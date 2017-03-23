@@ -183,7 +183,8 @@ void image_flip_h(image_t *image) {
     for (i = 0; i < image->height; i++) {
         for (j = 0; j < half_width; j++) {
             int index1 = i * image->pitch + j * image->channels;
-            int index2 = i * image->pitch + (image->width - j - 1) * image->channels;
+            int j2 = image->width - j - 1;
+            int index2 = i * image->pitch + j2 * image->channels;
             for (k = 0; k < image->channels; k++) {
                 unsigned char tmp = image->buffer[index1 + k];
                 image->buffer[index1 + k] = image->buffer[index2 + k];
@@ -199,7 +200,8 @@ void image_flip_v(image_t *image) {
     for (i = 0; i < half_height; i++) {
         for (j = 0; j < image->width; j++) {
             int index1 = i * image->pitch + j * image->channels;
-            int index2 = (image->height - i - 1) * image->pitch + j * image->channels;
+            int i2 = image->height - i - 1;
+            int index2 = i2 * image->pitch + j * image->channels;
             for (k = 0; k < image->channels; k++) {
                 unsigned char tmp = image->buffer[index1 + k];
                 image->buffer[index1 + k] = image->buffer[index2 + k];

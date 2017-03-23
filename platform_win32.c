@@ -6,7 +6,15 @@
 #include "image.h"
 #include "error.h"
 
-typedef struct context {
+typedef struct context context_t;
+
+struct window {
+    HWND handle;
+    context_t *context;
+    bool should_close;
+};
+
+struct context {
     int width;
     int height;
     int channels;
@@ -15,12 +23,6 @@ typedef struct context {
     HDC cdc;
     HBITMAP dib;
     HBITMAP old;
-} context_t;
-
-struct window {
-    HWND handle;
-    context_t *context;
-    bool should_close;
 };
 
 static const char *WINDOW_CLASS_NAME = "Renderer";
