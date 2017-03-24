@@ -9,8 +9,8 @@ typedef struct {
     unsigned char *buffer;
 } image_t;
 
-image_t *image_load(const char *file, const char *type);
-void image_save(image_t *image, const char *file, const char *type);
+image_t *image_load(const char *filename);
+void image_save(image_t *image, const char *filename);
 void image_free(image_t *image);
 
 void image_flip_h(image_t *image);

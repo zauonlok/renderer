@@ -22,6 +22,15 @@ struct tga_header {
 };
 #pragma pack(pop)
 
+static const char *get_filename_ext(const char *filename) {
+    const char *dot = strrchr(filename, '.');
+    if (dot == NULL || dot == filename) {
+        return "";
+    } else {
+        return dot + 1;
+    }
+}
+
 static int read_byte(FILE *file) {
     int byte = fgetc(file);
     if (byte == EOF) {
@@ -36,27 +45,27 @@ static void load_tga_rle(FILE *file, unsigned char *buffer,
     int buffer_count = 0;
     int i, j;
     do {
-        int chunk_count = read_byte(file);
-        if (chunk_count < 128) {    /* raw packet */
-            chunk_count = chunk_count + 1;
-            if (buffer_count + chunk_count * channels > buffer_size) {
+        int header = read_byte(file);
+        if (header < 128) {     /* raw packet */
+            int pixel_count = header + 1;
+            if (buffer_count + pixel_count * channels > buffer_size) {
                 FATAL("tga: raw packet too large");
             }
-            for (i = 0; i < chunk_count; i++) {
+            for (i = 0; i < pixel_count; i++) {
                 for (j = 0; j < channels; j++) {
                     buffer[buffer_count] = read_byte(file);
                     buffer_count += 1;
                 }
             }
-        } else {                    /* run-length packet */
-            chunk_count = chunk_count - 128 + 1;
-            if (buffer_count + chunk_count * channels > buffer_size) {
+        } else {                /* run-length packet */
+            int pixel_count = header - 128 + 1;
+            if (buffer_count + pixel_count * channels > buffer_size) {
                 FATAL("tga: run-length packet too large");
             }
             for (j = 0; j < channels; j++) {
                 pixel[j] = read_byte(file);
             }
-            for (i = 0; i < chunk_count; i++) {
+            for (i = 0; i < pixel_count; i++) {
                 for (j = 0; j < channels; j++) {
                     buffer[buffer_count] = pixel[j];
                     buffer_count += 1;
@@ -69,7 +78,8 @@ static void load_tga_rle(FILE *file, unsigned char *buffer,
 
 static image_t *load_tga(const char *filename) {
     FILE *file;
-    struct tga_header tga_header;
+    struct tga_header header;
+    int header_size = sizeof(struct tga_header);
     int width, height;
     int pixeldepth, channels;
     int image_type;
@@ -82,29 +92,29 @@ static image_t *load_tga(const char *filename) {
     if (file == NULL) {
         FATAL("fopen");
     }
-    count = fread(&tga_header, 1, sizeof(struct tga_header), file);
-    if (count != sizeof(struct tga_header)) {
+    count = fread(&header, 1, header_size, file);
+    if (count != header_size) {
         FATAL("fread");
     }
-    width = tga_header.width;
-    height = tga_header.height;
+    width = header.width;
+    height = header.height;
     if (width <= 0 || height <= 0) {
         FATAL("tga: bad width/height value");
     }
-    pixeldepth = tga_header.pixeldepth;
+    pixeldepth = header.pixeldepth;
     channels = pixeldepth / 8;
     if (pixeldepth != 8 && pixeldepth != 24 && pixeldepth != 32) {
         FATAL("tga: unsupported color depth");
     }
     buffer_size = width * height * channels;
     buffer = (unsigned char *)malloc(buffer_size);
-    image_type = tga_header.imagetype;
-    if (image_type == 2 || image_type == 3) {
+    image_type = header.imagetype;
+    if (image_type == 2 || image_type == 3) {           /* uncompressed */
         count = fread(buffer, 1, buffer_size, file);
         if (count != buffer_size) {
             FATAL("fread");
         }
-    } else if (image_type == 10 || image_type == 11) {
+    } else if (image_type == 10 || image_type == 11) {  /* run-length encoded */
         load_tga_rle(file, buffer, buffer_size, channels);
     } else {
         FATAL("tga: unsupported image type");
@@ -118,18 +128,19 @@ static image_t *load_tga(const char *filename) {
     image->pitch    = width * channels;
     image->buffer   = buffer;
 
-    if (!(tga_header.descriptor & 0x20)) {
+    if (!(header.descriptor & 0x20)) {
         image_flip_v(image);
     }
-    if (tga_header.descriptor & 0x10) {
+    if (header.descriptor & 0x10) {
         image_flip_h(image);
     }
     return image;
 }
 
-image_t *image_load(const char *file, const char *type) {
-    if (strcmp(type, "tga") == 0) {
-        return load_tga(file);
+image_t *image_load(const char *filename) {
+    const char *ext = get_filename_ext(filename);
+    if (strcmp(ext, "tga") == 0) {
+        return load_tga(filename);
     } else {
         FATAL("image: unsupported format");
         return NULL;
@@ -138,7 +149,8 @@ image_t *image_load(const char *file, const char *type) {
 
 static void save_tga(image_t *image, const char *filename) {
     FILE *file;
-    struct tga_header tga_header;
+    struct tga_header header;
+    int header_size = sizeof(struct tga_header);
     int buffer_size;
     int count;
 
@@ -146,14 +158,14 @@ static void save_tga(image_t *image, const char *filename) {
     if (file == NULL) {
         FATAL("fopen");
     }
-    memset(&tga_header, 0, sizeof(struct tga_header));
-    tga_header.width      = image->width;
-    tga_header.height     = image->height;
-    tga_header.pixeldepth = image->channels * 8;
-    tga_header.imagetype  = (image->channels == 1) ? 3 : 2;
-    tga_header.descriptor = 0x20;   /* top-left origin */
-    count = fwrite(&tga_header, 1, sizeof(struct tga_header), file);
-    if (count != sizeof(struct tga_header)) {
+    memset(&header, 0, header_size);
+    header.width      = image->width;
+    header.height     = image->height;
+    header.pixeldepth = image->channels * 8;
+    header.imagetype  = (image->channels == 1) ? 3 : 2;
+    header.descriptor = 0x20;   /* top-left origin */
+    count = fwrite(&header, 1, header_size, file);
+    if (count != header_size) {
         FATAL("fwrite");
     }
     buffer_size = image->width * image->height * image->channels;
@@ -164,9 +176,10 @@ static void save_tga(image_t *image, const char *filename) {
     fclose(file);
 }
 
-void image_save(image_t *image, const char *file, const char *type) {
-    if (strcmp(type, "tga") == 0) {
-        save_tga(image, file);
+void image_save(image_t *image, const char *filename) {
+    const char *ext = get_filename_ext(filename);
+    if (strcmp(ext, "tga") == 0) {
+        save_tga(image, filename);
     } else {
         FATAL("image: unsupported format");
     }
@@ -177,7 +190,14 @@ void image_free(image_t *image) {
     free(image);
 }
 
+static void swap_byte(unsigned char *a, unsigned char *b) {
+    unsigned char t = *a;
+    *a = *b;
+    *b = t;
+}
+
 void image_flip_h(image_t *image) {
+    unsigned char *buffer = image->buffer;
     int half_width = image->width / 2;
     int i, j, k;
     for (i = 0; i < image->height; i++) {
@@ -186,15 +206,14 @@ void image_flip_h(image_t *image) {
             int j2 = image->width - j - 1;
             int index2 = i * image->pitch + j2 * image->channels;
             for (k = 0; k < image->channels; k++) {
-                unsigned char tmp = image->buffer[index1 + k];
-                image->buffer[index1 + k] = image->buffer[index2 + k];
-                image->buffer[index2 + k] = tmp;
+                swap_byte(&buffer[index1 + k], &buffer[index2 + k]);
             }
         }
     }
 }
 
 void image_flip_v(image_t *image) {
+    unsigned char *buffer = image->buffer;
     int half_height = image->height / 2;
     int i, j, k;
     for (i = 0; i < half_height; i++) {
@@ -203,9 +222,7 @@ void image_flip_v(image_t *image) {
             int i2 = image->height - i - 1;
             int index2 = i2 * image->pitch + j * image->channels;
             for (k = 0; k < image->channels; k++) {
-                unsigned char tmp = image->buffer[index1 + k];
-                image->buffer[index1 + k] = image->buffer[index2 + k];
-                image->buffer[index2 + k] = tmp;
+                swap_byte(&buffer[index1 + k], &buffer[index2 + k]);
             }
         }
     }

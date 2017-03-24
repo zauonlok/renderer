@@ -6,15 +6,7 @@
 #include "image.h"
 #include "error.h"
 
-typedef struct context context_t;
-
-struct window {
-    HWND handle;
-    context_t *context;
-    bool should_close;
-};
-
-struct context {
+typedef struct {
     int width;
     int height;
     int channels;
@@ -23,14 +15,21 @@ struct context {
     HDC cdc;
     HBITMAP dib;
     HBITMAP old;
+} context_t;
+
+struct window {
+    HWND handle;
+    context_t *context;
+    bool should_close;
 };
 
 static const char *WINDOW_CLASS_NAME = "Renderer";
+static const char *WINDOW_ENTRY_NAME = "Ninja";
 
 static LRESULT CALLBACK window_proc(HWND hWnd, UINT uMsg,
                                     WPARAM wParam, LPARAM lParam) {
     if (uMsg == WM_CLOSE) {
-        window_t *window = (window_t*)GetProp(hWnd, "Ninja");
+        window_t *window = (window_t*)GetProp(hWnd, WINDOW_ENTRY_NAME);
         window->should_close = true;
         return 0;
     } else {
@@ -55,6 +54,7 @@ static void register_class() {
         if (RegisterClass(&wc) == 0) {
             FATAL("RegisterClass");
         }
+        initialized = true;
     }
 }
 
@@ -97,7 +97,7 @@ static context_t *create_context(HWND window, int width, int height) {
     bi.biBitCount    = 32;
     bi.biCompression = BI_RGB;
     dib = CreateDIBSection(cdc, (BITMAPINFO*)&bi, DIB_RGB_COLORS,
-                           &buffer, NULL, 0);
+                           (void**)&buffer, NULL, 0);
     if (dib == NULL) {
         FATAL("CreateDIBSection");
     }
@@ -128,7 +128,7 @@ window_t *platform_create_window(const char *title, int width, int height) {
     window->handle       = handle;
     window->context      = context;
     window->should_close = false;
-    SetProp(handle, "Ninja", window);
+    SetProp(handle, WINDOW_ENTRY_NAME, window);
     return window;
 }
 
@@ -138,24 +138,16 @@ bool platform_window_should_close(window_t *window) {
 
 void platform_draw_image(window_t *window, image_t *image) {
     context_t *context = window->context;
-    HDC hdc;
+    HDC wdc;
     int row, col, chn;
 
     memset(context->buffer, 0, context->height * context->pitch);
-    for (row = 0; row < context->height; row++) {
-        if (row >= image->height) {
-            break;
-        }
-        for (col = 0; col < context->width; col++) {
+    for (row = 0; row < context->height && row < image->height; row++) {
+        for (col = 0; col < context->width && col < image->width; col++) {
             int ctx_index = row * context->pitch + col * context->channels;
             int img_index = row * image->pitch + col * image->channels;
-            if (col >= image->width) {
-                break;
-            }
-            for (chn = 0; chn < context->channels; chn++) {
-                if (chn >= image->channels) {
-                    break;
-                }
+            for (chn = 0; chn < context->channels
+                          && chn < image->channels; chn++) {
                 int ctx_comp = ctx_index + chn;
                 int img_comp = img_index + chn;
                 context->buffer[ctx_comp] = image->buffer[img_comp];
@@ -163,10 +155,10 @@ void platform_draw_image(window_t *window, image_t *image) {
         }
     }
 
-    hdc = GetDC(window->handle);
-    BitBlt(hdc, 0, 0, context->width, context->height,
+    wdc = GetDC(window->handle);
+    BitBlt(wdc, 0, 0, context->width, context->height,
            context->cdc, 0, 0, SRCCOPY);
-    ReleaseDC(window->handle, hdc);
+    ReleaseDC(window->handle, wdc);
 }
 
 void platform_destroy_window(window_t *window) {
