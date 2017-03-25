@@ -6,7 +6,17 @@
 #include "image.h"
 #include "error.h"
 
-typedef struct {
+// data structures
+
+typedef struct context context_t;
+
+struct window {
+    HWND handle;
+    context_t *context;
+    bool should_close;
+};
+
+struct context {
     int width;
     int height;
     int channels;
@@ -15,19 +25,15 @@ typedef struct {
     HDC cdc;
     HBITMAP dib;
     HBITMAP old;
-} context_t;
-
-struct window {
-    HWND handle;
-    context_t *context;
-    bool should_close;
 };
 
-static const char *WINDOW_CLASS_NAME = "Renderer";
-static const char *WINDOW_ENTRY_NAME = "Ninja";
+// window stuff
 
-static LRESULT CALLBACK window_proc(HWND hWnd, UINT uMsg,
-                                    WPARAM wParam, LPARAM lParam) {
+static const char *WINDOW_CLASS_NAME = "Class";
+static const char *WINDOW_ENTRY_NAME = "Entry";
+
+static LRESULT CALLBACK process_message(HWND hWnd, UINT uMsg,
+                                        WPARAM wParam, LPARAM lParam) {
     if (uMsg == WM_CLOSE) {
         window_t *window = (window_t*)GetProp(hWnd, WINDOW_ENTRY_NAME);
         window->should_close = true;
@@ -42,7 +48,7 @@ static void register_class() {
     if (initialized == false) {
         WNDCLASS wc;
         wc.style         = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc   = window_proc;
+        wc.lpfnWndProc   = process_message;
         wc.cbClsExtra    = 0;
         wc.cbWndExtra    = 0;
         wc.hInstance     = GetModuleHandle(NULL);
@@ -70,10 +76,7 @@ static HWND create_window(const char *title, int width, int height) {
     window = CreateWindow(WINDOW_CLASS_NAME, title, style,
                           CW_USEDEFAULT, CW_USEDEFAULT, width, height,
                           NULL, NULL, GetModuleHandle(NULL), NULL);
-    if (window == NULL) {
-        FATAL("CreateWindow");
-    }
-
+    FORCE(window != NULL, "CreateWindow");
     ShowWindow(window, SW_SHOW);
     return window;
 }
@@ -98,9 +101,7 @@ static context_t *create_context(HWND window, int width, int height) {
     bi.biCompression = BI_RGB;
     dib = CreateDIBSection(cdc, (BITMAPINFO*)&bi, DIB_RGB_COLORS,
                            (void**)&buffer, NULL, 0);
-    if (dib == NULL) {
-        FATAL("CreateDIBSection");
-    }
+    FORCE(dib != NULL, "CreateDIBSection");
     old = (HBITMAP)SelectObject(cdc, dib);
 
     context = (context_t*)malloc(sizeof(context_t));
@@ -115,7 +116,7 @@ static context_t *create_context(HWND window, int width, int height) {
     return context;
 }
 
-window_t *platform_create_window(const char *title, int width, int height) {
+window_t *window_create(const char *title, int width, int height) {
     HWND handle;
     context_t *context;
     window_t *window;
@@ -132,25 +133,34 @@ window_t *platform_create_window(const char *title, int width, int height) {
     return window;
 }
 
-bool platform_window_should_close(window_t *window) {
+void window_destroy(window_t *window) {
+    SelectObject(window->context->cdc, window->context->old);
+    DeleteDC(window->context->cdc);
+    DeleteObject(window->context->dib);
+    DestroyWindow(window->handle);
+    free(window->context);
+    free(window);
+}
+
+bool window_should_close(window_t *window) {
     return window->should_close;
 }
 
-void platform_draw_image(window_t *window, image_t *image) {
+void window_draw_image(window_t *window, image_t *image) {
     context_t *context = window->context;
     HDC wdc;
-    int row, col, chn;
+    int row, col, channel;
 
     memset(context->buffer, 0, context->height * context->pitch);
     for (row = 0; row < context->height && row < image->height; row++) {
         for (col = 0; col < context->width && col < image->width; col++) {
-            int ctx_index = row * context->pitch + col * context->channels;
-            int img_index = row * image->pitch + col * image->channels;
-            for (chn = 0; chn < context->channels
-                          && chn < image->channels; chn++) {
-                int ctx_comp = ctx_index + chn;
-                int img_comp = img_index + chn;
-                context->buffer[ctx_comp] = image->buffer[img_comp];
+            int context_pixel = row * context->pitch + col * context->channels;
+            int image_pixel = row * image->pitch + col * image->channels;
+            for (channel = 0; channel < context->channels
+                              && channel < image->channels; channel++) {
+                int context_index = context_pixel + channel;
+                int image_index = image_pixel + channel;
+                context->buffer[context_index] = image->buffer[image_index];
             }
         }
     }
@@ -161,17 +171,9 @@ void platform_draw_image(window_t *window, image_t *image) {
     ReleaseDC(window->handle, wdc);
 }
 
-void platform_destroy_window(window_t *window) {
-    SelectObject(window->context->cdc, window->context->old);
-    DeleteDC(window->context->cdc);
-    DeleteObject(window->context->dib);
-    DestroyWindow(window->handle);
+// input stuff
 
-    free(window->context);
-    free(window);
-}
-
-void platform_poll_events(void) {
+void input_poll_events(void) {
     MSG message;
     while (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) {
         TranslateMessage(&message);
@@ -192,7 +194,7 @@ static int translate_keycode(keycode_t key) {
     return keycodes[key];
 }
 
-bool platform_is_key_down(window_t *window, keycode_t key) {
+bool input_key_pressed(window_t *window, keycode_t key) {
     int virtual_key = translate_keycode(key);
     if (GetAsyncKeyState(virtual_key) & (1 << 31)) {
         return true;
@@ -212,7 +214,7 @@ static int translate_button(button_t button) {
     return buttons[button];
 }
 
-bool platform_is_button_down(window_t *window, button_t button) {
+bool input_button_pressed(window_t *window, button_t button) {
     int virtual_key = translate_button(button);
     if (GetAsyncKeyState(virtual_key) & (1 << 31)) {
         return true;
@@ -221,7 +223,7 @@ bool platform_is_button_down(window_t *window, button_t button) {
     }
 }
 
-void platform_get_cursor_pos(window_t *window, double *xpos, double *ypos) {
+void input_query_cursor(window_t *window, int *xpos, int *ypos) {
     POINT pos;
     GetCursorPos(&pos);
     ScreenToClient(window->handle, &pos);
@@ -233,7 +235,7 @@ void platform_get_cursor_pos(window_t *window, double *xpos, double *ypos) {
     }
 }
 
-double platform_get_time(void) {
+double input_get_time(void) {
     static double period = -1;
     LARGE_INTEGER counter;
     if (period < 0) {
