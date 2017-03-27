@@ -61,6 +61,7 @@ static Window create_window(const char *title, int width, int height) {
     window = XCreateSimpleWindow(g_display, root, 0, 0, width, height, 0,
                                  white, black);
 
+    /* not resizable */
     size_hints = XAllocSizeHints();
     size_hints->flags      = PMinSize | PMaxSize;
     size_hints->min_width  = width;
@@ -70,10 +71,12 @@ static Window create_window(const char *title, int width, int height) {
     XSetWMNormalHints(g_display, window, size_hints);
     XFree(size_hints);
 
+    /* title bar name */
     XStringListToTextProperty((char**)&title, 1, &property);
     XSetWMName(g_display, window, &property);
     XSetWMIconName(g_display, window, &property);
 
+    /* application name */
     class_hints = XAllocClassHint();
     class_hints->res_name  = (char*)title;
     class_hints->res_class = (char*)title;
@@ -174,9 +177,9 @@ void window_draw_image(window_t *window, image_t *image) {
 
 /* input stuff */
 
-static keycode_t translate_scancode(int scancode) {
-    KeySym *keysyms;
-    KeySym symbol;
+static void handle_key_event(window_t *window, int scancode, char action) {
+    KeySym symbol, *keysyms;
+    keycode_t key;
     int dummy;
 
     keysyms = XGetKeyboardMapping(g_display, scancode, 1, &dummy);
@@ -184,22 +187,18 @@ static keycode_t translate_scancode(int scancode) {
     XFree(keysyms);
 
     switch (symbol) {
-        case XK_a: return KEY_A;
-        case XK_d: return KEY_D;
-        case XK_s: return KEY_S;
-        case XK_w: return KEY_W;
-        default:   return KEY_NUM;
+        case XK_a: key = KEY_A;   break;
+        case XK_d: key = KEY_D;   break;
+        case XK_s: key = KEY_S;   break;
+        case XK_w: key = KEY_W;   break;
+        default:   key = KEY_NUM; break;
+    }
+    if (key < KEY_NUM) {
+        window->keycodes[key] = action;
     }
 }
 
-static void handle_key_event(window_t *window, int scancode, int action) {
-    keycode_t keycode = translate_scancode(scancode);
-    if (keycode < KEY_NUM) {
-        window->keycodes[keycode] = action;
-    }
-}
-
-static void handle_button_event(window_t *window, int button, int action) {
+static void handle_button_event(window_t *window, int button, char action) {
     if (button == Button1) {
         window->buttons[BUTTON_L] = action;
     } else if (button == Button3) {
@@ -218,7 +217,14 @@ static void process_event(XEvent *event) {
         return;
     }
 
-    if (event->type == KeyPress) {
+    if (event->type == ClientMessage) {
+        if (event->xclient.message_type == WM_PROTOCOLS) {
+            Atom protocol = event->xclient.data.l[0];
+            if (protocol == WM_DELETE_WINDOW) {
+                window->should_close = 1;
+            }
+        }
+    } else if (event->type == KeyPress) {
         handle_key_event(window, event->xkey.keycode, 1);
     } else if (event->type == KeyRelease) {
         handle_key_event(window, event->xkey.keycode, 0);
@@ -226,13 +232,6 @@ static void process_event(XEvent *event) {
         handle_button_event(window, event->xbutton.button, 1);
     } else if (event->type == ButtonRelease) {
         handle_button_event(window, event->xbutton.button, 0);
-    } else if (event->type == ClientMessage) {
-        if (event->xclient.message_type == WM_PROTOCOLS) {
-            Atom protocol = event->xclient.data.l[0];
-            if (protocol == WM_DELETE_WINDOW) {
-                window->should_close = 1;
-            }
-        }
     }
 }
 
@@ -255,18 +254,18 @@ int input_button_pressed(window_t *window, button_t button) {
     return window->buttons[button];
 }
 
-void input_query_cursor(window_t *window, int *xpos, int *ypos) {
+void input_query_cursor(window_t *window, int *row, int *col) {
     Window root, child;
     int root_x, root_y, window_x, window_y;
     unsigned int mask;
 
     XQueryPointer(g_display, window->handle, &root, &child,
                   &root_x, &root_y, &window_x, &window_y, &mask);
-    if (xpos != NULL) {
-        *xpos = window_x;
+    if (row != NULL) {
+        *row = window_y;
     }
-    if (ypos != NULL) {
-        *ypos = window_y;
+    if (col != NULL) {
+        *col = window_x;
     }
 }
 
