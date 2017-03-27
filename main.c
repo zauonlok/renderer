@@ -20,10 +20,10 @@ void sanity_check(window_t *window, image_t *image) {
         image_flip_v(image);
     }
     if (input_button_pressed(window, BUTTON_L)) {
-        int xpos, ypos;
+        int row, col;
         printf("%s\n", "BUTTON_L");
-        input_query_cursor(window, &xpos, &ypos);
-        printf("xpos: %d, ypos: %d\n", xpos, ypos);
+        input_query_cursor(window, &row, &col);
+        printf("row: %d, col: %d\n", row, col);
     }
     if (input_button_pressed(window, BUTTON_R)) {
         printf("%s\n", "BUTTON_R");

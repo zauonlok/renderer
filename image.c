@@ -14,7 +14,7 @@ static const char *extract_extension(const char *filename) {
 static unsigned char read_byte(FILE *file) {
     int byte = fgetc(file);
     FORCE(byte != EOF, "fgetc");
-    return byte;
+    return (unsigned char)byte;
 }
 
 #if 0
@@ -86,8 +86,6 @@ void image_save(image_t *image, const char *filename) {
     }
 }
 
-static const int TGA_HEADER_SIZE = 18;
-
 static void load_tga_rle(FILE *file, image_t *image) {
     int channels = image->channels;
     unsigned char *pixel = (unsigned char*)malloc(channels);
@@ -122,6 +120,8 @@ static void load_tga_rle(FILE *file, image_t *image) {
     }
     free(pixel);
 }
+
+#define TGA_HEADER_SIZE 18
 
 static image_t *load_tga(const char *filename) {
     FILE *file;
@@ -177,7 +177,7 @@ static void save_tga(image_t *image, const char *filename) {
     header[13] = (image->width >> 8) & 0xFF;      /* width, msb */
     header[14] = image->height & 0xFF;            /* height, lsb */
     header[15] = (image->height >> 8) & 0xFF;     /* height, msb */
-    header[16] = image->channels * 8;             /* image channels */
+    header[16] = (image->channels * 8) & 0xFF;    /* image depth */
     header[17] = 0x20;                            /* top-left origin */
     write_bytes(file, header, TGA_HEADER_SIZE);
 
@@ -273,7 +273,8 @@ void image_resize(image_t *image, int width, int height) {
                 double v01 = pixel_01[k];
                 double v10 = pixel_10[k];
                 double v11 = pixel_11[k];
-                pixel[k] = bilinear_interp(v00, v01, v10, v11, drow, dcol);
+                double value = bilinear_interp(v00, v01, v10, v11, drow, dcol);
+                pixel[k] = (unsigned char)(value + 0.5);
             }
         }
     }

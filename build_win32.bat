@@ -17,7 +17,7 @@ if defined VS140COMNTOOLS (
     goto :pause
 )
 
-set OPTS=/Feviewer /nologo
+set OPTS=/Feviewer /nologo /W4 /wd4996
 set SRCS=main.c platform_win32.c image.c error.c
 set LIBS=user32.lib gdi32.lib
 
