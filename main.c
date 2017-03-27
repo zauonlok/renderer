@@ -2,10 +2,10 @@
 #include "platform.h"
 #include "image.h"
 
-void smoke_test(window_t *window, image_t *image) {
+void sanity_check(window_t *window, image_t *image) {
     if (input_key_pressed(window, KEY_A)) {
         printf("%s\n", "KEY_A");
-        printf("time: %.3lf\n", input_get_time());
+        printf("time: %lf\n", input_get_time());
     }
     if (input_key_pressed(window, KEY_D)) {
         printf("%s\n", "KEY_D");
@@ -33,7 +33,7 @@ void smoke_test(window_t *window, image_t *image) {
 int main(void) {
     window_t *window;
     image_t *image;
-    const char *title = "Example";
+    const char *title = "Viewer";
     int width = 800;
     int height = 600;
 
@@ -41,7 +41,7 @@ int main(void) {
     image = image_load("example.tga");
     image_resize(image, width, height);
     while (!window_should_close(window)) {
-        smoke_test(window, image);
+        sanity_check(window, image);
         window_draw_image(window, image);
         input_poll_events();
     }
