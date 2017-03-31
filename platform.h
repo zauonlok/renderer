@@ -15,7 +15,7 @@ void window_draw_image(window_t *window, image_t *image);
 void input_poll_events(void);
 int input_key_pressed(window_t *window, keycode_t key);
 int input_button_pressed(window_t *window, button_t button);
-void input_query_cursor(window_t *window, int *row, int *col);
+void input_query_cursor(window_t *window, int *xpos, int *ypos);
 double input_get_time(void);
 
 #endif

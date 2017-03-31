@@ -15,7 +15,7 @@ typedef struct context context_t;
 struct window {
     Window handle;
     int should_close;
-    char keycodes[KEY_NUM];
+    char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
     context_t *context;
 };
@@ -23,7 +23,6 @@ struct window {
 struct context {
     int width;
     int height;
-    int channels;
     unsigned char *buffer;
     XImage *image;
 };
@@ -83,6 +82,7 @@ static Window create_window(const char *title, int width, int height) {
     XSetClassHint(g_display, window, class_hints);
     XFree(class_hints);
 
+    /* event subscription */
     mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask;
     XSelectInput(g_display, window, mask);
     XSetWMProtocols(g_display, window, &WM_DELETE_WINDOW, 1);
@@ -92,24 +92,22 @@ static Window create_window(const char *title, int width, int height) {
     return window;
 }
 
-static const int BYTES_PER_PIXEL = 4;
-
 static context_t *create_context(int width, int height) {
     Visual *visual = XDefaultVisual(g_display, g_screen);
     int depth = XDefaultDepth(g_display, g_screen);
-    int buffer_size = width * height * BYTES_PER_PIXEL;
+    int bytes_per_pixel = 4;
+    int buffer_size = width * height * bytes_per_pixel;
     unsigned char *buffer = (unsigned char*)malloc(buffer_size);
     XImage *image;
     context_t *context;
 
     FORCE(depth == 24 || depth == 32, "create_context: depth");
     image = XCreateImage(g_display, visual, depth, ZPixmap, 0, (char*)buffer,
-                         width, height, BYTES_PER_PIXEL * 8, 0);
+                         width, height, 32, 0);
 
     context = (context_t*)malloc(sizeof(context_t));
     context->width    = width;
     context->height   = height;
-    context->channels = depth / 8;
     context->buffer   = buffer;
     context->image    = image;
     return context;
@@ -128,7 +126,7 @@ window_t *window_create(const char *title, int width, int height) {
     window->handle       = handle;
     window->should_close = 0;
     window->context      = context;
-    memset(window->keycodes, 0, sizeof(window->keycodes));
+    memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
     XSaveContext(g_display, handle, g_context, (XPointer)window);
     return window;
@@ -136,10 +134,10 @@ window_t *window_create(const char *title, int width, int height) {
 
 void window_destroy(window_t *window) {
     context_t *context = window->context;
+    XUnmapWindow(g_display, window->handle);
     XDeleteContext(g_display, window->handle, g_context);
     context->image->data = NULL;
     XDestroyImage(context->image);
-    XUnmapWindow(g_display, window->handle);
     XDestroyWindow(g_display, window->handle);
     XFlush(g_display);
     free(context->buffer);
@@ -154,18 +152,29 @@ int window_should_close(window_t *window) {
 void window_draw_image(window_t *window, image_t *image) {
     GC gc = XDefaultGC(g_display, g_screen);
     context_t *context = window->context;
-    int bytes_per_row = context->width * BYTES_PER_PIXEL;
+    int bytes_per_pixel = 4;
+    int bytes_per_row = context->width * bytes_per_pixel;
     int buffer_size = context->height * bytes_per_row;
-    int r, c, k;
+    int channels = image->channels;
+    int r, c;
 
+    if (channels != 1 && channels != 3 && channels != 4) {
+        FATAL("window_draw_image: channels");
+    }
     memset(context->buffer, 0, buffer_size);
     for (r = 0; r < context->height && r < image->height; r++) {
         for (c = 0; c < context->width && c < image->width; c++) {
-            int context_index = r * bytes_per_row + c * BYTES_PER_PIXEL;
+            int context_index = r * bytes_per_row + c * bytes_per_pixel;
             unsigned char *context_pixel = &(context->buffer[context_index]);
             unsigned char *image_pixel = image_pixel_ptr(image, r, c);
-            for (k = 0; k < context->channels && k < image->channels; k++) {
-                context_pixel[k] = image_pixel[k];
+            if (channels == 1) {
+                context_pixel[0] = image_pixel[0];
+                context_pixel[1] = image_pixel[0];
+                context_pixel[2] = image_pixel[0];
+            } else {
+                context_pixel[0] = image_pixel[0];
+                context_pixel[1] = image_pixel[1];
+                context_pixel[2] = image_pixel[2];
             }
         }
     }
@@ -177,16 +186,16 @@ void window_draw_image(window_t *window, image_t *image) {
 
 /* input stuff */
 
-static void handle_key_event(window_t *window, int scancode, char action) {
-    KeySym symbol, *keysyms;
+static void handle_key_event(window_t *window, int keycode, char action) {
+    KeySym keysym, *keysyms;
     keycode_t key;
     int dummy;
 
-    keysyms = XGetKeyboardMapping(g_display, scancode, 1, &dummy);
-    symbol = keysyms[0];
+    keysyms = XGetKeyboardMapping(g_display, keycode, 1, &dummy);
+    keysym = keysyms[0];
     XFree(keysyms);
 
-    switch (symbol) {
+    switch (keysym) {
         case XK_a: key = KEY_A;   break;
         case XK_d: key = KEY_D;   break;
         case XK_s: key = KEY_S;   break;
@@ -194,7 +203,7 @@ static void handle_key_event(window_t *window, int scancode, char action) {
         default:   key = KEY_NUM; break;
     }
     if (key < KEY_NUM) {
-        window->keycodes[key] = action;
+        window->keys[key] = action;
     }
 }
 
@@ -247,25 +256,25 @@ void input_poll_events(void) {
 }
 
 int input_key_pressed(window_t *window, keycode_t key) {
-    return window->keycodes[key];
+    return window->keys[key];
 }
 
 int input_button_pressed(window_t *window, button_t button) {
     return window->buttons[button];
 }
 
-void input_query_cursor(window_t *window, int *row, int *col) {
+void input_query_cursor(window_t *window, int *xpos, int *ypos) {
     Window root, child;
     int root_x, root_y, window_x, window_y;
     unsigned int mask;
 
     XQueryPointer(g_display, window->handle, &root, &child,
                   &root_x, &root_y, &window_x, &window_y, &mask);
-    if (row != NULL) {
-        *row = window_y;
+    if (xpos != NULL) {
+        *xpos = window_x;
     }
-    if (col != NULL) {
-        *col = window_x;
+    if (ypos != NULL) {
+        *ypos = window_y;
     }
 }
 
