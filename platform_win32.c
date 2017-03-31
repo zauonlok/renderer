@@ -48,16 +48,14 @@ static void handle_key_message(window_t *window, int virtual_key, char action) {
 static LRESULT CALLBACK process_message(HWND hWnd, UINT uMsg,
                                         WPARAM wParam, LPARAM lParam) {
     window_t *window = (window_t*)GetProp(hWnd, WINDOW_ENTRY_NAME);
-    if (window == NULL) {
-        return 0;
-    } else if (uMsg == WM_CLOSE) {
+    if (uMsg == WM_CLOSE) {
         window->should_close = 1;
         return 0;
     } else if (uMsg == WM_KEYDOWN) {
-        handle_key_msg(window, wParam, 1);
+        handle_key_message(window, wParam, 1);
         return 0;
     } else if (uMsg == WM_KEYUP) {
-        handle_key_msg(window, wParam, 0);
+        handle_key_message(window, wParam, 0);
         return 0;
     } else if (uMsg == WM_LBUTTONDOWN) {
         window->buttons[BUTTON_L] = 1;
@@ -171,7 +169,7 @@ window_t *window_create(const char *title, int width, int height) {
 }
 
 void window_destroy(window_t *window) {
-    ShowWindow(SW_HIDE);
+    ShowWindow(window->handle, SW_HIDE);
     RemoveProp(window->handle, WINDOW_ENTRY_NAME);
     SelectObject(window->context->cdc, window->context->old);
     DeleteDC(window->context->cdc);
