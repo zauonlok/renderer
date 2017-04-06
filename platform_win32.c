@@ -18,9 +18,7 @@ struct window {
 };
 
 struct context {
-    int width;
-    int height;
-    unsigned char *buffer;
+    image_t *framebuffer;
     HDC cdc;
     HBITMAP dib;
     HBITMAP old;
@@ -122,6 +120,7 @@ static context_t *create_context(HWND window, int width, int height) {
     HBITMAP dib, old;
     unsigned char *buffer;
     context_t *context;
+    image_t *framebuffer;
 
     wdc = GetDC(window);
     cdc = CreateCompatibleDC(wdc);
@@ -139,13 +138,17 @@ static context_t *create_context(HWND window, int width, int height) {
     FORCE(dib != NULL, "CreateDIBSection");
     old = (HBITMAP)SelectObject(cdc, dib);
 
+    framebuffer = (image_t*)malloc(sizeof(image_t));
+    framebuffer->width    = width;
+    framebuffer->height   = height;
+    framebuffer->channels = 4;
+    framebuffer->buffer   = buffer;
+
     context = (context_t*)malloc(sizeof(context_t));
-    context->width    = width;
-    context->height   = height;
-    context->buffer   = buffer;
-    context->cdc      = cdc;
-    context->dib      = dib;
-    context->old      = old;
+    context->framebuffer = framebuffer;
+    context->cdc         = cdc;
+    context->dib         = dib;
+    context->old         = old;
     return context;
 }
 
@@ -175,6 +178,7 @@ void window_destroy(window_t *window) {
     DeleteDC(window->context->cdc);
     DeleteObject(window->context->dib);
     DestroyWindow(window->handle);
+    free(window->context->framebuffer);
     free(window->context);
     free(window);
 }
@@ -184,37 +188,12 @@ int window_should_close(window_t *window) {
 }
 
 void window_draw_image(window_t *window, image_t *image) {
-    HDC wdc;
+    HDC wdc = GetDC(window->handle);
     context_t *context = window->context;
-    int bytes_per_pixel = 4;
-    int bytes_per_row = context->width * bytes_per_pixel;
-    int buffer_size = context->height * bytes_per_row;
-    int channels = image->channels;
-    int r, c;
-
-    if (channels != 1 && channels != 3 && channels != 4) {
-        FATAL("window_draw_image: channels");
-    }
-    memset(context->buffer, 0, buffer_size);
-    for (r = 0; r < context->height && r < image->height; r++) {
-        for (c = 0; c < context->width && c < image->width; c++) {
-            int context_index = r * bytes_per_row + c * bytes_per_pixel;
-            unsigned char *context_pixel = &(context->buffer[context_index]);
-            unsigned char *image_pixel = image_pixel_ptr(image, r, c);
-            if (channels == 1) {
-                context_pixel[0] = image_pixel[0];
-                context_pixel[1] = image_pixel[0];
-                context_pixel[2] = image_pixel[0];
-            } else {
-                context_pixel[0] = image_pixel[0];
-                context_pixel[1] = image_pixel[1];
-                context_pixel[2] = image_pixel[2];
-            }
-        }
-    }
-
-    wdc = GetDC(window->handle);
-    BitBlt(wdc, 0, 0, context->width, context->height,
+    image_t *framebuffer = context->framebuffer;
+    int swap_rb = 0;
+    image_blit_bgr(image, framebuffer, swap_rb);
+    BitBlt(wdc, 0, 0, framebuffer->width, framebuffer->height,
            context->cdc, 0, 0, SRCCOPY);
     ReleaseDC(window->handle, wdc);
 }
