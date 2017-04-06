@@ -1,43 +1,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mach/mach_time.h>
-#include <Cocoa/Cocoa.h>
+#import  <Cocoa/Cocoa.h>
 #include "platform.h"
 #include "image.h"
 #include "error.h"
 
-/* data structures */
-
-typedef struct context context_t;
+/* data structure */
 
 struct window {
     NSWindow *handle;
     int should_close;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
-    context_t *context;
-};
-
-struct context {
-    int width;
-    int height;
-    unsigned char *buffer;
+    image_t *framebuffer;
 };
 
 /* window stuff */
 
-NSAutoreleasePool *g_pool;
-
-@interface ApplicationDelegate : NSObject <NSApplicationDelegate>
-@end
-
-@implementation ApplicationDelegate
-
-- (void)applicationDidFinishLaunching:(NSNotification *)notification {
-    [NSApp stop:nil];
-}
-
-@end
+static NSAutoreleasePool *g_pool;
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
@@ -91,33 +72,34 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
 }
 
 - (BOOL)isOpaque {
-    return YES;
+    return YES;  /* pixels will be drawn opaquely */
 }
 
 - (BOOL)acceptsFirstResponder {
-    return YES;
+    return YES;  /* to receive key-down events */
 }
 
-- (void)drawRect:(NSRect)rect {
-    context_t *context = window->context;
+- (void)drawRect:(NSRect)dirtyRect {
     NSImage *image;
     NSBitmapImageRep *rep;
+    image_t *framebuffer = window->framebuffer;
 
     rep = [[[NSBitmapImageRep alloc]
-            initWithBitmapDataPlanes:&(context->buffer)
-                          pixelsWide:context->width
-                          pixelsHigh:context->height
+            initWithBitmapDataPlanes:&(framebuffer->buffer)
+                          pixelsWide:framebuffer->width
+                          pixelsHigh:framebuffer->height
                        bitsPerSample:8
                      samplesPerPixel:3
                             hasAlpha:NO
                             isPlanar:NO
                       colorSpaceName:NSCalibratedRGBColorSpace
-                         bytesPerRow:context->width * 4
+                         bytesPerRow:framebuffer->width * 4
                         bitsPerPixel:32] autorelease];
     FORCE(rep != nil, "NSBitmapImageRep");
     image = [[[NSImage alloc] init] autorelease];
     [image addRepresentation:rep];
-    [image drawInRect: rect];
+
+    [image drawInRect: dirtyRect];
 }
 
 - (void)keyDown:(NSEvent *)event {
@@ -149,6 +131,7 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
 static void create_menubar() {
     NSMenu *menu_bar, *app_menu;
     NSMenuItem *app_menu_item, *quit_menu_item;
+    NSString *app_name, *quit_title;
 
     menu_bar = [[[NSMenu alloc] init] autorelease];
     [NSApp setMainMenu:menu_bar];
@@ -157,26 +140,23 @@ static void create_menubar() {
 
     app_menu = [[[NSMenu alloc] init] autorelease];
     [app_menu_item setSubmenu:app_menu];
-    quit_menu_item = [[[NSMenuItem alloc] initWithTitle:@"Quit Viewer"
+    app_name = [[NSProcessInfo processInfo] processName];
+    quit_title = [@"Quit " stringByAppendingString:app_name];
+    quit_menu_item = [[[NSMenuItem alloc] initWithTitle:quit_title
                                                  action:@selector(terminate:)
                                           keyEquivalent:@"q"] autorelease];
     [app_menu addItem:quit_menu_item];
 }
 
 static void create_application() {
-    ApplicationDelegate *delegate;
     if (NSApp) {
         return;
     }
     g_pool = [[NSAutoreleasePool alloc] init];
     [NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    /* menubar setup must go between sharedApplication and finishLaunching */
     create_menubar();
-    delegate = [[[ApplicationDelegate alloc] init] autorelease];
-    FORCE(delegate != nil, "ApplicationDelegate");
-    [NSApp setDelegate:delegate];
-    [NSApp run];
+    [NSApp finishLaunching];
 }
 
 static NSWindow *create_window(window_t *window, const char *title,
@@ -185,6 +165,7 @@ static NSWindow *create_window(window_t *window, const char *title,
     NSUInteger mask;
     NSWindow *handle;
     WindowDelegate *delegate;
+    ContentView *view;
 
     rect = NSMakeRect(0, 0, width, height);
     mask = NSWindowStyleMaskTitled
@@ -196,58 +177,44 @@ static NSWindow *create_window(window_t *window, const char *title,
                                              defer:NO];
     FORCE(handle != nil, "NSWindow");
     [handle setTitle:[NSString stringWithUTF8String:title]];
-    delegate = [[[WindowDelegate alloc] initWithWindow:window] autorelease];
+    delegate = [[WindowDelegate alloc] initWithWindow:window];
     FORCE(delegate != nil, "WindowDelegate");
-    [handle setDelegate:delegate];
-    return handle;
-}
-
-static context_t *create_context(window_t *window, NSWindow *handle,
-                                 int width, int height) {
-    int bytes_per_pixel = 4;
-    int buffer_size = width * height * bytes_per_pixel;
-    unsigned char *buffer = (unsigned char*)malloc(buffer_size);
-    ContentView *view;
-    context_t *context;
+    [handle setDelegate:delegate];  /* @property(assign), do not autorelease */
 
     view = [[[ContentView alloc] initWithWindow:window] autorelease];
     FORCE(view != nil, "ContentView");
     [handle setContentView:view];
     [handle makeFirstResponder:view];
 
-    context = (context_t*)malloc(sizeof(context_t));
-    context->width  = width;
-    context->height = height;
-    context->buffer = buffer;
-    return context;
+    return handle;
 }
 
 window_t *window_create(const char *title, int width, int height) {
     window_t *window = (window_t*)malloc(sizeof(window_t));
     NSWindow * handle;
-    context_t *context;
 
     create_application();
     handle = create_window(window, title, width, height);
-    context = create_context(window, handle, width, height);
 
     window->handle       = handle;
     window->should_close = 0;
-    window->context      = context;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
+    window->framebuffer  = image_create(width, height, 4);
 
-    [NSApp activateIgnoringOtherApps:YES];
     [handle makeKeyAndOrderFront:nil];
     return window;
 }
 
 void window_destroy(window_t *window) {
+    WindowDelegate *delegate = [window->handle delegate];
     [window->handle orderOut:nil];
+    [window->handle setDelegate:nil];
+    [delegate release];
     [window->handle close];
     [g_pool drain];
     g_pool = [[NSAutoreleasePool alloc] init];
-    free(window->context);
+    image_release(window->framebuffer);
     free(window);
 }
 
@@ -256,35 +223,9 @@ int window_should_close(window_t *window) {
 }
 
 void window_draw_image(window_t *window, image_t *image) {
-    context_t *context = window->context;
-    int bytes_per_pixel = 4;
-    int bytes_per_row = context->width * bytes_per_pixel;
-    int buffer_size = context->height * bytes_per_row;
-    int channels = image->channels;
-    int r, c;
-
-    if (channels != 1 && channels != 3 && channels != 4) {
-        FATAL("window_draw_image: channels");
-    }
-    memset(context->buffer, 0, buffer_size);
-    for (r = 0; r < context->height && r < image->height; r++) {
-        for (c = 0; c < context->width && c < image->width; c++) {
-            int context_index = r * bytes_per_row + c * bytes_per_pixel;
-            unsigned char *context_pixel = &(context->buffer[context_index]);
-            unsigned char *image_pixel = image_pixel_ptr(image, r, c);
-            if (channels == 1) {
-                context_pixel[0] = image_pixel[0];
-                context_pixel[1] = image_pixel[0];
-                context_pixel[2] = image_pixel[0];
-            } else {
-                context_pixel[2] = image_pixel[0];
-                context_pixel[1] = image_pixel[1];
-                context_pixel[0] = image_pixel[2];
-            }
-        }
-    }
-
-    [[window->handle contentView] setNeedsDisplay:YES];
+    int swap_rb = 1;
+    image_blit_bgr(image, window->framebuffer, swap_rb);
+    [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
 }
 
 /* input stuff */

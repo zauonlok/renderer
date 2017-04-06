@@ -40,7 +40,7 @@ static void swap_byte(unsigned char *x, unsigned char *y) {
     *y = t;
 }
 
-static int get_buffer_size(image_t *image) {
+static int calc_buffer_size(image_t *image) {
     return image->width * image->height * image->channels;
 }
 
@@ -90,30 +90,28 @@ static void load_tga_rle(FILE *file, image_t *image) {
     int channels = image->channels;
     unsigned char *pixel = (unsigned char*)malloc(channels);
     unsigned char *buffer = image->buffer;
-    int buffer_size = get_buffer_size(image);
+    int buffer_size = calc_buffer_size(image);
     int buffer_count = 0;
     int i, j;
     while (buffer_count < buffer_size) {
-        int header = read_byte(file);
-        if (header < 128) {  /* raw packet */
-            int pixel_count = header + 1;
-            int expected_size = buffer_count + pixel_count * channels;
-            FORCE(expected_size <= buffer_size, "load_tga_rle: packet size");
-            for (i = 0; i < pixel_count; i++) {
-                for (j = 0; j < channels; j++) {
-                    buffer[buffer_count++] = read_byte(file);
-                }
-            }
-        } else {             /* run-length packet */
-            int pixel_count = header - 128 + 1;
-            int expected_size = buffer_count + pixel_count * channels;
-            FORCE(expected_size <= buffer_size, "load_tga_rle: packet size");
+        unsigned char header = read_byte(file);
+        int is_rle_packet = header & 0x80;
+        int pixel_count = (header & 0x7F) + 1;
+        int expected_size = buffer_count + pixel_count * channels;
+        FORCE(expected_size <= buffer_size, "load_tga_rle: packet size");
+        if (is_rle_packet) {  /* run-length packet */
             for (j = 0; j < channels; j++) {
                 pixel[j] = read_byte(file);
             }
             for (i = 0; i < pixel_count; i++) {
                 for (j = 0; j < channels; j++) {
                     buffer[buffer_count++] = pixel[j];
+                }
+            }
+        } else {              /* raw packet */
+            for (i = 0; i < pixel_count; i++) {
+                for (j = 0; j < channels; j++) {
+                    buffer[buffer_count++] = read_byte(file);
                 }
             }
         }
@@ -146,7 +144,7 @@ static image_t *load_tga(const char *filename) {
     FORCE(idlength == 0, "load_tga: idlength");
     imgtype = header[2];
     if (imgtype == 2 || imgtype == 3) {           /* uncompressed */
-        read_bytes(file, image->buffer, get_buffer_size(image));
+        read_bytes(file, image->buffer, calc_buffer_size(image));
     } else if (imgtype == 10 || imgtype == 11) {  /* run-length encoded */
         load_tga_rle(file, image);
     } else {
@@ -181,7 +179,7 @@ static void save_tga(image_t *image, const char *filename) {
     header[17] = 0x20;                            /* top-left origin */
     write_bytes(file, header, TGA_HEADER_SIZE);
 
-    write_bytes(file, image->buffer, get_buffer_size(image));
+    write_bytes(file, image->buffer, calc_buffer_size(image));
     fclose(file);
 }
 
@@ -190,6 +188,39 @@ static void save_tga(image_t *image, const char *filename) {
 unsigned char *image_pixel_ptr(image_t *image, int row, int col) {
     int index = row * image->width * image->channels + col * image->channels;
     return &(image->buffer[index]);
+}
+
+void image_blit_bgr(image_t *src, image_t *dst, int swap_rb) {
+    int r,c ;
+
+    if (src->channels != 1 && src->channels != 3 && src->channels != 4) {
+        FATAL("image_blit_bgr: src channels");
+    } else if (dst->channels != 3 && dst->channels != 4) {
+        FATAL("image_blit_bgr: dst channels");
+    }
+
+    memset(dst->buffer, 0, calc_buffer_size(dst));
+    for (r = 0; r < src->height && r < dst->height; r++) {
+        for (c = 0; c < src->width && c < dst->width; c++) {
+            unsigned char *src_pixel = image_pixel_ptr(src, r, c);
+            unsigned char *dst_pixel = image_pixel_ptr(dst, r, c);
+            if (src->channels == 1) {  /* gray */
+                dst_pixel[0] = src_pixel[0];
+                dst_pixel[1] = src_pixel[0];
+                dst_pixel[2] = src_pixel[0];
+            } else {
+                if (swap_rb) {         /* rgb */
+                    dst_pixel[0] = src_pixel[2];
+                    dst_pixel[1] = src_pixel[1];
+                    dst_pixel[2] = src_pixel[0];
+                } else {               /* bgr */
+                    dst_pixel[0] = src_pixel[0];
+                    dst_pixel[1] = src_pixel[1];
+                    dst_pixel[2] = src_pixel[2];
+                }
+            }
+        }
+    }
 }
 
 void image_flip_h(image_t *image) {
@@ -239,35 +270,35 @@ static int bound_index(int index, int length) {
 
 void image_resize(image_t *image, int width, int height) {
     int channels = image->channels;
-    image_t old = *image;
-    image_t *new = image;
+    image_t src = *image;
+    image_t *dst = image;
     double scale_r, scale_c;
     int r, c, k;
 
-    new->width  = width;
-    new->height = height;
-    new->buffer = (unsigned char*)malloc(width * height * channels);
+    dst->width  = width;
+    dst->height = height;
+    dst->buffer = (unsigned char*)malloc(width * height * channels);
 
-    scale_r = (double)old.height / new->height;
-    scale_c = (double)old.width / new->width;
+    scale_r = (double)src.height / dst->height;
+    scale_c = (double)src.width / dst->width;
 
-    for (r = 0; r < new->height; r++) {
-        for (c = 0; c < new->width; c++) {
+    for (r = 0; r < dst->height; r++) {
+        for (c = 0; c < dst->width; c++) {
             double mapped_r = r * scale_r;
             double mapped_c = c * scale_c;
-            int old_r = (int)mapped_r;
-            int old_c = (int)mapped_c;
-            double drow = mapped_r - old_r;
-            double dcol = mapped_c - old_c;
-            int old_r_p1 = bound_index(old_r + 1, old.height);
-            int old_c_p1 = bound_index(old_c + 1, old.width);
+            int src_r = (int)mapped_r;
+            int src_c = (int)mapped_c;
+            double drow = mapped_r - src_r;
+            double dcol = mapped_c - src_c;
+            int src_r_p1 = bound_index(src_r + 1, src.height);
+            int src_c_p1 = bound_index(src_c + 1, src.width);
 
-            unsigned char *pixel_00 = image_pixel_ptr(&old, old_r, old_c);
-            unsigned char *pixel_01 = image_pixel_ptr(&old, old_r, old_c_p1);
-            unsigned char *pixel_10 = image_pixel_ptr(&old, old_r_p1, old_c);
-            unsigned char *pixel_11 = image_pixel_ptr(&old, old_r_p1, old_c_p1);
+            unsigned char *pixel_00 = image_pixel_ptr(&src, src_r, src_c);
+            unsigned char *pixel_01 = image_pixel_ptr(&src, src_r, src_c_p1);
+            unsigned char *pixel_10 = image_pixel_ptr(&src, src_r_p1, src_c);
+            unsigned char *pixel_11 = image_pixel_ptr(&src, src_r_p1, src_c_p1);
 
-            unsigned char *pixel = image_pixel_ptr(new, r, c);
+            unsigned char *pixel = image_pixel_ptr(dst, r, c);
             for (k = 0; k < channels; k++) {
                 double v00 = pixel_00[k];
                 double v01 = pixel_01[k];
@@ -278,5 +309,5 @@ void image_resize(image_t *image, int width, int height) {
             }
         }
     }
-    free(old.buffer);
+    free(src.buffer);
 }
