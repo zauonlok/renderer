@@ -21,10 +21,8 @@ struct window {
 };
 
 struct context {
-    int width;
-    int height;
-    unsigned char *buffer;
-    XImage *image;
+    image_t *framebuffer;
+    XImage *ximage;
 };
 
 /* window stuff */
@@ -95,21 +93,18 @@ static Window create_window(const char *title, int width, int height) {
 static context_t *create_context(int width, int height) {
     Visual *visual = XDefaultVisual(g_display, g_screen);
     int depth = XDefaultDepth(g_display, g_screen);
-    int bytes_per_pixel = 4;
-    int buffer_size = width * height * bytes_per_pixel;
-    unsigned char *buffer = (unsigned char*)malloc(buffer_size);
-    XImage *image;
+    image_t *framebuffer = image_create(width, height, 4);
+    unsigned char *buffer = framebuffer->buffer;
+    XImage *ximage;
     context_t *context;
 
     FORCE(depth == 24 || depth == 32, "create_context: depth");
-    image = XCreateImage(g_display, visual, depth, ZPixmap, 0, (char*)buffer,
-                         width, height, 32, 0);
+    ximage = XCreateImage(g_display, visual, depth, ZPixmap, 0,
+                          (char*)buffer, width, height, 32, 0);
 
     context = (context_t*)malloc(sizeof(context_t));
-    context->width    = width;
-    context->height   = height;
-    context->buffer   = buffer;
-    context->image    = image;
+    context->framebuffer = framebuffer;
+    context->ximage      = ximage;
     return context;
 }
 
@@ -136,11 +131,11 @@ void window_destroy(window_t *window) {
     context_t *context = window->context;
     XUnmapWindow(g_display, window->handle);
     XDeleteContext(g_display, window->handle, g_context);
-    context->image->data = NULL;
-    XDestroyImage(context->image);
+    context->ximage->data = NULL;
+    XDestroyImage(context->ximage);
     XDestroyWindow(g_display, window->handle);
     XFlush(g_display);
-    free(context->buffer);
+    image_release(context->framebuffer);
     free(context);
     free(window);
 }
@@ -152,35 +147,11 @@ int window_should_close(window_t *window) {
 void window_draw_image(window_t *window, image_t *image) {
     GC gc = XDefaultGC(g_display, g_screen);
     context_t *context = window->context;
-    int bytes_per_pixel = 4;
-    int bytes_per_row = context->width * bytes_per_pixel;
-    int buffer_size = context->height * bytes_per_row;
-    int channels = image->channels;
-    int r, c;
-
-    if (channels != 1 && channels != 3 && channels != 4) {
-        FATAL("window_draw_image: channels");
-    }
-    memset(context->buffer, 0, buffer_size);
-    for (r = 0; r < context->height && r < image->height; r++) {
-        for (c = 0; c < context->width && c < image->width; c++) {
-            int context_index = r * bytes_per_row + c * bytes_per_pixel;
-            unsigned char *context_pixel = &(context->buffer[context_index]);
-            unsigned char *image_pixel = image_pixel_ptr(image, r, c);
-            if (channels == 1) {
-                context_pixel[0] = image_pixel[0];
-                context_pixel[1] = image_pixel[0];
-                context_pixel[2] = image_pixel[0];
-            } else {
-                context_pixel[0] = image_pixel[0];
-                context_pixel[1] = image_pixel[1];
-                context_pixel[2] = image_pixel[2];
-            }
-        }
-    }
-
-    XPutImage(g_display, window->handle, gc, context->image,
-              0, 0, 0, 0, context->width, context->height);
+    image_t *framebuffer = context->framebuffer;
+    int swap_rb = 0;
+    image_blit_bgr(image, framebuffer, swap_rb);
+    XPutImage(g_display, window->handle, gc, context->ximage,
+              0, 0, 0, 0, framebuffer->width, framebuffer->height);
     XFlush(g_display);
 }
 
