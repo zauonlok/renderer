@@ -27,3 +27,6 @@
 *.exe
 *.out
 *.app
+
+# Resource Files
+*.tga
