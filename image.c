@@ -191,7 +191,7 @@ unsigned char *image_pixel_ptr(image_t *image, int row, int col) {
 }
 
 void image_blit_bgr(image_t *src, image_t *dst, int swap_rb) {
-    int r,c ;
+    int r, c;
 
     if (src->channels != 1 && src->channels != 3 && src->channels != 4) {
         FATAL("image_blit_bgr: src channels");

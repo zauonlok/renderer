@@ -46,7 +46,9 @@ static void handle_key_message(window_t *window, int virtual_key, char action) {
 static LRESULT CALLBACK process_message(HWND hWnd, UINT uMsg,
                                         WPARAM wParam, LPARAM lParam) {
     window_t *window = (window_t*)GetProp(hWnd, WINDOW_ENTRY_NAME);
-    if (uMsg == WM_CLOSE) {
+    if (window == NULL) {
+        return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    } else if (uMsg == WM_CLOSE) {
         window->should_close = 1;
         return 0;
     } else if (uMsg == WM_KEYDOWN) {
@@ -110,7 +112,6 @@ static HWND create_window(const char *title, int width, int height) {
                           CW_USEDEFAULT, CW_USEDEFAULT, width, height,
                           NULL, NULL, GetModuleHandle(NULL), NULL);
     FORCE(window != NULL, "CreateWindow");
-    ShowWindow(window, SW_SHOW);
     return window;
 }
 
@@ -167,17 +168,22 @@ window_t *window_create(const char *title, int width, int height) {
     window->context      = context;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
+
     SetProp(handle, WINDOW_ENTRY_NAME, window);
+    ShowWindow(window, SW_SHOW);
     return window;
 }
 
 void window_destroy(window_t *window) {
     ShowWindow(window->handle, SW_HIDE);
     RemoveProp(window->handle, WINDOW_ENTRY_NAME);
+
     SelectObject(window->context->cdc, window->context->old);
     DeleteDC(window->context->cdc);
     DeleteObject(window->context->dib);
+
     DestroyWindow(window->handle);
+
     free(window->context->framebuffer);
     free(window->context);
     free(window);
@@ -192,7 +198,9 @@ void window_draw_image(window_t *window, image_t *image) {
     context_t *context = window->context;
     image_t *framebuffer = context->framebuffer;
     int swap_rb = 0;
+
     image_blit_bgr(image, framebuffer, swap_rb);
+
     BitBlt(wdc, 0, 0, framebuffer->width, framebuffer->height,
            context->cdc, 0, 0, SRCCOPY);
     ReleaseDC(window->handle, wdc);

@@ -135,11 +135,13 @@ static void create_menubar() {
 
     menu_bar = [[[NSMenu alloc] init] autorelease];
     [NSApp setMainMenu:menu_bar];
+
     app_menu_item = [[[NSMenuItem alloc] init] autorelease];
     [menu_bar addItem:app_menu_item];
 
     app_menu = [[[NSMenu alloc] init] autorelease];
     [app_menu_item setSubmenu:app_menu];
+
     app_name = [[NSProcessInfo processInfo] processName];
     quit_title = [@"Quit " stringByAppendingString:app_name];
     quit_menu_item = [[[NSMenuItem alloc] initWithTitle:quit_title
@@ -177,6 +179,7 @@ static NSWindow *create_window(window_t *window, const char *title,
                                              defer:NO];
     FORCE(handle != nil, "NSWindow");
     [handle setTitle:[NSString stringWithUTF8String:title]];
+
     delegate = [[WindowDelegate alloc] initWithWindow:window];
     FORCE(delegate != nil, "WindowDelegate");
     [handle setDelegate:delegate];  /* @property(assign), do not autorelease */
@@ -198,9 +201,9 @@ window_t *window_create(const char *title, int width, int height) {
 
     window->handle       = handle;
     window->should_close = 0;
+    window->framebuffer  = image_create(width, height, 4);
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
-    window->framebuffer  = image_create(width, height, 4);
 
     [handle makeKeyAndOrderFront:nil];
     return window;
@@ -208,12 +211,16 @@ window_t *window_create(const char *title, int width, int height) {
 
 void window_destroy(window_t *window) {
     WindowDelegate *delegate = [window->handle delegate];
+
     [window->handle orderOut:nil];
+
     [window->handle setDelegate:nil];
     [delegate release];
     [window->handle close];
+
     [g_pool drain];
     g_pool = [[NSAutoreleasePool alloc] init];
+
     image_release(window->framebuffer);
     free(window);
 }

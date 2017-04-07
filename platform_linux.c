@@ -85,8 +85,6 @@ static Window create_window(const char *title, int width, int height) {
     XSelectInput(g_display, window, mask);
     XSetWMProtocols(g_display, window, &WM_DELETE_WINDOW, 1);
 
-    XMapWindow(g_display, window);
-    XFlush(g_display);
     return window;
 }
 
@@ -123,18 +121,25 @@ window_t *window_create(const char *title, int width, int height) {
     window->context      = context;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
+
     XSaveContext(g_display, handle, g_context, (XPointer)window);
+    XMapWindow(g_display, window);
+    XFlush(g_display);
     return window;
 }
 
 void window_destroy(window_t *window) {
     context_t *context = window->context;
+
     XUnmapWindow(g_display, window->handle);
     XDeleteContext(g_display, window->handle, g_context);
+
     context->ximage->data = NULL;
     XDestroyImage(context->ximage);
+
     XDestroyWindow(g_display, window->handle);
     XFlush(g_display);
+
     image_release(context->framebuffer);
     free(context);
     free(window);
@@ -149,7 +154,9 @@ void window_draw_image(window_t *window, image_t *image) {
     context_t *context = window->context;
     image_t *framebuffer = context->framebuffer;
     int swap_rb = 0;
+
     image_blit_bgr(image, framebuffer, swap_rb);
+
     XPutImage(g_display, window->handle, gc, context->ximage,
               0, 0, 0, 0, framebuffer->width, framebuffer->height);
     XFlush(g_display);
