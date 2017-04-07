@@ -170,7 +170,7 @@ window_t *window_create(const char *title, int width, int height) {
     memset(window->buttons, 0, sizeof(window->buttons));
 
     SetProp(handle, WINDOW_ENTRY_NAME, window);
-    ShowWindow(window, SW_SHOW);
+    ShowWindow(handle, SW_SHOW);
     return window;
 }
 
