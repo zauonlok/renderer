@@ -3,6 +3,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <X11/Xlib.h>
+#include <X11/Xresource.h>
 #include <X11/Xutil.h>
 #include "platform.h"
 #include "image.h"
@@ -123,7 +124,7 @@ window_t *window_create(const char *title, int width, int height) {
     memset(window->buttons, 0, sizeof(window->buttons));
 
     XSaveContext(g_display, handle, g_context, (XPointer)window);
-    XMapWindow(g_display, window);
+    XMapWindow(g_display, handle);
     XFlush(g_display);
     return window;
 }
