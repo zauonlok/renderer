@@ -6,13 +6,19 @@
 #include "image.h"
 #include "error.h"
 
-/* data structure */
+/* data structures */
+
+typedef struct context context_t;
 
 struct window {
     NSWindow *handle;
     int should_close;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
+    context_t *context;
+};
+
+struct context {
     image_t *framebuffer;
 };
 
@@ -80,9 +86,9 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
-    NSImage *image;
+    image_t *framebuffer = window->context->framebuffer;
+    NSImage *nsimage;
     NSBitmapImageRep *rep;
-    image_t *framebuffer = window->framebuffer;
 
     rep = [[[NSBitmapImageRep alloc]
             initWithBitmapDataPlanes:&(framebuffer->buffer)
@@ -96,10 +102,10 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
                          bytesPerRow:framebuffer->width * 4
                         bitsPerPixel:32] autorelease];
     FORCE(rep != nil, "NSBitmapImageRep");
-    image = [[[NSImage alloc] init] autorelease];
-    [image addRepresentation:rep];
+    nsimage = [[[NSImage alloc] init] autorelease];
+    [nsimage addRepresentation:rep];
 
-    [image drawInRect: dirtyRect];
+    [nsimage drawInRect: dirtyRect];
 }
 
 - (void)keyDown:(NSEvent *)event {
@@ -128,7 +134,7 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
 
 @end
 
-static void create_menubar() {
+static void create_menubar(void) {
     NSMenu *menu_bar, *app_menu;
     NSMenuItem *app_menu_item, *quit_menu_item;
     NSString *app_name, *quit_title;
@@ -150,7 +156,7 @@ static void create_menubar() {
     [app_menu addItem:quit_menu_item];
 }
 
-static void create_application() {
+static void create_application(void) {
     if (NSApp) {
         return;
     }
@@ -192,16 +198,24 @@ static NSWindow *create_window(window_t *window, const char *title,
     return handle;
 }
 
+static context_t *create_context(int width, int height) {
+    context_t *context = (context_t*)malloc(sizeof(context_t));
+    context->framebuffer = image_create(width, height, 4);
+    return context;
+}
+
 window_t *window_create(const char *title, int width, int height) {
     window_t *window = (window_t*)malloc(sizeof(window_t));
     NSWindow * handle;
+    context_t *context;
 
     create_application();
     handle = create_window(window, title, width, height);
+    context = create_context(width, height);
 
     window->handle       = handle;
     window->should_close = 0;
-    window->framebuffer  = image_create(width, height, 4);
+    window->context      = context;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
@@ -211,6 +225,7 @@ window_t *window_create(const char *title, int width, int height) {
 
 void window_destroy(window_t *window) {
     WindowDelegate *delegate = [window->handle delegate];
+    context_t *context = window->context;
 
     [window->handle orderOut:nil];
 
@@ -221,7 +236,8 @@ void window_destroy(window_t *window) {
     [g_pool drain];
     g_pool = [[NSAutoreleasePool alloc] init];
 
-    image_release(window->framebuffer);
+    image_release(context->framebuffer);
+    free(context);
     free(window);
 }
 
@@ -231,7 +247,7 @@ int window_should_close(window_t *window) {
 
 void window_draw_image(window_t *window, image_t *image) {
     int swap_rb = 1;
-    image_blit_bgr(image, window->framebuffer, swap_rb);
+    image_blit_bgr(image, window->context->framebuffer, swap_rb);
     [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
 }
 
