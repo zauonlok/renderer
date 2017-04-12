@@ -190,13 +190,13 @@ unsigned char *image_pixel_ptr(image_t *image, int row, int col) {
     return &(image->buffer[index]);
 }
 
-void image_blit_bgr(image_t *src, image_t *dst, int swap_rb) {
+static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
     int r, c;
 
     if (src->channels != 1 && src->channels != 3 && src->channels != 4) {
-        FATAL("image_blit_bgr: src channels");
+        FATAL("blit_truecolor: src channels");
     } else if (dst->channels != 3 && dst->channels != 4) {
-        FATAL("image_blit_bgr: dst channels");
+        FATAL("blit_truecolor: dst channels");
     }
 
     memset(dst->buffer, 0, calc_buffer_size(dst));
@@ -221,6 +221,16 @@ void image_blit_bgr(image_t *src, image_t *dst, int swap_rb) {
             }
         }
     }
+}
+
+void image_blit_bgr(image_t *src, image_t *dst) {
+    int swap_rb = 0;
+    blit_truecolor(src, dst, swap_rb);
+}
+
+void image_blit_rgb(image_t *src, image_t *dst) {
+    int swap_rb = 1;
+    blit_truecolor(src, dst, swap_rb);
 }
 
 void image_flip_h(image_t *image) {

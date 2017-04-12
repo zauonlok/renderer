@@ -246,8 +246,7 @@ int window_should_close(window_t *window) {
 }
 
 void window_draw_image(window_t *window, image_t *image) {
-    int swap_rb = 1;
-    image_blit_bgr(image, window->context->framebuffer, swap_rb);
+    image_blit_rgb(image, window->context->framebuffer);
     [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
 }
 

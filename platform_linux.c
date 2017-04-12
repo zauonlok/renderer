@@ -154,9 +154,8 @@ void window_draw_image(window_t *window, image_t *image) {
     GC gc = XDefaultGC(g_display, g_screen);
     context_t *context = window->context;
     image_t *framebuffer = context->framebuffer;
-    int swap_rb = 0;
 
-    image_blit_bgr(image, framebuffer, swap_rb);
+    image_blit_bgr(image, framebuffer);
 
     XPutImage(g_display, window->handle, gc, context->ximage,
               0, 0, 0, 0, framebuffer->width, framebuffer->height);

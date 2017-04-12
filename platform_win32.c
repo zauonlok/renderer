@@ -197,9 +197,8 @@ void window_draw_image(window_t *window, image_t *image) {
     HDC wdc = GetDC(window->handle);
     context_t *context = window->context;
     image_t *framebuffer = context->framebuffer;
-    int swap_rb = 0;
 
-    image_blit_bgr(image, framebuffer, swap_rb);
+    image_blit_bgr(image, framebuffer);
 
     BitBlt(wdc, 0, 0, framebuffer->width, framebuffer->height,
            context->cdc, 0, 0, SRCCOPY);
