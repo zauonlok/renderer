@@ -17,20 +17,20 @@ int buffer_size(void *buffer) {
 
 void *buffer_hold_helper(void *buffer, int count, int itemsize) {
     if (buffer == NULL) {
-        int *base = (int*)malloc(itemsize * count + sizeof(int) * 2);
-        base[0] = count;
-        base[1] = count;
+        int *base = (int*)malloc(sizeof(int) * 2 + itemsize * count);
+        base[0] = count;  /* capacity */
+        base[1] = count;  /* occupied */
         return base + 2;
     } else if (BUFFER_OCCUPIED(buffer) + count <= BUFFER_CAPACITY(buffer)) {
         BUFFER_OCCUPIED(buffer) += count;
         return buffer;
     } else {
-        int double_curr = BUFFER_CAPACITY(buffer) * 2;
         int needed_size = BUFFER_OCCUPIED(buffer) + count;
-        int capacity = double_curr > needed_size ? double_curr : needed_size;
+        int double_curr = BUFFER_CAPACITY(buffer) * 2;
+        int capacity = needed_size > double_curr ? needed_size : double_curr;
         int occupied = needed_size;
         int *base = (int*)realloc(BUFFER_RAW_DATA(buffer),
-                                  itemsize * capacity + sizeof(int) * 2);
+                                  sizeof(int) * 2 + itemsize * capacity);
         base[0] = capacity;
         base[1] = occupied;
         return base + 2;
