@@ -48,7 +48,11 @@ static int calc_buffer_size(image_t *image) {
 
 image_t *image_create(int width, int height, int channels) {
     int buffer_size = width * height * channels;
-    image_t *image = (image_t*)malloc(sizeof(image_t));
+    image_t *image;
+
+    FORCE(width > 0 && height > 0 && channels > 0, "image_create: size");
+
+    image = (image_t*)malloc(sizeof(image_t));
     image->width    = width;
     image->height   = height;
     image->channels = channels;
@@ -92,7 +96,6 @@ static void load_tga_rle(FILE *file, image_t *image) {
     unsigned char *buffer = image->buffer;
     int buffer_size = calc_buffer_size(image);
     int buffer_count = 0;
-    int i, j;
     while (buffer_count < buffer_size) {
         unsigned char header = read_byte(file);
         int is_rle_packet = header & 0x80;
@@ -100,6 +103,7 @@ static void load_tga_rle(FILE *file, image_t *image) {
         int expected_size = buffer_count + pixel_count * channels;
         FORCE(expected_size <= buffer_size, "load_tga_rle: packet size");
         if (is_rle_packet) {  /* run-length packet */
+            int i, j;
             for (j = 0; j < channels; j++) {
                 pixel[j] = read_byte(file);
             }
@@ -109,6 +113,7 @@ static void load_tga_rle(FILE *file, image_t *image) {
                 }
             }
         } else {              /* raw packet */
+            int i, j;
             for (i = 0; i < pixel_count; i++) {
                 for (j = 0; j < channels; j++) {
                     buffer[buffer_count++] = read_byte(file);
@@ -187,6 +192,8 @@ static void save_tga(image_t *image, const char *filename) {
 
 unsigned char *image_pixel_ptr(image_t *image, int row, int col) {
     int index = row * image->width * image->channels + col * image->channels;
+    FORCE(row >= 0 && row < image->height, "image_pixel_ptr: row");
+    FORCE(col >= 0 && col < image->width, "image_pixel_ptr: col");
     return &(image->buffer[index]);
 }
 
@@ -235,12 +242,12 @@ void image_blit_rgb(image_t *src, image_t *dst) {
 
 void image_flip_h(image_t *image) {
     int half_width = image->width / 2;
-    int i, j, k;
-    for (i = 0; i < image->height; i++) {
-        for (j = 0; j < half_width; j++) {
-            int j2 = image->width - j - 1;
-            unsigned char *pixel1 = image_pixel_ptr(image, i, j);
-            unsigned char *pixel2 = image_pixel_ptr(image, i, j2);
+    int r, c, k;
+    for (r = 0; r < image->height; r++) {
+        for (c = 0; c < half_width; c++) {
+            int c2 = image->width - c - 1;
+            unsigned char *pixel1 = image_pixel_ptr(image, r, c);
+            unsigned char *pixel2 = image_pixel_ptr(image, r, c2);
             for (k = 0; k < image->channels; k++) {
                 swap_byte(&pixel1[k], &pixel2[k]);
             }
@@ -250,12 +257,12 @@ void image_flip_h(image_t *image) {
 
 void image_flip_v(image_t *image) {
     int half_height = image->height / 2;
-    int i, j, k;
-    for (i = 0; i < half_height; i++) {
-        for (j = 0; j < image->width; j++) {
-            int i2 = image->height - i - 1;
-            unsigned char *pixel1 = image_pixel_ptr(image, i, j);
-            unsigned char *pixel2 = image_pixel_ptr(image, i2, j);
+    int r, c, k;
+    for (r = 0; r < half_height; r++) {
+        for (c = 0; c < image->width; c++) {
+            int r2 = image->height - r - 1;
+            unsigned char *pixel1 = image_pixel_ptr(image, r, c);
+            unsigned char *pixel2 = image_pixel_ptr(image, r2, c);
             for (k = 0; k < image->channels; k++) {
                 swap_byte(&pixel1[k], &pixel2[k]);
             }
@@ -284,6 +291,8 @@ void image_resize(image_t *image, int width, int height) {
     image_t *dst = image;
     double scale_r, scale_c;
     int r, c, k;
+
+    FORCE(width > 0 && height > 0, "image_resize: width/height");
 
     dst->width  = width;
     dst->height = height;

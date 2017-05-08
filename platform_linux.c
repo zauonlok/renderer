@@ -112,6 +112,8 @@ window_t *window_create(const char *title, int width, int height) {
     context_t *context;
     window_t *window;
 
+    FORCE(width > 0 && height > 0, "window_create: width/height");
+
     open_display();
     handle = create_window(title, width, height);
     context = create_context(width, height);

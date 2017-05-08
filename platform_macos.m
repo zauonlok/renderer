@@ -209,6 +209,8 @@ window_t *window_create(const char *title, int width, int height) {
     NSWindow * handle;
     context_t *context;
 
+    FORCE(width > 0 && height > 0, "window_create: width/height");
+
     create_application();
     handle = create_window(window, title, width, height);
     context = create_context(width, height);
