@@ -44,6 +44,11 @@ static int calc_buffer_size(image_t *image) {
     return image->width * image->height * image->channels;
 }
 
+static unsigned char *get_pixel_ptr(image_t *image, int row, int col) {
+    int index = row * image->width * image->channels + col * image->channels;
+    return &(image->buffer[index]);
+}
+
 /* image creation/destruction */
 
 image_t *image_create(int width, int height, int channels) {
@@ -190,11 +195,68 @@ static void save_tga(image_t *image, const char *filename) {
 
 /* image processing */
 
-unsigned char *image_pixel_ptr(image_t *image, int row, int col) {
-    int index = row * image->width * image->channels + col * image->channels;
-    FORCE(row >= 0 && row < image->height, "image_pixel_ptr: row");
-    FORCE(col >= 0 && col < image->width, "image_pixel_ptr: col");
-    return &(image->buffer[index]);
+color_t image_get_color(image_t *image, int row, int col) {
+    int channels = image->channels;
+    color_t color = {0, 0, 0, 0};
+    unsigned char *pixel;
+
+    FORCE(row >= 0 && row < image->height, "image_get_color: row");
+    FORCE(col >= 0 && col < image->width, "image_get_color: col");
+
+    pixel = get_pixel_ptr(image, row, col);
+    if (channels == 1) {
+        color.b = color.g = color.r = pixel[0];
+    } else if (channels == 2) {
+        color.b = color.g = color.r = pixel[0];
+        color.a = pixel[1];
+    } else if (channels == 3) {
+        color.b = pixel[0];
+        color.g = pixel[1];
+        color.r = pixel[2];
+    } else if (channels == 4) {
+        color.b = pixel[0];
+        color.g = pixel[1];
+        color.r = pixel[2];
+        color.a = pixel[3];
+    } else {
+        FATAL("image_get_color: channels");
+    }
+
+    return color;
+}
+
+static unsigned char color2gray(color_t color) {
+    int gray = ((int)color.b + (int)color.g + (int)color.r) / 3;
+    return (unsigned char)gray;
+}
+
+void image_set_color(image_t *image, int row, int col, color_t color) {
+    int channels = image->channels;
+    unsigned char *pixel;
+
+    FORCE(row >= 0 && row < image->height, "image_set_color: row");
+    FORCE(col >= 0 && col < image->width, "image_set_color: col");
+
+    pixel = get_pixel_ptr(image, row, col);
+    if (channels == 1) {
+        unsigned char gray = color2gray(color);
+        pixel[0] = gray;
+    } else if (channels == 2) {
+        unsigned char gray = color2gray(color);
+        pixel[0] = gray;
+        pixel[1] = color.a;
+    } else if (channels == 3) {
+        pixel[0] = color.b;
+        pixel[1] = color.g;
+        pixel[2] = color.r;
+    } else if (channels == 4) {
+        pixel[0] = color.b;
+        pixel[1] = color.g;
+        pixel[2] = color.r;
+        pixel[3] = color.a;
+    } else {
+        FATAL("image_set_color: channels");
+    }
 }
 
 static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
@@ -209,8 +271,8 @@ static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
     memset(dst->buffer, 0, calc_buffer_size(dst));
     for (r = 0; r < src->height && r < dst->height; r++) {
         for (c = 0; c < src->width && c < dst->width; c++) {
-            unsigned char *src_pixel = image_pixel_ptr(src, r, c);
-            unsigned char *dst_pixel = image_pixel_ptr(dst, r, c);
+            unsigned char *src_pixel = get_pixel_ptr(src, r, c);
+            unsigned char *dst_pixel = get_pixel_ptr(dst, r, c);
             if (src->channels == 1) {  /* gray */
                 dst_pixel[0] = src_pixel[0];
                 dst_pixel[1] = src_pixel[0];
@@ -246,8 +308,8 @@ void image_flip_h(image_t *image) {
     for (r = 0; r < image->height; r++) {
         for (c = 0; c < half_width; c++) {
             int c2 = image->width - c - 1;
-            unsigned char *pixel1 = image_pixel_ptr(image, r, c);
-            unsigned char *pixel2 = image_pixel_ptr(image, r, c2);
+            unsigned char *pixel1 = get_pixel_ptr(image, r, c);
+            unsigned char *pixel2 = get_pixel_ptr(image, r, c2);
             for (k = 0; k < image->channels; k++) {
                 swap_byte(&pixel1[k], &pixel2[k]);
             }
@@ -261,8 +323,8 @@ void image_flip_v(image_t *image) {
     for (r = 0; r < half_height; r++) {
         for (c = 0; c < image->width; c++) {
             int r2 = image->height - r - 1;
-            unsigned char *pixel1 = image_pixel_ptr(image, r, c);
-            unsigned char *pixel2 = image_pixel_ptr(image, r2, c);
+            unsigned char *pixel1 = get_pixel_ptr(image, r, c);
+            unsigned char *pixel2 = get_pixel_ptr(image, r2, c);
             for (k = 0; k < image->channels; k++) {
                 swap_byte(&pixel1[k], &pixel2[k]);
             }
@@ -312,12 +374,12 @@ void image_resize(image_t *image, int width, int height) {
             int src_r_p1 = bound_index(src_r + 1, src.height);
             int src_c_p1 = bound_index(src_c + 1, src.width);
 
-            unsigned char *pixel_00 = image_pixel_ptr(&src, src_r, src_c);
-            unsigned char *pixel_01 = image_pixel_ptr(&src, src_r, src_c_p1);
-            unsigned char *pixel_10 = image_pixel_ptr(&src, src_r_p1, src_c);
-            unsigned char *pixel_11 = image_pixel_ptr(&src, src_r_p1, src_c_p1);
+            unsigned char *pixel_00 = get_pixel_ptr(&src, src_r, src_c);
+            unsigned char *pixel_01 = get_pixel_ptr(&src, src_r, src_c_p1);
+            unsigned char *pixel_10 = get_pixel_ptr(&src, src_r_p1, src_c);
+            unsigned char *pixel_11 = get_pixel_ptr(&src, src_r_p1, src_c_p1);
 
-            unsigned char *pixel = image_pixel_ptr(dst, r, c);
+            unsigned char *pixel = get_pixel_ptr(dst, r, c);
             for (k = 0; k < channels; k++) {
                 double v00 = pixel_00[k];
                 double v01 = pixel_01[k];

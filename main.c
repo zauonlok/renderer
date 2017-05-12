@@ -11,14 +11,15 @@ void swap_int(int *a, int *b) {
     *b = t;
 }
 
-void draw_point(image_t *image, int row, int col, unsigned char color) {
+void draw_point(image_t *image, int row, int col, color_t color) {
     if (row < 0 || col < 0 || row >= image->height || col >= image->width) {
         return;
     } else {
-        unsigned char *pixel = image_pixel_ptr(image, row, col);
-        pixel[0] = color;
+        image_set_color(image, row, col, color);
     }
 }
+
+color_t white = {255, 255, 255};
 
 void draw_line(image_t *image, int x0, int y0, int x1, int y1) {
     if (abs(x1 - x0) > abs(y1 - y0)) {
@@ -30,7 +31,7 @@ void draw_line(image_t *image, int x0, int y0, int x1, int y1) {
         for (x = x0; x <= x1; x++) {
             double t = (x - x0) / (double)(x1 - x0);
             int y =  (int)(y0 + (y1 - y0) * t);
-            draw_point(image, y, x, 255);
+            draw_point(image, y, x, white);
         }
     } else {
         int y;
@@ -41,7 +42,7 @@ void draw_line(image_t *image, int x0, int y0, int x1, int y1) {
         for (y = y0; y <= y1; y++) {
             double t = (y - y0) / (double)(y1 - y0);
             int x = (int)(x0 + (x1 - x0) * t);
-            draw_point(image, y, x, 255);
+            draw_point(image, y, x, white);
         }
     }
 }
