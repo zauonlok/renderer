@@ -55,7 +55,8 @@ image_t *image_create(int width, int height, int channels) {
     int buffer_size = width * height * channels;
     image_t *image;
 
-    FORCE(width > 0 && height > 0 && channels > 0, "image_create: size");
+    FORCE(width > 0 && height > 0, "image_create: width/height");
+    FORCE(channels >= 1 && channels <= 4, "image_create: channels");
 
     image = (image_t*)malloc(sizeof(image_t));
     image->width    = width;
