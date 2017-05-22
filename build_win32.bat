@@ -18,7 +18,7 @@ if defined VS140COMNTOOLS (
 )
 
 set OPTS=/Feviewer /nologo /W4 /wd4996
-set SRCS=main.c platform_win32.c image.c error.c buffer.c geometry.c model.c
+set SRCS=main.c platform_win32.c image.c error.c buffer.c geometry.c model.c graphics.c
 set LIBS=user32.lib gdi32.lib
 
 cl %OPTS% %SRCS% %LIBS%
