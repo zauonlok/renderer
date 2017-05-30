@@ -1,6 +1,6 @@
+#include <assert.h>
 #include <stdlib.h>
 #include "graphics.h"
-#include "error.h"
 #include "geometry.h"
 #include "image.h"
 
@@ -48,7 +48,7 @@ static void sort_point_x(vec2i_t *point0, vec2i_t *point1, vec2i_t *point2) {
 static void draw_scanline(image_t *image, vec2i_t point0, vec2i_t point1,
                           color_t color) {
     vec2i_t point;
-    FORCE(point0.y == point1.y, "draw_scanline: diff y");
+    assert(point0.y == point1.y);
     if (point0.x > point1.x) {
         swap_point(&point0, &point1);
     }
@@ -61,7 +61,7 @@ void gfx_draw_point(image_t *image, vec2i_t point, color_t color) {
     int row = point.y;
     int col = point.x;
     if (row < 0 || col < 0 || row >= image->height || col >= image->width) {
-        DEBUG("gfx_draw_point: row/col");
+        assert(0);
     } else {
         image_set_color(image, row, col, color);
     }
@@ -165,7 +165,7 @@ static int in_triangle(vec2i_t A, vec2i_t B, vec2i_t C, vec2i_t P) {
         /*printf("in_triangle: A=(%d,%d) B=(%d,%d) C=(%d,%d)\n",
                A.x, A.y, B.x, B.y, C.x, C.y);*/
     }
-    /* FORCE(denom != 0, "in_triangle: not triangle"); */
+    /* assert(denom != 0); */
 
     s = (AC.y * AP.x - AC.x * AP.y) / (double)denom;
     t = (AB.x * AP.y - AB.y * AP.x) / (double)denom;

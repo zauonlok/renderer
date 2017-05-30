@@ -1,10 +1,10 @@
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "model.h"
 #include "buffer.h"
-#include "error.h"
 #include "geometry.h"
 
 struct model {
@@ -53,7 +53,7 @@ static model_t *build_model(vec3f_t *vertex_buffer, vec2f_t *uv_buffer,
     model_t *model;
     int i;
 
-    FORCE(num_faces > 0, "build_model: no face");
+    assert(num_faces > 0);
 
     model = (model_t*)malloc(sizeof(model_t));
     model->vertices = (vec3f_t*)malloc(num_face_vertices * sizeof(vec3f_t));
@@ -66,12 +66,9 @@ static model_t *build_model(vec3f_t *vertex_buffer, vec2f_t *uv_buffer,
         int uv_index = uv_index_buffer[i];
         int normal_index = normal_index_buffer[i];
 
-        FORCE(vertex_index >= 0 && vertex_index < num_vertices,
-              "build_model: vertex index range");
-        FORCE(uv_index >= 0 && uv_index < num_uvs,
-              "build_model: uv index range");
-        FORCE(normal_index >= 0 && normal_index < num_normals,
-              "build_model: normal index range");
+        assert(vertex_index >= 0 && vertex_index < num_vertices);
+        assert(uv_index >= 0 && uv_index < num_uvs);
+        assert(normal_index >= 0 && normal_index < num_normals);
 
         model->vertices[i] = vertex_buffer[vertex_index];
         model->uvs[i] = uv_buffer[uv_index];
@@ -92,7 +89,7 @@ static model_t *load_obj(const char *filename) {
     FILE *file;
 
     file = fopen(filename, "rb");
-    FORCE(file != NULL, "fopen");
+    assert(file != NULL);
     while (1) {
         char *line = read_line(file);
         char *curr = line;
@@ -106,18 +103,18 @@ static model_t *load_obj(const char *filename) {
             vec3f_t vertex;
             int items = sscanf(curr + 2, "%f %f %f",
                                &vertex.x, &vertex.y, &vertex.z);
-            FORCE(items == 3, "load_obj: read v");
+            assert(items == 3);
             buffer_push(vertex_buffer, vertex);
         } else if (strncmp(curr, "vt ", 3) == 0) {  /* texture */
             vec2f_t uv;
             int items = sscanf(curr + 3, "%f %f", &uv.x, &uv.y);
-            FORCE(items == 2, "load_obj: read vt");
+            assert(items == 2);
             buffer_push(uv_buffer, uv);
         } else if (strncmp(curr, "vn ", 3) == 0) {  /* normal */
             vec3f_t normal;
             int items = sscanf(curr + 3, "%f %f %f",
                                &normal.x, &normal.y, &normal.z);
-            FORCE(items == 3, "load_obj: read vn");
+            assert(items == 3);
             buffer_push(normal_buffer, normal);
         } else if (strncmp(curr, "f ", 2) == 0) {   /* face */
             int i;
@@ -128,7 +125,7 @@ static model_t *load_obj(const char *filename) {
                 &vertex_indices[1], &uv_indices[1], &normal_indices[1],
                 &vertex_indices[2], &uv_indices[2], &normal_indices[2]
             );
-            FORCE(items == 9, "load_obj: read f");
+            assert(items == 9);
             for (i = 0; i < 3; i++) {
                 buffer_push(vertex_index_buffer, vertex_indices[i] - 1);
                 buffer_push(uv_index_buffer, uv_indices[i] - 1);
@@ -159,7 +156,7 @@ model_t *model_load(const char *filename) {
     if (strcmp(ext, "obj") == 0) {
         return load_obj(filename);
     } else {
-        FATAL("model_load: format");
+        assert(0);
         return NULL;
     }
 }
@@ -176,8 +173,8 @@ int model_get_num_faces(model_t *model) {
 }
 
 static void check_range(model_t *model, int face, int nth_element) {
-    FORCE(face >= 0 && face < model->num_faces, "check_range: face range");
-    FORCE(nth_element >= 0 && nth_element < 3, "check_range: element range");
+    assert(face >= 0 && face < model->num_faces);
+    assert(nth_element >= 0 && nth_element < 3);
 }
 
 vec3f_t model_get_vertex(model_t *model, int face, int nth_vertex) {

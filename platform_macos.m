@@ -1,10 +1,10 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <mach/mach_time.h>
 #import  <Cocoa/Cocoa.h>
 #include "platform.h"
 #include "image.h"
-#include "error.h"
 
 /* data structures */
 
@@ -101,7 +101,7 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
                       colorSpaceName:NSCalibratedRGBColorSpace
                          bytesPerRow:framebuffer->width * 4
                         bitsPerPixel:32] autorelease];
-    FORCE(rep != nil, "NSBitmapImageRep");
+    assert(rep != nil);
     nsimage = [[[NSImage alloc] init] autorelease];
     [nsimage addRepresentation:rep];
 
@@ -183,15 +183,15 @@ static NSWindow *create_window(window_t *window, const char *title,
                                          styleMask:mask
                                            backing:NSBackingStoreBuffered
                                              defer:NO];
-    FORCE(handle != nil, "NSWindow");
+    assert(handle != nil);
     [handle setTitle:[NSString stringWithUTF8String:title]];
 
     delegate = [[WindowDelegate alloc] initWithWindow:window];
-    FORCE(delegate != nil, "WindowDelegate");
+    assert(delegate != nil);
     [handle setDelegate:delegate];  /* @property(assign), do not autorelease */
 
     view = [[[ContentView alloc] initWithWindow:window] autorelease];
-    FORCE(view != nil, "ContentView");
+    assert(view != nil);
     [handle setContentView:view];
     [handle makeFirstResponder:view];
 
@@ -209,7 +209,7 @@ window_t *window_create(const char *title, int width, int height) {
     NSWindow * handle;
     context_t *context;
 
-    FORCE(width > 0 && height > 0, "window_create: width/height");
+    assert(width > 0 && height > 0);
 
     create_application();
     handle = create_window(window, title, width, height);

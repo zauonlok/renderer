@@ -1,9 +1,9 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
 #include "platform.h"
 #include "image.h"
-#include "error.h"
 
 /* data structures */
 
@@ -77,6 +77,7 @@ static LRESULT CALLBACK process_message(HWND hWnd, UINT uMsg,
 static void register_class(void) {
     static int initialized = 0;
     if (initialized == 0) {
+        ATOM id;
         WNDCLASS wc;
         wc.style         = CS_HREDRAW | CS_VREDRAW;
         wc.lpfnWndProc   = process_message;
@@ -88,9 +89,8 @@ static void register_class(void) {
         wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
         wc.lpszMenuName  = NULL;
         wc.lpszClassName = WINDOW_CLASS_NAME;
-        if (RegisterClass(&wc) == 0) {
-            FATAL("RegisterClass");
-        }
+        id = RegisterClass(&wc);
+        assert(id != 0);
         initialized = 1;
     }
 }
@@ -111,7 +111,7 @@ static HWND create_window(const char *title, int width, int height) {
     window = CreateWindow(WINDOW_CLASS_NAME, title, style,
                           CW_USEDEFAULT, CW_USEDEFAULT, width, height,
                           NULL, NULL, GetModuleHandle(NULL), NULL);
-    FORCE(window != NULL, "CreateWindow");
+    assert(window != NULL);
     return window;
 }
 
@@ -136,7 +136,7 @@ static context_t *create_context(HWND window, int width, int height) {
     bi.biCompression = BI_RGB;
     dib = CreateDIBSection(cdc, (BITMAPINFO*)&bi, DIB_RGB_COLORS,
                            (void**)&buffer, NULL, 0);
-    FORCE(dib != NULL, "CreateDIBSection");
+    assert(dib != NULL);
     old = (HBITMAP)SelectObject(cdc, dib);
 
     framebuffer = (image_t*)malloc(sizeof(image_t));
@@ -158,7 +158,7 @@ window_t *window_create(const char *title, int width, int height) {
     context_t *context;
     window_t *window;
 
-    FORCE(width > 0 && height > 0, "window_create: width/height");
+    assert(width > 0 && height > 0);
 
     register_class();
     handle = create_window(title, width, height);

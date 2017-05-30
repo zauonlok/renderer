@@ -1,8 +1,8 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "image.h"
-#include "error.h"
 
 /* helper functions */
 
@@ -13,25 +13,25 @@ static const char *extract_extension(const char *filename) {
 
 static unsigned char read_byte(FILE *file) {
     int byte = fgetc(file);
-    FORCE(byte != EOF, "fgetc");
+    assert(byte != EOF);
     return (unsigned char)byte;
 }
 
 #if 0
 static void write_byte(FILE *file, unsigned char byte) {
     int status = fputc(byte, file);
-    FORCE(status != EOF, "fputc");
+    assert(status != EOF);
 }
 #endif
 
 static void read_bytes(FILE *file, void *buffer, int size) {
     int count = fread(buffer, 1, size, file);
-    FORCE(count == size, "fread");
+    assert(count == size);
 }
 
 static void write_bytes(FILE *file, void *buffer, int size) {
     int count = fwrite(buffer, 1, size, file);
-    FORCE(count == size, "fwrite");
+    assert(count == size);
 }
 
 static void swap_byte(unsigned char *x, unsigned char *y) {
@@ -55,8 +55,7 @@ image_t *image_create(int width, int height, int channels) {
     int buffer_size = width * height * channels;
     image_t *image;
 
-    FORCE(width > 0 && height > 0, "image_create: width/height");
-    FORCE(channels >= 1 && channels <= 4, "image_create: channels");
+    assert(width > 0 && height > 0 && channels >= 1 && channels <= 4);
 
     image = (image_t*)malloc(sizeof(image_t));
     image->width    = width;
@@ -82,7 +81,7 @@ image_t *image_load(const char *filename) {
     if (strcmp(ext, "tga") == 0) {
         return load_tga(filename);
     } else {
-        FATAL("image_load: format");
+        assert(0);
         return NULL;
     }
 }
@@ -92,7 +91,7 @@ void image_save(image_t *image, const char *filename) {
     if (strcmp(ext, "tga") == 0) {
         save_tga(image, filename);
     } else {
-        FATAL("image_save: format");
+        assert(0);
     }
 }
 
@@ -107,7 +106,7 @@ static void load_tga_rle(FILE *file, image_t *image) {
         int is_rle_packet = header & 0x80;
         int pixel_count = (header & 0x7F) + 1;
         int expected_size = buffer_count + pixel_count * channels;
-        FORCE(expected_size <= buffer_size, "load_tga_rle: packet size");
+        assert(expected_size <= buffer_size);
         if (is_rle_packet) {  /* run-length packet */
             int i, j;
             for (j = 0; j < channels; j++) {
@@ -140,26 +139,26 @@ static image_t *load_tga(const char *filename) {
     image_t *image;
 
     file = fopen(filename, "rb");
-    FORCE(file != NULL, "fopen");
+    assert(file != NULL);
     read_bytes(file, header, TGA_HEADER_SIZE);
 
     width = header[12] + (header[13] << 8);
     height = header[14] + (header[15] << 8);
-    FORCE(width > 0 && height > 0, "load_tga: width/height");
+    assert(width > 0 && height > 0);
     depth = header[16];
-    FORCE(depth == 8 || depth == 24 || depth == 32, "load_tga: depth");
+    assert(depth == 8 || depth == 24 || depth == 32);
     channels = depth / 8;
     image = image_create(width, height, channels);
 
     idlength = header[0];
-    FORCE(idlength == 0, "load_tga: idlength");
+    assert(idlength == 0);
     imgtype = header[2];
     if (imgtype == 2 || imgtype == 3) {           /* uncompressed */
         read_bytes(file, image->buffer, calc_buffer_size(image));
     } else if (imgtype == 10 || imgtype == 11) {  /* run-length encoded */
         load_tga_rle(file, image);
     } else {
-        FATAL("load_tga: image type");
+        assert(0);
     }
     fclose(file);
 
@@ -178,7 +177,7 @@ static void save_tga(image_t *image, const char *filename) {
     unsigned char header[TGA_HEADER_SIZE];
 
     file = fopen(filename, "wb");
-    FORCE(file != NULL, "fopen");
+    assert(file != NULL);
 
     memset(header, 0, TGA_HEADER_SIZE);
     header[2]  = (image->channels == 1) ? 3 : 2;  /* image type */
@@ -201,8 +200,7 @@ color_t image_get_color(image_t *image, int row, int col) {
     color_t color = {0, 0, 0, 0};
     unsigned char *pixel;
 
-    FORCE(row >= 0 && row < image->height, "image_get_color: row");
-    FORCE(col >= 0 && col < image->width, "image_get_color: col");
+    assert(row >= 0 && row < image->height && col >= 0 && col < image->width);
 
     pixel = get_pixel_ptr(image, row, col);
     if (channels == 1) {
@@ -220,7 +218,7 @@ color_t image_get_color(image_t *image, int row, int col) {
         color.r = pixel[2];
         color.a = pixel[3];
     } else {
-        FATAL("image_get_color: channels");
+        assert(0);
     }
 
     return color;
@@ -235,8 +233,7 @@ void image_set_color(image_t *image, int row, int col, color_t color) {
     int channels = image->channels;
     unsigned char *pixel;
 
-    FORCE(row >= 0 && row < image->height, "image_set_color: row");
-    FORCE(col >= 0 && col < image->width, "image_set_color: col");
+    assert(row >= 0 && row < image->height && col >= 0 && col < image->width);
 
     pixel = get_pixel_ptr(image, row, col);
     if (channels == 1) {
@@ -256,18 +253,15 @@ void image_set_color(image_t *image, int row, int col, color_t color) {
         pixel[2] = color.r;
         pixel[3] = color.a;
     } else {
-        FATAL("image_set_color: channels");
+        assert(0);
     }
 }
 
 static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
     int r, c;
 
-    if (src->channels != 1 && src->channels != 3 && src->channels != 4) {
-        FATAL("blit_truecolor: src channels");
-    } else if (dst->channels != 3 && dst->channels != 4) {
-        FATAL("blit_truecolor: dst channels");
-    }
+    assert(src->channels == 1 || src->channels == 3 || src->channels == 4);
+    assert(dst->channels == 3 || dst->channels == 4);
 
     memset(dst->buffer, 0, calc_buffer_size(dst));
     for (r = 0; r < src->height && r < dst->height; r++) {
@@ -355,7 +349,7 @@ void image_resize(image_t *image, int width, int height) {
     double scale_r, scale_c;
     int r, c, k;
 
-    FORCE(width > 0 && height > 0, "image_resize: width/height");
+    assert(width > 0 && height > 0);
 
     dst->width  = width;
     dst->height = height;

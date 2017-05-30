@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -7,7 +8,6 @@
 #include <X11/Xutil.h>
 #include "platform.h"
 #include "image.h"
-#include "error.h"
 
 /* data structures */
 
@@ -37,7 +37,7 @@ static XContext g_context;
 static void open_display(void) {
     if (g_display == NULL) {
         g_display = XOpenDisplay(NULL);
-        FORCE(g_display != NULL, "XOpenDisplay");
+        assert(g_display != NULL);
         g_screen = XDefaultScreen(g_display);
         WM_PROTOCOLS = XInternAtom(g_display, "WM_PROTOCOLS", True);
         WM_DELETE_WINDOW = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
@@ -97,7 +97,7 @@ static context_t *create_context(int width, int height) {
     XImage *ximage;
     context_t *context;
 
-    FORCE(depth == 24 || depth == 32, "create_context: depth");
+    assert(depth == 24 || depth == 32);
     ximage = XCreateImage(g_display, visual, depth, ZPixmap, 0,
                           (char*)buffer, width, height, 32, 0);
 
@@ -112,7 +112,7 @@ window_t *window_create(const char *title, int width, int height) {
     context_t *context;
     window_t *window;
 
-    FORCE(width > 0 && height > 0, "window_create: width/height");
+    assert(width > 0 && height > 0);
 
     open_display();
     handle = create_window(title, width, height);
