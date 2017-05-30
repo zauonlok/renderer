@@ -4,13 +4,6 @@
 #include "geometry.h"
 #include "image.h"
 
-static vec2i_t make_point(int x, int y) {
-    vec2i_t point;
-    point.x = x;
-    point.y = y;
-    return point;
-}
-
 static void swap_point(vec2i_t *point0, vec2i_t *point1) {
     vec2i_t t = *point0;
     *point0 = *point1;
@@ -88,7 +81,7 @@ void gfx_draw_line(image_t *image, vec2i_t point0, vec2i_t point1,
         for (x = point0.x; x <= point1.x; x++) {
             double d = (x - point0.x) / (double)x_distance;
             int y = linear_interp(point0.y, point1.y, d);
-            gfx_draw_point(image, make_point(x, y), color);
+            gfx_draw_point(image, vec2i_new(x, y), color);
         }
     } else {
         int y;
@@ -98,7 +91,7 @@ void gfx_draw_line(image_t *image, vec2i_t point0, vec2i_t point1,
         for (y = point0.y; y <= point1.y; y++) {
             double d = (y - point0.y) / (double)y_distance;
             int x = linear_interp(point0.x, point1.x, d);
-            gfx_draw_point(image, make_point(x, y), color);
+            gfx_draw_point(image, vec2i_new(x, y), color);
         }
     }
 }
@@ -110,7 +103,7 @@ void gfx_draw_triangle(image_t *image, vec2i_t point0, vec2i_t point1,
     gfx_draw_line(image, point2, point0, color);
 }
 
-void gfx_fill_triangle(image_t *image, vec2i_t point0, vec2i_t point1,
+void gfx_fill_triangle_2(image_t *image, vec2i_t point0, vec2i_t point1,
                        vec2i_t point2, color_t color) {
     sort_point_y(&point0, &point1, &point2);
     if (point0.y == point2.y) {
@@ -146,6 +139,42 @@ void gfx_fill_triangle(image_t *image, vec2i_t point0, vec2i_t point1,
                 vec2i_t p1 = lerp_point(point1, point2, d1);
                 p0.y = p1.y = y;
                 draw_scanline(image, p0, p1, color);
+            }
+        }
+    }
+}
+
+/*
+ * using barycentric coordinates, see http://blackpawn.com/texts/pointinpoly/
+ * solve P = A + sAB + tAC
+ *   --> AP = sAB + tAC
+ *   --> s = (AC.y * AP.x - AC.x * AP.y) / (AB.x * AC.y - AB.y * AC.x)
+ *   --> t = (AB.x * AP.y - AB.y * AP.x) / (AB.x * AC.y - AB.y * AC.x)
+ * check if the point is in triangle: (s >= 0) && (t >= 0) && (s + t <= 1)
+ */
+static int in_triangle(vec2i_t A, vec2i_t B, vec2i_t C, vec2i_t P) {
+    vec2i_t AB = vec2i_sub(B, A);
+    vec2i_t AC = vec2i_sub(C, A);
+    vec2i_t AP = vec2i_sub(P, A);
+    double s, t;
+
+    int denom = AB.x * AC.y - AB.y * AC.x;
+    FORCE(denom != 0, "in_triangle: not triangle");
+
+    s = (AC.y * AP.x - AC.x * AP.y) / (double)denom;
+    t = (AB.x * AP.y - AB.y * AP.x) / (double)denom;
+
+    return (s >=0 && t >= 0 && s + t <= 1);
+}
+
+void gfx_fill_triangle(image_t *image, vec2i_t point0, vec2i_t point1,
+                       vec2i_t point2, color_t color) {
+    int i, j;
+    for (i = 0; i < image->height; i++) {
+        for (j = 0; j < image->width; j++) {
+            vec2i_t point = vec2i_new(j, i);
+            if (in_triangle(point0, point1, point2, point)) {
+                gfx_draw_point(image, point, color);
             }
         }
     }
