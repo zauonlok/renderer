@@ -31,8 +31,8 @@ struct context {
 
 static Display *g_display = NULL;
 static int g_screen;
-static Atom WM_PROTOCOLS;
-static Atom WM_DELETE_WINDOW;
+static Atom g_WM_PROTOCOLS;
+static Atom g_WM_DELETE_WINDOW;
 static XContext g_context;
 
 static void open_display(void) {
@@ -40,8 +40,8 @@ static void open_display(void) {
         g_display = XOpenDisplay(NULL);
         assert(g_display != NULL);
         g_screen = XDefaultScreen(g_display);
-        WM_PROTOCOLS = XInternAtom(g_display, "WM_PROTOCOLS", True);
-        WM_DELETE_WINDOW = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
+        g_WM_PROTOCOLS = XInternAtom(g_display, "WM_PROTOCOLS", True);
+        g_WM_DELETE_WINDOW = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
         g_context = XUniqueContext();
     }
 }
@@ -85,7 +85,7 @@ static Window create_window(const char *title, int width, int height) {
     /* event subscription */
     mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask;
     XSelectInput(g_display, window, mask);
-    XSetWMProtocols(g_display, window, &WM_DELETE_WINDOW, 1);
+    XSetWMProtocols(g_display, window, &g_WM_DELETE_WINDOW, 1);
 
     return window;
 }
@@ -153,6 +153,8 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
+void image_blit_bgr(image_t *src, image_t *dst);  /* implemented in image.c */
+
 void window_draw_image(window_t *window, image_t *image) {
     GC gc = XDefaultGC(g_display, g_screen);
     context_t *context = window->context;
@@ -208,9 +210,9 @@ static void process_event(XEvent *event) {
     }
 
     if (event->type == ClientMessage) {
-        if (event->xclient.message_type == WM_PROTOCOLS) {
+        if (event->xclient.message_type == g_WM_PROTOCOLS) {
             Atom protocol = event->xclient.data.l[0];
-            if (protocol == WM_DELETE_WINDOW) {
+            if (protocol == g_WM_DELETE_WINDOW) {
                 window->should_close = 1;
             }
         }
@@ -237,10 +239,12 @@ void input_poll_events(void) {
 }
 
 int input_key_pressed(window_t *window, keycode_t key) {
+    assert(key < KEY_NUM);
     return window->keys[key];
 }
 
 int input_button_pressed(window_t *window, button_t button) {
+    assert(button < BUTTON_NUM);
     return window->buttons[button];
 }
 

@@ -6,7 +6,7 @@
 
 /* helper functions */
 
-static const char *extract_extension(const char *filename) {
+static const char *extract_ext(const char *filename) {
     const char *dot_pos = strrchr(filename, '.');
     return (dot_pos == NULL) ? "" : dot_pos + 1;
 }
@@ -19,8 +19,8 @@ static unsigned char read_byte(FILE *file) {
 
 #if 0
 static void write_byte(FILE *file, unsigned char byte) {
-    int status = fputc(byte, file);
-    assert(status != EOF);
+    int written = fputc(byte, file);
+    assert(written != EOF);
 }
 #endif
 
@@ -49,7 +49,7 @@ static unsigned char *get_pixel_ptr(image_t *image, int row, int col) {
     return &(image->buffer[index]);
 }
 
-/* image creation/destruction */
+/* image construction/destruction */
 
 image_t *image_create(int width, int height, int channels) {
     int buffer_size = width * height * channels;
@@ -77,7 +77,7 @@ static image_t *load_tga(const char *filename);
 static void save_tga(image_t *image, const char *filename);
 
 image_t *image_load(const char *filename) {
-    const char *ext = extract_extension(filename);
+    const char *ext = extract_ext(filename);
     if (strcmp(ext, "tga") == 0) {
         return load_tga(filename);
     } else {
@@ -87,7 +87,7 @@ image_t *image_load(const char *filename) {
 }
 
 void image_save(image_t *image, const char *filename) {
-    const char *ext = extract_extension(filename);
+    const char *ext = extract_ext(filename);
     if (strcmp(ext, "tga") == 0) {
         save_tga(image, filename);
     } else {
@@ -257,46 +257,6 @@ void image_set_color(image_t *image, int row, int col, color_t color) {
     }
 }
 
-static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
-    int r, c;
-
-    assert(src->channels == 1 || src->channels == 3 || src->channels == 4);
-    assert(dst->channels == 3 || dst->channels == 4);
-
-    memset(dst->buffer, 0, calc_buffer_size(dst));
-    for (r = 0; r < src->height && r < dst->height; r++) {
-        for (c = 0; c < src->width && c < dst->width; c++) {
-            unsigned char *src_pixel = get_pixel_ptr(src, r, c);
-            unsigned char *dst_pixel = get_pixel_ptr(dst, r, c);
-            if (src->channels == 1) {  /* gray */
-                dst_pixel[0] = src_pixel[0];
-                dst_pixel[1] = src_pixel[0];
-                dst_pixel[2] = src_pixel[0];
-            } else {
-                if (swap_rb) {         /* rgb */
-                    dst_pixel[0] = src_pixel[2];
-                    dst_pixel[1] = src_pixel[1];
-                    dst_pixel[2] = src_pixel[0];
-                } else {               /* bgr */
-                    dst_pixel[0] = src_pixel[0];
-                    dst_pixel[1] = src_pixel[1];
-                    dst_pixel[2] = src_pixel[2];
-                }
-            }
-        }
-    }
-}
-
-void image_blit_bgr(image_t *src, image_t *dst) {
-    int swap_rb = 0;
-    blit_truecolor(src, dst, swap_rb);
-}
-
-void image_blit_rgb(image_t *src, image_t *dst) {
-    int swap_rb = 1;
-    blit_truecolor(src, dst, swap_rb);
-}
-
 void image_flip_h(image_t *image) {
     int half_width = image->width / 2;
     int r, c, k;
@@ -386,4 +346,46 @@ void image_resize(image_t *image, int width, int height) {
         }
     }
     free(src.buffer);
+}
+
+/* private bit blit routines, used by window_draw_image */
+
+static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
+    int r, c;
+
+    assert(src->channels == 1 || src->channels == 3 || src->channels == 4);
+    assert(dst->channels == 3 || dst->channels == 4);
+
+    memset(dst->buffer, 0, calc_buffer_size(dst));
+    for (r = 0; r < src->height && r < dst->height; r++) {
+        for (c = 0; c < src->width && c < dst->width; c++) {
+            unsigned char *src_pixel = get_pixel_ptr(src, r, c);
+            unsigned char *dst_pixel = get_pixel_ptr(dst, r, c);
+            if (src->channels == 1) {  /* gray */
+                dst_pixel[0] = src_pixel[0];
+                dst_pixel[1] = src_pixel[0];
+                dst_pixel[2] = src_pixel[0];
+            } else {
+                if (swap_rb) {         /* rgb */
+                    dst_pixel[0] = src_pixel[2];
+                    dst_pixel[1] = src_pixel[1];
+                    dst_pixel[2] = src_pixel[0];
+                } else {               /* bgr */
+                    dst_pixel[0] = src_pixel[0];
+                    dst_pixel[1] = src_pixel[1];
+                    dst_pixel[2] = src_pixel[2];
+                }
+            }
+        }
+    }
+}
+
+void image_blit_bgr(image_t *src, image_t *dst) {
+    int swap_rb = 0;
+    blit_truecolor(src, dst, swap_rb);
+}
+
+void image_blit_rgb(image_t *src, image_t *dst) {
+    int swap_rb = 1;
+    blit_truecolor(src, dst, swap_rb);
 }

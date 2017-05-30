@@ -12,16 +12,15 @@
 #define BUFFER_CAPACITY(buffer) (BUFFER_RAW_DATA(buffer)[0])
 #define BUFFER_OCCUPIED(buffer) (BUFFER_RAW_DATA(buffer)[1])
 
-#define buffer_hold(buffer, count)                                          \
-    do {                                                                    \
-        (buffer) = buffer_hold_helper(buffer, count, sizeof(*(buffer)));    \
-    } while (0)
-
 #define buffer_push(buffer, value)                                          \
     do {                                                                    \
-        buffer_hold(buffer, 1);                                             \
+        (buffer) = buffer_hold(buffer, 1, sizeof(*(buffer)));               \
         (buffer)[buffer_size(buffer) - 1] = (value);                        \
     } while (0)
+
+static int buffer_size(void *buffer) {
+    return buffer != NULL ? BUFFER_OCCUPIED(buffer) : 0;
+}
 
 static void buffer_free(void *buffer) {
     if (buffer != NULL) {
@@ -29,11 +28,7 @@ static void buffer_free(void *buffer) {
     }
 }
 
-static int buffer_size(void *buffer) {
-    return buffer != NULL ? BUFFER_OCCUPIED(buffer) : 0;
-}
-
-static void *buffer_hold_helper(void *buffer, int count, int itemsize) {
+static void *buffer_hold(void *buffer, int count, int itemsize) {
     if (buffer == NULL) {
         int *base = (int*)malloc(sizeof(int) * 2 + itemsize * count);
         base[0] = count;  /* capacity */
@@ -99,7 +94,7 @@ static model_t *build_model(vec3f_t *vertex_buffer, vec2f_t *uv_buffer,
     int num_uvs = buffer_size(uv_buffer);
     int num_normals = buffer_size(normal_buffer);
     int num_faces = buffer_size(vertex_index_buffer) / 3;
-    int num_face_vertices = buffer_size(vertex_index_buffer);
+    int num_face_vertices = num_faces * 3;
     model_t *model;
     int i;
 

@@ -195,6 +195,8 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
+void image_blit_bgr(image_t *src, image_t *dst);  /* implemented in image.c */
+
 void window_draw_image(window_t *window, image_t *image) {
     HDC wdc = GetDC(window->handle);
     context_t *context = window->context;
@@ -218,10 +220,12 @@ void input_poll_events(void) {
 }
 
 int input_key_pressed(window_t *window, keycode_t key) {
+    assert(key < KEY_NUM);
     return window->keys[key];
 }
 
 int input_button_pressed(window_t *window, button_t button) {
+    assert(button < BUTTON_NUM);
     return window->buttons[button];
 }
 

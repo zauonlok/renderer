@@ -158,7 +158,7 @@ static void create_menubar(void) {
 }
 
 static void create_application(void) {
-    if (NSApp) {
+    if (NSApp != nil) {
         return;
     }
     g_pool = [[NSAutoreleasePool alloc] init];
@@ -248,6 +248,8 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
+void image_blit_rgb(image_t *src, image_t *dst);  /* implemented in image.c */
+
 void window_draw_image(window_t *window, image_t *image) {
     image_blit_rgb(image, window->context->framebuffer);
     [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
@@ -271,10 +273,12 @@ void input_poll_events(void) {
 }
 
 int input_key_pressed(window_t *window, keycode_t key) {
+    assert(key < KEY_NUM);
     return window->keys[key];
 }
 
 int input_button_pressed(window_t *window, button_t button) {
+    assert(button < BUTTON_NUM);
     return window->buttons[button];
 }
 
