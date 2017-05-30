@@ -152,6 +152,8 @@ void gfx_fill_triangle_2(image_t *image, vec2i_t point0, vec2i_t point1,
  *   --> t = (AB.x * AP.y - AB.y * AP.x) / (AB.x * AC.y - AB.y * AC.x)
  * check if the point is in triangle: (s >= 0) && (t >= 0) && (s + t <= 1)
  */
+#include <stdio.h>
+
 static int in_triangle(vec2i_t A, vec2i_t B, vec2i_t C, vec2i_t P) {
     vec2i_t AB = vec2i_sub(B, A);
     vec2i_t AC = vec2i_sub(C, A);
@@ -159,7 +161,11 @@ static int in_triangle(vec2i_t A, vec2i_t B, vec2i_t C, vec2i_t P) {
     double s, t;
 
     int denom = AB.x * AC.y - AB.y * AC.x;
-    FORCE(denom != 0, "in_triangle: not triangle");
+    if (denom == 0) {
+        /*printf("in_triangle: A=(%d,%d) B=(%d,%d) C=(%d,%d)\n",
+               A.x, A.y, B.x, B.y, C.x, C.y);*/
+    }
+    /* FORCE(denom != 0, "in_triangle: not triangle"); */
 
     s = (AC.y * AP.x - AC.x * AP.y) / (double)denom;
     t = (AB.x * AP.y - AB.y * AP.x) / (double)denom;
@@ -167,12 +173,38 @@ static int in_triangle(vec2i_t A, vec2i_t B, vec2i_t C, vec2i_t P) {
     return (s >=0 && t >= 0 && s + t <= 1);
 }
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 void gfx_fill_triangle(image_t *image, vec2i_t point0, vec2i_t point1,
                        vec2i_t point2, color_t color) {
+    int min_x = image->width - 1, min_y = image->height - 1;
+    int max_x = 0, max_y = 0;
     int i, j;
-    for (i = 0; i < image->height; i++) {
-        for (j = 0; j < image->width; j++) {
-            vec2i_t point = vec2i_new(j, i);
+
+    min_x = MIN(point0.x, min_x);
+    min_y = MIN(point0.y, min_y);
+    max_x = MAX(point0.x, max_x);
+    max_y = MAX(point0.y, max_y);
+
+    min_x = MIN(point1.x, min_x);
+    min_y = MIN(point1.y, min_y);
+    max_x = MAX(point1.x, max_x);
+    max_y = MAX(point1.y, max_y);
+
+    min_x = MIN(point2.x, min_x);
+    min_y = MIN(point2.y, min_y);
+    max_x = MAX(point2.x, max_x);
+    max_y = MAX(point2.y, max_y);
+
+    min_x = MAX(0, min_x);
+    min_y = MAX(0, min_y);
+    max_x = MIN(image->width - 1, max_x);
+    max_y = MIN(image->height - 1, max_y);
+
+    for (i = min_x; i <= max_x; i++) {
+        for (j = min_y; j <= max_y; j++) {
+            vec2i_t point = vec2i_new(i, j);
             if (in_triangle(point0, point1, point2, point)) {
                 gfx_draw_point(image, point, color);
             }
