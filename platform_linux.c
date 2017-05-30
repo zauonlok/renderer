@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
@@ -258,7 +259,9 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
     }
 }
 
-double input_get_time(void) {
+/* time stuff */
+
+double time_get_time(void) {
 #if defined(CLOCK_MONOTONIC)
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -268,4 +271,9 @@ double input_get_time(void) {
     gettimeofday(&tv, NULL);
     return (double)tv.tv_sec + (double)tv.tv_usec / 1e6;
 #endif
+}
+
+void time_sleep_for(int milliseconds) {
+    assert(milliseconds > 0);
+    usleep(milliseconds * 1000);
 }

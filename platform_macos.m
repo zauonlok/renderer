@@ -1,8 +1,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mach/mach_time.h>
 #import  <Cocoa/Cocoa.h>
+#include <mach/mach_time.h>
+#include <unistd.h>
 #include "platform.h"
 #include "image.h"
 
@@ -288,7 +289,9 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
     }
 }
 
-double input_get_time(void) {
+/* time stuff */
+
+double time_get_time(void) {
     static double period = -1;
     if (period < 0) {
         mach_timebase_info_data_t info;
@@ -296,4 +299,9 @@ double input_get_time(void) {
         period = (double)info.numer / (double)info.denom / 1e9;
     }
     return mach_absolute_time() * period;
+}
+
+void time_sleep_for(int milliseconds) {
+    assert(milliseconds > 0);
+    usleep(milliseconds * 1000);
 }
