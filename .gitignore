@@ -31,3 +31,7 @@
 # Resource Files
 *.tga
 *.obj
+
+# Executable Files
+Viewer
+Viewer.exe

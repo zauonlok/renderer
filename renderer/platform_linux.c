@@ -279,5 +279,12 @@ double time_get_time(void) {
 
 void time_sleep_for(int milliseconds) {
     assert(milliseconds > 0);
+#if _POSIX_C_SOURCE >= 199309L
+    struct timespec ts;
+    ts.tv_sec  = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+#else
     usleep(milliseconds * 1000);
+#endif
 }
