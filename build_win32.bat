@@ -17,12 +17,14 @@ if defined VS140COMNTOOLS (
     goto :pause
 )
 
-set OPTS=/Feviewer /nologo /W4 /wd4996
+set OPTS=/Fe../Viewer /nologo /W4 /wd4996
 set SRCS=main.c platform_win32.c geometry.c graphics.c image.c model.c
 set LIBS=user32.lib gdi32.lib
 
+cd renderer
 cl %OPTS% %SRCS% %LIBS%
 del *.obj
+cd ..
 
 :pause
 pause
