@@ -3,7 +3,7 @@
 #include <string.h>
 #import  <Cocoa/Cocoa.h>
 #include <mach/mach_time.h>
-#include <unistd.h>
+#include <time.h>
 #include "platform.h"
 #include "image.h"
 
@@ -163,14 +163,13 @@ static void create_menubar(void) {
 }
 
 static void create_application(void) {
-    if (NSApp != nil) {
-        return;
+    if (NSApp == nil) {
+        g_pool = [[NSAutoreleasePool alloc] init];
+        [NSApplication sharedApplication];
+        [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+        create_menubar();
+        [NSApp finishLaunching];
     }
-    g_pool = [[NSAutoreleasePool alloc] init];
-    [NSApplication sharedApplication];
-    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    create_menubar();
-    [NSApp finishLaunching];
 }
 
 static NSWindow *create_window(window_t *window, const char *title,
@@ -311,6 +310,9 @@ double time_get_time(void) {
 }
 
 void time_sleep_for(int milliseconds) {
+    struct timespec ts;
     assert(milliseconds > 0);
-    usleep(milliseconds * 1000);
+    ts.tv_sec  = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
 }
