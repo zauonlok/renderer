@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OPTS="-o ../Viewer -std=c89 -D_POSIX_C_SOURCE=199309L -Wall"
+OPTS="-o ../Viewer -std=c89 -pedantic -Wall -Wextra -D_POSIX_C_SOURCE=199309L"
 SRCS="main.c platform_linux.c geometry.c graphics.c image.c model.c"
 LIBS="-lm -lX11"
 
