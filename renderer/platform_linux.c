@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <sys/time.h>
-#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
@@ -266,25 +264,15 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
 /* time stuff */
 
 double time_get_time(void) {
-#if defined(CLOCK_MONOTONIC)
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
-#else
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (double)tv.tv_sec + (double)tv.tv_usec / 1e6;
-#endif
 }
 
 void time_sleep_for(int milliseconds) {
-    assert(milliseconds > 0);
-#if _POSIX_C_SOURCE >= 199309L
     struct timespec ts;
+    assert(milliseconds > 0);
     ts.tv_sec  = milliseconds / 1000;
     ts.tv_nsec = (milliseconds % 1000) * 1000000;
     nanosleep(&ts, NULL);
-#else
-    usleep(milliseconds * 1000);
-#endif
 }
