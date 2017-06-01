@@ -43,6 +43,7 @@ static NSAutoreleasePool *g_pool;
 }
 
 - (BOOL)windowShouldClose:(id)sender {
+    (void)sender;
     window->should_close = 1;
     return NO;
 }
@@ -118,18 +119,22 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
 }
 
 - (void)mouseDown:(NSEvent *)event {
+    (void)event;
     window->buttons[BUTTON_L] = 1;
 }
 
 - (void)mouseUp:(NSEvent *)event {
+    (void)event;
     window->buttons[BUTTON_L] = 0;
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
+    (void)event;
     window->buttons[BUTTON_R] = 1;
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
+    (void)event;
     window->buttons[BUTTON_R] = 0;
 }
 
