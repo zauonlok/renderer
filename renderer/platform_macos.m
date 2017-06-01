@@ -107,7 +107,7 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
     nsimage = [[[NSImage alloc] init] autorelease];
     [nsimage addRepresentation:rep];
 
-    [nsimage drawInRect: dirtyRect];
+    [nsimage drawInRect:dirtyRect];
 }
 
 - (void)keyDown:(NSEvent *)event {

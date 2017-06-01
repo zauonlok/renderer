@@ -17,13 +17,6 @@ static unsigned char read_byte(FILE *file) {
     return (unsigned char)byte;
 }
 
-#if 0
-static void write_byte(FILE *file, unsigned char byte) {
-    int written = fputc(byte, file);
-    assert(written != EOF);
-}
-#endif
-
 static void read_bytes(FILE *file, void *buffer, int size) {
     int count = fread(buffer, 1, size, file);
     assert(count == size);
@@ -96,9 +89,9 @@ void image_save(image_t *image, const char *filename) {
 }
 
 static void load_tga_rle(FILE *file, image_t *image) {
-    int channels = image->channels;
-    unsigned char *pixel = (unsigned char*)malloc(channels);
     unsigned char *buffer = image->buffer;
+    unsigned char pixel[4];
+    int channels = image->channels;
     int buffer_size = calc_buffer_size(image);
     int buffer_count = 0;
     while (buffer_count < buffer_size) {
@@ -126,7 +119,6 @@ static void load_tga_rle(FILE *file, image_t *image) {
             }
         }
     }
-    free(pixel);
 }
 
 #define TGA_HEADER_SIZE 18
@@ -353,7 +345,6 @@ void image_resize(image_t *image, int width, int height) {
 static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
     int r, c;
 
-    assert(src->channels == 1 || src->channels == 3 || src->channels == 4);
     assert(dst->channels == 3 || dst->channels == 4);
 
     memset(dst->buffer, 0, calc_buffer_size(dst));
@@ -361,16 +352,15 @@ static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
         for (c = 0; c < src->width && c < dst->width; c++) {
             unsigned char *src_pixel = get_pixel_ptr(src, r, c);
             unsigned char *dst_pixel = get_pixel_ptr(dst, r, c);
-            if (src->channels == 1) {  /* gray */
-                dst_pixel[0] = src_pixel[0];
-                dst_pixel[1] = src_pixel[0];
-                dst_pixel[2] = src_pixel[0];
+            if (src->channels == 1 || src->channels == 2) {  /* gray */
+                unsigned char gray = src_pixel[0];
+                dst_pixel[0] = dst_pixel[1] = dst_pixel[2] = gray;
             } else {
-                if (swap_rb) {         /* rgb */
+                if (swap_rb) {  /* rgb */
                     dst_pixel[0] = src_pixel[2];
                     dst_pixel[1] = src_pixel[1];
                     dst_pixel[2] = src_pixel[0];
-                } else {               /* bgr */
+                } else {        /* bgr */
                     dst_pixel[0] = src_pixel[0];
                     dst_pixel[1] = src_pixel[1];
                     dst_pixel[2] = src_pixel[2];
