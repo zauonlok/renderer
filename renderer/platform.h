@@ -17,7 +17,7 @@ int input_key_pressed(window_t *window, keycode_t key);
 int input_button_pressed(window_t *window, button_t button);
 void input_query_cursor(window_t *window, int *xpos, int *ypos);
 
-double time_get_time(void);
-void time_sleep_for(int milliseconds);
+double timer_get_time(void);
+void timer_sleep_for(int milliseconds);
 
 #endif

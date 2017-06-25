@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#import  <Cocoa/Cocoa.h>
+#import <Cocoa/Cocoa.h>
 #include <mach/mach_time.h>
 #include <time.h>
 #include "platform.h"
@@ -25,7 +25,7 @@ struct context {
 
 /* window stuff */
 
-static NSAutoreleasePool *g_pool;
+static NSAutoreleasePool *g_autoreleasepool;
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
@@ -164,7 +164,7 @@ static void create_menubar(void) {
 
 static void create_application(void) {
     if (NSApp == nil) {
-        g_pool = [[NSAutoreleasePool alloc] init];
+        g_autoreleasepool = [[NSAutoreleasePool alloc] init];
         [NSApplication sharedApplication];
         [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
         create_menubar();
@@ -240,8 +240,8 @@ void window_destroy(window_t *window) {
     [delegate release];
     [window->handle close];
 
-    [g_pool drain];
-    g_pool = [[NSAutoreleasePool alloc] init];
+    [g_autoreleasepool drain];
+    g_autoreleasepool = [[NSAutoreleasePool alloc] init];
 
     image_release(context->framebuffer);
     free(context);
@@ -272,8 +272,8 @@ void input_poll_events(void) {
         }
         [NSApp sendEvent:event];
     }
-    [g_pool drain];
-    g_pool = [[NSAutoreleasePool alloc] init];
+    [g_autoreleasepool drain];
+    g_autoreleasepool = [[NSAutoreleasePool alloc] init];
 }
 
 int input_key_pressed(window_t *window, keycode_t key) {
@@ -299,7 +299,7 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
 
 /* time stuff */
 
-double time_get_time(void) {
+double timer_get_time(void) {
     static double period = -1;
     if (period < 0) {
         mach_timebase_info_data_t info;
@@ -309,7 +309,7 @@ double time_get_time(void) {
     return mach_absolute_time() * period;
 }
 
-void time_sleep_for(int milliseconds) {
+void timer_sleep_for(int milliseconds) {
     struct timespec ts;
     assert(milliseconds > 0);
     ts.tv_sec  = milliseconds / 1000;

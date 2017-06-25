@@ -243,7 +243,7 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
 
 /* time stuff */
 
-double time_get_time(void) {
+double timer_get_time(void) {
     static double period = -1;
     LARGE_INTEGER counter;
     if (period < 0) {
@@ -255,7 +255,7 @@ double time_get_time(void) {
     return counter.QuadPart * period;
 }
 
-void time_sleep_for(int milliseconds) {
+void timer_sleep_for(int milliseconds) {
     assert(milliseconds > 0);
     Sleep(milliseconds);
 }

@@ -27,23 +27,22 @@ struct context {
 /* window stuff */
 
 static Display *g_display = NULL;
-static int g_screen;
+static XContext g_context;
 static Atom g_WM_PROTOCOLS;
 static Atom g_WM_DELETE_WINDOW;
-static XContext g_context;
 
 static void open_display(void) {
     if (g_display == NULL) {
         g_display = XOpenDisplay(NULL);
         assert(g_display != NULL);
-        g_screen = XDefaultScreen(g_display);
+        g_context = XUniqueContext();
         g_WM_PROTOCOLS = XInternAtom(g_display, "WM_PROTOCOLS", True);
         g_WM_DELETE_WINDOW = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
-        g_context = XUniqueContext();
     }
 }
 
 static Window create_window(const char *title, int width, int height) {
+    int screen;
     Window root, window;
     unsigned long black, white;
     XTextProperty property;
@@ -51,9 +50,10 @@ static Window create_window(const char *title, int width, int height) {
     XClassHint *class_hints;
     long mask;
 
-    root = XRootWindow(g_display, g_screen);
-    black = XBlackPixel(g_display, g_screen);
-    white = XWhitePixel(g_display, g_screen);
+    screen = XDefaultScreen(g_display);
+    root = XRootWindow(g_display, screen);
+    black = XBlackPixel(g_display, screen);
+    white = XWhitePixel(g_display, screen);
     window = XCreateSimpleWindow(g_display, root, 0, 0, width, height, 0,
                                  white, black);
 
@@ -88,8 +88,9 @@ static Window create_window(const char *title, int width, int height) {
 }
 
 static context_t *create_context(int width, int height) {
-    Visual *visual = XDefaultVisual(g_display, g_screen);
-    int depth = XDefaultDepth(g_display, g_screen);
+    int screen = XDefaultScreen(g_display);
+    Visual *visual = XDefaultVisual(g_display, screen);
+    int depth = XDefaultDepth(g_display, screen);
     image_t *framebuffer = image_create(width, height, 4);
     unsigned char *buffer = framebuffer->buffer;
     XImage *ximage;
@@ -153,7 +154,8 @@ int window_should_close(window_t *window) {
 void image_blit_bgr(image_t *src, image_t *dst);  /* implemented in image.c */
 
 void window_draw_image(window_t *window, image_t *image) {
-    GC gc = XDefaultGC(g_display, g_screen);
+    int screen = XDefaultScreen(g_display);
+    GC gc = XDefaultGC(g_display, screen);
     context_t *context = window->context;
     image_t *framebuffer = context->framebuffer;
 
@@ -262,13 +264,13 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
 
 /* time stuff */
 
-double time_get_time(void) {
+double timer_get_time(void) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
 }
 
-void time_sleep_for(int milliseconds) {
+void timer_sleep_for(int milliseconds) {
     struct timespec ts;
     assert(milliseconds > 0);
     ts.tv_sec  = milliseconds / 1000;
