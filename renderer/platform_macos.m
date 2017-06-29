@@ -162,6 +162,13 @@ static void create_menubar(void) {
     [app_menu addItem:quit_menu_item];
 }
 
+static void change_directory(void) {
+    NSArray<NSString*> *arguments = [[NSProcessInfo processInfo] arguments];
+    NSString *program_path = [arguments objectAtIndex:0];
+    NSString *program_dir = [program_path stringByDeletingLastPathComponent];
+    [[NSFileManager defaultManager] changeCurrentDirectoryPath:program_dir];
+}
+
 static void create_application(void) {
     if (NSApp == nil) {
         g_autoreleasepool = [[NSAutoreleasePool alloc] init];
@@ -169,6 +176,7 @@ static void create_application(void) {
         [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
         create_menubar();
         [NSApp finishLaunching];
+        change_directory();
     }
 }
 
