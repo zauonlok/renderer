@@ -27,7 +27,7 @@ static void write_bytes(FILE *file, void *buffer, int size) {
     assert(count == size);
 }
 
-static void swap_byte(unsigned char *x, unsigned char *y) {
+static void swap_bytes(unsigned char *x, unsigned char *y) {
     unsigned char t = *x;
     *x = *y;
     *y = t;
@@ -258,7 +258,7 @@ void image_flip_h(image_t *image) {
             unsigned char *pixel1 = get_pixel_ptr(image, r, c);
             unsigned char *pixel2 = get_pixel_ptr(image, r, c2);
             for (k = 0; k < image->channels; k++) {
-                swap_byte(&pixel1[k], &pixel2[k]);
+                swap_bytes(&pixel1[k], &pixel2[k]);
             }
         }
     }
@@ -273,7 +273,7 @@ void image_flip_v(image_t *image) {
             unsigned char *pixel1 = get_pixel_ptr(image, r, c);
             unsigned char *pixel2 = get_pixel_ptr(image, r2, c);
             for (k = 0; k < image->channels; k++) {
-                swap_byte(&pixel1[k], &pixel2[k]);
+                swap_bytes(&pixel1[k], &pixel2[k]);
             }
         }
     }

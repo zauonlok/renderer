@@ -260,7 +260,8 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
-void image_blit_rgb(image_t *src, image_t *dst);  /* implemented in image.c */
+/* private function, implemented in image.c */
+void image_blit_rgb(image_t *src, image_t *dst);
 
 void window_draw_image(window_t *window, image_t *image) {
     image_blit_rgb(image, window->context->framebuffer);
