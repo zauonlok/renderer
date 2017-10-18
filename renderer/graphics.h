@@ -9,7 +9,7 @@ void gfx_draw_line(image_t *image, vec2i_t point1, vec2i_t point2,
                    color_t color);
 void gfx_draw_triangle(image_t *image, vec2i_t point1, vec2i_t point2,
                        vec2i_t point3, color_t color);
-void gfx_fill_triangle(image_t *image, vec2i_t point0, vec2i_t point1,
-                       vec2i_t point2, color_t color);
+void gfx_fill_triangle(image_t *image, vec3i_t point0, vec3i_t point1,
+                       vec3i_t point2, color_t color, float *zbuffer);
 
 #endif

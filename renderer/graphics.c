@@ -154,7 +154,7 @@ void gfx_fill_triangle_2(image_t *image, vec2i_t point0, vec2i_t point1,
  */
 #include <stdio.h>
 
-static int in_triangle(vec2i_t A, vec2i_t B, vec2i_t C, vec2i_t P) {
+static int in_triangle(vec2i_t A, vec2i_t B, vec2i_t C, vec2i_t P, double *sp, double *tp) {
     vec2i_t AB = vec2i_sub(B, A);
     vec2i_t AC = vec2i_sub(C, A);
     vec2i_t AP = vec2i_sub(P, A);
@@ -170,17 +170,21 @@ static int in_triangle(vec2i_t A, vec2i_t B, vec2i_t C, vec2i_t P) {
     s = (AC.y * AP.x - AC.x * AP.y) / (double)denom;
     t = (AB.x * AP.y - AB.y * AP.x) / (double)denom;
 
+    *sp = s;
+    *tp = t;
+
     return (s >=0 && t >= 0 && s + t <= 1);
 }
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-void gfx_fill_triangle(image_t *image, vec2i_t point0, vec2i_t point1,
-                       vec2i_t point2, color_t color) {
+void gfx_fill_triangle(image_t *image, vec3i_t point0, vec3i_t point1,
+                       vec3i_t point2, color_t color, float *zbuffer) {
     int min_x = image->width - 1, min_y = image->height - 1;
     int max_x = 0, max_y = 0;
     int i, j;
+    int width = image->width;
 
     min_x = MIN(point0.x, min_x);
     min_y = MIN(point0.y, min_y);
@@ -202,11 +206,22 @@ void gfx_fill_triangle(image_t *image, vec2i_t point0, vec2i_t point1,
     max_x = MIN(image->width - 1, max_x);
     max_y = MIN(image->height - 1, max_y);
 
+
+
     for (i = min_x; i <= max_x; i++) {
         for (j = min_y; j <= max_y; j++) {
             vec2i_t point = vec2i_new(i, j);
-            if (in_triangle(point0, point1, point2, point)) {
-                gfx_draw_point(image, point, color);
+            double s, t;
+            vec2i_t point02 = vec2i_new(point0.x, point0.y);
+            vec2i_t point12 = vec2i_new(point1.x, point1.y);
+            vec2i_t point22 = vec2i_new(point2.x, point2.y);
+            if (in_triangle(point02, point12, point22, point, &s, &t)) {
+                float z = point0.z + s * point1.z + t * point2.z;
+                /*if (zbuffer[j * width + i] < z) {*/
+                    gfx_draw_point(image, point, color);
+                /*    zbuffer[j * width + i] = z;
+                }*/
+
             }
         }
     }

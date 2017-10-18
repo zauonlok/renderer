@@ -1,3 +1,4 @@
+#include <float.h>
 #include <math.h>
 #include <stdlib.h>
 #include "geometry.h"
@@ -5,6 +6,14 @@
 #include "image.h"
 #include "model.h"
 #include "platform.h"
+
+
+#include <stdio.h>
+
+#define WIDTH 800
+#define HEIGHT 800
+
+float zbuffer[WIDTH * HEIGHT];
 
 vec3f_t vec3f_cross(vec3f_t a, vec3f_t b) {
     vec3f_t result;
@@ -36,7 +45,7 @@ void draw_model(model_t *model, image_t *image) {
     vec3f_t light = {0, 0, -1};
 
     for (i = 0; i < num_faces; i++) {
-        vec2i_t points[3];
+        vec3i_t points[3];
         vec3f_t coords[3];
         vec3f_t normal;
         float intensity;
@@ -45,6 +54,9 @@ void draw_model(model_t *model, image_t *image) {
             points[j].x = (int)((vertex.x + 1) / 2 * (width - 1));
             points[j].y = (int)((vertex.y + 1) / 2 * (height - 1));
             points[j].y = (height - 1) - points[j].y;
+            points[j].z = (int)((vertex.z + 0.5) * 128);
+
+            /*printf("vertex.z: %lf\n", vertex.z);*/
 
             coords[j] = vertex;
         }
@@ -60,7 +72,7 @@ void draw_model(model_t *model, image_t *image) {
             color.b = (unsigned char)(intensity * 255);
             color.g = (unsigned char)(intensity * 255);
             color.r = (unsigned char)(intensity * 255);
-            gfx_fill_triangle(image, points[0], points[1], points[2], color);
+            gfx_fill_triangle(image, points[0], points[1], points[2], color, zbuffer);
         }
     }
 }
@@ -70,11 +82,16 @@ int main(void) {
     image_t *image;
     model_t *model;
     const char *title = "Viewer";
-    int width = 800;
-    int height = 800;
+    int width = WIDTH;
+    int height = HEIGHT;
+    int i;
 
     window = window_create(title, width, height);
     image = image_create(width, height, 3);
+
+    for (i = 0; i < WIDTH * HEIGHT; i++) {
+        zbuffer[i] = FLT_MIN;
+    }
 
     model = model_load("resources/african_head.obj");
     draw_model(model, image);
