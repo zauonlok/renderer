@@ -36,21 +36,35 @@ vec3f_t vec3f_sub(vec3f_t a, vec3f_t b) {
     return vec3f_new(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
-void draw_model(model_t *model, image_t *image) {
+void draw_model(model_t *model, image_t *texture, image_t *image) {
     int num_faces = model_get_num_faces(model);
     int width = image->width;
     int height = image->height;
     int i, j;
+    int tex_width = texture->width;
+    int tex_height = texture->height;
 
     vec3f_t light = {0, 0, -1};
 
     for (i = 0; i < num_faces; i++) {
         vec3i_t points[3];
+        color_t colors[3];
         vec3f_t coords[3];
         vec3f_t normal;
         float intensity;
         for (j = 0; j < 3; j++) {
             vec3f_t vertex = model_get_vertex(model, i, j);
+            vec2f_t uv = model_get_uv(model, i, j);
+            int tex_x = (int)(uv.x * (tex_width - 1));
+            int tex_y = (int)(uv.y * (tex_height - 1));
+            tex_y = (tex_height - 1) - tex_y;
+            /*tex_y = (tex_height - 1) - tex_y;*/
+            colors[j]  = image_get_color(texture, tex_y, tex_x);
+            /*printf("uv.x: %f, uv.y: %f, tex_x: %d, tex_y: %d\n", uv.x ,uv.y, tex_x, tex_y);*/
+
+
+
+
             points[j].x = (int)((vertex.x + 1) / 2 * (width - 1));
             points[j].y = (int)((vertex.y + 1) / 2 * (height - 1));
             points[j].y = (height - 1) - points[j].y;
@@ -72,7 +86,8 @@ void draw_model(model_t *model, image_t *image) {
             color.b = (unsigned char)(intensity * 255);
             color.g = (unsigned char)(intensity * 255);
             color.r = (unsigned char)(intensity * 255);
-            gfx_fill_triangle(image, points[0], points[1], points[2], color, zbuffer);
+            gfx_fill_triangle(image, points[0], points[1], points[2],
+                colors[0], colors[1], colors[2], zbuffer, intensity);
         }
     }
 }
@@ -85,6 +100,7 @@ int main(void) {
     int width = WIDTH;
     int height = HEIGHT;
     int i;
+    image_t *texture;
 
     window = window_create(title, width, height);
     image = image_create(width, height, 3);
@@ -94,7 +110,10 @@ int main(void) {
     }
 
     model = model_load("resources/african_head.obj");
-    draw_model(model, image);
+    texture = image_load("resources/african_head_diffuse.tga");
+
+
+    draw_model(model, texture, image);
 
     while (!window_should_close(window)) {
         window_draw_image(window, image);

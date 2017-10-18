@@ -189,7 +189,7 @@ static void save_tga(image_t *image, const char *filename) {
 
 color_t image_get_color(image_t *image, int row, int col) {
     int channels = image->channels;
-    color_t color = {0, 0, 0, 0};
+    color_t color = {0, 0, 0, 255};
     unsigned char *pixel;
 
     assert(row >= 0 && row < image->height && col >= 0 && col < image->width);

@@ -180,7 +180,7 @@ static int in_triangle(vec2i_t A, vec2i_t B, vec2i_t C, vec2i_t P, double *sp, d
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 void gfx_fill_triangle(image_t *image, vec3i_t point0, vec3i_t point1,
-                       vec3i_t point2, color_t color, float *zbuffer) {
+                       vec3i_t point2, color_t color0, color_t color1, color_t color2, float *zbuffer, float intensity) {
     int min_x = image->width - 1, min_y = image->height - 1;
     int max_x = 0, max_y = 0;
     int i, j;
@@ -216,11 +216,16 @@ void gfx_fill_triangle(image_t *image, vec3i_t point0, vec3i_t point1,
             vec2i_t point12 = vec2i_new(point1.x, point1.y);
             vec2i_t point22 = vec2i_new(point2.x, point2.y);
             if (in_triangle(point02, point12, point22, point, &s, &t)) {
-                float z = point0.z + s * point1.z + t * point2.z;
-                /*if (zbuffer[j * width + i] < z) {*/
+                float z = (1 - s -t ) * point0.z + s * point1.z + t * point2.z;
+                color_t color;
+                color.b = (unsigned char)(((1 - s - t) * color0.b + s * color1.b + t * color2.b) * intensity);
+                color.g = (unsigned char)(((1 - s - t) * color0.g + s * color1.g + t * color2.g) * intensity);
+                color.r = (unsigned char)(((1 - s - t) * color0.r + s * color1.r + t * color2.r) * intensity);
+                color.a = 255;
+                if (zbuffer[j * width + i] < z) {
                     gfx_draw_point(image, point, color);
-                /*    zbuffer[j * width + i] = z;
-                }*/
+                    zbuffer[j * width + i] = z;
+                }
 
             }
         }
