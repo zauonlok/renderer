@@ -130,7 +130,7 @@ static context_t *create_context(HWND window, int width, int height) {
     memset(&bi, 0, sizeof(BITMAPINFOHEADER));
     bi.biSize        = sizeof(BITMAPINFOHEADER);
     bi.biWidth       = width;
-    bi.biHeight      = -height;
+    bi.biHeight      = -height;  /* top-down */
     bi.biPlanes      = 1;
     bi.biBitCount    = 32;
     bi.biCompression = BI_RGB;

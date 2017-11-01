@@ -54,7 +54,7 @@ image_t *image_create(int width, int height, int channels) {
     image->width    = width;
     image->height   = height;
     image->channels = channels;
-    image->buffer   = (unsigned char *)malloc(buffer_size);
+    image->buffer   = (unsigned char*)malloc(buffer_size);
     memset(image->buffer, 0, buffer_size);
     return image;
 }

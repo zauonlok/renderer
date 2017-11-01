@@ -1,9 +1,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#import <Cocoa/Cocoa.h>
-#include <mach/mach_time.h>
 #include <time.h>
+#include <mach/mach_time.h>
+#import <Cocoa/Cocoa.h>
 #include "platform.h"
 #include "image.h"
 
