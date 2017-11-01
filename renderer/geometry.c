@@ -81,6 +81,22 @@ mat4f_t mat4f_mul_mat4f(mat4f_t a, mat4f_t b) {
     return m;
 }
 
+mat4f_t mat4f_mul_vec4f(mat4f_t m, vec4f_t v) {
+    vec4f_t output;
+    int i;
+    for (i = 0; i < 4; i++) {
+        float e = 0.0f;
+        e += m.m[i][0] * v.x;
+        e += m.m[i][1] * v.y;
+        e += m.m[i][2] * v.z;
+        e += m.m[i][3] * v.w;
+
+        output.x = e;
+        /* error here */
+
+    }
+}
+
 mat4f_t mat4f_identity() {
     mat4f_t m;
     int i, j;
