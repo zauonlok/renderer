@@ -231,3 +231,60 @@ void gfx_fill_triangle(image_t *image, vec3i_t point0, vec3i_t point1,
         }
     }
 }
+
+
+
+
+
+
+
+mat4f_t gfx_lookat_matrix(vec3f_t eye, vec3f_t center, vec3f_t up) {
+    vec3f_t zaxis = vec3f_normalize(vec3f_sub(eye, center));
+    vec3f_t xaxis = vec3f_normalize(vec3f_cross(up, zaxis));
+    vec3f_t yaxis = vec3f_normalize(vec3f_cross(zaxis, xaxis));
+
+    mat4f_t viewing_inv = mat4f_identity();
+    mat4f_t translation = mat4f_identity();
+
+    viewing_inv.m[0][0] = xaxis.x;
+    viewing_inv.m[0][1] = xaxis.y;
+    viewing_inv.m[0][2] = xaxis.z;
+
+    viewing_inv.m[1][0] = yaxis.x;
+    viewing_inv.m[1][1] = yaxis.y;
+    viewing_inv.m[1][2] = yaxis.z;
+
+    viewing_inv.m[2][0] = zaxis.x;
+    viewing_inv.m[2][1] = zaxis.y;
+    viewing_inv.m[2][2] = zaxis.z;
+
+    translation.m[0][3] = -center.x;
+    translation.m[1][3] = -center.y;
+    translation.m[2][3] = -center.z;
+
+    return mat4f_mul_mat4f(viewing_inv, translation);
+}
+
+mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
+    mat4f_t viewport = mat4f_identity();
+
+    viewport.m[0][0] = width / 2.0f;
+    viewport.m[0][3] = x + width / 2.0f;
+
+    viewport.m[1][1] = height / 2.0f;
+    viewport.m[1][3] = y + height / 2.0f;
+
+    viewport.m[2][2] = 0.0f;
+    viewport.m[2][3] = 1.0f;
+
+    return viewport;
+}
+
+mat4f_t gfx_projection_matrix(float coeff) {
+    mat4f_t projection = mat4f_identity();
+    projection.m[3][2] = coeff;
+    return projection;
+}
+
+
+
