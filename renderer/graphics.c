@@ -238,6 +238,26 @@ void gfx_fill_triangle(image_t *image, vec3i_t point0, vec3i_t point1,
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+/* GOOD CODE */
+
+/*
+ * for lookat, projection and viewport matrices, see
+ * https://github.com/ssloy/tinyrenderer/wiki/Lesson-4:-Perspective-projection
+ * https://github.com/ssloy/tinyrenderer/wiki/Lesson-5:-Moving-the-camera
+ */
+
 mat4f_t gfx_lookat_matrix(vec3f_t eye, vec3f_t center, vec3f_t up) {
     vec3f_t zaxis = vec3f_normalize(vec3f_sub(eye, center));
     vec3f_t xaxis = vec3f_normalize(vec3f_cross(up, zaxis));
@@ -245,45 +265,119 @@ mat4f_t gfx_lookat_matrix(vec3f_t eye, vec3f_t center, vec3f_t up) {
 
     mat4f_t viewing_inv = mat4f_identity();
     mat4f_t translation = mat4f_identity();
-
-    viewing_inv.m[0][0] = xaxis.x;
-    viewing_inv.m[0][1] = xaxis.y;
-    viewing_inv.m[0][2] = xaxis.z;
-
-    viewing_inv.m[1][0] = yaxis.x;
-    viewing_inv.m[1][1] = yaxis.y;
-    viewing_inv.m[1][2] = yaxis.z;
-
-    viewing_inv.m[2][0] = zaxis.x;
-    viewing_inv.m[2][1] = zaxis.y;
-    viewing_inv.m[2][2] = zaxis.z;
-
-    translation.m[0][3] = -center.x;
-    translation.m[1][3] = -center.y;
-    translation.m[2][3] = -center.z;
-
+    int i;
+    for (i = 0; i < 3; i++) {
+        viewing_inv.e[0][i] = xaxis.e[i];
+        viewing_inv.e[1][i] = yaxis.e[i];
+        viewing_inv.e[2][i] = zaxis.e[i];
+        translation.e[i][3] = -center.e[i];
+    }
     return mat4f_mul_mat4f(viewing_inv, translation);
-}
-
-mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
-    mat4f_t viewport = mat4f_identity();
-
-    viewport.m[0][0] = width / 2.0f;
-    viewport.m[0][3] = x + width / 2.0f;
-
-    viewport.m[1][1] = height / 2.0f;
-    viewport.m[1][3] = y + height / 2.0f;
-
-    viewport.m[2][2] = 0.0f;
-    viewport.m[2][3] = 1.0f;
-
-    return viewport;
 }
 
 mat4f_t gfx_projection_matrix(float coeff) {
     mat4f_t projection = mat4f_identity();
-    projection.m[3][2] = coeff;
+    projection.e[3][2] = coeff;
     return projection;
+}
+
+mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
+    mat4f_t viewport = mat4f_identity();
+    viewport.e[0][0] = width / 2.0f;
+    viewport.e[0][3] = x + width / 2.0f;
+    viewport.e[1][1] = height / 2.0f;
+    viewport.e[1][3] = y + height / 2.0f;
+    viewport.e[2][2] = 0.0f;
+    viewport.e[2][3] = 1.0f;
+    return viewport;
+}
+
+/*
+ * for barycentric coordinates, see http://blackpawn.com/texts/pointinpoly/
+ * solve P = A + s * AB + t * AC
+ * --> AP = s * AB + t * AC
+ * --> s = (AC.y * AP.x - AC.x * AP.y) / (AB.x * AC.y - AB.y * AC.x)
+ * --> t = (AB.x * AP.y - AB.y * AP.x) / (AB.x * AC.y - AB.y * AC.x)
+ *
+ * if s < 0 or t < 0 then we've walked in the wrong direction
+ * if s > 1 or t > 1 then we've walked too far in a direction
+ * if s + t > 1 then we've crossed the edge BC
+ * therefore P is in ABC only if (s >= 0) && (t >= 0) && (1 - s - t >= 0)
+ *
+ * note P = A + s * AB + t * AC =
+ *        = A + s * (B - A) + t * (C - A)
+ *        = (1 - s - t) * A + s * B + t * C
+ */
+static vec3f_t barycentric_coords(vec2f_t A, vec2f_t B, vec2f_t C, vec2f_t P) {
+    vec2f_t AB = vec2f_sub(B, A);
+    vec2f_t AC = vec2f_sub(C, A);
+    vec2f_t AP = vec2f_sub(P, A);
+
+    float denom = AB.e[0] * AC.e[1] - AB.e[1] * AC.e[0];
+    float s = (AC.e[1] * AP.e[0] - AC.e[0] * AP.e[1]) / denom;
+    float t = (AB.e[0] * AP.e[1] - AB.e[1] * AP.e[0]) / denom;
+
+    vec3f_t barycentric;
+    barycentric.e[0] = 1.0f - s - t;
+    barycentric.e[1] = s;
+    barycentric.e[2] = t;
+    return barycentric;
+}
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+void gfx_fill_triangle(image_t *image, vec3i_t point0, vec3i_t point1,
+                       vec3i_t point2, color_t color0, color_t color1, color_t color2, float *zbuffer, float intensity) {
+    int min_x = image->width - 1, min_y = image->height - 1;
+    int max_x = 0, max_y = 0;
+    int i, j;
+    int width = image->width;
+
+    min_x = MIN(point0.x, min_x);
+    min_y = MIN(point0.y, min_y);
+    max_x = MAX(point0.x, max_x);
+    max_y = MAX(point0.y, max_y);
+
+    min_x = MIN(point1.x, min_x);
+    min_y = MIN(point1.y, min_y);
+    max_x = MAX(point1.x, max_x);
+    max_y = MAX(point1.y, max_y);
+
+    min_x = MIN(point2.x, min_x);
+    min_y = MIN(point2.y, min_y);
+    max_x = MAX(point2.x, max_x);
+    max_y = MAX(point2.y, max_y);
+
+    min_x = MAX(0, min_x);
+    min_y = MAX(0, min_y);
+    max_x = MIN(image->width - 1, max_x);
+    max_y = MIN(image->height - 1, max_y);
+
+
+
+    for (i = min_x; i <= max_x; i++) {
+        for (j = min_y; j <= max_y; j++) {
+            vec2i_t point = vec2i_new(i, j);
+            double s, t;
+            vec2i_t point02 = vec2i_new(point0.x, point0.y);
+            vec2i_t point12 = vec2i_new(point1.x, point1.y);
+            vec2i_t point22 = vec2i_new(point2.x, point2.y);
+            if (in_triangle(point02, point12, point22, point, &s, &t)) {
+                float z = (1 - s -t ) * point0.z + s * point1.z + t * point2.z;
+                color_t color;
+                color.b = (unsigned char)(((1 - s - t) * color0.b + s * color1.b + t * color2.b) * intensity);
+                color.g = (unsigned char)(((1 - s - t) * color0.g + s * color1.g + t * color2.g) * intensity);
+                color.r = (unsigned char)(((1 - s - t) * color0.r + s * color1.r + t * color2.r) * intensity);
+                color.a = 255;
+                if (zbuffer[j * width + i] < z) {
+                    gfx_draw_point(image, point, color);
+                    zbuffer[j * width + i] = z;
+                }
+
+            }
+        }
+    }
 }
 
 
