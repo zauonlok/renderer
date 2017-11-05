@@ -94,19 +94,22 @@ static model_t *build_model(vec3f_t *vertex_buffer, vec2f_t *uv_buffer,
     int num_uvs = buffer_size(uv_buffer);
     int num_normals = buffer_size(normal_buffer);
     int num_faces = buffer_size(vertex_index_buffer) / 3;
-    int num_face_vertices = num_faces * 3;
+    int num_indices = num_faces * 3;
     model_t *model;
     int i;
 
     assert(num_faces > 0);
+    assert(num_indices == buffer_size(vertex_index_buffer));
+    assert(num_indices == buffer_size(uv_index_buffer));
+    assert(num_indices == buffer_size(normal_index_buffer));
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->vertices = (vec3f_t*)malloc(num_face_vertices * sizeof(vec3f_t));
-    model->uvs = (vec2f_t*)malloc(num_face_vertices * sizeof(vec2f_t));
-    model->normals = (vec3f_t*)malloc(num_face_vertices * sizeof(vec3f_t));
+    model->vertices  = (vec3f_t*)malloc(num_indices * sizeof(vec3f_t));
+    model->uvs       = (vec2f_t*)malloc(num_indices * sizeof(vec2f_t));
+    model->normals   = (vec3f_t*)malloc(num_indices * sizeof(vec3f_t));
     model->num_faces = num_faces;
 
-    for (i = 0; i < num_face_vertices; i++) {
+    for (i = 0; i < num_indices; i++) {
         int vertex_index = vertex_index_buffer[i];
         int uv_index = uv_index_buffer[i];
         int normal_index = normal_index_buffer[i];

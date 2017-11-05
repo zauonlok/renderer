@@ -6,10 +6,10 @@ typedef struct {int x, y;} vec2i_t;
 typedef struct {int x, y, z;} vec3i_t;
 */
 
-typedef struct {float e[2];} vec2f_t;
-typedef struct {float e[3];} vec3f_t;
-typedef struct {float e[4];} vec4f_t;
-typedef struct {float e[4][4];} mat4f_t;
+typedef struct {float x, y;} vec2f_t;
+typedef struct {float x, y, z;} vec3f_t;
+typedef struct {float x, y, z, w;} vec4f_t;
+typedef struct {float m[4][4];} mat4f_t;
 
 /*
 vec2i_t vec2i_new(int x, int y);
@@ -27,8 +27,10 @@ mat4f_t mat4f_rotate_x(float angle);
 mat4f_t mat4f_rotate_y(float angle);
 mat4f_t mat4f_rotate_z(float angle);
 
+/*
 vec2i_t vec2i_add(vec2i_t v0, vec2i_t v1);
 vec2i_t vec2i_sub(vec2i_t v0, vec2i_t v1);
+*/
 
 vec3f_t vec3f_normalize(vec3f_t v);
 vec3f_t vec3f_sub(vec3f_t a, vec3f_t b);

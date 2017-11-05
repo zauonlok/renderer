@@ -345,6 +345,7 @@ void image_resize(image_t *image, int width, int height) {
 static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
     int r, c;
 
+    assert(src->channels == 3 || src->channels == 4);
     assert(dst->channels == 3 || dst->channels == 4);
 
     memset(dst->buffer, 0, calc_buffer_size(dst));
@@ -352,19 +353,14 @@ static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
         for (c = 0; c < src->width && c < dst->width; c++) {
             unsigned char *src_pixel = get_pixel_ptr(src, r, c);
             unsigned char *dst_pixel = get_pixel_ptr(dst, r, c);
-            if (src->channels == 1 || src->channels == 2) {  /* gray */
-                unsigned char gray = src_pixel[0];
-                dst_pixel[0] = dst_pixel[1] = dst_pixel[2] = gray;
-            } else {
-                if (swap_rb) {  /* rgb */
-                    dst_pixel[0] = src_pixel[2];
-                    dst_pixel[1] = src_pixel[1];
-                    dst_pixel[2] = src_pixel[0];
-                } else {        /* bgr */
-                    dst_pixel[0] = src_pixel[0];
-                    dst_pixel[1] = src_pixel[1];
-                    dst_pixel[2] = src_pixel[2];
-                }
+            if (swap_rb) {  /* rgb */
+                dst_pixel[0] = src_pixel[2];
+                dst_pixel[1] = src_pixel[1];
+                dst_pixel[2] = src_pixel[0];
+            } else {        /* bgr */
+                dst_pixel[0] = src_pixel[0];
+                dst_pixel[1] = src_pixel[1];
+                dst_pixel[2] = src_pixel[2];
             }
         }
     }

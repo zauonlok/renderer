@@ -296,13 +296,13 @@ int input_button_pressed(window_t *window, button_t button) {
 }
 
 void input_query_cursor(window_t *window, int *xpos, int *ypos) {
-    NSRect rect = [[window->handle contentView] frame];
     NSPoint pos = [window->handle mouseLocationOutsideOfEventStream];
+    NSRect rect = [[window->handle contentView] frame];
     if (xpos) {
         *xpos = (int)(pos.x + 0.5);
     }
     if (ypos) {
-        *ypos = (int)(rect.size.height - pos.y - 1 + 0.5);
+        *ypos = (int)(rect.size.height - 1 - pos.y + 0.5);
     }
 }
 
