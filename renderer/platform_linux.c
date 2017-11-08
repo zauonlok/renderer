@@ -151,8 +151,8 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
-/* private function, implemented in image.c */
-void image_blit_bgr(image_t *src, image_t *dst);
+void image_blit_bgr(image_t *src, image_t *dst);  /* private function,
+                                                     implemented in image.c */
 
 void window_draw_image(window_t *window, image_t *image) {
     int screen = XDefaultScreen(g_display);
@@ -169,12 +169,12 @@ void window_draw_image(window_t *window, image_t *image) {
 
 /* input stuff */
 
-static void handle_key_event(window_t *window, int keycode, char action) {
+static void handle_key_event(window_t *window, int virtual_key, char action) {
     KeySym keysym, *keysyms;
     keycode_t key;
     int dummy;
 
-    keysyms = XGetKeyboardMapping(g_display, keycode, 1, &dummy);
+    keysyms = XGetKeyboardMapping(g_display, virtual_key, 1, &dummy);
     keysym = keysyms[0];
     XFree(keysyms);
 

@@ -23,9 +23,11 @@ struct context {
     image_t *framebuffer;
 };
 
-/* window stuff */
+/* memory management */
 
 static NSAutoreleasePool *g_autoreleasepool;
+
+/* window stuff */
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
@@ -50,6 +52,7 @@ static NSAutoreleasePool *g_autoreleasepool;
 
 @end
 
+/* for virtual key codes, see https://stackoverflow.com/questions/3202629/ */
 static void handle_key_event(window_t *window, int virtual_key, char action) {
     keycode_t key;
     switch (virtual_key) {
@@ -201,7 +204,8 @@ static NSWindow *create_window(window_t *window, const char *title,
 
     delegate = [[WindowDelegate alloc] initWithWindow:window];
     assert(delegate != nil);
-    [handle setDelegate:delegate];  /* @property(assign), do not autorelease */
+    [handle setDelegate:delegate];  /* setDelegate has @property(assign),
+                                       do not autorelease the delegate */
 
     view = [[[ContentView alloc] initWithWindow:window] autorelease];
     assert(view != nil);
@@ -260,8 +264,8 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
-/* private function, implemented in image.c */
-void image_blit_rgb(image_t *src, image_t *dst);
+void image_blit_rgb(image_t *src, image_t *dst);  /* private function,
+                                                     implemented in image.c */
 
 void window_draw_image(window_t *window, image_t *image) {
     image_blit_rgb(image, window->context->framebuffer);
