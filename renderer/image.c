@@ -401,7 +401,7 @@ void image_draw_line(image_t *image, point_t point0, point_t point1,
     int col_distance = abs(point1.col - point0.col);
     int row_distance = abs(point1.row - point0.row);
     if (col_distance == 0 && row_distance == 0) {
-        gfx_draw_point(image, point0, color);
+        image_draw_point(image, point0, color);
     } else if (col_distance > row_distance) {
         int col;
         if (point0.col > point1.col) {
