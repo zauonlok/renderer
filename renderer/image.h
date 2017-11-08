@@ -20,7 +20,7 @@ void image_flip_h(image_t *image);
 void image_flip_v(image_t *image);
 void image_resize(image_t *image, int width, int height);
 
-void image_make_point(int row, int col);
+point_t image_make_point(int row, int col);
 void image_draw_point(image_t *image, color_t color, point_t point);
 void image_draw_line(image_t *image, color_t color,
                      point_t point0, point_t point1);

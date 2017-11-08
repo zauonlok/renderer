@@ -21,6 +21,22 @@ vec3f_t vec3f_cross(vec3f_t a, vec3f_t b);
 vec4f_t mat4f_mul_vec4f(mat4f_t m, vec4f_t v);
 mat4f_t mat4f_mul_mat4f(mat4f_t a, mat4f_t b);
 
+void vec3f_to_array(vec3f_t v, float arr[3]) {
+    arr[0] = v.x;
+    arr[1] = v.y;
+    arr[2] = v.z;
+}
+
+
+vec2f_t vec2f_add(vec2f_t a, vec2f_t b) {
+    return vec2f_new(a.x + b.x, a.y + b.y);
+}
+
+
+vec2f_t vec2f_sub(vec2f_t a, vec2f_t b) {
+    return vec2f_new(a.x - b.x, a.y - b.y);
+}
+
 
 /*
 

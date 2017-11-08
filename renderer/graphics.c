@@ -4,273 +4,8 @@
 #include "geometry.h"
 #include "image.h"
 
-void gfx_draw_point(image_t *image, vec2i_t point, color_t color);
-void gfx_draw_line(image_t *image, vec2i_t point1, vec2i_t point2,
-                   color_t color);
-void gfx_draw_triangle(image_t *image, vec2i_t point1, vec2i_t point2,
-                       vec2i_t point3, color_t color);
-void gfx_fill_triangle(image_t *image, vec3i_t point0, vec3i_t point1,
-                       vec3i_t point2, color_t color0, color_t color1,
-                       color_t color2, float *zbuffer, float intensity);
-
-static void swap_point(vec2i_t *point0, vec2i_t *point1) {
-    vec2i_t t = *point0;
-    *point0 = *point1;
-    *point1 = t;
-}
-
-static int linear_interp(int v0, int v1, double d) {
-    return (int)(v0 + (v1 - v0) * d + 0.5);
-}
-
-static vec2i_t lerp_point(vec2i_t point0, vec2i_t point1, double d) {
-    vec2i_t point;
-    point.x = linear_interp(point0.x, point1.x, d);
-    point.y = linear_interp(point0.y, point1.y, d);
-    return point;
-}
-
-static void sort_point_y(vec2i_t *point0, vec2i_t *point1, vec2i_t *point2) {
-    if (point0->y > point1->y) {
-        swap_point(point0, point1);
-    }
-    if (point0->y > point2->y) {
-        swap_point(point0, point2);
-    }
-    if (point1->y > point2->y) {
-        swap_point(point1, point2);
-    }
-}
-
-static void sort_point_x(vec2i_t *point0, vec2i_t *point1, vec2i_t *point2) {
-    if (point0->x > point1->x) {
-        swap_point(point0, point1);
-    }
-    if (point0->x > point2->x) {
-        swap_point(point0, point2);
-    }
-    if (point1->x > point2->x) {
-        swap_point(point1, point2);
-    }
-}
-
-static void draw_scanline(image_t *image, vec2i_t point0, vec2i_t point1,
-                          color_t color) {
-    vec2i_t point;
-    assert(point0.y == point1.y);
-    if (point0.x > point1.x) {
-        swap_point(&point0, &point1);
-    }
-    for (point = point0; point.x <= point1.x; point.x += 1) {
-        gfx_draw_point(image, point, color);
-    }
-}
-
-void gfx_draw_point(image_t *image, vec2i_t point, color_t color) {
-    int row = point.y;
-    int col = point.x;
-    if (row < 0 || col < 0 || row >= image->height || col >= image->width) {
-        assert(0);
-    } else {
-        image_set_color(image, row, col, color);
-    }
-}
-
-void gfx_draw_line(image_t *image, vec2i_t point0, vec2i_t point1,
-                   color_t color) {
-    int x_distance = abs(point1.x - point0.x);
-    int y_distance = abs(point1.y - point0.y);
-    if (x_distance == 0 && y_distance == 0) {
-        gfx_draw_point(image, point0, color);
-    } else if (x_distance > y_distance) {
-        int x;
-        if (point0.x > point1.x) {
-            swap_point(&point0, &point1);
-        }
-        for (x = point0.x; x <= point1.x; x++) {
-            double d = (x - point0.x) / (double)x_distance;
-            int y = linear_interp(point0.y, point1.y, d);
-            gfx_draw_point(image, vec2i_new(x, y), color);
-        }
-    } else {
-        int y;
-        if (point0.y > point1.y) {
-            swap_point(&point0, &point1);
-        }
-        for (y = point0.y; y <= point1.y; y++) {
-            double d = (y - point0.y) / (double)y_distance;
-            int x = linear_interp(point0.x, point1.x, d);
-            gfx_draw_point(image, vec2i_new(x, y), color);
-        }
-    }
-}
-
-void gfx_draw_triangle(image_t *image, vec2i_t point0, vec2i_t point1,
-                       vec2i_t point2, color_t color) {
-    gfx_draw_line(image, point0, point1, color);
-    gfx_draw_line(image, point1, point2, color);
-    gfx_draw_line(image, point2, point0, color);
-}
-
-void gfx_fill_triangle_2(image_t *image, vec2i_t point0, vec2i_t point1,
-                       vec2i_t point2, color_t color) {
-    sort_point_y(&point0, &point1, &point2);
-    if (point0.y == point2.y) {
-        sort_point_x(&point0, &point1, &point2);
-        draw_scanline(image, point0, point2, color);
-    } else {
-        int total_height = point2.y - point0.y;
-        int upper_height = point1.y - point0.y;
-        int lower_height = point2.y - point1.y;
-
-        if (upper_height == 0) {
-            draw_scanline(image, point0, point1, color);
-        } else {
-            int y;
-            for (y = point0.y; y <= point1.y; y++) {
-                double d1 = (y - point0.y) / (double)upper_height;
-                double d2 = (y - point0.y) / (double)total_height;
-                vec2i_t p1 = lerp_point(point0, point1, d1);
-                vec2i_t p2 = lerp_point(point0, point2, d2);
-                p1.y = p2.y = y;
-                draw_scanline(image, p1, p2, color);
-            }
-        }
-
-        if (lower_height == 0) {
-            draw_scanline(image, point1, point2, color);
-        } else {
-            int y;
-            for (y = point1.y; y <= point2.y; y++) {
-                double d0 = (y - point0.y) / (double)total_height;
-                double d1 = (y - point1.y) / (double)lower_height;
-                vec2i_t p0 = lerp_point(point0, point2, d0);
-                vec2i_t p1 = lerp_point(point1, point2, d1);
-                p0.y = p1.y = y;
-                draw_scanline(image, p0, p1, color);
-            }
-        }
-    }
-}
-
-/*
- * using barycentric coordinates, see http://blackpawn.com/texts/pointinpoly/
- * solve P = A + sAB + tAC
- *   --> AP = sAB + tAC
- *   --> s = (AC.y * AP.x - AC.x * AP.y) / (AB.x * AC.y - AB.y * AC.x)
- *   --> t = (AB.x * AP.y - AB.y * AP.x) / (AB.x * AC.y - AB.y * AC.x)
- * check if the point is in triangle: (s >= 0) && (t >= 0) && (s + t <= 1)
- */
-#include <stdio.h>
-
-static int in_triangle(vec2i_t A, vec2i_t B, vec2i_t C, vec2i_t P, double *sp, double *tp) {
-    vec2i_t AB = vec2i_sub(B, A);
-    vec2i_t AC = vec2i_sub(C, A);
-    vec2i_t AP = vec2i_sub(P, A);
-    double s, t;
-
-    int denom = AB.x * AC.y - AB.y * AC.x;
-    if (denom == 0) {
-        /*printf("in_triangle: A=(%d,%d) B=(%d,%d) C=(%d,%d)\n",
-               A.x, A.y, B.x, B.y, C.x, C.y);*/
-    }
-    /* assert(denom != 0); */
-
-    s = (AC.y * AP.x - AC.x * AP.y) / (double)denom;
-    t = (AB.x * AP.y - AB.y * AP.x) / (double)denom;
-
-    *sp = s;
-    *tp = t;
-
-    return (s >=0 && t >= 0 && s + t <= 1);
-}
-
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
-
-void gfx_fill_triangle(image_t *image, vec3i_t point0, vec3i_t point1,
-                       vec3i_t point2, color_t color0, color_t color1, color_t color2, float *zbuffer, float intensity) {
-    int min_x = image->width - 1, min_y = image->height - 1;
-    int max_x = 0, max_y = 0;
-    int i, j;
-    int width = image->width;
-
-    min_x = MIN(point0.x, min_x);
-    min_y = MIN(point0.y, min_y);
-    max_x = MAX(point0.x, max_x);
-    max_y = MAX(point0.y, max_y);
-
-    min_x = MIN(point1.x, min_x);
-    min_y = MIN(point1.y, min_y);
-    max_x = MAX(point1.x, max_x);
-    max_y = MAX(point1.y, max_y);
-
-    min_x = MIN(point2.x, min_x);
-    min_y = MIN(point2.y, min_y);
-    max_x = MAX(point2.x, max_x);
-    max_y = MAX(point2.y, max_y);
-
-    min_x = MAX(0, min_x);
-    min_y = MAX(0, min_y);
-    max_x = MIN(image->width - 1, max_x);
-    max_y = MIN(image->height - 1, max_y);
-
-
-
-    for (i = min_x; i <= max_x; i++) {
-        for (j = min_y; j <= max_y; j++) {
-            vec2i_t point = vec2i_new(i, j);
-            double s, t;
-            vec2i_t point02 = vec2i_new(point0.x, point0.y);
-            vec2i_t point12 = vec2i_new(point1.x, point1.y);
-            vec2i_t point22 = vec2i_new(point2.x, point2.y);
-            if (in_triangle(point02, point12, point22, point, &s, &t)) {
-                float z = (1 - s -t ) * point0.z + s * point1.z + t * point2.z;
-                color_t color;
-                color.b = (unsigned char)(((1 - s - t) * color0.b + s * color1.b + t * color2.b) * intensity);
-                color.g = (unsigned char)(((1 - s - t) * color0.g + s * color1.g + t * color2.g) * intensity);
-                color.r = (unsigned char)(((1 - s - t) * color0.r + s * color1.r + t * color2.r) * intensity);
-                color.a = 255;
-                if (zbuffer[j * width + i] < z) {
-                    gfx_draw_point(image, point, color);
-                    zbuffer[j * width + i] = z;
-                }
-
-            }
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* GOOD CODE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
-
-
-
-
-
-
-
-
-
-
-
 
 /*
  * for lookat, projection and viewport matrices, see
@@ -283,32 +18,37 @@ mat4f_t gfx_lookat_matrix(vec3f_t eye, vec3f_t center, vec3f_t up) {
     vec3f_t xaxis = vec3f_normalize(vec3f_cross(up, zaxis));
     vec3f_t yaxis = vec3f_normalize(vec3f_cross(zaxis, xaxis));
 
-    mat4f_t viewing_inv = mat4f_identity();
-    mat4f_t translation = mat4f_identity();
     int i;
+    mat4f_t model_view = mat4f_identity();
+    float xaxis_arr[3], yaxis_arr[3], zaxis_arr[3], center_arr[3];
+    vec3f_to_array(xaxis, xaxis_arr);
+    vec3f_to_array(yaxis, yaxis_arr);
+    vec3f_to_array(zaxis, zaxis_arr);
+    vec3f_to_array(center, center_arr);
     for (i = 0; i < 3; i++) {
-        viewing_inv.e[0][i] = xaxis.e[i];
-        viewing_inv.e[1][i] = yaxis.e[i];
-        viewing_inv.e[2][i] = zaxis.e[i];
-        translation.e[i][3] = -center.e[i];
+        model_view.m[0][i] = xaxis_arr[i];
+        model_view.m[1][i] = yaxis_arr[i];
+        model_view.m[2][i] = zaxis_arr[i];
+        model_view.m[i][3] = -center_arr[i];
     }
-    return mat4f_mul_mat4f(viewing_inv, translation);
+    return model_view;
 }
 
 mat4f_t gfx_projection_matrix(float coeff) {
     mat4f_t projection = mat4f_identity();
-    projection.e[3][2] = coeff;
+    projection.m[3][2] = coeff;
     return projection;
 }
 
 mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
+    const static float depth = 255.0f;
     mat4f_t viewport = mat4f_identity();
-    viewport.e[0][0] = width / 2.0f;
-    viewport.e[0][3] = x + width / 2.0f;
-    viewport.e[1][1] = height / 2.0f;
-    viewport.e[1][3] = y + height / 2.0f;
-    viewport.e[2][2] = 0.0f;
-    viewport.e[2][3] = 1.0f;
+    viewport.m[0][0] = width / 2.0f;
+    viewport.m[0][3] = x + width / 2.0f;
+    viewport.m[1][1] = height / 2.0f;
+    viewport.m[1][3] = y + height / 2.0f;
+    viewport.m[2][2] = depth / 2.0f;
+    viewport.m[2][3] = depth / 2.0f;
     return viewport;
 }
 
@@ -324,81 +64,93 @@ mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
  * if s + t > 1 then we've crossed the edge BC
  * therefore P is in ABC only if (s >= 0) && (t >= 0) && (1 - s - t >= 0)
  *
- * note P = A + s * AB + t * AC =
+ * note P = A + s * AB + t * AC
  *        = A + s * (B - A) + t * (C - A)
  *        = (1 - s - t) * A + s * B + t * C
  */
-static vec3f_t barycentric_coords(vec2f_t A, vec2f_t B, vec2f_t C, vec2f_t P) {
+static vec3f_t calculate_weights(vec2f_t A, vec2f_t B, vec2f_t C, vec2f_t P) {
     vec2f_t AB = vec2f_sub(B, A);
     vec2f_t AC = vec2f_sub(C, A);
     vec2f_t AP = vec2f_sub(P, A);
 
-    float denom = AB.e[0] * AC.e[1] - AB.e[1] * AC.e[0];
-    float s = (AC.e[1] * AP.e[0] - AC.e[0] * AP.e[1]) / denom;
-    float t = (AB.e[0] * AP.e[1] - AB.e[1] * AP.e[0]) / denom;
+    float denom = AB.x * AC.y - AB.y * AC.x;
+    float s = (AC.y * AP.x - AC.x * AP.y) / denom;
+    float t = (AB.x * AP.y - AB.y * AP.x) / denom;
 
-    vec3f_t barycentric;
-    barycentric.e[0] = 1.0f - s - t;
-    barycentric.e[1] = s;
-    barycentric.e[2] = t;
-    return barycentric;
+    return vec3f_new(1.0f - s - t, s, t);
 }
 
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
+typedef struct {int min_x, min_y, max_x, max_y;} box_t;
 
-void gfx_fill_triangle(image_t *image, vec3i_t point0, vec3i_t point1,
-                       vec3i_t point2, color_t color0, color_t color1, color_t color2, float *zbuffer, float intensity) {
-    int min_x = image->width - 1, min_y = image->height - 1;
-    int max_x = 0, max_y = 0;
-    int i, j;
-    int width = image->width;
+static box_t find_bounding_box(int width, int height,
+                               vec2f_t P0, vec2f_t P1, vec2f_t P2) {
+    box_t box;
 
-    min_x = MIN(point0.x, min_x);
-    min_y = MIN(point0.y, min_y);
-    max_x = MAX(point0.x, max_x);
-    max_y = MAX(point0.y, max_y);
+    box.min_x = MIN(P1.x, P0.x);
+    box.min_y = MIN(P1.y, P0.y);
+    box.max_x = MAX(P1.x, P0.x);
+    box.max_y = MAX(P1.y, P0.y);
 
-    min_x = MIN(point1.x, min_x);
-    min_y = MIN(point1.y, min_y);
-    max_x = MAX(point1.x, max_x);
-    max_y = MAX(point1.y, max_y);
+    box.min_x = MIN(P2.x, box.min_x);
+    box.min_y = MIN(P2.y, box.min_y);
+    box.max_x = MAX(P2.x, box.max_x);
+    box.max_y = MAX(P2.y, box.max_y);
 
-    min_x = MIN(point2.x, min_x);
-    min_y = MIN(point2.y, min_y);
-    max_x = MAX(point2.x, max_x);
-    max_y = MAX(point2.y, max_y);
+    box.min_x = MAX(0, box.min_x);
+    box.min_y = MAX(0, box.min_y);
+    box.max_x = MIN(width - 1, box.max_x);
+    box.max_y = MIN(height - 1, box.max_y);
 
-    min_x = MAX(0, min_x);
-    min_y = MAX(0, min_y);
-    max_x = MIN(image->width - 1, max_x);
-    max_y = MIN(image->height - 1, max_y);
+    return box;
+}
 
+void gfx_draw_triangle(context_t *context, program_t *program) {
+    /* for convenience */
+    int width = context->framebuffer->width;
+    int height = context->framebuffer->height;
+    mat4f_t viewport = context->viewport;
+    void *varyings = program->varyings;
+    void *uniforms = program->uniforms;
 
+    int i, x, y;
+    vec4f_t screen_coords[3];
+    vec2f_t screen_points[3];
+    box_t box;
 
-    for (i = min_x; i <= max_x; i++) {
-        for (j = min_y; j <= max_y; j++) {
-            vec2i_t point = vec2i_new(i, j);
-            double s, t;
-            vec2i_t point02 = vec2i_new(point0.x, point0.y);
-            vec2i_t point12 = vec2i_new(point1.x, point1.y);
-            vec2i_t point22 = vec2i_new(point2.x, point2.y);
-            if (in_triangle(point02, point12, point22, point, &s, &t)) {
-                float z = (1 - s -t ) * point0.z + s * point1.z + t * point2.z;
-                color_t color;
-                color.b = (unsigned char)(((1 - s - t) * color0.b + s * color1.b + t * color2.b) * intensity);
-                color.g = (unsigned char)(((1 - s - t) * color0.g + s * color1.g + t * color2.g) * intensity);
-                color.r = (unsigned char)(((1 - s - t) * color0.r + s * color1.r + t * color2.r) * intensity);
-                color.a = 255;
-                if (zbuffer[j * width + i] < z) {
-                    gfx_draw_point(image, point, color);
-                    zbuffer[j * width + i] = z;
+    for (i = 0; i < 3; i++) {
+        vec4f_t ndc_coord = program->vertex_shader(i, varyings, uniforms);
+        screen_coords[i] = mat4f_mul_vec4f(viewport, ndc_coord);
+
+        screen_coords[i].x /= screen_coords[i].w;
+        screen_coords[i].y /= screen_coords[i].w;
+        screen_coords[i].z /= screen_coords[i].w;
+        screen_coords[i].w /= screen_coords[i].w;
+
+        screen_points[i] = vec2f_new(screen_coords[i].x, screen_coords[i].y);
+    }
+
+    box = find_bounding_box(width, height, screen_points[0],
+                            screen_points[1], screen_points[2]);
+    for (x = box.min_x; x <= box.max_x; x++) {
+        for (y = box.min_y; y <= box.max_y; y++) {
+            vec2f_t point = vec2f_new(x, y);
+            vec3f_t weights = calculate_weights(screen_points[0],
+                                                screen_points[1],
+                                                screen_points[2],
+                                                point);
+            if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
+                float depth = screen_coords[0].z * weights.x +
+                              screen_coords[1].z * weights.y +
+                              screen_coords[2].z * weights.z;
+                int index = y * width + x;
+                if (context->depthbuffer[index] < depth) {
+                    color_t color;
+                    program->interp_varyings(weights, varyings);
+                    color = program->fragment_shader(varyings, uniforms);
+                    image_set_color(context->framebuffer, y, x);
+                    context->depthbuffer[index] = depth;
                 }
-
             }
         }
     }
 }
-
-
-
