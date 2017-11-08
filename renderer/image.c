@@ -390,18 +390,18 @@ point_t image_make_point(int row, int col) {
     return point;
 }
 
-void image_draw_point(image_t *image, point_t point, color_t color) {
+void image_draw_point(image_t *image, color_t color, point_t point) {
     assert(point.row >= 0 && point.row < image->height);
     assert(point.col >= 0 && point.col < image->width);
     image_set_color(image, point.row, point.col, color);
 }
 
-void image_draw_line(image_t *image, point_t point0, point_t point1,
-                     color_t color) {
+void image_draw_line(image_t *image, color_t color,
+                     point_t point0, point_t point1) {
     int col_distance = abs(point1.col - point0.col);
     int row_distance = abs(point1.row - point0.row);
     if (col_distance == 0 && row_distance == 0) {
-        image_draw_point(image, point0, color);
+        image_draw_point(image, color, point0);
     } else if (col_distance > row_distance) {
         int col;
         if (point0.col > point1.col) {
@@ -410,7 +410,7 @@ void image_draw_line(image_t *image, point_t point0, point_t point1,
         for (col = point0.col; col <= point1.col; col++) {
             double d = (col - point0.col) / (double)col_distance;
             int row = linear_interp_int(point0.row, point1.row, d);
-            image_draw_point(image, image_make_point(row, col), color);
+            image_draw_point(image, color, image_make_point(row, col));
         }
     } else {
         int row;
@@ -420,43 +420,43 @@ void image_draw_line(image_t *image, point_t point0, point_t point1,
         for (row = point0.row; row <= point1.row; row++) {
             double d = (row - point0.row) / (double)row_distance;
             int col = linear_interp_int(point0.col, point1.col, d);
-            image_draw_point(image, image_make_point(row, col), color);
+            image_draw_point(image, color, image_make_point(row, col));
         }
     }
 }
 
-void image_draw_triangle(image_t *image, point_t point0, point_t point1,
-                         point_t point2, color_t color) {
-    image_draw_line(image, point0, point1, color);
-    image_draw_line(image, point1, point2, color);
-    image_draw_line(image, point2, point0, color);
+void image_draw_triangle(image_t *image, color_t color,
+                         point_t point0, point_t point1, point_t point2) {
+    image_draw_line(image, color, point0, point1);
+    image_draw_line(image, color, point1, point2);
+    image_draw_line(image, color, point2, point0);
 }
 
-static void draw_scanline(image_t *image, point_t point0, point_t point1,
-                          color_t color) {
+static void draw_scanline(image_t *image, color_t color,
+                          point_t point0, point_t point1) {
     point_t point;
     assert(point0.row == point1.row);
     if (point0.col > point1.col) {
         swap_points(&point0, &point1);
     }
     for (point = point0; point.col <= point1.col; point.col += 1) {
-        image_draw_point(image, point, color);
+        image_draw_point(image, color, point);
     }
 }
 
-void image_fill_triangle(image_t *image, point_t point0, point_t point1,
-                         point_t point2, color_t color) {
+void image_fill_triangle(image_t *image, color_t color,
+                         point_t point0, point_t point1, point_t point2) {
     sort_point_row(&point0, &point1, &point2);
     if (point0.row == point2.row) {
         sort_point_col(&point0, &point1, &point2);
-        draw_scanline(image, point0, point2, color);
+        draw_scanline(image, color, point0, point2);
     } else {
         int total_height = point2.row - point0.row;
         int upper_height = point1.row - point0.row;
         int lower_height = point2.row - point1.row;
 
         if (upper_height == 0) {
-            draw_scanline(image, point0, point1, color);
+            draw_scanline(image, color, point0, point1);
         } else {
             int row;
             for (row = point0.row; row <= point1.row; row++) {
@@ -465,12 +465,12 @@ void image_fill_triangle(image_t *image, point_t point0, point_t point1,
                 point_t p1 = linear_interp_point(point0, point1, d1);
                 point_t p2 = linear_interp_point(point0, point2, d2);
                 p1.row = p2.row = row;
-                draw_scanline(image, p1, p2, color);
+                draw_scanline(image, color, p1, p2);
             }
         }
 
         if (lower_height == 0) {
-            draw_scanline(image, point1, point2, color);
+            draw_scanline(image, color, point1, point2);
         } else {
             int row;
             for (row = point1.row; row <= point2.row; row++) {
@@ -479,7 +479,7 @@ void image_fill_triangle(image_t *image, point_t point0, point_t point1,
                 point_t p0 = linear_interp_point(point0, point2, d0);
                 point_t p1 = linear_interp_point(point1, point2, d1);
                 p0.row = p1.row = row;
-                draw_scanline(image, p0, p1, color);
+                draw_scanline(image, color, p0, p1);
             }
         }
     }
