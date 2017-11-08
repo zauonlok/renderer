@@ -27,10 +27,10 @@ static void write_bytes(FILE *file, void *buffer, int size) {
     assert(count == size);
 }
 
-static void swap_bytes(unsigned char *x, unsigned char *y) {
-    unsigned char t = *x;
-    *x = *y;
-    *y = t;
+static void swap_bytes(unsigned char *a, unsigned char *b) {
+    unsigned char t = *a;
+    *a = *b;
+    *b = t;
 }
 
 static int calc_buffer_size(image_t *image) {
@@ -40,6 +40,67 @@ static int calc_buffer_size(image_t *image) {
 static unsigned char *get_pixel_ptr(image_t *image, int row, int col) {
     int index = row * image->width * image->channels + col * image->channels;
     return &(image->buffer[index]);
+}
+
+static unsigned char color2gray(color_t color) {
+    int gray = ((int)color.b + (int)color.g + (int)color.r) / 3;
+    return (unsigned char)gray;
+}
+
+static double linear_interp_double(double v0, double v1, double d) {
+    return v0 + (v1 - v0) * d;
+}
+
+static double bilinear_interp(double v00, double v01, double v10, double v11,
+                              double drow, double dcol) {
+    double v0 = linear_interp_double(v00, v01, dcol);  /* row 0 */
+    double v1 = linear_interp_double(v10, v11, dcol);  /* row 1 */
+    return linear_interp_double(v0, v1, drow);
+}
+
+static int bound_index(int index, int length) {
+    return (index > length - 1) ? length - 1 : index;
+}
+
+static void swap_points(point_t *a, point_t *b) {
+    point_t t = *a;
+    *a = *b;
+    *b = t;
+}
+
+static void sort_point_row(point_t *point0, point_t *point1, point_t *point2) {
+    if (point0->row > point1->row) {
+        swap_points(point0, point1);
+    }
+    if (point0->row > point2->row) {
+        swap_points(point0, point2);
+    }
+    if (point1->row > point2->row) {
+        swap_points(point1, point2);
+    }
+}
+
+static void sort_point_col(point_t *point0, point_t *point1, point_t *point2) {
+    if (point0->col > point1->col) {
+        swap_points(point0, point1);
+    }
+    if (point0->col > point2->col) {
+        swap_points(point0, point2);
+    }
+    if (point1->col > point2->col) {
+        swap_points(point1, point2);
+    }
+}
+
+static int linear_interp_int(int v0, int v1, double d) {
+    return (int)(v0 + (v1 - v0) * d + 0.5);
+}
+
+static point_t linear_interp_point(point_t point0, point_t point1, double d) {
+    point_t point;
+    point.row = linear_interp_int(point0.row, point1.row, d);
+    point.col = linear_interp_int(point0.col, point1.col, d);
+    return point;
 }
 
 /* image construction/destruction */
@@ -216,11 +277,6 @@ color_t image_get_color(image_t *image, int row, int col) {
     return color;
 }
 
-static unsigned char color2gray(color_t color) {
-    int gray = ((int)color.b + (int)color.g + (int)color.r) / 3;
-    return (unsigned char)gray;
-}
-
 void image_set_color(image_t *image, int row, int col, color_t color) {
     int channels = image->channels;
     unsigned char *pixel;
@@ -279,21 +335,6 @@ void image_flip_v(image_t *image) {
     }
 }
 
-static double linear_interp(double v0, double v1, double d) {
-    return v0 + (v1 - v0) * d;
-}
-
-static double bilinear_interp(double v00, double v01, double v10, double v11,
-                              double drow, double dcol) {
-    double v0 = linear_interp(v00, v01, dcol);  /* row 0 */
-    double v1 = linear_interp(v10, v11, dcol);  /* row 1 */
-    return linear_interp(v0, v1, drow);
-}
-
-static int bound_index(int index, int length) {
-    return (index > length - 1) ? length - 1 : index;
-}
-
 void image_resize(image_t *image, int width, int height) {
     int channels = image->channels;
     image_t src = *image;
@@ -340,12 +381,115 @@ void image_resize(image_t *image, int width, int height) {
     free(src.buffer);
 }
 
+/* image drawing */
+
+point_t image_make_point(int row, int col) {
+    point_t point;
+    point.row = row;
+    point.col = col;
+    return point;
+}
+
+void image_draw_point(image_t *image, point_t point, color_t color) {
+    assert(point.row >= 0 && point.row < image->height);
+    assert(point.col >= 0 && point.col < image->width);
+    image_set_color(image, point.row, point.col, color);
+}
+
+void image_draw_line(image_t *image, point_t point0, point_t point1,
+                     color_t color) {
+    int col_distance = abs(point1.col - point0.col);
+    int row_distance = abs(point1.row - point0.row);
+    if (col_distance == 0 && row_distance == 0) {
+        gfx_draw_point(image, point0, color);
+    } else if (col_distance > row_distance) {
+        int col;
+        if (point0.col > point1.col) {
+            swap_points(&point0, &point1);
+        }
+        for (col = point0.col; col <= point1.col; col++) {
+            double d = (col - point0.col) / (double)col_distance;
+            int row = linear_interp_int(point0.row, point1.row, d);
+            image_draw_point(image, image_make_point(row, col), color);
+        }
+    } else {
+        int row;
+        if (point0.row > point1.row) {
+            swap_points(&point0, &point1);
+        }
+        for (row = point0.row; row <= point1.row; row++) {
+            double d = (row - point0.row) / (double)row_distance;
+            int col = linear_interp_int(point0.col, point1.col, d);
+            image_draw_point(image, image_make_point(row, col), color);
+        }
+    }
+}
+
+void image_draw_triangle(image_t *image, point_t point0, point_t point1,
+                         point_t point2, color_t color) {
+    image_draw_line(image, point0, point1, color);
+    image_draw_line(image, point1, point2, color);
+    image_draw_line(image, point2, point0, color);
+}
+
+static void draw_scanline(image_t *image, point_t point0, point_t point1,
+                          color_t color) {
+    point_t point;
+    assert(point0.row == point1.row);
+    if (point0.col > point1.col) {
+        swap_points(&point0, &point1);
+    }
+    for (point = point0; point.col <= point1.col; point.col += 1) {
+        image_draw_point(image, point, color);
+    }
+}
+
+void image_fill_triangle(image_t *image, point_t point0, point_t point1,
+                         point_t point2, color_t color) {
+    sort_point_row(&point0, &point1, &point2);
+    if (point0.row == point2.row) {
+        sort_point_col(&point0, &point1, &point2);
+        draw_scanline(image, point0, point2, color);
+    } else {
+        int total_height = point2.row - point0.row;
+        int upper_height = point1.row - point0.row;
+        int lower_height = point2.row - point1.row;
+
+        if (upper_height == 0) {
+            draw_scanline(image, point0, point1, color);
+        } else {
+            int row;
+            for (row = point0.row; row <= point1.row; row++) {
+                double d1 = (row - point0.row) / (double)upper_height;
+                double d2 = (row - point0.row) / (double)total_height;
+                point_t p1 = linear_interp_point(point0, point1, d1);
+                point_t p2 = linear_interp_point(point0, point2, d2);
+                p1.row = p2.row = row;
+                draw_scanline(image, p1, p2, color);
+            }
+        }
+
+        if (lower_height == 0) {
+            draw_scanline(image, point1, point2, color);
+        } else {
+            int row;
+            for (row = point1.row; row <= point2.row; row++) {
+                double d0 = (row - point0.row) / (double)total_height;
+                double d1 = (row - point1.row) / (double)lower_height;
+                point_t p0 = linear_interp_point(point0, point2, d0);
+                point_t p1 = linear_interp_point(point1, point2, d1);
+                p0.row = p1.row = row;
+                draw_scanline(image, p0, p1, color);
+            }
+        }
+    }
+}
+
 /* private bit blit routines, used by window_draw_image */
 
 static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
     int r, c;
 
-    assert(src->channels == 3 || src->channels == 4);
     assert(dst->channels == 3 || dst->channels == 4);
 
     memset(dst->buffer, 0, calc_buffer_size(dst));
@@ -353,14 +497,19 @@ static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
         for (c = 0; c < src->width && c < dst->width; c++) {
             unsigned char *src_pixel = get_pixel_ptr(src, r, c);
             unsigned char *dst_pixel = get_pixel_ptr(dst, r, c);
-            if (swap_rb) {  /* rgb */
-                dst_pixel[0] = src_pixel[2];
-                dst_pixel[1] = src_pixel[1];
-                dst_pixel[2] = src_pixel[0];
-            } else {        /* bgr */
-                dst_pixel[0] = src_pixel[0];
-                dst_pixel[1] = src_pixel[1];
-                dst_pixel[2] = src_pixel[2];
+            if (src->channels == 1 || src->channels == 2) {  /* gray */
+                unsigned char gray = src_pixel[0];
+                dst_pixel[0] = dst_pixel[1] = dst_pixel[2] = gray;
+            } else {
+                if (swap_rb) {  /* rgb */
+                    dst_pixel[0] = src_pixel[2];
+                    dst_pixel[1] = src_pixel[1];
+                    dst_pixel[2] = src_pixel[0];
+                } else {        /* bgr */
+                    dst_pixel[0] = src_pixel[0];
+                    dst_pixel[1] = src_pixel[1];
+                    dst_pixel[2] = src_pixel[2];
+                }
             }
         }
     }
