@@ -6,7 +6,7 @@
 #include "model.h"
 #include "geometry.h"
 
-/* dynamic array */
+/* dynamic array, see stretchy_buffer.h in https://github.com/nothings/stb */
 
 #define BUFFER_RAW_DATA(buffer) ((int*)(buffer) - 2)
 #define BUFFER_CAPACITY(buffer) (BUFFER_RAW_DATA(buffer)[0])
@@ -53,8 +53,8 @@ static void *buffer_hold(void *buffer, int count, int itemsize) {
 /* model stuff */
 
 struct model {
-    vec3f_t *vertices;
-    vec2f_t *uvs;
+    vec3f_t *positions;
+    vec2f_t *texcoords;
     vec3f_t *normals;
     int num_faces;
 };
@@ -86,40 +86,39 @@ static char *read_line(FILE *file) {
     }
 }
 
-static model_t *build_model(vec3f_t *vertex_buffer, vec2f_t *uv_buffer,
-                            vec3f_t *normal_buffer,
-                            int *vertex_index_buffer, int *uv_index_buffer,
-                            int *normal_index_buffer) {
-    int num_vertices = buffer_size(vertex_buffer);
-    int num_uvs = buffer_size(uv_buffer);
+static model_t *build_model(vec3f_t *position_buffer, int *position_index_buffer,
+                            vec2f_t *texcoord_buffer, int *texcoord_index_buffer,
+                            vec3f_t *normal_buffer, int *normal_index_buffer) {
+    int num_positions = buffer_size(position_buffer);
+    int num_texcoords = buffer_size(texcoord_buffer);
     int num_normals = buffer_size(normal_buffer);
-    int num_faces = buffer_size(vertex_index_buffer) / 3;
+    int num_faces = buffer_size(position_index_buffer) / 3;
     int num_indices = num_faces * 3;
     model_t *model;
     int i;
 
     assert(num_faces > 0);
-    assert(num_indices == buffer_size(vertex_index_buffer));
-    assert(num_indices == buffer_size(uv_index_buffer));
+    assert(num_indices == buffer_size(position_index_buffer));
+    assert(num_indices == buffer_size(texcoord_index_buffer));
     assert(num_indices == buffer_size(normal_index_buffer));
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->vertices  = (vec3f_t*)malloc(num_indices * sizeof(vec3f_t));
-    model->uvs       = (vec2f_t*)malloc(num_indices * sizeof(vec2f_t));
+    model->positions = (vec3f_t*)malloc(num_indices * sizeof(vec3f_t));
+    model->texcoords = (vec2f_t*)malloc(num_indices * sizeof(vec2f_t));
     model->normals   = (vec3f_t*)malloc(num_indices * sizeof(vec3f_t));
     model->num_faces = num_faces;
 
     for (i = 0; i < num_indices; i++) {
-        int vertex_index = vertex_index_buffer[i];
-        int uv_index = uv_index_buffer[i];
+        int position_index = position_index_buffer[i];
+        int texcoord_index = texcoord_index_buffer[i];
         int normal_index = normal_index_buffer[i];
 
-        assert(vertex_index >= 0 && vertex_index < num_vertices);
-        assert(uv_index >= 0 && uv_index < num_uvs);
+        assert(position_index >= 0 && position_index < num_positions);
+        assert(texcoord_index >= 0 && texcoord_index < num_texcoords);
         assert(normal_index >= 0 && normal_index < num_normals);
 
-        model->vertices[i] = vertex_buffer[vertex_index];
-        model->uvs[i] = uv_buffer[uv_index];
+        model->positions[i] = position_buffer[position_index];
+        model->texcoords[i] = texcoord_buffer[texcoord_index];
         model->normals[i] = normal_buffer[normal_index];
     }
 
@@ -127,11 +126,11 @@ static model_t *build_model(vec3f_t *vertex_buffer, vec2f_t *uv_buffer,
 }
 
 static model_t *load_obj(const char *filename) {
-    vec3f_t *vertex_buffer = NULL;
-    vec2f_t *uv_buffer = NULL;
+    vec3f_t *position_buffer = NULL;
+    vec2f_t *texcoord_buffer = NULL;
     vec3f_t *normal_buffer = NULL;
-    int *vertex_index_buffer = NULL;
-    int *uv_index_buffer = NULL;
+    int *position_index_buffer = NULL;
+    int *texcoord_index_buffer = NULL;
     int *normal_index_buffer = NULL;
     model_t *model;
     FILE *file;
@@ -147,17 +146,17 @@ static model_t *load_obj(const char *filename) {
         while (isspace(*curr)) {
             curr += 1;
         }
-        if (strncmp(curr, "v ", 2) == 0) {          /* vertex */
-            vec3f_t vertex;
+        if (strncmp(curr, "v ", 2) == 0) {          /* position */
+            vec3f_t position;
             int items = sscanf(curr + 2, "%f %f %f",
-                               &vertex.x, &vertex.y, &vertex.z);
+                               &position.x, &position.y, &position.z);
             assert(items == 3);
-            buffer_push(vertex_buffer, vertex);
-        } else if (strncmp(curr, "vt ", 3) == 0) {  /* texture */
-            vec2f_t uv;
-            int items = sscanf(curr + 3, "%f %f", &uv.x, &uv.y);
+            buffer_push(position_buffer, position);
+        } else if (strncmp(curr, "vt ", 3) == 0) {  /* texcoord */
+            vec2f_t texcoord;
+            int items = sscanf(curr + 3, "%f %f", &texcoord.x, &texcoord.y);
             assert(items == 2);
-            buffer_push(uv_buffer, uv);
+            buffer_push(texcoord_buffer, texcoord);
         } else if (strncmp(curr, "vn ", 3) == 0) {  /* normal */
             vec3f_t normal;
             int items = sscanf(curr + 3, "%f %f %f",
@@ -166,17 +165,17 @@ static model_t *load_obj(const char *filename) {
             buffer_push(normal_buffer, normal);
         } else if (strncmp(curr, "f ", 2) == 0) {   /* face */
             int i;
-            int vertex_indices[3], uv_indices[3], normal_indices[3];
+            int position_indices[3], texcoord_indices[3], normal_indices[3];
             int items = sscanf(
                 curr + 2, "%d/%d/%d %d/%d/%d %d/%d/%d",
-                &vertex_indices[0], &uv_indices[0], &normal_indices[0],
-                &vertex_indices[1], &uv_indices[1], &normal_indices[1],
-                &vertex_indices[2], &uv_indices[2], &normal_indices[2]
+                &position_indices[0], &texcoord_indices[0], &normal_indices[0],
+                &position_indices[1], &texcoord_indices[1], &normal_indices[1],
+                &position_indices[2], &texcoord_indices[2], &normal_indices[2]
             );
             assert(items == 9);
             for (i = 0; i < 3; i++) {
-                buffer_push(vertex_index_buffer, vertex_indices[i] - 1);
-                buffer_push(uv_index_buffer, uv_indices[i] - 1);
+                buffer_push(position_index_buffer, position_indices[i] - 1);
+                buffer_push(texcoord_index_buffer, texcoord_indices[i] - 1);
                 buffer_push(normal_index_buffer, normal_indices[i] - 1);
             }
         }
@@ -184,16 +183,15 @@ static model_t *load_obj(const char *filename) {
     }
     fclose(file);
 
-    model = build_model(
-        vertex_buffer, uv_buffer, normal_buffer,
-        vertex_index_buffer, uv_index_buffer, normal_index_buffer
-    );
+    model = build_model(position_buffer, position_index_buffer,
+                        texcoord_buffer, texcoord_index_buffer,
+                        normal_buffer, normal_index_buffer);
 
-    buffer_free(vertex_buffer);
-    buffer_free(uv_buffer);
+    buffer_free(position_buffer);
+    buffer_free(texcoord_buffer);
     buffer_free(normal_buffer);
-    buffer_free(vertex_index_buffer);
-    buffer_free(uv_index_buffer);
+    buffer_free(position_index_buffer);
+    buffer_free(texcoord_index_buffer);
     buffer_free(normal_index_buffer);
 
     return model;
@@ -210,8 +208,8 @@ model_t *model_load(const char *filename) {
 }
 
 void model_free(model_t *model) {
-    free(model->vertices);
-    free(model->uvs);
+    free(model->positions);
+    free(model->texcoords);
     free(model->normals);
     free(model);
 }
@@ -225,16 +223,16 @@ static void check_range(model_t *model, int face, int nth_element) {
     assert(nth_element >= 0 && nth_element < 3);
 }
 
-vec3f_t model_get_vertex(model_t *model, int face, int nth_vertex) {
-    int index = face * 3 + nth_vertex;
-    check_range(model, face, nth_vertex);
-    return model->vertices[index];
+vec3f_t model_get_position(model_t *model, int face, int nth_position) {
+    int index = face * 3 + nth_position;
+    check_range(model, face, nth_position);
+    return model->positions[index];
 }
 
-vec2f_t model_get_uv(model_t *model, int face, int nth_uv) {
-    int index = face * 3 + nth_uv;
-    check_range(model, face, nth_uv);
-    return model->uvs[index];
+vec2f_t model_get_texcoord(model_t *model, int face, int nth_texcoord) {
+    int index = face * 3 + nth_texcoord;
+    check_range(model, face, nth_texcoord);
+    return model->texcoords[index];
 }
 
 vec3f_t model_get_normal(model_t *model, int face, int nth_normal) {
