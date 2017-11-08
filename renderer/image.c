@@ -103,7 +103,7 @@ static point_t linear_interp_point(point_t point0, point_t point1, double d) {
     return point;
 }
 
-/* image construction/destruction */
+/* image creating/releasing */
 
 image_t *image_create(int width, int height, int channels) {
     int buffer_size = width * height * channels;
@@ -246,7 +246,7 @@ static void save_tga(image_t *image, const char *filename) {
     fclose(file);
 }
 
-/* image processing */
+/* color getting/setting */
 
 color_t image_get_color(image_t *image, int row, int col) {
     int channels = image->channels;
@@ -304,6 +304,8 @@ void image_set_color(image_t *image, int row, int col, color_t color) {
         assert(0);
     }
 }
+
+/* image processing */
 
 void image_flip_h(image_t *image) {
     int half_width = image->width / 2;
@@ -398,21 +400,11 @@ void image_draw_point(image_t *image, color_t color, point_t point) {
 
 void image_draw_line(image_t *image, color_t color,
                      point_t point0, point_t point1) {
-    int col_distance = abs(point1.col - point0.col);
     int row_distance = abs(point1.row - point0.row);
-    if (col_distance == 0 && row_distance == 0) {
+    int col_distance = abs(point1.col - point0.col);
+    if (row_distance == 0 && col_distance == 0) {
         image_draw_point(image, color, point0);
-    } else if (col_distance > row_distance) {
-        int col;
-        if (point0.col > point1.col) {
-            swap_points(&point0, &point1);
-        }
-        for (col = point0.col; col <= point1.col; col++) {
-            double d = (col - point0.col) / (double)col_distance;
-            int row = linear_interp_int(point0.row, point1.row, d);
-            image_draw_point(image, color, image_make_point(row, col));
-        }
-    } else {
+    } else if (row_distance > col_distance) {
         int row;
         if (point0.row > point1.row) {
             swap_points(&point0, &point1);
@@ -420,6 +412,16 @@ void image_draw_line(image_t *image, color_t color,
         for (row = point0.row; row <= point1.row; row++) {
             double d = (row - point0.row) / (double)row_distance;
             int col = linear_interp_int(point0.col, point1.col, d);
+            image_draw_point(image, color, image_make_point(row, col));
+        }
+    } else {
+        int col;
+        if (point0.col > point1.col) {
+            swap_points(&point0, &point1);
+        }
+        for (col = point0.col; col <= point1.col; col++) {
+            double d = (col - point0.col) / (double)col_distance;
+            int row = linear_interp_int(point0.row, point1.row, d);
             image_draw_point(image, color, image_make_point(row, col));
         }
     }
@@ -439,7 +441,7 @@ static void draw_scanline(image_t *image, color_t color,
     if (point0.col > point1.col) {
         swap_points(&point0, &point1);
     }
-    for (point = point0; point.col <= point1.col; point.col += 1) {
+    for (point = point0; point.col <= point1.col; point.col++) {
         image_draw_point(image, color, point);
     }
 }
@@ -485,7 +487,7 @@ void image_fill_triangle(image_t *image, color_t color,
     }
 }
 
-/* private bit blit routines, used by window_draw_image */
+/* private blit functions, used by window_draw_image */
 
 static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
     int r, c;
