@@ -1,5 +1,7 @@
 #include <assert.h>
+#include <float.h>
 #include <stdlib.h>
+#include <string.h>
 #include "graphics.h"
 #include "geometry.h"
 #include "image.h"
@@ -19,22 +21,23 @@ mat4f_t gfx_lookat_matrix(vec3f_t eye, vec3f_t center, vec3f_t up) {
     vec3f_t yaxis = vec3f_normalize(vec3f_cross(zaxis, xaxis));
 
     int i;
-    mat4f_t model_view = mat4f_identity();
+    mat4f_t lookat = mat4f_identity();
     float xaxis_arr[3], yaxis_arr[3], zaxis_arr[3], center_arr[3];
     vec3f_to_array(xaxis, xaxis_arr);
     vec3f_to_array(yaxis, yaxis_arr);
     vec3f_to_array(zaxis, zaxis_arr);
     vec3f_to_array(center, center_arr);
     for (i = 0; i < 3; i++) {
-        model_view.m[0][i] = xaxis_arr[i];
-        model_view.m[1][i] = yaxis_arr[i];
-        model_view.m[2][i] = zaxis_arr[i];
-        model_view.m[i][3] = -center_arr[i];
+        lookat.m[0][i] = xaxis_arr[i];
+        lookat.m[1][i] = yaxis_arr[i];
+        lookat.m[2][i] = zaxis_arr[i];
+        lookat.m[i][3] = -center_arr[i];
     }
-    return model_view;
+    return lookat;
 }
 
-mat4f_t gfx_projection_matrix(float coeff) {
+mat4f_t gfx_projection_matrix(vec3f_t eye, vec3f_t center) {
+    float coeff = -1.0f / vec3f_length(vec3f_sub(eye, center));
     mat4f_t projection = mat4f_identity();
     projection.m[3][2] = coeff;
     return projection;
@@ -80,7 +83,7 @@ static vec3f_t calculate_weights(vec2f_t A, vec2f_t B, vec2f_t C, vec2f_t P) {
     return vec3f_new(1.0f - s - t, s, t);
 }
 
-typedef struct {int min_x, min_y, max_x, max_y;} box_t;
+typedef struct {float min_x, min_y, max_x, max_y;} box_t;
 
 static box_t find_bounding_box(int width, int height,
                                vec2f_t P0, vec2f_t P1, vec2f_t P2) {
@@ -104,6 +107,15 @@ static box_t find_bounding_box(int width, int height,
     return box;
 }
 
+static vec4f_t perspective_divide(vec4f_t clip_coord) {
+    vec4f_t ndc_coord;  /* normalized device coordinate */
+    ndc_coord.x = clip_coord.x / clip_coord.w;
+    ndc_coord.y = clip_coord.y / clip_coord.w;
+    ndc_coord.z = clip_coord.z / clip_coord.w;
+    ndc_coord.w = clip_coord.w / clip_coord.w;
+    return ndc_coord;
+}
+
 void gfx_draw_triangle(context_t *context, program_t *program) {
     /* for convenience */
     int width = context->framebuffer->width;
@@ -118,39 +130,126 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
     box_t box;
 
     for (i = 0; i < 3; i++) {
-        vec4f_t ndc_coord = program->vertex_shader(i, varyings, uniforms);
+        vec4f_t clip_coord = program->vertex_shader(i, varyings, uniforms);
+        vec4f_t ndc_coord = perspective_divide(clip_coord);
         screen_coords[i] = mat4f_mul_vec4f(viewport, ndc_coord);
-
-        screen_coords[i].x /= screen_coords[i].w;
-        screen_coords[i].y /= screen_coords[i].w;
-        screen_coords[i].z /= screen_coords[i].w;
-        screen_coords[i].w /= screen_coords[i].w;
-
         screen_points[i] = vec2f_new(screen_coords[i].x, screen_coords[i].y);
     }
 
     box = find_bounding_box(width, height, screen_points[0],
                             screen_points[1], screen_points[2]);
-    for (x = box.min_x; x <= box.max_x; x++) {
-        for (y = box.min_y; y <= box.max_y; y++) {
-            vec2f_t point = vec2f_new(x, y);
+    for (x = (int)box.min_x; x <= box.max_x; x++) {
+        for (y = (int)box.min_y; y <= box.max_y; y++) {
+            vec2f_t point = vec2f_new((float)x, (float)y);
             vec3f_t weights = calculate_weights(screen_points[0],
                                                 screen_points[1],
                                                 screen_points[2],
                                                 point);
             if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
-                float depth = screen_coords[0].z * weights.x +
-                              screen_coords[1].z * weights.y +
-                              screen_coords[2].z * weights.z;
+                float depth = screen_coords[0].z * weights.x
+                              + screen_coords[1].z * weights.y
+                              + screen_coords[2].z * weights.z;
                 int index = y * width + x;
                 if (context->depthbuffer[index] < depth) {
                     color_t color;
                     program->interp_varyings(weights, varyings);
                     color = program->fragment_shader(varyings, uniforms);
-                    image_set_color(context->framebuffer, y, x);
+                    image_set_color(context->framebuffer, y, x, color);
                     context->depthbuffer[index] = depth;
                 }
             }
         }
     }
+}
+
+
+
+/* context management */
+
+context_t *gfx_create_context(int width, int height) {
+    context_t *context = (context_t*)malloc(sizeof(context_t));
+    context->framebuffer = image_create(width, height, 3);
+    context->depthbuffer = (float*)malloc(sizeof(float) * width * height);
+    context->viewport    = gfx_viewport_matrix(0, 0, width, height);
+    gfx_clear_buffers(context);
+    return context;
+}
+
+void gfx_release_context(context_t *context) {
+    image_release(context->framebuffer);
+    free(context->depthbuffer);
+    free(context);
+}
+
+void gfx_clear_buffers(context_t *context) {
+    image_t *framebuffer = context->framebuffer;
+    float *depthbuffer = context->depthbuffer;
+    int width = framebuffer->width;
+    int height = framebuffer->height;
+    int i;
+    memset(framebuffer->buffer, 0, width * height * framebuffer->channels);
+    for (i = 0; i < width * height; i++) {
+        depthbuffer[i] = FLT_MIN;
+    }
+}
+
+/* texture sampling */
+
+color_t gfx_sample_texture(image_t *texture, float u, float v) {
+    int row, col;
+    assert(u >= 0.0f && u <= 1.0f && v >= 0.0f && v <= 1.0f);
+    col = (int)((texture->width - 1) * u + 0.5f);
+    row = (int)((texture->height - 1) * v + 0.5f);
+    return image_get_color(texture, row, col);
+}
+
+color_t gfx_sample_diffuse(image_t *diffuse_map, float u, float v) {
+    return gfx_sample_texture(diffuse_map, u, v);
+}
+
+vec3f_t gfx_sample_normal(image_t *normal_map, float u, float v) {
+    color_t color = gfx_sample_texture(normal_map, u, v);
+    vec3f_t normal;
+    normal.x = color.r / 255.0f * 2.0f - 1.0f;
+    normal.y = color.g / 255.0f * 2.0f - 1.0f;
+    normal.z = color.b / 255.0f * 2.0f - 1.0f;
+    return normal;
+}
+
+float gfx_sample_specular(image_t *specular_map, float u, float v) {
+    color_t color = gfx_sample_texture(specular_map, u, v);
+    assert(color.b == color.g && color.b == color.r);
+    return (float)color.b;
+}
+
+/* vector interpolation */
+
+vec2f_t gfx_interp_vec2f(vec2f_t vs[3], vec3f_t weights_) {
+    vec2f_t out;
+    float weights[3];
+    vec3f_to_array(weights_, weights);
+    out.x = vs[0].x * weights[0]  + vs[1].x * weights[1] + vs[2].x * weights[2];
+    out.y = vs[0].y * weights[0]  + vs[1].y * weights[1] + vs[2].y * weights[2];
+    return out;
+}
+
+vec3f_t gfx_interp_vec3f(vec3f_t vs[3], vec3f_t weights_) {
+    vec3f_t out;
+    float weights[3];
+    vec3f_to_array(weights_, weights);
+    out.x = vs[0].x * weights[0]  + vs[1].x * weights[1] + vs[2].x * weights[2];
+    out.y = vs[0].y * weights[0]  + vs[1].y * weights[1] + vs[2].y * weights[2];
+    out.z = vs[0].z * weights[0]  + vs[1].z * weights[1] + vs[2].z * weights[2];
+    return out;
+}
+
+vec4f_t gfx_interp_vec4f(vec4f_t vs[3], vec3f_t weights_) {
+    vec4f_t out;
+    float weights[3];
+    vec3f_to_array(weights_, weights);
+    out.x = vs[0].x * weights[0]  + vs[1].x * weights[1] + vs[2].x * weights[2];
+    out.y = vs[0].y * weights[0]  + vs[1].y * weights[1] + vs[2].y * weights[2];
+    out.z = vs[0].z * weights[0]  + vs[1].z * weights[1] + vs[2].z * weights[2];
+    out.w = vs[0].w * weights[0]  + vs[1].w * weights[1] + vs[2].w * weights[2];
+    return out;
 }

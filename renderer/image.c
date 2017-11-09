@@ -68,7 +68,7 @@ static void swap_points(point_t *a, point_t *b) {
     *b = t;
 }
 
-static void sort_point_row(point_t *point0, point_t *point1, point_t *point2) {
+static void sort_points_row(point_t *point0, point_t *point1, point_t *point2) {
     if (point0->row > point1->row) {
         swap_points(point0, point1);
     }
@@ -80,7 +80,7 @@ static void sort_point_row(point_t *point0, point_t *point1, point_t *point2) {
     }
 }
 
-static void sort_point_col(point_t *point0, point_t *point1, point_t *point2) {
+static void sort_points_col(point_t *point0, point_t *point1, point_t *point2) {
     if (point0->col > point1->col) {
         swap_points(point0, point1);
     }
@@ -448,9 +448,9 @@ static void draw_scanline(image_t *image, color_t color,
 
 void image_fill_triangle(image_t *image, color_t color,
                          point_t point0, point_t point1, point_t point2) {
-    sort_point_row(&point0, &point1, &point2);
+    sort_points_row(&point0, &point1, &point2);
     if (point0.row == point2.row) {
-        sort_point_col(&point0, &point1, &point2);
+        sort_points_col(&point0, &point1, &point2);
         draw_scanline(image, color, point0, point2);
     } else {
         int total_height = point2.row - point0.row;
