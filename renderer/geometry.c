@@ -90,7 +90,6 @@ vec4f_t vec4f_from_vec3f(vec3f_t v, float w) {
 }
 
 vec4f_t vec4f_scale(vec4f_t v, float scale) {
-    assert(scale >= 0.0f && scale <= 1.0f);
     return vec4f_new(v.x * scale, v.y * scale, v.z * scale, v.w * scale);
 }
 

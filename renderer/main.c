@@ -29,7 +29,7 @@ typedef struct {
     image_t *specular_map;
 } uniforms_t;
 
-vec4f_t vertex_shader(int nth_vertex, void *varyings_, const void *uniforms_) {
+vec4f_t vertex_shader(int nth_vertex, void *varyings_, void *uniforms_) {
     varyings_t *varyings = (varyings_t*)varyings_;
     uniforms_t *uniforms = (uniforms_t*)uniforms_;
 
@@ -61,7 +61,7 @@ vec3f_t reflect_light(vec3f_t normal, vec3f_t light) {
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-color_t fragment_shader(void *varyings_, const void *uniforms_) {
+color_t fragment_shader(void *varyings_, void *uniforms_) {
     varyings_t *varyings = (varyings_t*)varyings_;
     uniforms_t *uniforms = (uniforms_t*)uniforms_;
 
@@ -134,9 +134,10 @@ int main(void) {
     int width = WIDTH;
     int height = HEIGHT;
     image_t *diffuse_map, *normal_map, *specular_map;
+    context_t *context;
 
     window = window_create(title, width, height);
-    context_t *context = gfx_create_context(width, height);
+    context = gfx_create_context(width, height);
 
     model = model_load("resources/african_head.obj");
     diffuse_map = image_load("resources/african_head_diffuse.tga");
@@ -159,12 +160,3 @@ int main(void) {
     window_destroy(window);
     return 0;
 }
-
-
-
-
-
-
-
-
-

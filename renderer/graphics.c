@@ -47,7 +47,7 @@ mat4f_t gfx_projection_matrix(vec3f_t eye, vec3f_t center) {
 }
 
 mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
-    const static float depth = 255.0f;
+    static const float depth = 255.0f;
     mat4f_t viewport = mat4f_identity();
     viewport.m[0][0] = width / 2.0f;
     viewport.m[0][3] = x + width / 2.0f;
