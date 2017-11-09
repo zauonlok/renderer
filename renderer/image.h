@@ -12,6 +12,7 @@ typedef struct {int row, col;} point_t;
 /* image creating/releasing */
 image_t *image_create(int width, int height, int channels);
 void image_release(image_t *image);
+image_t *image_clone(image_t *image);
 
 /* image input/output */
 image_t *image_load(const char *filename);

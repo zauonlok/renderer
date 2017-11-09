@@ -47,15 +47,15 @@ static unsigned char color2gray(color_t color) {
     return (unsigned char)gray;
 }
 
-static double linear_interp_double(double v0, double v1, double d) {
+static double linear_interp(double v0, double v1, double d) {
     return v0 + (v1 - v0) * d;
 }
 
 static double bilinear_interp(double v00, double v01, double v10, double v11,
                               double drow, double dcol) {
-    double v0 = linear_interp_double(v00, v01, dcol);  /* row 0 */
-    double v1 = linear_interp_double(v10, v11, dcol);  /* row 1 */
-    return linear_interp_double(v0, v1, drow);
+    double v0 = linear_interp(v00, v01, dcol);  /* row 0 */
+    double v1 = linear_interp(v10, v11, dcol);  /* row 1 */
+    return linear_interp(v0, v1, drow);
 }
 
 static int bound_index(int index, int length) {
@@ -123,6 +123,16 @@ image_t *image_create(int width, int height, int channels) {
 void image_release(image_t *image) {
     free(image->buffer);
     free(image);
+}
+
+image_t *image_clone(image_t *image) {
+    int buffer_size = calc_buffer_size(image);
+    unsigned char *buffer = (unsigned char*)malloc(buffer_size);
+    image_t *clone = (image_t*)malloc(sizeof(image_t));
+    *clone = *image;
+    clone->buffer = buffer;
+    memcpy(clone->buffer, image->buffer, buffer_size);
+    return clone;
 }
 
 /* image input/output */
@@ -339,8 +349,8 @@ void image_flip_v(image_t *image) {
 
 void image_resize(image_t *image, int width, int height) {
     int channels = image->channels;
-    image_t src = *image;
-    image_t *dst = image;
+    image_t src = *image;  /* tricks */
+    image_t *dst = image;  /* tricks */
     double scale_r, scale_c;
     int r, c, k;
 
@@ -457,6 +467,7 @@ void image_fill_triangle(image_t *image, color_t color,
         int upper_height = point1.row - point0.row;
         int lower_height = point2.row - point1.row;
 
+        /* fill the upper triangle */
         if (upper_height == 0) {
             draw_scanline(image, color, point0, point1);
         } else {
@@ -471,6 +482,7 @@ void image_fill_triangle(image_t *image, color_t color,
             }
         }
 
+        /* fill the lower triangle */
         if (lower_height == 0) {
             draw_scanline(image, color, point1, point2);
         } else {
