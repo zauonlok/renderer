@@ -89,6 +89,11 @@ vec4f_t vec4f_from_vec3f(vec3f_t v, float w) {
     return vec4f_new(v.x, v.y, v.z, w);
 }
 
+vec4f_t vec4f_scale(vec4f_t v, float scale) {
+    assert(scale >= 0.0f && scale <= 1.0f);
+    return vec4f_new(v.x * scale, v.y * scale, v.z * scale, v.w * scale);
+}
+
 /* mat4f stuff */
 
 mat4f_t mat4f_identity() {
@@ -132,7 +137,7 @@ mat4f_t mat4f_mul_mat4f(mat4f_t a, mat4f_t b) {
 
 /*
  * for determinant, minor, cofactor and adjoint, see
- * 3D Math Primer for Graphics and Game Development, Chapter 6 More on Matrices
+ * 3D Math Primer for Graphics and Game Development, Chapter 6
  */
 
 typedef struct {float m[3][3];} mat3f_t;

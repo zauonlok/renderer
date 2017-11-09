@@ -4,9 +4,9 @@
 #include "geometry.h"
 #include "image.h"
 
-typedef vec4f_t vertex_shader_t(int nth_vertex, void *varyings, const void *uniforms);
+typedef vec4f_t vertex_shader_t(int nth_vertex, void *varyings, void *uniforms);
 typedef void interp_varyings_t(vec3f_t weights, void *varyings);
-typedef color_t fragment_shader_t(void *varyings, const void *uniforms);
+typedef color_t fragment_shader_t(void *varyings, void *uniforms);
 
 typedef struct {
     image_t *framebuffer;
@@ -22,10 +22,12 @@ typedef struct {
     void *uniforms;
 } program_t;
 
+/* common matrices */
 mat4f_t gfx_lookat_matrix(vec3f_t eye, vec3f_t center, vec3f_t up);
 mat4f_t gfx_projection_matrix(vec3f_t eye, vec3f_t center);
 mat4f_t gfx_viewport_matrix(int x, int y, int width, int height);
 
+/* triangle rasterization */
 void gfx_draw_triangle(context_t *context, program_t *program);
 
 /* context management */

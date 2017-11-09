@@ -26,6 +26,7 @@ vec3f_t vec3f_cross(vec3f_t a, vec3f_t b);
 vec4f_t vec4f_new(float x, float y, float z, float w);
 void vec4f_to_array(vec4f_t v, float arr[4]);
 vec4f_t vec4f_from_vec3f(vec3f_t v, float w);
+vec4f_t vec4f_scale(vec4f_t v, float scale);
 
 /* mat4f stuff */
 mat4f_t mat4f_identity();

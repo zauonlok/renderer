@@ -9,10 +9,13 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
+/* common matrices */
+
 /*
  * for lookat, projection and viewport matrices, see
  * https://github.com/ssloy/tinyrenderer/wiki/Lesson-4:-Perspective-projection
  * https://github.com/ssloy/tinyrenderer/wiki/Lesson-5:-Moving-the-camera
+ * 3D Math Primer for Graphics and Game Development, Chapter 10
  */
 
 mat4f_t gfx_lookat_matrix(vec3f_t eye, vec3f_t center, vec3f_t up) {
@@ -107,14 +110,7 @@ static box_t find_bounding_box(int width, int height,
     return box;
 }
 
-static vec4f_t perspective_divide(vec4f_t clip_coord) {
-    vec4f_t ndc_coord;  /* normalized device coordinate */
-    ndc_coord.x = clip_coord.x / clip_coord.w;
-    ndc_coord.y = clip_coord.y / clip_coord.w;
-    ndc_coord.z = clip_coord.z / clip_coord.w;
-    ndc_coord.w = clip_coord.w / clip_coord.w;
-    return ndc_coord;
-}
+/* triangle rasterization */
 
 void gfx_draw_triangle(context_t *context, program_t *program) {
     /* for convenience */
@@ -131,7 +127,7 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
 
     for (i = 0; i < 3; i++) {
         vec4f_t clip_coord = program->vertex_shader(i, varyings, uniforms);
-        vec4f_t ndc_coord = perspective_divide(clip_coord);
+        vec4f_t ndc_coord = vec4f_scale(clip_coord, 1.0f / clip_coord.w);
         screen_coords[i] = mat4f_mul_vec4f(viewport, ndc_coord);
         screen_points[i] = vec2f_new(screen_coords[i].x, screen_coords[i].y);
     }
@@ -161,8 +157,6 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
         }
     }
 }
-
-
 
 /* context management */
 
@@ -225,31 +219,40 @@ float gfx_sample_specular(image_t *specular_map, float u, float v) {
 /* vector interpolation */
 
 vec2f_t gfx_interp_vec2f(vec2f_t vs[3], vec3f_t weights_) {
-    vec2f_t out;
+    int i;
+    vec2f_t out = {0.0f, 0.0f};
     float weights[3];
     vec3f_to_array(weights_, weights);
-    out.x = vs[0].x * weights[0]  + vs[1].x * weights[1] + vs[2].x * weights[2];
-    out.y = vs[0].y * weights[0]  + vs[1].y * weights[1] + vs[2].y * weights[2];
+    for (i = 0; i < 3; i++) {
+        out.x += vs[i].x * weights[i];
+        out.y += vs[i].y * weights[i];
+    }
     return out;
 }
 
 vec3f_t gfx_interp_vec3f(vec3f_t vs[3], vec3f_t weights_) {
-    vec3f_t out;
+    int i;
+    vec3f_t out = {0.0f, 0.0f, 0.0f};
     float weights[3];
     vec3f_to_array(weights_, weights);
-    out.x = vs[0].x * weights[0]  + vs[1].x * weights[1] + vs[2].x * weights[2];
-    out.y = vs[0].y * weights[0]  + vs[1].y * weights[1] + vs[2].y * weights[2];
-    out.z = vs[0].z * weights[0]  + vs[1].z * weights[1] + vs[2].z * weights[2];
+    for (i = 0; i < 3; i++) {
+        out.x += vs[i].x * weights[i];
+        out.y += vs[i].y * weights[i];
+        out.z += vs[i].z * weights[i];
+    }
     return out;
 }
 
 vec4f_t gfx_interp_vec4f(vec4f_t vs[3], vec3f_t weights_) {
-    vec4f_t out;
+    int i;
+    vec4f_t out = {0.0f, 0.0f, 0.0f, 0.0f};
     float weights[3];
     vec3f_to_array(weights_, weights);
-    out.x = vs[0].x * weights[0]  + vs[1].x * weights[1] + vs[2].x * weights[2];
-    out.y = vs[0].y * weights[0]  + vs[1].y * weights[1] + vs[2].y * weights[2];
-    out.z = vs[0].z * weights[0]  + vs[1].z * weights[1] + vs[2].z * weights[2];
-    out.w = vs[0].w * weights[0]  + vs[1].w * weights[1] + vs[2].w * weights[2];
+    for (i = 0; i < 3; i++) {
+        out.x += vs[i].x * weights[i];
+        out.y += vs[i].y * weights[i];
+        out.z += vs[i].z * weights[i];
+        out.w += vs[i].w * weights[i];
+    }
     return out;
 }
