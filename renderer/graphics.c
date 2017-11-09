@@ -9,54 +9,36 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-/* common matrices */
+/* context management */
 
-/*
- * for lookat, projection and viewport matrices, see
- * https://github.com/ssloy/tinyrenderer/wiki/Lesson-4:-Perspective-projection
- * https://github.com/ssloy/tinyrenderer/wiki/Lesson-5:-Moving-the-camera
- * 3D Math Primer for Graphics and Game Development, Chapter 10
- */
+context_t *gfx_create_context(int width, int height) {
+    context_t *context = (context_t*)malloc(sizeof(context_t));
+    context->framebuffer = image_create(width, height, 3);
+    context->depthbuffer = (float*)malloc(sizeof(float) * width * height);
+    context->viewport    = gfx_viewport_matrix(0, 0, width, height);
+    gfx_clear_buffers(context);
+    return context;
+}
 
-mat4f_t gfx_lookat_matrix(vec3f_t eye, vec3f_t center, vec3f_t up) {
-    vec3f_t zaxis = vec3f_normalize(vec3f_sub(eye, center));
-    vec3f_t xaxis = vec3f_normalize(vec3f_cross(up, zaxis));
-    vec3f_t yaxis = vec3f_normalize(vec3f_cross(zaxis, xaxis));
+void gfx_release_context(context_t *context) {
+    image_release(context->framebuffer);
+    free(context->depthbuffer);
+    free(context);
+}
 
+void gfx_clear_buffers(context_t *context) {
+    image_t *framebuffer = context->framebuffer;
+    float *depthbuffer = context->depthbuffer;
+    int width = framebuffer->width;
+    int height = framebuffer->height;
     int i;
-    mat4f_t lookat = mat4f_identity();
-    float xaxis_arr[3], yaxis_arr[3], zaxis_arr[3], center_arr[3];
-    vec3f_to_array(xaxis, xaxis_arr);
-    vec3f_to_array(yaxis, yaxis_arr);
-    vec3f_to_array(zaxis, zaxis_arr);
-    vec3f_to_array(center, center_arr);
-    for (i = 0; i < 3; i++) {
-        lookat.m[0][i] = xaxis_arr[i];
-        lookat.m[1][i] = yaxis_arr[i];
-        lookat.m[2][i] = zaxis_arr[i];
-        lookat.m[i][3] = -center_arr[i];
+    memset(framebuffer->buffer, 0, width * height * framebuffer->channels);
+    for (i = 0; i < width * height; i++) {
+        depthbuffer[i] = FLT_MIN;
     }
-    return lookat;
 }
 
-mat4f_t gfx_projection_matrix(vec3f_t eye, vec3f_t center) {
-    float coeff = -1.0f / vec3f_length(vec3f_sub(eye, center));
-    mat4f_t projection = mat4f_identity();
-    projection.m[3][2] = coeff;
-    return projection;
-}
-
-mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
-    static const float depth = 255.0f;
-    mat4f_t viewport = mat4f_identity();
-    viewport.m[0][0] = width / 2.0f;
-    viewport.m[0][3] = x + width / 2.0f;
-    viewport.m[1][1] = height / 2.0f;
-    viewport.m[1][3] = y + height / 2.0f;
-    viewport.m[2][2] = depth / 2.0f;
-    viewport.m[2][3] = depth / 2.0f;
-    return viewport;
-}
+/* triangle rasterization */
 
 /*
  * for barycentric coordinates, see http://blackpawn.com/texts/pointinpoly/
@@ -110,8 +92,6 @@ static box_t find_bounding_box(int width, int height,
     return box;
 }
 
-/* triangle rasterization */
-
 void gfx_draw_triangle(context_t *context, program_t *program) {
     /* for convenience */
     int width = context->framebuffer->width;
@@ -158,33 +138,53 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
     }
 }
 
-/* context management */
+/* common matrices */
 
-context_t *gfx_create_context(int width, int height) {
-    context_t *context = (context_t*)malloc(sizeof(context_t));
-    context->framebuffer = image_create(width, height, 3);
-    context->depthbuffer = (float*)malloc(sizeof(float) * width * height);
-    context->viewport    = gfx_viewport_matrix(0, 0, width, height);
-    gfx_clear_buffers(context);
-    return context;
-}
+/*
+ * for lookat, projection and viewport matrices, see
+ * https://github.com/ssloy/tinyrenderer/wiki/Lesson-4:-Perspective-projection
+ * https://github.com/ssloy/tinyrenderer/wiki/Lesson-5:-Moving-the-camera
+ * 3D Math Primer for Graphics and Game Development, Chapter 10
+ */
 
-void gfx_release_context(context_t *context) {
-    image_release(context->framebuffer);
-    free(context->depthbuffer);
-    free(context);
-}
+mat4f_t gfx_lookat_matrix(vec3f_t eye, vec3f_t center, vec3f_t up) {
+    vec3f_t zaxis = vec3f_normalize(vec3f_sub(eye, center));
+    vec3f_t xaxis = vec3f_normalize(vec3f_cross(up, zaxis));
+    vec3f_t yaxis = vec3f_normalize(vec3f_cross(zaxis, xaxis));
 
-void gfx_clear_buffers(context_t *context) {
-    image_t *framebuffer = context->framebuffer;
-    float *depthbuffer = context->depthbuffer;
-    int width = framebuffer->width;
-    int height = framebuffer->height;
     int i;
-    memset(framebuffer->buffer, 0, width * height * framebuffer->channels);
-    for (i = 0; i < width * height; i++) {
-        depthbuffer[i] = FLT_MIN;
+    mat4f_t lookat = mat4f_identity();
+    float xaxis_arr[3], yaxis_arr[3], zaxis_arr[3], center_arr[3];
+    vec3f_to_array(xaxis, xaxis_arr);
+    vec3f_to_array(yaxis, yaxis_arr);
+    vec3f_to_array(zaxis, zaxis_arr);
+    vec3f_to_array(center, center_arr);
+    for (i = 0; i < 3; i++) {
+        lookat.m[0][i] = xaxis_arr[i];
+        lookat.m[1][i] = yaxis_arr[i];
+        lookat.m[2][i] = zaxis_arr[i];
+        lookat.m[i][3] = -center_arr[i];
     }
+    return lookat;
+}
+
+mat4f_t gfx_projection_matrix(vec3f_t eye, vec3f_t center) {
+    float coeff = -1.0f / vec3f_length(vec3f_sub(eye, center));
+    mat4f_t projection = mat4f_identity();
+    projection.m[3][2] = coeff;
+    return projection;
+}
+
+mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
+    static const float depth = 255.0f;
+    mat4f_t viewport = mat4f_identity();
+    viewport.m[0][0] = width / 2.0f;
+    viewport.m[0][3] = x + width / 2.0f;
+    viewport.m[1][1] = height / 2.0f;
+    viewport.m[1][3] = y + height / 2.0f;
+    viewport.m[2][2] = depth / 2.0f;
+    viewport.m[2][3] = depth / 2.0f;
+    return viewport;
 }
 
 /* texture sampling */

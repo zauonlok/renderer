@@ -124,11 +124,10 @@ mat4f_t mat4f_mul_mat4f(mat4f_t a, mat4f_t b) {
     mat4f_t m;
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            float sum = 0.0f;
+            m.m[i][j] = 0.0f;
             for (k = 0; k < 4; k++) {
-                sum += a.m[i][k] * b.m[k][j];
+                m.m[i][j] += a.m[i][k] * b.m[k][j];
             }
-            m.m[i][j] = sum;
         }
     }
     return m;
@@ -141,27 +140,27 @@ mat4f_t mat4f_mul_mat4f(mat4f_t a, mat4f_t b) {
 
 typedef struct {float m[3][3];} mat3f_t;
 
-static float mat3f_determinant(mat3f_t m) {
-    return m.m[0][0] * (m.m[1][1] * m.m[2][2] - m.m[1][2] * m.m[2][1])
-           + m.m[0][1] * (m.m[1][2] * m.m[2][0] - m.m[1][0] * m.m[2][2])
-           + m.m[0][2] * (m.m[1][0] * m.m[2][1] - m.m[1][1] * m.m[2][0]);
+static float mat3f_determinant(mat3f_t *m) {
+    return m->m[0][0] * (m->m[1][1] * m->m[2][2] - m->m[1][2] * m->m[2][1])
+           + m->m[0][1] * (m->m[1][2] * m->m[2][0] - m->m[1][0] * m->m[2][2])
+           + m->m[0][2] * (m->m[1][0] * m->m[2][1] - m->m[1][1] * m->m[2][0]);
 }
 
-static float mat4f_minor(mat4f_t m, int r, int c) {
+static float mat4f_minor(mat4f_t *m, int r, int c) {
     int i, j;
-    mat3f_t sub_matrix;
+    mat3f_t sub_mat;
     assert(r >= 0 && c >= 0 && r < 4 && c < 4);
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
             int row = (i < r) ? i : i + 1;
             int col = (j < c) ? j : j + 1;
-            sub_matrix.m[i][j] = m.m[row][col];
+            sub_mat.m[i][j] = m->m[row][col];
         }
     }
-    return mat3f_determinant(sub_matrix);
+    return mat3f_determinant(&sub_mat);
 }
 
-static float mat4f_cofactor(mat4f_t m, int r, int c) {
+static float mat4f_cofactor(mat4f_t *m, int r, int c) {
     float minor, sign;
     assert(r >= 0 && c >= 0 && r < 4 && c < 4);
     minor = mat4f_minor(m, r, c);
@@ -169,16 +168,7 @@ static float mat4f_cofactor(mat4f_t m, int r, int c) {
     return sign * minor;
 }
 
-float mat4f_determinant(mat4f_t m) {
-    int i;
-    float determinant = 0.0f;
-    for (i = 0; i < 4; i++) {
-        determinant += m.m[0][i] * mat4f_cofactor(m, 0, i);
-    }
-    return determinant;
-}
-
-static mat4f_t mat4f_adjoint(mat4f_t m) {
+static mat4f_t mat4f_adjoint(mat4f_t *m) {
     int i, j;
     mat4f_t adjoint;
     for (i = 0; i < 4; i++) {
@@ -194,8 +184,8 @@ mat4f_t mat4f_invert_transpose(mat4f_t m) {
     float determinant;
     mat4f_t adjoint, invert_transpose;
 
-    adjoint = mat4f_adjoint(m);
-    /* this is the same as mat4f_determinant */
+    adjoint = mat4f_adjoint(&m);
+    /* calculate the determinant */
     determinant = 0.0f;
     for (i = 0; i < 4; i++) {
         determinant += m.m[0][i] * adjoint.m[0][i];

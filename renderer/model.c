@@ -59,6 +59,8 @@ struct model {
     int num_faces;
 };
 
+/* model loading */
+
 static const char *extract_ext(const char *filename) {
     const char *dot_pos = strrchr(filename, '.');
     return (dot_pos == NULL) ? "" : dot_pos + 1;
@@ -213,6 +215,8 @@ void model_free(model_t *model) {
     free(model->normals);
     free(model);
 }
+
+/* vertex retrieving */
 
 int model_get_num_faces(model_t *model) {
     return model->num_faces;

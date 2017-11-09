@@ -32,7 +32,6 @@ vec4f_t vec4f_scale(vec4f_t v, float scale);
 mat4f_t mat4f_identity();
 vec4f_t mat4f_mul_vec4f(mat4f_t m, vec4f_t v);
 mat4f_t mat4f_mul_mat4f(mat4f_t a, mat4f_t b);
-float mat4f_determinant(mat4f_t m);
 mat4f_t mat4f_invert_transpose(mat4f_t m);
 mat4f_t mat4f_inverse(mat4f_t m);
 mat4f_t mat4f_transpose(mat4f_t m);
