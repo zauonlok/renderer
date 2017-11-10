@@ -39,7 +39,6 @@ vec4f_t vertex_shader(int nth_vertex, void *varyings_, void *uniforms_) {
     vec2f_t in_texcoord = varyings->vs_in_texcoords[nth_vertex];
     vec2f_t *out_texcoord = &varyings->vs_out_texcoords[nth_vertex];
     mat4f_t mvp_matrix = uniforms->mvp_matrix;
-    mat4f_t mvp_it_mat = uniforms->mvp_it_mat;
 
     /* setup position */
     vec4f_t position = vec4f_from_vec3f(in_position, 1.0f);

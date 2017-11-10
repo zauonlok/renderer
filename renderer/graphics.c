@@ -190,8 +190,8 @@ mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
 /* texture sampling */
 
 color_t gfx_sample_texture(image_t *texture, vec2f_t texcoord) {
-    int u = texcoord.x;
-    int v = texcoord.y;
+    float u = texcoord.x;
+    float v = texcoord.y;
     int row, col;
     assert(u >= 0.0f && u <= 1.0f && v >= 0.0f && v <= 1.0f);
     col = (int)((texture->width - 1) * u + 0.5f);
