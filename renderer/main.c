@@ -166,6 +166,7 @@ int main(void) {
     model_t *model;
     image_t *diffuse_map, *normal_map, *specular_map;
     image_t *framebuffer;
+    double start;
 
     window = window_create(title, width, height);
     context = gfx_create_context(width, height);
@@ -175,7 +176,9 @@ int main(void) {
     normal_map = image_load("resources/african_head_nm.tga");
     specular_map = image_load("resources/african_head_spec.tga");
 
+    start = timer_get_time();
     draw_model(context, model, diffuse_map, normal_map, specular_map);
+    printf("It takes %lf seconds.\n", timer_get_time() - start);
     framebuffer = image_clone(context->framebuffer);
     image_flip_v(framebuffer);
 
