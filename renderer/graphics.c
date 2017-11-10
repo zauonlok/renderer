@@ -168,8 +168,7 @@ mat4f_t gfx_lookat_matrix(vec3f_t eye, vec3f_t center, vec3f_t up) {
     return lookat;
 }
 
-mat4f_t gfx_projection_matrix(vec3f_t eye, vec3f_t center) {
-    float coeff = -1.0f / vec3f_length(vec3f_sub(eye, center));
+mat4f_t gfx_projection_matrix(float coeff) {
     mat4f_t projection = mat4f_identity();
     projection.m[3][2] = coeff;
     return projection;
@@ -215,7 +214,6 @@ vec3f_t gfx_sample_normal(image_t *normal_map, vec2f_t texcoord) {
 
 float gfx_sample_specular(image_t *specular_map, vec2f_t texcoord) {
     color_t color = gfx_sample_texture(specular_map, texcoord);
-    assert(color.b == color.g && color.b == color.r);
     return (float)color.b;
 }
 

@@ -88,7 +88,6 @@ color_t fragment_shader(void *varyings_, void *uniforms_) {
     }
     /* calculate reflected light */
     reflected = gfx_reflect_light(normal, light);
-
     /* calculate specular factor */
     {
         float in_specular = gfx_sample_specular(specular_map, in_texcoord);
@@ -123,13 +122,14 @@ void draw_model(context_t *context, model_t *model, image_t *diffuse_map,
     int num_faces = model_get_num_faces(model);
     int i, j;
 
-    vec3f_t light_dir = vec3f_new(1.0f, 1.0f, 0.0f);
-    vec3f_t eye = vec3f_new(1.0f, 1.0f, 4.0f);
+    vec3f_t light_dir = vec3f_new(1.0f, 1.0f, 1.0f);
+    vec3f_t eye = vec3f_new(1.0f, 1.0f, 3.0f);
     vec3f_t center = vec3f_new(0.0f, 0.0f, 0.0f);
     vec3f_t up = vec3f_new(0.0f, 1.0f, 0.0f);
 
     mat4f_t model_view = gfx_lookat_matrix(eye, center, up);
-    mat4f_t projection = gfx_projection_matrix(eye, center);
+    float coeff = -1.0f / vec3f_length(vec3f_sub(eye, center));
+    mat4f_t projection = gfx_projection_matrix(coeff);
 
     mat4f_t mvp_matrix = mat4f_mul_mat4f(projection, model_view);
     mat4f_t mvp_it_mat = mat4f_invert_transpose(mvp_matrix);
@@ -165,19 +165,22 @@ int main(void) {
     context_t *context;
     model_t *model;
     image_t *diffuse_map, *normal_map, *specular_map;
+    image_t *framebuffer;
 
     window = window_create(title, width, height);
     context = gfx_create_context(width, height);
 
-    model = model_load("resources/african_head.obj");
-    diffuse_map = image_load("resources/african_head_diffuse.tga");
-    normal_map = image_load("resources/african_head_nm.tga");
-    specular_map = image_load("resources/african_head_spec.tga");
+    model = model_load("resources/diablo3_pose.obj");
+    diffuse_map = image_load("resources/diablo3_pose_diffuse.tga");
+    normal_map = image_load("resources/diablo3_pose_nm.tga");
+    specular_map = image_load("resources/diablo3_pose_spec.tga");
 
     draw_model(context, model, diffuse_map, normal_map, specular_map);
+    framebuffer = image_clone(context->framebuffer);
+    image_flip_v(framebuffer);
 
     while (!window_should_close(window)) {
-        window_draw_image(window, context->framebuffer);
+        window_draw_image(window, framebuffer);
         input_poll_events();
     }
 

@@ -226,7 +226,7 @@ static image_t *load_tga(const char *filename) {
     fclose(file);
 
     imgdesc = header[17];
-    if (!(imgdesc & 0x20)) {
+    if (imgdesc & 0x20) {
         image_flip_v(image);
     }
     if (imgdesc & 0x10) {

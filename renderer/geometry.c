@@ -120,7 +120,7 @@ vec4f_t mat4f_mul_vec4f(mat4f_t m, vec4f_t v) {
             o_arr[i] += m.m[i][j] * v_arr[j];
         }
     }
-    return vec4f_new(o_arr[0], o_arr[1], o_arr[2], o_arr[2]);
+    return vec4f_new(o_arr[0], o_arr[1], o_arr[2], o_arr[3]);
 }
 
 mat4f_t mat4f_mul_mat4f(mat4f_t a, mat4f_t b) {
