@@ -170,10 +170,10 @@ int main(void) {
     window = window_create(title, width, height);
     context = gfx_create_context(width, height);
 
-    model = model_load("resources/diablo3_pose.obj");
-    diffuse_map = image_load("resources/diablo3_pose_diffuse.tga");
-    normal_map = image_load("resources/diablo3_pose_nm.tga");
-    specular_map = image_load("resources/diablo3_pose_spec.tga");
+    model = model_load("resources/african_head.obj");
+    diffuse_map = image_load("resources/african_head_diffuse.tga");
+    normal_map = image_load("resources/african_head_nm.tga");
+    specular_map = image_load("resources/african_head_spec.tga");
 
     draw_model(context, model, diffuse_map, normal_map, specular_map);
     framebuffer = image_clone(context->framebuffer);
