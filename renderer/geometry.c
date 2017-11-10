@@ -40,6 +40,10 @@ vec3f_t vec3f_from_vec4f(vec4f_t v) {
     return vec3f_new(v.x, v.y, v.z);
 }
 
+vec3f_t vec3f_scale(vec3f_t v, float scale) {
+    return vec3f_new(v.x * scale, v.y * scale, v.z * scale);
+}
+
 vec3f_t vec3f_add(vec3f_t a, vec3f_t b) {
     return vec3f_new(a.x + b.x, a.y + b.y, a.z + b.z);
 }

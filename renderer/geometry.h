@@ -15,6 +15,7 @@ vec2f_t vec2f_sub(vec2f_t a, vec2f_t b);
 vec3f_t vec3f_new(float x, float y, float z);
 void vec3f_to_array(vec3f_t v, float arr[3]);
 vec3f_t vec3f_from_vec4f(vec4f_t v);
+vec3f_t vec3f_scale(vec3f_t v, float scale);
 vec3f_t vec3f_add(vec3f_t a, vec3f_t b);
 vec3f_t vec3f_sub(vec3f_t a, vec3f_t b);
 float vec3f_length(vec3f_t v);

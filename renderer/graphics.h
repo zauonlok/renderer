@@ -36,14 +36,17 @@ mat4f_t gfx_projection_matrix(vec3f_t eye, vec3f_t center);
 mat4f_t gfx_viewport_matrix(int x, int y, int width, int height);
 
 /* texture sampling */
-color_t gfx_sample_texture(image_t *texture, float u, float v);
-color_t gfx_sample_diffuse(image_t *diffuse_map, float u, float v);
-vec3f_t gfx_sample_normal(image_t *normal_map, float u, float v);
-float gfx_sample_specular(image_t *specular_map, float u, float v);
+color_t gfx_sample_texture(image_t *texture, vec2f_t texcoord);
+color_t gfx_sample_diffuse(image_t *diffuse_map, vec2f_t texcoord);
+vec3f_t gfx_sample_normal(image_t *normal_map, vec2f_t texcoord);
+float gfx_sample_specular(image_t *specular_map, vec2f_t texcoord);
 
 /* vector interpolation */
 vec2f_t gfx_interp_vec2f(vec2f_t vs[3], vec3f_t weights);
 vec3f_t gfx_interp_vec3f(vec3f_t vs[3], vec3f_t weights);
 vec4f_t gfx_interp_vec4f(vec4f_t vs[3], vec3f_t weights);
+
+/* utility functions */
+vec3f_t gfx_reflect_light(vec3f_t normal, vec3f_t light);
 
 #endif

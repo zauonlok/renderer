@@ -189,7 +189,9 @@ mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
 
 /* texture sampling */
 
-color_t gfx_sample_texture(image_t *texture, float u, float v) {
+color_t gfx_sample_texture(image_t *texture, vec2f_t texcoord) {
+    int u = texcoord.x;
+    int v = texcoord.y;
     int row, col;
     assert(u >= 0.0f && u <= 1.0f && v >= 0.0f && v <= 1.0f);
     col = (int)((texture->width - 1) * u + 0.5f);
@@ -197,21 +199,22 @@ color_t gfx_sample_texture(image_t *texture, float u, float v) {
     return image_get_color(texture, row, col);
 }
 
-color_t gfx_sample_diffuse(image_t *diffuse_map, float u, float v) {
-    return gfx_sample_texture(diffuse_map, u, v);
+color_t gfx_sample_diffuse(image_t *diffuse_map, vec2f_t texcoord) {
+    return gfx_sample_texture(diffuse_map, texcoord);
 }
 
-vec3f_t gfx_sample_normal(image_t *normal_map, float u, float v) {
-    color_t color = gfx_sample_texture(normal_map, u, v);
+vec3f_t gfx_sample_normal(image_t *normal_map, vec2f_t texcoord) {
+    color_t color = gfx_sample_texture(normal_map, texcoord);
     vec3f_t normal;
+    /* interpret rgb values as xyz directions */
     normal.x = color.r / 255.0f * 2.0f - 1.0f;
     normal.y = color.g / 255.0f * 2.0f - 1.0f;
     normal.z = color.b / 255.0f * 2.0f - 1.0f;
     return normal;
 }
 
-float gfx_sample_specular(image_t *specular_map, float u, float v) {
-    color_t color = gfx_sample_texture(specular_map, u, v);
+float gfx_sample_specular(image_t *specular_map, vec2f_t texcoord) {
+    color_t color = gfx_sample_texture(specular_map, texcoord);
     assert(color.b == color.g && color.b == color.r);
     return (float)color.b;
 }
@@ -255,4 +258,17 @@ vec4f_t gfx_interp_vec4f(vec4f_t vs[3], vec3f_t weights_) {
         out.w += vs[i].w * weights[i];
     }
     return out;
+}
+
+/* utility functions */
+
+/*
+ * reflected = 2 * normal * dot(normal, light) - light
+ * normal must be normalized
+ * light is the inverse of the incident light
+ */
+vec3f_t gfx_reflect_light(vec3f_t normal, vec3f_t light) {
+    float n_dot_l = vec3f_dot(normal, light);
+    vec3f_t two_n_dot = vec3f_scale(normal, n_dot_l * 2.0f);
+    return vec3f_normalize(vec3f_sub(two_n_dot, light));
 }
