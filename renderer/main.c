@@ -178,7 +178,7 @@ int main(void) {
 
     start = timer_get_time();
     draw_model(context, model, diffuse_map, normal_map, specular_map);
-    printf("It takes %lf seconds.\n", timer_get_time() - start);
+    printf("It takes %f seconds.\n", timer_get_time() - start);
     framebuffer = image_clone(context->framebuffer);
     image_flip_v(framebuffer);
 
