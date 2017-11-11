@@ -76,13 +76,13 @@ color_t fragment_shader(void *varyings_, void *uniforms_) {
     /* transform normal */
     {
         vec3f_t in_normal = gfx_sample_normal(normal_map, in_texcoord);
-        vec4f_t normal_4f = vec4f_from_vec3f(in_normal, 1.0f);
+        vec4f_t normal_4f = vec4f_from_vec3f(in_normal, 0.0f);
         normal_4f = mat4f_mul_vec4f(mvp_it_mat, normal_4f);
         normal = vec3f_normalize(vec3f_from_vec4f(normal_4f));
     }
     /* transform light */
     {
-        vec4f_t light_4f = vec4f_from_vec3f(light_dir, 1.0f);
+        vec4f_t light_4f = vec4f_from_vec3f(light_dir, 0.0f);
         light_4f = mat4f_mul_vec4f(mvp_matrix, light_4f);
         light = vec3f_normalize(vec3f_from_vec4f(light_4f));
     }
@@ -106,9 +106,9 @@ color_t fragment_shader(void *varyings_, void *uniforms_) {
         float color_b = 5.0f + in_color.b * (diffuse + 0.6f * specular);
         float color_g = 5.0f + in_color.g * (diffuse + 0.6f * specular);
         float color_r = 5.0f + in_color.r * (diffuse + 0.6f * specular);
-        color.b = (unsigned char)MIN(255.0f, color_b);
-        color.g = (unsigned char)MIN(255.0f, color_g);
-        color.r = (unsigned char)MIN(255.0f, color_r);
+        color.b = (unsigned char)MIN(color_b, 255.0f);
+        color.g = (unsigned char)MIN(color_g, 255.0f);
+        color.r = (unsigned char)MIN(color_r, 255.0f);
     }
 
     return color;
