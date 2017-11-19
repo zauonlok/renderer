@@ -249,7 +249,6 @@ static void save_tga(image_t *image, const char *filename) {
     header[14] = image->height & 0xFF;            /* height, lsb */
     header[15] = (image->height >> 8) & 0xFF;     /* height, msb */
     header[16] = (image->channels * 8) & 0xFF;    /* image depth */
-    header[17] = 0x20;                            /* top-left origin */
     write_bytes(file, header, TGA_HEADER_SIZE);
 
     write_bytes(file, image->buffer, calc_buffer_size(image));
