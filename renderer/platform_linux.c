@@ -38,7 +38,7 @@ static void open_display(void) {
 
 static Window create_window(const char *title, int width, int height) {
     Atom WM_DELETE_WINDOW = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
-    int screen = XDefaultScreen(g_display);;
+    int screen = XDefaultScreen(g_display);
     unsigned long black = XBlackPixel(g_display, screen);
     unsigned long white = XWhitePixel(g_display, screen);
     Window root = XRootWindow(g_display, screen);
