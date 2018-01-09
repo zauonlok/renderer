@@ -10,7 +10,10 @@
 
 /* data structures */
 
-typedef struct context context_t;
+typedef struct {
+    image_t *framebuffer;
+    XImage *ximage;
+} context_t;
 
 struct window {
     Window handle;
@@ -20,41 +23,31 @@ struct window {
     context_t *context;
 };
 
-struct context {
-    image_t *framebuffer;
-    XImage *ximage;
-};
-
 /* window stuff */
 
 static Display *g_display = NULL;
 static XContext g_context;
-static Atom g_WM_PROTOCOLS;
-static Atom g_WM_DELETE_WINDOW;
 
 static void open_display(void) {
     if (g_display == NULL) {
         g_display = XOpenDisplay(NULL);
         assert(g_display != NULL);
         g_context = XUniqueContext();
-        g_WM_PROTOCOLS = XInternAtom(g_display, "WM_PROTOCOLS", True);
-        g_WM_DELETE_WINDOW = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
     }
 }
 
 static Window create_window(const char *title, int width, int height) {
-    int screen;
-    Window root, window;
-    unsigned long black, white;
+    Atom WM_DELETE_WINDOW = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
+    int screen = XDefaultScreen(g_display);;
+    unsigned long black = XBlackPixel(g_display, screen);
+    unsigned long white = XWhitePixel(g_display, screen);
+    Window root = XRootWindow(g_display, screen);
+    Window window;
     XTextProperty property;
     XSizeHints *size_hints;
-    XClassHint *class_hints;
+    XClassHint *class_hint;
     long mask;
 
-    screen = XDefaultScreen(g_display);
-    root = XRootWindow(g_display, screen);
-    black = XBlackPixel(g_display, screen);
-    white = XWhitePixel(g_display, screen);
     window = XCreateSimpleWindow(g_display, root, 0, 0, width, height, 0,
                                  white, black);
 
@@ -74,24 +67,24 @@ static Window create_window(const char *title, int width, int height) {
     XSetWMIconName(g_display, window, &property);
 
     /* application name */
-    class_hints = XAllocClassHint();
-    class_hints->res_name  = (char*)title;
-    class_hints->res_class = (char*)title;
-    XSetClassHint(g_display, window, class_hints);
-    XFree(class_hints);
+    class_hint = XAllocClassHint();
+    class_hint->res_name  = (char*)title;
+    class_hint->res_class = (char*)title;
+    XSetClassHint(g_display, window, class_hint);
+    XFree(class_hint);
 
     /* event subscription */
     mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask;
     XSelectInput(g_display, window, mask);
-    XSetWMProtocols(g_display, window, &g_WM_DELETE_WINDOW, 1);
+    XSetWMProtocols(g_display, window, &WM_DELETE_WINDOW, 1);
 
     return window;
 }
 
 static context_t *create_context(int width, int height) {
     int screen = XDefaultScreen(g_display);
-    Visual *visual = XDefaultVisual(g_display, screen);
     int depth = XDefaultDepth(g_display, screen);
+    Visual *visual = XDefaultVisual(g_display, screen);
     image_t *framebuffer = image_create(width, height, 4);
     unsigned char *buffer = framebuffer->buffer;
     XImage *ximage;
@@ -152,8 +145,8 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
-void image_blit_bgr(image_t *src, image_t *dst);  /* private function,
-                                                     implemented in image.c */
+/* private function, implemented in image.c */
+void image_blit_bgr(image_t *src, image_t *dst);
 
 void window_draw_image(window_t *window, image_t *image) {
     int screen = XDefaultScreen(g_display);
@@ -162,13 +155,15 @@ void window_draw_image(window_t *window, image_t *image) {
     image_t *framebuffer = context->framebuffer;
 
     image_blit_bgr(image, framebuffer);
-
     XPutImage(g_display, window->handle, gc, context->ximage,
               0, 0, 0, 0, framebuffer->width, framebuffer->height);
     XFlush(g_display);
 }
 
 /* input stuff */
+
+static const char ACTION_UP = 0;
+static const char ACTION_DOWN = 1;
 
 static void handle_key_event(window_t *window, int virtual_key, char action) {
     KeySym keysym, *keysyms;
@@ -200,31 +195,31 @@ static void handle_button_event(window_t *window, int button, char action) {
 }
 
 static void process_event(XEvent *event) {
-    Window handle;
     window_t *window;
-    int status;
-
-    handle = event->xany.window;
-    status = XFindContext(g_display, handle, g_context, (XPointer*)&window);
+    Window handle = event->xany.window;
+    int status = XFindContext(g_display, handle, g_context, (XPointer*)&window);
     if (status != 0) {
         return;
     }
 
     if (event->type == ClientMessage) {
-        if (event->xclient.message_type == g_WM_PROTOCOLS) {
+        Atom WM_PROTOCOLS = XInternAtom(g_display, "WM_PROTOCOLS", True);
+        if (event->xclient.message_type == WM_PROTOCOLS) {
             Atom protocol = event->xclient.data.l[0];
-            if (protocol == g_WM_DELETE_WINDOW) {
+            Atom WM_DELETE_WINDOW = XInternAtom(g_display, "WM_DELETE_WINDOW",
+                                                True);
+            if (protocol == WM_DELETE_WINDOW) {
                 window->should_close = 1;
             }
         }
     } else if (event->type == KeyPress) {
-        handle_key_event(window, event->xkey.keycode, 1);
+        handle_key_event(window, event->xkey.keycode, ACTION_DOWN);
     } else if (event->type == KeyRelease) {
-        handle_key_event(window, event->xkey.keycode, 0);
+        handle_key_event(window, event->xkey.keycode, ACTION_UP);
     } else if (event->type == ButtonPress) {
-        handle_button_event(window, event->xbutton.button, 1);
+        handle_button_event(window, event->xbutton.button, ACTION_DOWN);
     } else if (event->type == ButtonRelease) {
-        handle_button_event(window, event->xbutton.button, 0);
+        handle_button_event(window, event->xbutton.button, ACTION_UP);
     }
 }
 

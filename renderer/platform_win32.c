@@ -7,7 +7,12 @@
 
 /* data structures */
 
-typedef struct context context_t;
+typedef struct {
+    image_t *framebuffer;
+    HDC cdc;
+    HBITMAP dib;
+    HBITMAP old;
+} context_t;
 
 struct window {
     HWND handle;
@@ -17,17 +22,13 @@ struct window {
     context_t *context;
 };
 
-struct context {
-    image_t *framebuffer;
-    HDC cdc;
-    HBITMAP dib;
-    HBITMAP old;
-};
-
 /* window stuff */
 
 static const char *WINDOW_CLASS_NAME = "Class";
 static const char *WINDOW_ENTRY_NAME = "Entry";
+
+static const char ACTION_UP = 0;
+static const char ACTION_DOWN = 1;
 
 static void handle_key_message(window_t *window, int virtual_key, char action) {
     keycode_t key;
@@ -52,22 +53,22 @@ static LRESULT CALLBACK process_message(HWND hWnd, UINT uMsg,
         window->should_close = 1;
         return 0;
     } else if (uMsg == WM_KEYDOWN) {
-        handle_key_message(window, wParam, 1);
+        handle_key_message(window, wParam, ACTION_DOWN);
         return 0;
     } else if (uMsg == WM_KEYUP) {
-        handle_key_message(window, wParam, 0);
+        handle_key_message(window, wParam, ACTION_UP);
         return 0;
     } else if (uMsg == WM_LBUTTONDOWN) {
-        window->buttons[BUTTON_L] = 1;
+        window->buttons[BUTTON_L] = ACTION_DOWN;
         return 0;
     } else if (uMsg == WM_RBUTTONDOWN) {
-        window->buttons[BUTTON_R] = 1;
+        window->buttons[BUTTON_R] = ACTION_DOWN;
         return 0;
     } else if (uMsg == WM_LBUTTONUP) {
-        window->buttons[BUTTON_L] = 0;
+        window->buttons[BUTTON_L] = ACTION_UP;
         return 0;
     } else if (uMsg == WM_RBUTTONUP) {
-        window->buttons[BUTTON_R] = 0;
+        window->buttons[BUTTON_R] = ACTION_UP;
         return 0;
     } else {
         return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -195,8 +196,8 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
-void image_blit_bgr(image_t *src, image_t *dst);  /* private function,
-                                                     implemented in image.c */
+/* private function, implemented in image.c */
+void image_blit_bgr(image_t *src, image_t *dst);
 
 void window_draw_image(window_t *window, image_t *image) {
     HDC wdc = GetDC(window->handle);
@@ -204,7 +205,6 @@ void window_draw_image(window_t *window, image_t *image) {
     image_t *framebuffer = context->framebuffer;
 
     image_blit_bgr(image, framebuffer);
-
     BitBlt(wdc, 0, 0, framebuffer->width, framebuffer->height,
            context->cdc, 0, 0, SRCCOPY);
     ReleaseDC(window->handle, wdc);

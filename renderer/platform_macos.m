@@ -9,7 +9,9 @@
 
 /* data structures */
 
-typedef struct context context_t;
+typedef struct {
+    image_t *framebuffer;
+} context_t;
 
 struct window {
     NSWindow *handle;
@@ -17,10 +19,6 @@ struct window {
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
     context_t *context;
-};
-
-struct context {
-    image_t *framebuffer;
 };
 
 /* memory management */
@@ -51,6 +49,9 @@ static NSAutoreleasePool *g_autoreleasepool;
 }
 
 @end
+
+static const char ACTION_UP = 0;
+static const char ACTION_DOWN = 1;
 
 /* for virtual key codes, see https://stackoverflow.com/questions/3202629/ */
 static void handle_key_event(window_t *window, int virtual_key, char action) {
@@ -114,31 +115,31 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
 }
 
 - (void)keyDown:(NSEvent *)event {
-    handle_key_event(window, [event keyCode], 1);
+    handle_key_event(window, [event keyCode], ACTION_DOWN);
 }
 
 - (void)keyUp:(NSEvent *)event {
-    handle_key_event(window, [event keyCode], 0);
+    handle_key_event(window, [event keyCode], ACTION_UP);
 }
 
 - (void)mouseDown:(NSEvent *)event {
     (void)event;
-    window->buttons[BUTTON_L] = 1;
+    window->buttons[BUTTON_L] = ACTION_DOWN;
 }
 
 - (void)mouseUp:(NSEvent *)event {
     (void)event;
-    window->buttons[BUTTON_L] = 0;
+    window->buttons[BUTTON_L] = ACTION_UP;
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
     (void)event;
-    window->buttons[BUTTON_R] = 1;
+    window->buttons[BUTTON_R] = ACTION_DOWN;
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
     (void)event;
-    window->buttons[BUTTON_R] = 0;
+    window->buttons[BUTTON_R] = ACTION_UP;
 }
 
 @end
@@ -185,13 +186,12 @@ static void create_application(void) {
 
 static NSWindow *create_window(window_t *window, const char *title,
                                int width, int height) {
-    NSRect rect;
+    NSRect rect = NSMakeRect(0, 0, width, height);
     NSUInteger mask;
     NSWindow *handle;
     WindowDelegate *delegate;
     ContentView *view;
 
-    rect = NSMakeRect(0, 0, width, height);
     mask = NSWindowStyleMaskTitled
            | NSWindowStyleMaskClosable
            | NSWindowStyleMaskMiniaturizable;
@@ -264,8 +264,8 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
-void image_blit_rgb(image_t *src, image_t *dst);  /* private function,
-                                                     implemented in image.c */
+/* private function, implemented in image.c */
+void image_blit_rgb(image_t *src, image_t *dst);
 
 void window_draw_image(window_t *window, image_t *image) {
     image_blit_rgb(image, window->context->framebuffer);
