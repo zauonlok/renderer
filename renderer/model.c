@@ -222,25 +222,26 @@ int model_get_num_faces(model_t *model) {
     return model->num_faces;
 }
 
-static void check_range(model_t *model, int face, int nth_element) {
-    assert(face >= 0 && face < model->num_faces);
-    assert(nth_element >= 0 && nth_element < 3);
-}
+#define check_range(model, nth_face, nth_element)                           \
+    do {                                                                    \
+        assert(nth_face >= 0 && nth_face < model->num_faces);               \
+        assert(nth_element >= 0 && nth_element < 3);                        \
+    } while (0)
 
-vec3f_t model_get_position(model_t *model, int face, int nth_position) {
-    int index = face * 3 + nth_position;
-    check_range(model, face, nth_position);
+vec3f_t model_get_position(model_t *model, int nth_face, int nth_position) {
+    int index = nth_face * 3 + nth_position;
+    check_range(model, nth_face, nth_position);
     return model->positions[index];
 }
 
-vec2f_t model_get_texcoord(model_t *model, int face, int nth_texcoord) {
-    int index = face * 3 + nth_texcoord;
-    check_range(model, face, nth_texcoord);
+vec2f_t model_get_texcoord(model_t *model, int nth_face, int nth_texcoord) {
+    int index = nth_face * 3 + nth_texcoord;
+    check_range(model, nth_face, nth_texcoord);
     return model->texcoords[index];
 }
 
-vec3f_t model_get_normal(model_t *model, int face, int nth_normal) {
-    int index = face * 3 + nth_normal;
-    check_range(model, face, nth_normal);
+vec3f_t model_get_normal(model_t *model, int nth_face, int nth_normal) {
+    int index = nth_face * 3 + nth_normal;
+    check_range(model, nth_face, nth_normal);
     return model->normals[index];
 }
