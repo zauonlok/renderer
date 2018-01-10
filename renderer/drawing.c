@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdlib.h>
 #include "drawing.h"
 
 static point_t make_point(int row, int col) {
