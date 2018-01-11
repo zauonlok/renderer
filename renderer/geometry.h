@@ -4,7 +4,7 @@
 typedef struct {float x, y;} vec2_t;
 typedef struct {float x, y, z;} vec3_t;
 typedef struct {float x, y, z, w;} vec4_t;
-typedef struct {float m[4][4];} mat4f_t;
+typedef struct {float m[4][4];} mat4_t;
 
 /* vec2 stuff */
 vec2_t vec2_new(float x, float y);
@@ -29,20 +29,20 @@ void vec4_to_array(vec4_t v, float arr[4]);
 vec4_t vec4_from_vec3(vec3_t v, float w);
 vec4_t vec4_scale(vec4_t v, float scale);
 
-/* mat4f stuff */
-mat4f_t mat4f_identity();
-vec4_t mat4f_mul_vec4(mat4f_t m, vec4_t v);
-mat4f_t mat4f_mul_mat4f(mat4f_t a, mat4f_t b);
-mat4f_t mat4f_invert_transpose(mat4f_t m);
-mat4f_t mat4f_inverse(mat4f_t m);
-mat4f_t mat4f_transpose(mat4f_t m);
+/* mat4 stuff */
+mat4_t mat4_identity();
+vec4_t mat4_mul_vec4(mat4_t m, vec4_t v);
+mat4_t mat4_mul_mat4(mat4_t a, mat4_t b);
+mat4_t mat4_invert_transpose(mat4_t m);
+mat4_t mat4_inverse(mat4_t m);
+mat4_t mat4_transpose(mat4_t m);
 
 /*
-mat4f_t mat4f_translate(float dx, float dy, float dz);
-mat4f_t mat4f_scale(float sx, float sy, float sz);
-mat4f_t mat4f_rotate_x(float angle);
-mat4f_t mat4f_rotate_y(float angle);
-mat4f_t mat4f_rotate_z(float angle);
+mat4_t mat4_translate(float dx, float dy, float dz);
+mat4_t mat4_scale(float sx, float sy, float sz);
+mat4_t mat4_rotate_x(float angle);
+mat4_t mat4_rotate_y(float angle);
+mat4_t mat4_rotate_z(float angle);
 */
 
 #endif

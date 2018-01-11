@@ -97,11 +97,11 @@ vec4_t vec4_scale(vec4_t v, float scale) {
     return vec4_new(v.x * scale, v.y * scale, v.z * scale, v.w * scale);
 }
 
-/* mat4f stuff */
+/* mat4 stuff */
 
-mat4f_t mat4f_identity() {
+mat4_t mat4_identity() {
     int i, j;
-    mat4f_t m;
+    mat4_t m;
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
             m.m[i][j] = (i == j) ? 1.0f : 0.0f;
@@ -110,7 +110,7 @@ mat4f_t mat4f_identity() {
     return m;
 }
 
-vec4_t mat4f_mul_vec4(mat4f_t m, vec4_t v) {
+vec4_t mat4_mul_vec4(mat4_t m, vec4_t v) {
     int i, j;
     float v_arr[4], o_arr[4];
     vec4_to_array(v, v_arr);
@@ -123,9 +123,9 @@ vec4_t mat4f_mul_vec4(mat4f_t m, vec4_t v) {
     return vec4_new(o_arr[0], o_arr[1], o_arr[2], o_arr[3]);
 }
 
-mat4f_t mat4f_mul_mat4f(mat4f_t a, mat4f_t b) {
+mat4_t mat4_mul_mat4(mat4_t a, mat4_t b) {
     int i, j, k;
-    mat4f_t m;
+    mat4_t m;
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
             m.m[i][j] = 0.0f;
@@ -150,7 +150,7 @@ static float mat3f_determinant(mat3f_t *m) {
            + m->m[0][2] * (m->m[1][0] * m->m[2][1] - m->m[1][1] * m->m[2][0]);
 }
 
-static float mat4f_minor(mat4f_t *m, int r, int c) {
+static float mat4_minor(mat4_t *m, int r, int c) {
     int i, j;
     mat3f_t sub_mat;
     assert(r >= 0 && c >= 0 && r < 4 && c < 4);
@@ -164,31 +164,31 @@ static float mat4f_minor(mat4f_t *m, int r, int c) {
     return mat3f_determinant(&sub_mat);
 }
 
-static float mat4f_cofactor(mat4f_t *m, int r, int c) {
+static float mat4_cofactor(mat4_t *m, int r, int c) {
     float minor, sign;
     assert(r >= 0 && c >= 0 && r < 4 && c < 4);
-    minor = mat4f_minor(m, r, c);
+    minor = mat4_minor(m, r, c);
     sign = ((r + c) % 2 == 0) ? 1.0f : -1.0f;
     return sign * minor;
 }
 
-static mat4f_t mat4f_adjoint(mat4f_t *m) {
+static mat4_t mat4_adjoint(mat4_t *m) {
     int i, j;
-    mat4f_t adjoint;
+    mat4_t adjoint;
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            adjoint.m[i][j] = mat4f_cofactor(m, i, j);
+            adjoint.m[i][j] = mat4_cofactor(m, i, j);
         }
     }
     return adjoint;
 }
 
-mat4f_t mat4f_invert_transpose(mat4f_t m) {
+mat4_t mat4_invert_transpose(mat4_t m) {
     int i, j;
     float determinant;
-    mat4f_t adjoint, invert_transpose;
+    mat4_t adjoint, invert_transpose;
 
-    adjoint = mat4f_adjoint(&m);
+    adjoint = mat4_adjoint(&m);
     /* calculate the determinant */
     determinant = 0.0f;
     for (i = 0; i < 4; i++) {
@@ -204,13 +204,13 @@ mat4f_t mat4f_invert_transpose(mat4f_t m) {
     return invert_transpose;
 }
 
-mat4f_t mat4f_inverse(mat4f_t m) {
-    return mat4f_transpose(mat4f_invert_transpose(m));
+mat4_t mat4_inverse(mat4_t m) {
+    return mat4_transpose(mat4_invert_transpose(m));
 }
 
-mat4f_t mat4f_transpose(mat4f_t m) {
+mat4_t mat4_transpose(mat4_t m) {
     int i, j;
-    mat4f_t transpose;
+    mat4_t transpose;
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
             transpose.m[i][j] = m.m[j][i];

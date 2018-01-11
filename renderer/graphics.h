@@ -11,7 +11,7 @@ typedef color_t fragment_shader_t(void *varyings, void *uniforms);
 typedef struct {
     image_t *framebuffer;
     float *depthbuffer;
-    mat4f_t viewport;
+    mat4_t viewport;
 } context_t;
 
 typedef struct {
@@ -31,9 +31,9 @@ void gfx_clear_buffers(context_t *context);
 void gfx_draw_triangle(context_t *context, program_t *program);
 
 /* common matrices */
-mat4f_t gfx_lookat_matrix(vec3_t eye, vec3_t center, vec3_t up);
-mat4f_t gfx_projection_matrix(float coeff);
-mat4f_t gfx_viewport_matrix(int x, int y, int width, int height);
+mat4_t gfx_lookat_matrix(vec3_t eye, vec3_t center, vec3_t up);
+mat4_t gfx_projection_matrix(float coeff);
+mat4_t gfx_viewport_matrix(int x, int y, int width, int height);
 
 /* texture sampling */
 color_t gfx_sample_texture(image_t *texture, vec2_t texcoord);

@@ -96,7 +96,7 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
     /* for convenience */
     int width = context->framebuffer->width;
     int height = context->framebuffer->height;
-    mat4f_t viewport = context->viewport;
+    mat4_t viewport = context->viewport;
     void *varyings = program->varyings;
     void *uniforms = program->uniforms;
 
@@ -108,7 +108,7 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
     for (i = 0; i < 3; i++) {
         vec4_t clip_coord = program->vertex_shader(i, varyings, uniforms);
         vec4_t ndc_coord = vec4_scale(clip_coord, 1.0f / clip_coord.w);
-        screen_coords[i] = mat4f_mul_vec4(viewport, ndc_coord);
+        screen_coords[i] = mat4_mul_vec4(viewport, ndc_coord);
         screen_points[i] = vec2_new(screen_coords[i].x, screen_coords[i].y);
     }
 
@@ -147,13 +147,13 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
  * 3D Math Primer for Graphics and Game Development, Chapter 10
  */
 
-mat4f_t gfx_lookat_matrix(vec3_t eye, vec3_t center, vec3_t up) {
+mat4_t gfx_lookat_matrix(vec3_t eye, vec3_t center, vec3_t up) {
     vec3_t zaxis = vec3_normalize(vec3_sub(eye, center));
     vec3_t xaxis = vec3_normalize(vec3_cross(up, zaxis));
     vec3_t yaxis = vec3_normalize(vec3_cross(zaxis, xaxis));
 
     int i;
-    mat4f_t lookat = mat4f_identity();
+    mat4_t lookat = mat4_identity();
     float xaxis_arr[3], yaxis_arr[3], zaxis_arr[3], center_arr[3];
     vec3_to_array(xaxis, xaxis_arr);
     vec3_to_array(yaxis, yaxis_arr);
@@ -168,15 +168,15 @@ mat4f_t gfx_lookat_matrix(vec3_t eye, vec3_t center, vec3_t up) {
     return lookat;
 }
 
-mat4f_t gfx_projection_matrix(float coeff) {
-    mat4f_t projection = mat4f_identity();
+mat4_t gfx_projection_matrix(float coeff) {
+    mat4_t projection = mat4_identity();
     projection.m[3][2] = coeff;
     return projection;
 }
 
-mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
+mat4_t gfx_viewport_matrix(int x, int y, int width, int height) {
     static const float depth = 255.0f;
-    mat4f_t viewport = mat4f_identity();
+    mat4_t viewport = mat4_identity();
     viewport.m[0][0] = width / 2.0f;
     viewport.m[0][3] = x + width / 2.0f;
     viewport.m[1][1] = height / 2.0f;

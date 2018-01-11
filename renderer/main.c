@@ -22,8 +22,8 @@ typedef struct {
 typedef struct {
     /* geometry uniforms */
     vec3_t light_dir;
-    mat4f_t mvp_matrix;
-    mat4f_t mvp_it_mat;
+    mat4_t mvp_matrix;
+    mat4_t mvp_it_mat;
     /* texture uniforms */
     image_t *diffuse_map;
     image_t *normal_map;
@@ -38,11 +38,11 @@ vec4_t vertex_shader(int nth_vertex, void *varyings_, void *uniforms_) {
     vec3_t in_position = varyings->vs_in_positions[nth_vertex];
     vec2_t in_texcoord = varyings->vs_in_texcoords[nth_vertex];
     vec2_t *out_texcoord = &varyings->vs_out_texcoords[nth_vertex];
-    mat4f_t mvp_matrix = uniforms->mvp_matrix;
+    mat4_t mvp_matrix = uniforms->mvp_matrix;
 
     /* setup position */
     vec4_t position = vec4_from_vec3(in_position, 1.0f);
-    vec4_t clip_coord = mat4f_mul_vec4(mvp_matrix, position);
+    vec4_t clip_coord = mat4_mul_vec4(mvp_matrix, position);
 
     /* setup texcoord */
     *out_texcoord = in_texcoord;
@@ -63,8 +63,8 @@ color_t fragment_shader(void *varyings_, void *uniforms_) {
     /* for convenience */
     vec2_t in_texcoord = varyings->fs_in_texcoord;
     vec3_t light_dir = uniforms->light_dir;
-    mat4f_t mvp_matrix = uniforms->mvp_matrix;
-    mat4f_t mvp_it_mat = uniforms->mvp_it_mat;
+    mat4_t mvp_matrix = uniforms->mvp_matrix;
+    mat4_t mvp_it_mat = uniforms->mvp_it_mat;
     image_t *diffuse_map = uniforms->diffuse_map;
     image_t *normal_map = uniforms->normal_map;
     image_t *specular_map = uniforms->specular_map;
@@ -77,13 +77,13 @@ color_t fragment_shader(void *varyings_, void *uniforms_) {
     {
         vec3_t in_normal = gfx_sample_normal(normal_map, in_texcoord);
         vec4_t normal_4f = vec4_from_vec3(in_normal, 0.0f);
-        normal_4f = mat4f_mul_vec4(mvp_it_mat, normal_4f);
+        normal_4f = mat4_mul_vec4(mvp_it_mat, normal_4f);
         normal = vec3_normalize(vec3_from_vec4(normal_4f));
     }
     /* transform light */
     {
         vec4_t light_4f = vec4_from_vec3(light_dir, 0.0f);
-        light_4f = mat4f_mul_vec4(mvp_matrix, light_4f);
+        light_4f = mat4_mul_vec4(mvp_matrix, light_4f);
         light = vec3_normalize(vec3_from_vec4(light_4f));
     }
     /* calculate reflected light */
@@ -127,12 +127,12 @@ void draw_model(context_t *context, model_t *model, image_t *diffuse_map,
     vec3_t center = vec3_new(0.0f, 0.0f, 0.0f);
     vec3_t up = vec3_new(0.0f, 1.0f, 0.0f);
 
-    mat4f_t model_view = gfx_lookat_matrix(eye, center, up);
+    mat4_t model_view = gfx_lookat_matrix(eye, center, up);
     float coeff = -1.0f / vec3_length(vec3_sub(eye, center));
-    mat4f_t projection = gfx_projection_matrix(coeff);
+    mat4_t projection = gfx_projection_matrix(coeff);
 
-    mat4f_t mvp_matrix = mat4f_mul_mat4f(projection, model_view);
-    mat4f_t mvp_it_mat = mat4f_invert_transpose(mvp_matrix);
+    mat4_t mvp_matrix = mat4_mul_mat4(projection, model_view);
+    mat4_t mvp_it_mat = mat4_invert_transpose(mvp_matrix);
 
     uniforms.light_dir    = light_dir;
     uniforms.mvp_matrix   = mvp_matrix;
