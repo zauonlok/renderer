@@ -56,7 +56,7 @@ void gfx_clear_buffers(context_t *context) {
  *        = A + s * (B - A) + t * (C - A)
  *        = (1 - s - t) * A + s * B + t * C
  */
-static vec3f_t calculate_weights(vec2_t A, vec2_t B, vec2_t C, vec2_t P) {
+static vec3_t calculate_weights(vec2_t A, vec2_t B, vec2_t C, vec2_t P) {
     vec2_t AB = vec2_sub(B, A);
     vec2_t AC = vec2_sub(C, A);
     vec2_t AP = vec2_sub(P, A);
@@ -65,7 +65,7 @@ static vec3f_t calculate_weights(vec2_t A, vec2_t B, vec2_t C, vec2_t P) {
     float s = (AC.y * AP.x - AC.x * AP.y) / denom;
     float t = (AB.x * AP.y - AB.y * AP.x) / denom;
 
-    return vec3f_new(1.0f - s - t, s, t);
+    return vec3_new(1.0f - s - t, s, t);
 }
 
 typedef struct {float min_x, min_y, max_x, max_y;} box_t;
@@ -117,7 +117,7 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
     for (x = (int)box.min_x; x <= box.max_x; x++) {
         for (y = (int)box.min_y; y <= box.max_y; y++) {
             vec2_t point = vec2_new((float)x, (float)y);
-            vec3f_t weights = calculate_weights(screen_points[0],
+            vec3_t weights = calculate_weights(screen_points[0],
                                                 screen_points[1],
                                                 screen_points[2],
                                                 point);
@@ -147,18 +147,18 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
  * 3D Math Primer for Graphics and Game Development, Chapter 10
  */
 
-mat4f_t gfx_lookat_matrix(vec3f_t eye, vec3f_t center, vec3f_t up) {
-    vec3f_t zaxis = vec3f_normalize(vec3f_sub(eye, center));
-    vec3f_t xaxis = vec3f_normalize(vec3f_cross(up, zaxis));
-    vec3f_t yaxis = vec3f_normalize(vec3f_cross(zaxis, xaxis));
+mat4f_t gfx_lookat_matrix(vec3_t eye, vec3_t center, vec3_t up) {
+    vec3_t zaxis = vec3_normalize(vec3_sub(eye, center));
+    vec3_t xaxis = vec3_normalize(vec3_cross(up, zaxis));
+    vec3_t yaxis = vec3_normalize(vec3_cross(zaxis, xaxis));
 
     int i;
     mat4f_t lookat = mat4f_identity();
     float xaxis_arr[3], yaxis_arr[3], zaxis_arr[3], center_arr[3];
-    vec3f_to_array(xaxis, xaxis_arr);
-    vec3f_to_array(yaxis, yaxis_arr);
-    vec3f_to_array(zaxis, zaxis_arr);
-    vec3f_to_array(center, center_arr);
+    vec3_to_array(xaxis, xaxis_arr);
+    vec3_to_array(yaxis, yaxis_arr);
+    vec3_to_array(zaxis, zaxis_arr);
+    vec3_to_array(center, center_arr);
     for (i = 0; i < 3; i++) {
         lookat.m[0][i] = xaxis_arr[i];
         lookat.m[1][i] = yaxis_arr[i];
@@ -202,9 +202,9 @@ color_t gfx_sample_diffuse(image_t *diffuse_map, vec2_t texcoord) {
     return gfx_sample_texture(diffuse_map, texcoord);
 }
 
-vec3f_t gfx_sample_normal(image_t *normal_map, vec2_t texcoord) {
+vec3_t gfx_sample_normal(image_t *normal_map, vec2_t texcoord) {
     color_t color = gfx_sample_texture(normal_map, texcoord);
-    vec3f_t normal;
+    vec3_t normal;
     /* interpret rgb values as xyz directions */
     normal.x = color.r / 255.0f * 2.0f - 1.0f;
     normal.y = color.g / 255.0f * 2.0f - 1.0f;
@@ -219,11 +219,11 @@ float gfx_sample_specular(image_t *specular_map, vec2_t texcoord) {
 
 /* vector interpolation */
 
-vec2_t gfx_interp_vec2(vec2_t vs[3], vec3f_t weights_) {
+vec2_t gfx_interp_vec2(vec2_t vs[3], vec3_t weights_) {
     int i;
     vec2_t out = {0.0f, 0.0f};
     float weights[3];
-    vec3f_to_array(weights_, weights);
+    vec3_to_array(weights_, weights);
     for (i = 0; i < 3; i++) {
         out.x += vs[i].x * weights[i];
         out.y += vs[i].y * weights[i];
@@ -231,11 +231,11 @@ vec2_t gfx_interp_vec2(vec2_t vs[3], vec3f_t weights_) {
     return out;
 }
 
-vec3f_t gfx_interp_vec3f(vec3f_t vs[3], vec3f_t weights_) {
+vec3_t gfx_interp_vec3(vec3_t vs[3], vec3_t weights_) {
     int i;
-    vec3f_t out = {0.0f, 0.0f, 0.0f};
+    vec3_t out = {0.0f, 0.0f, 0.0f};
     float weights[3];
-    vec3f_to_array(weights_, weights);
+    vec3_to_array(weights_, weights);
     for (i = 0; i < 3; i++) {
         out.x += vs[i].x * weights[i];
         out.y += vs[i].y * weights[i];
@@ -244,11 +244,11 @@ vec3f_t gfx_interp_vec3f(vec3f_t vs[3], vec3f_t weights_) {
     return out;
 }
 
-vec4f_t gfx_interp_vec4f(vec4f_t vs[3], vec3f_t weights_) {
+vec4f_t gfx_interp_vec4f(vec4f_t vs[3], vec3_t weights_) {
     int i;
     vec4f_t out = {0.0f, 0.0f, 0.0f, 0.0f};
     float weights[3];
-    vec3f_to_array(weights_, weights);
+    vec3_to_array(weights_, weights);
     for (i = 0; i < 3; i++) {
         out.x += vs[i].x * weights[i];
         out.y += vs[i].y * weights[i];
@@ -265,8 +265,8 @@ vec4f_t gfx_interp_vec4f(vec4f_t vs[3], vec3f_t weights_) {
  * normal must be normalized
  * light is the inverse of the incident light
  */
-vec3f_t gfx_reflect_light(vec3f_t normal, vec3f_t light) {
-    float n_dot_l = vec3f_dot(normal, light);
-    vec3f_t two_n_dot = vec3f_scale(normal, n_dot_l * 2.0f);
-    return vec3f_normalize(vec3f_sub(two_n_dot, light));
+vec3_t gfx_reflect_light(vec3_t normal, vec3_t light) {
+    float n_dot_l = vec3_dot(normal, light);
+    vec3_t two_n_dot = vec3_scale(normal, n_dot_l * 2.0f);
+    return vec3_normalize(vec3_sub(two_n_dot, light));
 }

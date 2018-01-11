@@ -2,7 +2,7 @@
 #define GEOMETRY_H
 
 typedef struct {float x, y;} vec2_t;
-typedef struct {float x, y, z;} vec3f_t;
+typedef struct {float x, y, z;} vec3_t;
 typedef struct {float x, y, z, w;} vec4f_t;
 typedef struct {float m[4][4];} mat4f_t;
 
@@ -11,22 +11,22 @@ vec2_t vec2_new(float x, float y);
 vec2_t vec2_add(vec2_t a, vec2_t b);
 vec2_t vec2_sub(vec2_t a, vec2_t b);
 
-/* vec3f stuff */
-vec3f_t vec3f_new(float x, float y, float z);
-void vec3f_to_array(vec3f_t v, float arr[3]);
-vec3f_t vec3f_from_vec4f(vec4f_t v);
-vec3f_t vec3f_scale(vec3f_t v, float scale);
-vec3f_t vec3f_add(vec3f_t a, vec3f_t b);
-vec3f_t vec3f_sub(vec3f_t a, vec3f_t b);
-float vec3f_length(vec3f_t v);
-vec3f_t vec3f_normalize(vec3f_t v);
-float vec3f_dot(vec3f_t a, vec3f_t b);
-vec3f_t vec3f_cross(vec3f_t a, vec3f_t b);
+/* vec3 stuff */
+vec3_t vec3_new(float x, float y, float z);
+void vec3_to_array(vec3_t v, float arr[3]);
+vec3_t vec3_from_vec4f(vec4f_t v);
+vec3_t vec3_scale(vec3_t v, float scale);
+vec3_t vec3_add(vec3_t a, vec3_t b);
+vec3_t vec3_sub(vec3_t a, vec3_t b);
+float vec3_length(vec3_t v);
+vec3_t vec3_normalize(vec3_t v);
+float vec3_dot(vec3_t a, vec3_t b);
+vec3_t vec3_cross(vec3_t a, vec3_t b);
 
 /* vec4f stuff */
 vec4f_t vec4f_new(float x, float y, float z, float w);
 void vec4f_to_array(vec4f_t v, float arr[4]);
-vec4f_t vec4f_from_vec3f(vec3f_t v, float w);
+vec4f_t vec4f_from_vec3(vec3_t v, float w);
 vec4f_t vec4f_scale(vec4f_t v, float scale);
 
 /* mat4f stuff */

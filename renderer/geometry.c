@@ -20,53 +20,53 @@ vec2_t vec2_sub(vec2_t a, vec2_t b) {
     return vec2_new(a.x - b.x, a.y - b.y);
 }
 
-/* vec3f stuff */
+/* vec3 stuff */
 
-vec3f_t vec3f_new(float x, float y, float z) {
-    vec3f_t v;
+vec3_t vec3_new(float x, float y, float z) {
+    vec3_t v;
     v.x = x;
     v.y = y;
     v.z = z;
     return v;
 }
 
-void vec3f_to_array(vec3f_t v, float arr[3]) {
+void vec3_to_array(vec3_t v, float arr[3]) {
     arr[0] = v.x;
     arr[1] = v.y;
     arr[2] = v.z;
 }
 
-vec3f_t vec3f_from_vec4f(vec4f_t v) {
-    return vec3f_new(v.x, v.y, v.z);
+vec3_t vec3_from_vec4f(vec4f_t v) {
+    return vec3_new(v.x, v.y, v.z);
 }
 
-vec3f_t vec3f_scale(vec3f_t v, float scale) {
-    return vec3f_new(v.x * scale, v.y * scale, v.z * scale);
+vec3_t vec3_scale(vec3_t v, float scale) {
+    return vec3_new(v.x * scale, v.y * scale, v.z * scale);
 }
 
-vec3f_t vec3f_add(vec3f_t a, vec3f_t b) {
-    return vec3f_new(a.x + b.x, a.y + b.y, a.z + b.z);
+vec3_t vec3_add(vec3_t a, vec3_t b) {
+    return vec3_new(a.x + b.x, a.y + b.y, a.z + b.z);
 }
 
-vec3f_t vec3f_sub(vec3f_t a, vec3f_t b) {
-    return vec3f_new(a.x - b.x, a.y - b.y, a.z - b.z);
+vec3_t vec3_sub(vec3_t a, vec3_t b) {
+    return vec3_new(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
-float vec3f_length(vec3f_t v) {
+float vec3_length(vec3_t v) {
     return (float)sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
-vec3f_t vec3f_normalize(vec3f_t v) {
-    float length = vec3f_length(v);
-    return vec3f_new(v.x / length, v.y / length, v.z / length);
+vec3_t vec3_normalize(vec3_t v) {
+    float length = vec3_length(v);
+    return vec3_new(v.x / length, v.y / length, v.z / length);
 }
 
-float vec3f_dot(vec3f_t a, vec3f_t b) {
+float vec3_dot(vec3_t a, vec3_t b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-vec3f_t vec3f_cross(vec3f_t a, vec3f_t b) {
-    return vec3f_new(a.y * b.z - a.z * b.y,
+vec3_t vec3_cross(vec3_t a, vec3_t b) {
+    return vec3_new(a.y * b.z - a.z * b.y,
                      a.z * b.x - a.x * b.z,
                      a.x * b.y - a.y * b.x);
 }
@@ -89,7 +89,7 @@ void vec4f_to_array(vec4f_t v, float arr[4]) {
     arr[3] = v.w;
 }
 
-vec4f_t vec4f_from_vec3f(vec3f_t v, float w) {
+vec4f_t vec4f_from_vec3(vec3_t v, float w) {
     return vec4f_new(v.x, v.y, v.z, w);
 }
 

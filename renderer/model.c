@@ -53,9 +53,9 @@ static void *buffer_hold(void *buffer, int count, int itemsize) {
 /* model stuff */
 
 struct model {
-    vec3f_t *positions;
+    vec3_t *positions;
     vec2_t *texcoords;
-    vec3f_t *normals;
+    vec3_t *normals;
     int num_faces;
 };
 
@@ -88,9 +88,9 @@ static char *read_line(FILE *file) {
     }
 }
 
-static model_t *build_model(vec3f_t *position_buffer, int *position_index_buffer,
+static model_t *build_model(vec3_t *position_buffer, int *position_index_buffer,
                             vec2_t *texcoord_buffer, int *texcoord_index_buffer,
-                            vec3f_t *normal_buffer, int *normal_index_buffer) {
+                            vec3_t *normal_buffer, int *normal_index_buffer) {
     int num_positions = buffer_size(position_buffer);
     int num_texcoords = buffer_size(texcoord_buffer);
     int num_normals = buffer_size(normal_buffer);
@@ -105,9 +105,9 @@ static model_t *build_model(vec3f_t *position_buffer, int *position_index_buffer
     assert(num_indices == buffer_size(normal_index_buffer));
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->positions = (vec3f_t*)malloc(num_indices * sizeof(vec3f_t));
+    model->positions = (vec3_t*)malloc(num_indices * sizeof(vec3_t));
     model->texcoords = (vec2_t*)malloc(num_indices * sizeof(vec2_t));
-    model->normals   = (vec3f_t*)malloc(num_indices * sizeof(vec3f_t));
+    model->normals   = (vec3_t*)malloc(num_indices * sizeof(vec3_t));
     model->num_faces = num_faces;
 
     for (i = 0; i < num_indices; i++) {
@@ -128,9 +128,9 @@ static model_t *build_model(vec3f_t *position_buffer, int *position_index_buffer
 }
 
 static model_t *load_obj(const char *filename) {
-    vec3f_t *position_buffer = NULL;
+    vec3_t *position_buffer = NULL;
     vec2_t *texcoord_buffer = NULL;
-    vec3f_t *normal_buffer = NULL;
+    vec3_t *normal_buffer = NULL;
     int *position_index_buffer = NULL;
     int *texcoord_index_buffer = NULL;
     int *normal_index_buffer = NULL;
@@ -149,7 +149,7 @@ static model_t *load_obj(const char *filename) {
             curr += 1;
         }
         if (strncmp(curr, "v ", 2) == 0) {          /* position */
-            vec3f_t position;
+            vec3_t position;
             int items = sscanf(curr + 2, "%f %f %f",
                                &position.x, &position.y, &position.z);
             assert(items == 3);
@@ -160,7 +160,7 @@ static model_t *load_obj(const char *filename) {
             assert(items == 2);
             buffer_push(texcoord_buffer, texcoord);
         } else if (strncmp(curr, "vn ", 3) == 0) {  /* normal */
-            vec3f_t normal;
+            vec3_t normal;
             int items = sscanf(curr + 3, "%f %f %f",
                                &normal.x, &normal.y, &normal.z);
             assert(items == 3);
@@ -228,7 +228,7 @@ int model_get_num_faces(model_t *model) {
         assert(nth_element >= 0 && nth_element < 3);                        \
     } while (0)
 
-vec3f_t model_get_position(model_t *model, int nth_face, int nth_position) {
+vec3_t model_get_position(model_t *model, int nth_face, int nth_position) {
     int index = nth_face * 3 + nth_position;
     check_range(model, nth_face, nth_position);
     return model->positions[index];
@@ -240,7 +240,7 @@ vec2_t model_get_texcoord(model_t *model, int nth_face, int nth_texcoord) {
     return model->texcoords[index];
 }
 
-vec3f_t model_get_normal(model_t *model, int nth_face, int nth_normal) {
+vec3_t model_get_normal(model_t *model, int nth_face, int nth_normal) {
     int index = nth_face * 3 + nth_normal;
     check_range(model, nth_face, nth_normal);
     return model->normals[index];
