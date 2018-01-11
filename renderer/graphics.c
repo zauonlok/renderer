@@ -101,14 +101,14 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
     void *uniforms = program->uniforms;
 
     int i, x, y;
-    vec4f_t screen_coords[3];
+    vec4_t screen_coords[3];
     vec2_t screen_points[3];
     box_t box;
 
     for (i = 0; i < 3; i++) {
-        vec4f_t clip_coord = program->vertex_shader(i, varyings, uniforms);
-        vec4f_t ndc_coord = vec4f_scale(clip_coord, 1.0f / clip_coord.w);
-        screen_coords[i] = mat4f_mul_vec4f(viewport, ndc_coord);
+        vec4_t clip_coord = program->vertex_shader(i, varyings, uniforms);
+        vec4_t ndc_coord = vec4_scale(clip_coord, 1.0f / clip_coord.w);
+        screen_coords[i] = mat4f_mul_vec4(viewport, ndc_coord);
         screen_points[i] = vec2_new(screen_coords[i].x, screen_coords[i].y);
     }
 
@@ -244,9 +244,9 @@ vec3_t gfx_interp_vec3(vec3_t vs[3], vec3_t weights_) {
     return out;
 }
 
-vec4f_t gfx_interp_vec4f(vec4f_t vs[3], vec3_t weights_) {
+vec4_t gfx_interp_vec4(vec4_t vs[3], vec3_t weights_) {
     int i;
-    vec4f_t out = {0.0f, 0.0f, 0.0f, 0.0f};
+    vec4_t out = {0.0f, 0.0f, 0.0f, 0.0f};
     float weights[3];
     vec3_to_array(weights_, weights);
     for (i = 0; i < 3; i++) {

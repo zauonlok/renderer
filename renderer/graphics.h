@@ -4,7 +4,7 @@
 #include "geometry.h"
 #include "image.h"
 
-typedef vec4f_t vertex_shader_t(int nth_vertex, void *varyings, void *uniforms);
+typedef vec4_t vertex_shader_t(int nth_vertex, void *varyings, void *uniforms);
 typedef void interp_varyings_t(vec3_t weights, void *varyings);
 typedef color_t fragment_shader_t(void *varyings, void *uniforms);
 
@@ -44,7 +44,7 @@ float gfx_sample_specular(image_t *specular_map, vec2_t texcoord);
 /* vector interpolation */
 vec2_t gfx_interp_vec2(vec2_t vs[3], vec3_t weights);
 vec3_t gfx_interp_vec3(vec3_t vs[3], vec3_t weights);
-vec4f_t gfx_interp_vec4f(vec4f_t vs[3], vec3_t weights);
+vec4_t gfx_interp_vec4(vec4_t vs[3], vec3_t weights);
 
 /* utility functions */
 vec3_t gfx_reflect_light(vec3_t normal, vec3_t light);

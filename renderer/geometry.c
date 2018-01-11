@@ -36,7 +36,7 @@ void vec3_to_array(vec3_t v, float arr[3]) {
     arr[2] = v.z;
 }
 
-vec3_t vec3_from_vec4f(vec4f_t v) {
+vec3_t vec3_from_vec4(vec4_t v) {
     return vec3_new(v.x, v.y, v.z);
 }
 
@@ -71,10 +71,10 @@ vec3_t vec3_cross(vec3_t a, vec3_t b) {
                      a.x * b.y - a.y * b.x);
 }
 
-/* vec4f stuff */
+/* vec4 stuff */
 
-vec4f_t vec4f_new(float x, float y, float z, float w) {
-    vec4f_t v;
+vec4_t vec4_new(float x, float y, float z, float w) {
+    vec4_t v;
     v.x = x;
     v.y = y;
     v.z = z;
@@ -82,19 +82,19 @@ vec4f_t vec4f_new(float x, float y, float z, float w) {
     return v;
 }
 
-void vec4f_to_array(vec4f_t v, float arr[4]) {
+void vec4_to_array(vec4_t v, float arr[4]) {
     arr[0] = v.x;
     arr[1] = v.y;
     arr[2] = v.z;
     arr[3] = v.w;
 }
 
-vec4f_t vec4f_from_vec3(vec3_t v, float w) {
-    return vec4f_new(v.x, v.y, v.z, w);
+vec4_t vec4_from_vec3(vec3_t v, float w) {
+    return vec4_new(v.x, v.y, v.z, w);
 }
 
-vec4f_t vec4f_scale(vec4f_t v, float scale) {
-    return vec4f_new(v.x * scale, v.y * scale, v.z * scale, v.w * scale);
+vec4_t vec4_scale(vec4_t v, float scale) {
+    return vec4_new(v.x * scale, v.y * scale, v.z * scale, v.w * scale);
 }
 
 /* mat4f stuff */
@@ -110,17 +110,17 @@ mat4f_t mat4f_identity() {
     return m;
 }
 
-vec4f_t mat4f_mul_vec4f(mat4f_t m, vec4f_t v) {
+vec4_t mat4f_mul_vec4(mat4f_t m, vec4_t v) {
     int i, j;
     float v_arr[4], o_arr[4];
-    vec4f_to_array(v, v_arr);
+    vec4_to_array(v, v_arr);
     for (i = 0; i < 4; i++) {
         o_arr[i] = 0.0f;
         for (j = 0; j < 4; j++) {
             o_arr[i] += m.m[i][j] * v_arr[j];
         }
     }
-    return vec4f_new(o_arr[0], o_arr[1], o_arr[2], o_arr[3]);
+    return vec4_new(o_arr[0], o_arr[1], o_arr[2], o_arr[3]);
 }
 
 mat4f_t mat4f_mul_mat4f(mat4f_t a, mat4f_t b) {

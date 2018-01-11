@@ -30,7 +30,7 @@ typedef struct {
     image_t *specular_map;
 } uniforms_t;
 
-vec4f_t vertex_shader(int nth_vertex, void *varyings_, void *uniforms_) {
+vec4_t vertex_shader(int nth_vertex, void *varyings_, void *uniforms_) {
     varyings_t *varyings = (varyings_t*)varyings_;
     uniforms_t *uniforms = (uniforms_t*)uniforms_;
 
@@ -41,8 +41,8 @@ vec4f_t vertex_shader(int nth_vertex, void *varyings_, void *uniforms_) {
     mat4f_t mvp_matrix = uniforms->mvp_matrix;
 
     /* setup position */
-    vec4f_t position = vec4f_from_vec3(in_position, 1.0f);
-    vec4f_t clip_coord = mat4f_mul_vec4f(mvp_matrix, position);
+    vec4_t position = vec4_from_vec3(in_position, 1.0f);
+    vec4_t clip_coord = mat4f_mul_vec4(mvp_matrix, position);
 
     /* setup texcoord */
     *out_texcoord = in_texcoord;
@@ -76,15 +76,15 @@ color_t fragment_shader(void *varyings_, void *uniforms_) {
     /* transform normal */
     {
         vec3_t in_normal = gfx_sample_normal(normal_map, in_texcoord);
-        vec4f_t normal_4f = vec4f_from_vec3(in_normal, 0.0f);
-        normal_4f = mat4f_mul_vec4f(mvp_it_mat, normal_4f);
-        normal = vec3_normalize(vec3_from_vec4f(normal_4f));
+        vec4_t normal_4f = vec4_from_vec3(in_normal, 0.0f);
+        normal_4f = mat4f_mul_vec4(mvp_it_mat, normal_4f);
+        normal = vec3_normalize(vec3_from_vec4(normal_4f));
     }
     /* transform light */
     {
-        vec4f_t light_4f = vec4f_from_vec3(light_dir, 0.0f);
-        light_4f = mat4f_mul_vec4f(mvp_matrix, light_4f);
-        light = vec3_normalize(vec3_from_vec4f(light_4f));
+        vec4_t light_4f = vec4_from_vec3(light_dir, 0.0f);
+        light_4f = mat4f_mul_vec4(mvp_matrix, light_4f);
+        light = vec3_normalize(vec3_from_vec4(light_4f));
     }
     /* calculate reflected light */
     reflected = gfx_reflect_light(normal, light);
