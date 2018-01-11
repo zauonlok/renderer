@@ -12,11 +12,11 @@
 typedef struct {
     /* input of vertex shader */
     vec3f_t vs_in_positions[3];
-    vec2f_t vs_in_texcoords[3];
+    vec2_t vs_in_texcoords[3];
     /* output of vertex shader */
-    vec2f_t vs_out_texcoords[3];
+    vec2_t vs_out_texcoords[3];
     /* input of fragment shader */
-    vec2f_t fs_in_texcoord;
+    vec2_t fs_in_texcoord;
 } varyings_t;
 
 typedef struct {
@@ -36,8 +36,8 @@ vec4f_t vertex_shader(int nth_vertex, void *varyings_, void *uniforms_) {
 
     /* for convenience */
     vec3f_t in_position = varyings->vs_in_positions[nth_vertex];
-    vec2f_t in_texcoord = varyings->vs_in_texcoords[nth_vertex];
-    vec2f_t *out_texcoord = &varyings->vs_out_texcoords[nth_vertex];
+    vec2_t in_texcoord = varyings->vs_in_texcoords[nth_vertex];
+    vec2_t *out_texcoord = &varyings->vs_out_texcoords[nth_vertex];
     mat4f_t mvp_matrix = uniforms->mvp_matrix;
 
     /* setup position */
@@ -52,8 +52,8 @@ vec4f_t vertex_shader(int nth_vertex, void *varyings_, void *uniforms_) {
 
 void interp_varyings(vec3f_t weights, void *varyings_) {
     varyings_t *varyings = (varyings_t*)varyings_;
-    vec2f_t *vs_out_texcoords = varyings->vs_out_texcoords;
-    varyings->fs_in_texcoord = gfx_interp_vec2f(vs_out_texcoords, weights);
+    vec2_t *vs_out_texcoords = varyings->vs_out_texcoords;
+    varyings->fs_in_texcoord = gfx_interp_vec2(vs_out_texcoords, weights);
 }
 
 color_t fragment_shader(void *varyings_, void *uniforms_) {
@@ -61,7 +61,7 @@ color_t fragment_shader(void *varyings_, void *uniforms_) {
     uniforms_t *uniforms = (uniforms_t*)uniforms_;
 
     /* for convenience */
-    vec2f_t in_texcoord = varyings->fs_in_texcoord;
+    vec2_t in_texcoord = varyings->fs_in_texcoord;
     vec3f_t light_dir = uniforms->light_dir;
     mat4f_t mvp_matrix = uniforms->mvp_matrix;
     mat4f_t mvp_it_mat = uniforms->mvp_it_mat;

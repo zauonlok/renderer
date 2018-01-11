@@ -1,15 +1,15 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-typedef struct {float x, y;} vec2f_t;
+typedef struct {float x, y;} vec2_t;
 typedef struct {float x, y, z;} vec3f_t;
 typedef struct {float x, y, z, w;} vec4f_t;
 typedef struct {float m[4][4];} mat4f_t;
 
-/* vec2f stuff */
-vec2f_t vec2f_new(float x, float y);
-vec2f_t vec2f_add(vec2f_t a, vec2f_t b);
-vec2f_t vec2f_sub(vec2f_t a, vec2f_t b);
+/* vec2 stuff */
+vec2_t vec2_new(float x, float y);
+vec2_t vec2_add(vec2_t a, vec2_t b);
+vec2_t vec2_sub(vec2_t a, vec2_t b);
 
 /* vec3f stuff */
 vec3f_t vec3f_new(float x, float y, float z);

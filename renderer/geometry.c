@@ -3,21 +3,21 @@
 #include <stdlib.h>
 #include "geometry.h"
 
-/* vec2f stuff */
+/* vec2 stuff */
 
-vec2f_t vec2f_new(float x, float y) {
-    vec2f_t v;
+vec2_t vec2_new(float x, float y) {
+    vec2_t v;
     v.x = x;
     v.y = y;
     return v;
 }
 
-vec2f_t vec2f_add(vec2f_t a, vec2f_t b) {
-    return vec2f_new(a.x + b.x, a.y + b.y);
+vec2_t vec2_add(vec2_t a, vec2_t b) {
+    return vec2_new(a.x + b.x, a.y + b.y);
 }
 
-vec2f_t vec2f_sub(vec2f_t a, vec2f_t b) {
-    return vec2f_new(a.x - b.x, a.y - b.y);
+vec2_t vec2_sub(vec2_t a, vec2_t b) {
+    return vec2_new(a.x - b.x, a.y - b.y);
 }
 
 /* vec3f stuff */

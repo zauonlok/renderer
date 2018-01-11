@@ -56,10 +56,10 @@ void gfx_clear_buffers(context_t *context) {
  *        = A + s * (B - A) + t * (C - A)
  *        = (1 - s - t) * A + s * B + t * C
  */
-static vec3f_t calculate_weights(vec2f_t A, vec2f_t B, vec2f_t C, vec2f_t P) {
-    vec2f_t AB = vec2f_sub(B, A);
-    vec2f_t AC = vec2f_sub(C, A);
-    vec2f_t AP = vec2f_sub(P, A);
+static vec3f_t calculate_weights(vec2_t A, vec2_t B, vec2_t C, vec2_t P) {
+    vec2_t AB = vec2_sub(B, A);
+    vec2_t AC = vec2_sub(C, A);
+    vec2_t AP = vec2_sub(P, A);
 
     float denom = AB.x * AC.y - AB.y * AC.x;
     float s = (AC.y * AP.x - AC.x * AP.y) / denom;
@@ -71,7 +71,7 @@ static vec3f_t calculate_weights(vec2f_t A, vec2f_t B, vec2f_t C, vec2f_t P) {
 typedef struct {float min_x, min_y, max_x, max_y;} box_t;
 
 static box_t find_bounding_box(int width, int height,
-                               vec2f_t P0, vec2f_t P1, vec2f_t P2) {
+                               vec2_t P0, vec2_t P1, vec2_t P2) {
     box_t box;
 
     box.min_x = MIN(P1.x, P0.x);
@@ -102,21 +102,21 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
 
     int i, x, y;
     vec4f_t screen_coords[3];
-    vec2f_t screen_points[3];
+    vec2_t screen_points[3];
     box_t box;
 
     for (i = 0; i < 3; i++) {
         vec4f_t clip_coord = program->vertex_shader(i, varyings, uniforms);
         vec4f_t ndc_coord = vec4f_scale(clip_coord, 1.0f / clip_coord.w);
         screen_coords[i] = mat4f_mul_vec4f(viewport, ndc_coord);
-        screen_points[i] = vec2f_new(screen_coords[i].x, screen_coords[i].y);
+        screen_points[i] = vec2_new(screen_coords[i].x, screen_coords[i].y);
     }
 
     box = find_bounding_box(width, height, screen_points[0],
                             screen_points[1], screen_points[2]);
     for (x = (int)box.min_x; x <= box.max_x; x++) {
         for (y = (int)box.min_y; y <= box.max_y; y++) {
-            vec2f_t point = vec2f_new((float)x, (float)y);
+            vec2_t point = vec2_new((float)x, (float)y);
             vec3f_t weights = calculate_weights(screen_points[0],
                                                 screen_points[1],
                                                 screen_points[2],
@@ -188,7 +188,7 @@ mat4f_t gfx_viewport_matrix(int x, int y, int width, int height) {
 
 /* texture sampling */
 
-color_t gfx_sample_texture(image_t *texture, vec2f_t texcoord) {
+color_t gfx_sample_texture(image_t *texture, vec2_t texcoord) {
     float u = texcoord.x;
     float v = texcoord.y;
     int row, col;
@@ -198,11 +198,11 @@ color_t gfx_sample_texture(image_t *texture, vec2f_t texcoord) {
     return image_get_color(texture, row, col);
 }
 
-color_t gfx_sample_diffuse(image_t *diffuse_map, vec2f_t texcoord) {
+color_t gfx_sample_diffuse(image_t *diffuse_map, vec2_t texcoord) {
     return gfx_sample_texture(diffuse_map, texcoord);
 }
 
-vec3f_t gfx_sample_normal(image_t *normal_map, vec2f_t texcoord) {
+vec3f_t gfx_sample_normal(image_t *normal_map, vec2_t texcoord) {
     color_t color = gfx_sample_texture(normal_map, texcoord);
     vec3f_t normal;
     /* interpret rgb values as xyz directions */
@@ -212,16 +212,16 @@ vec3f_t gfx_sample_normal(image_t *normal_map, vec2f_t texcoord) {
     return normal;
 }
 
-float gfx_sample_specular(image_t *specular_map, vec2f_t texcoord) {
+float gfx_sample_specular(image_t *specular_map, vec2_t texcoord) {
     color_t color = gfx_sample_texture(specular_map, texcoord);
     return (float)color.b;
 }
 
 /* vector interpolation */
 
-vec2f_t gfx_interp_vec2f(vec2f_t vs[3], vec3f_t weights_) {
+vec2_t gfx_interp_vec2(vec2_t vs[3], vec3f_t weights_) {
     int i;
-    vec2f_t out = {0.0f, 0.0f};
+    vec2_t out = {0.0f, 0.0f};
     float weights[3];
     vec3f_to_array(weights_, weights);
     for (i = 0; i < 3; i++) {
