@@ -132,7 +132,7 @@ void draw_model(context_t *context, model_t *model, image_t *diffuse_map,
     mat4_t projection = gfx_projection_matrix(coeff);
 
     mat4_t mvp_matrix = mat4_mul_mat4(projection, model_view);
-    mat4_t mvp_it_mat = mat4_invert_transpose(mvp_matrix);
+    mat4_t mvp_it_mat = mat4_inverse_transpose(mvp_matrix);
 
     uniforms.light_dir    = light_dir;
     uniforms.mvp_matrix   = mvp_matrix;

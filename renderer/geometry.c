@@ -30,18 +30,14 @@ vec3_t vec3_new(float x, float y, float z) {
     return v;
 }
 
-void vec3_to_array(vec3_t v, float arr[3]) {
-    arr[0] = v.x;
-    arr[1] = v.y;
-    arr[2] = v.z;
-}
-
 vec3_t vec3_from_vec4(vec4_t v) {
     return vec3_new(v.x, v.y, v.z);
 }
 
-vec3_t vec3_scale(vec3_t v, float scale) {
-    return vec3_new(v.x * scale, v.y * scale, v.z * scale);
+void vec3_to_array(vec3_t v, float arr[3]) {
+    arr[0] = v.x;
+    arr[1] = v.y;
+    arr[2] = v.z;
 }
 
 vec3_t vec3_add(vec3_t a, vec3_t b) {
@@ -50,6 +46,10 @@ vec3_t vec3_add(vec3_t a, vec3_t b) {
 
 vec3_t vec3_sub(vec3_t a, vec3_t b) {
     return vec3_new(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+vec3_t vec3_scale(vec3_t v, float scale) {
+    return vec3_new(v.x * scale, v.y * scale, v.z * scale);
 }
 
 float vec3_length(vec3_t v) {
@@ -67,8 +67,8 @@ float vec3_dot(vec3_t a, vec3_t b) {
 
 vec3_t vec3_cross(vec3_t a, vec3_t b) {
     return vec3_new(a.y * b.z - a.z * b.y,
-                     a.z * b.x - a.x * b.z,
-                     a.x * b.y - a.y * b.x);
+                    a.z * b.x - a.x * b.z,
+                    a.x * b.y - a.y * b.x);
 }
 
 /* vec4 stuff */
@@ -82,15 +82,15 @@ vec4_t vec4_new(float x, float y, float z, float w) {
     return v;
 }
 
+vec4_t vec4_from_vec3(vec3_t v, float w) {
+    return vec4_new(v.x, v.y, v.z, w);
+}
+
 void vec4_to_array(vec4_t v, float arr[4]) {
     arr[0] = v.x;
     arr[1] = v.y;
     arr[2] = v.z;
     arr[3] = v.w;
-}
-
-vec4_t vec4_from_vec3(vec3_t v, float w) {
-    return vec4_new(v.x, v.y, v.z, w);
 }
 
 vec4_t vec4_scale(vec4_t v, float scale) {
@@ -100,13 +100,12 @@ vec4_t vec4_scale(vec4_t v, float scale) {
 /* mat4 stuff */
 
 mat4_t mat4_identity() {
-    int i, j;
-    mat4_t m;
-    for (i = 0; i < 4; i++) {
-        for (j = 0; j < 4; j++) {
-            m.m[i][j] = (i == j) ? 1.0f : 0.0f;
-        }
-    }
+    mat4_t m = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
     return m;
 }
 
@@ -142,9 +141,9 @@ mat4_t mat4_mul_mat4(mat4_t a, mat4_t b) {
  * 3D Math Primer for Graphics and Game Development, Chapter 6
  */
 
-typedef struct {float m[3][3];} mat3f_t;
+typedef struct {float m[3][3];} mat3_t;
 
-static float mat3f_determinant(mat3f_t *m) {
+static float mat3_determinant(mat3_t *m) {
     return m->m[0][0] * (m->m[1][1] * m->m[2][2] - m->m[1][2] * m->m[2][1])
            + m->m[0][1] * (m->m[1][2] * m->m[2][0] - m->m[1][0] * m->m[2][2])
            + m->m[0][2] * (m->m[1][0] * m->m[2][1] - m->m[1][1] * m->m[2][0]);
@@ -152,7 +151,7 @@ static float mat3f_determinant(mat3f_t *m) {
 
 static float mat4_minor(mat4_t *m, int r, int c) {
     int i, j;
-    mat3f_t sub_mat;
+    mat3_t sub_mat;
     assert(r >= 0 && c >= 0 && r < 4 && c < 4);
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
@@ -161,7 +160,7 @@ static float mat4_minor(mat4_t *m, int r, int c) {
             sub_mat.m[i][j] = m->m[row][col];
         }
     }
-    return mat3f_determinant(&sub_mat);
+    return mat3_determinant(&sub_mat);
 }
 
 static float mat4_cofactor(mat4_t *m, int r, int c) {
@@ -183,10 +182,10 @@ static mat4_t mat4_adjoint(mat4_t *m) {
     return adjoint;
 }
 
-mat4_t mat4_invert_transpose(mat4_t m) {
+mat4_t mat4_inverse_transpose(mat4_t m) {
     int i, j;
     float determinant;
-    mat4_t adjoint, invert_transpose;
+    mat4_t adjoint, inverse_transpose;
 
     adjoint = mat4_adjoint(&m);
     /* calculate the determinant */
@@ -195,24 +194,24 @@ mat4_t mat4_invert_transpose(mat4_t m) {
         determinant += m.m[0][i] * adjoint.m[0][i];
     }
     assert(fabs(determinant) > 1.0e-6);
-    /* invert_transpose = adjoint / determinant */
+    /* inverse_transpose = adjoint / determinant */
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            invert_transpose.m[i][j] = adjoint.m[i][j] / determinant;
+            inverse_transpose.m[i][j] = adjoint.m[i][j] / determinant;
         }
     }
-    return invert_transpose;
+    return inverse_transpose;
 }
 
-mat4_t mat4_inverse(mat4_t m) {
-    return mat4_transpose(mat4_invert_transpose(m));
+mat4_t mat4_invert(mat4_t m) {
+    return mat4_transpose(mat4_inverse_transpose(m));
 }
 
 mat4_t mat4_transpose(mat4_t m) {
     int i, j;
     mat4_t transpose;
     for (i = 0; i < 4; i++) {
-        for (j = 0; j < 4; j++) {
+        for (j = i + 1; j < 4; j++) {
             transpose.m[i][j] = m.m[j][i];
         }
     }

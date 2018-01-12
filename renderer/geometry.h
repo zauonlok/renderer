@@ -13,11 +13,11 @@ vec2_t vec2_sub(vec2_t a, vec2_t b);
 
 /* vec3 stuff */
 vec3_t vec3_new(float x, float y, float z);
-void vec3_to_array(vec3_t v, float arr[3]);
 vec3_t vec3_from_vec4(vec4_t v);
-vec3_t vec3_scale(vec3_t v, float scale);
+void vec3_to_array(vec3_t v, float arr[3]);
 vec3_t vec3_add(vec3_t a, vec3_t b);
 vec3_t vec3_sub(vec3_t a, vec3_t b);
+vec3_t vec3_scale(vec3_t v, float scale);
 float vec3_length(vec3_t v);
 vec3_t vec3_normalize(vec3_t v);
 float vec3_dot(vec3_t a, vec3_t b);
@@ -25,16 +25,16 @@ vec3_t vec3_cross(vec3_t a, vec3_t b);
 
 /* vec4 stuff */
 vec4_t vec4_new(float x, float y, float z, float w);
-void vec4_to_array(vec4_t v, float arr[4]);
 vec4_t vec4_from_vec3(vec3_t v, float w);
+void vec4_to_array(vec4_t v, float arr[4]);
 vec4_t vec4_scale(vec4_t v, float scale);
 
 /* mat4 stuff */
 mat4_t mat4_identity();
 vec4_t mat4_mul_vec4(mat4_t m, vec4_t v);
 mat4_t mat4_mul_mat4(mat4_t a, mat4_t b);
-mat4_t mat4_invert_transpose(mat4_t m);
-mat4_t mat4_inverse(mat4_t m);
+mat4_t mat4_inverse_transpose(mat4_t m);
+mat4_t mat4_invert(mat4_t m);
 mat4_t mat4_transpose(mat4_t m);
 
 /*
