@@ -53,8 +53,8 @@ static NSAutoreleasePool *g_autoreleasepool;
 static const char ACTION_UP = 0;
 static const char ACTION_DOWN = 1;
 
-/* for virtual key codes, see https://stackoverflow.com/questions/3202629/ */
 static void handle_key_event(window_t *window, int virtual_key, char action) {
+    /* for virtual keys, see https://stackoverflow.com/questions/3202629/ */
     keycode_t key;
     switch (virtual_key) {
         case 0x00: key = KEY_A;   break;
