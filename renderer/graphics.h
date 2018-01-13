@@ -33,7 +33,6 @@ void gfx_draw_triangle(context_t *context, program_t *program);
 /* common matrices */
 mat4_t gfx_lookat_matrix(vec3_t eye, vec3_t center, vec3_t up);
 mat4_t gfx_projection_matrix(float coeff);
-mat4_t gfx_viewport_matrix(int x, int y, int width, int height);
 
 /* texture sampling */
 color_t gfx_sample_texture(image_t *texture, vec2_t texcoord);

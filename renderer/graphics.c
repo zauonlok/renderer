@@ -15,7 +15,7 @@ context_t *gfx_create_context(int width, int height) {
     context_t *context = (context_t*)malloc(sizeof(context_t));
     context->framebuffer = image_create(width, height, 3);
     context->depthbuffer = (float*)malloc(sizeof(float) * width * height);
-    context->viewport    = gfx_viewport_matrix(0, 0, width, height);
+    context->viewport    = mat4_viewport(0, 0, width, height);
     gfx_clear_buffers(context);
     return context;
 }
@@ -172,18 +172,6 @@ mat4_t gfx_projection_matrix(float coeff) {
     mat4_t projection = mat4_identity();
     projection.m[3][2] = coeff;
     return projection;
-}
-
-mat4_t gfx_viewport_matrix(int x, int y, int width, int height) {
-    static const float depth = 255.0f;
-    mat4_t viewport = mat4_identity();
-    viewport.m[0][0] = width / 2.0f;
-    viewport.m[0][3] = x + width / 2.0f;
-    viewport.m[1][1] = height / 2.0f;
-    viewport.m[1][3] = y + height / 2.0f;
-    viewport.m[2][2] = depth / 2.0f;
-    viewport.m[2][3] = depth / 2.0f;
-    return viewport;
 }
 
 /* texture sampling */
