@@ -1,12 +1,15 @@
+#include "model.h"
 #include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "model.h"
 #include "geometry.h"
 
-/* dynamic array, see stretchy_buffer.h in https://github.com/nothings/stb */
+/*
+ * typesafe dynamic array, see
+ * https://github.com/nothings/stb/blob/master/stretchy_buffer.h
+ */
 
 #define BUFFER_RAW_DATA(buffer) ((int*)(buffer) - 2)
 #define BUFFER_CAPACITY(buffer) (BUFFER_RAW_DATA(buffer)[0])
@@ -50,7 +53,7 @@ static void *buffer_hold(void *buffer, int count, int itemsize) {
     }
 }
 
-/* model stuff */
+/* data structure */
 
 struct model {
     vec3_t *positions;
@@ -172,8 +175,7 @@ static model_t *load_obj(const char *filename) {
                 curr + 2, "%d/%d/%d %d/%d/%d %d/%d/%d",
                 &position_indices[0], &texcoord_indices[0], &normal_indices[0],
                 &position_indices[1], &texcoord_indices[1], &normal_indices[1],
-                &position_indices[2], &texcoord_indices[2], &normal_indices[2]
-            );
+                &position_indices[2], &texcoord_indices[2], &normal_indices[2]);
             assert(items == 9);
             for (i = 0; i < 3; i++) {
                 buffer_push(position_index_buffer, position_indices[i] - 1);
@@ -222,26 +224,23 @@ int model_get_num_faces(model_t *model) {
     return model->num_faces;
 }
 
-#define check_range(model, nth_face, nth_element)                           \
-    do {                                                                    \
-        assert(nth_face >= 0 && nth_face < model->num_faces);               \
-        assert(nth_element >= 0 && nth_element < 3);                        \
-    } while (0)
-
 vec3_t model_get_position(model_t *model, int nth_face, int nth_position) {
     int index = nth_face * 3 + nth_position;
-    check_range(model, nth_face, nth_position);
+    assert(nth_face >= 0 && nth_face < model->num_faces);
+    assert(nth_position >= 0 && nth_position < 3);
     return model->positions[index];
 }
 
 vec2_t model_get_texcoord(model_t *model, int nth_face, int nth_texcoord) {
     int index = nth_face * 3 + nth_texcoord;
-    check_range(model, nth_face, nth_texcoord);
+    assert(nth_face >= 0 && nth_face < model->num_faces);
+    assert(nth_texcoord >= 0 && nth_texcoord < 3);
     return model->texcoords[index];
 }
 
 vec3_t model_get_normal(model_t *model, int nth_face, int nth_normal) {
     int index = nth_face * 3 + nth_normal;
-    check_range(model, nth_face, nth_normal);
+    assert(nth_face >= 0 && nth_face < model->num_faces);
+    assert(nth_normal >= 0 && nth_normal < 3);
     return model->normals[index];
 }
