@@ -1,11 +1,12 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
+typedef struct {int row, col;} point_t;
+typedef struct {unsigned char b, g, r, a;} color_t;
 typedef struct {
     int width, height, channels;
     unsigned char *buffer;
 } image_t;
-typedef struct {unsigned char b, g, r, a;} color_t;
 
 /* image creating/releasing */
 image_t *image_create(int width, int height, int channels);
@@ -24,5 +25,14 @@ void image_set_color(image_t *image, int row, int col, color_t color);
 void image_flip_h(image_t *image);
 void image_flip_v(image_t *image);
 void image_resize(image_t *image, int width, int height);
+
+/* geometry drawing */
+void image_draw_point(image_t *image, color_t color, point_t point);
+void image_draw_line(image_t *image, color_t color,
+                     point_t point0, point_t point1);
+void image_draw_triangle(image_t *image, color_t color,
+                         point_t point0, point_t point1, point_t point2);
+void image_fill_triangle(image_t *image, color_t color,
+                         point_t point0, point_t point1, point_t point2);
 
 #endif
