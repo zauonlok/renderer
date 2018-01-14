@@ -1,3 +1,4 @@
+#include "platform.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,7 +6,6 @@
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
-#include "platform.h"
 #include "image.h"
 
 /* data structures */
@@ -23,7 +23,7 @@ struct window {
     context_t *context;
 };
 
-/* window stuff */
+/* window related functions */
 
 static Display *g_display = NULL;
 static XContext g_context;
@@ -132,7 +132,6 @@ void window_destroy(window_t *window) {
 
     context->ximage->data = NULL;
     XDestroyImage(context->ximage);
-
     XDestroyWindow(g_display, window->handle);
     XFlush(g_display);
 
@@ -145,7 +144,7 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
-/* private function, implemented in image.c */
+/* private helper function, implemented in image.c */
 void image_blit_bgr(image_t *src, image_t *dst);
 
 void window_draw_image(window_t *window, image_t *image) {
@@ -153,14 +152,13 @@ void window_draw_image(window_t *window, image_t *image) {
     GC gc = XDefaultGC(g_display, screen);
     context_t *context = window->context;
     image_t *framebuffer = context->framebuffer;
-
     image_blit_bgr(image, framebuffer);
     XPutImage(g_display, window->handle, gc, context->ximage,
               0, 0, 0, 0, framebuffer->width, framebuffer->height);
     XFlush(g_display);
 }
 
-/* input stuff */
+/* input related functions */
 
 static const char ACTION_UP = 0;
 static const char ACTION_DOWN = 1;
@@ -248,7 +246,6 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
     Window root, child;
     int root_x, root_y, window_x, window_y;
     unsigned int mask;
-
     XQueryPointer(g_display, window->handle, &root, &child,
                   &root_x, &root_y, &window_x, &window_y, &mask);
     if (xpos != NULL) {

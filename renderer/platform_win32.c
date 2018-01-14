@@ -1,17 +1,15 @@
+#include "platform.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-#include "platform.h"
 #include "image.h"
 
 /* data structures */
 
 typedef struct {
     image_t *framebuffer;
-    HDC cdc;
-    HBITMAP dib;
-    HBITMAP old;
+    HDC compatible_dc;
 } context_t;
 
 struct window {
@@ -22,7 +20,7 @@ struct window {
     context_t *context;
 };
 
-/* window stuff */
+/* window related functions */
 
 static const char *WINDOW_CLASS_NAME = "Class";
 static const char *WINDOW_ENTRY_NAME = "Entry";
@@ -117,28 +115,31 @@ static HWND create_window(const char *title, int width, int height) {
 }
 
 static context_t *create_context(HWND window, int width, int height) {
-    BITMAPINFOHEADER bi;
-    HDC wdc, cdc;
-    HBITMAP dib, old;
+    BITMAPINFOHEADER bi_header;
+    HDC window_dc;
+    HDC compatible_dc;
+    HBITMAP dib_bitmap;
+    HBITMAP old_bitmap;
     unsigned char *buffer;
-    context_t *context;
     image_t *framebuffer;
+    context_t *context;
 
-    wdc = GetDC(window);
-    cdc = CreateCompatibleDC(wdc);
-    ReleaseDC(window, wdc);
+    window_dc = GetDC(window);
+    compatible_dc = CreateCompatibleDC(window_dc);
+    ReleaseDC(window, window_dc);
 
-    memset(&bi, 0, sizeof(BITMAPINFOHEADER));
-    bi.biSize        = sizeof(BITMAPINFOHEADER);
-    bi.biWidth       = width;
-    bi.biHeight      = -height;  /* top-down */
-    bi.biPlanes      = 1;
-    bi.biBitCount    = 32;
-    bi.biCompression = BI_RGB;
-    dib = CreateDIBSection(cdc, (BITMAPINFO*)&bi, DIB_RGB_COLORS,
-                           (void**)&buffer, NULL, 0);
-    assert(dib != NULL);
-    old = (HBITMAP)SelectObject(cdc, dib);
+    memset(&bi_header, 0, sizeof(BITMAPINFOHEADER));
+    bi_header.biSize        = sizeof(BITMAPINFOHEADER);
+    bi_header.biWidth       = width;
+    bi_header.biHeight      = -height;  /* top-down */
+    bi_header.biPlanes      = 1;
+    bi_header.biBitCount    = 32;
+    bi_header.biCompression = BI_RGB;
+    dib_bitmap = CreateDIBSection(compatible_dc, (BITMAPINFO*)&bi_header,
+                                  DIB_RGB_COLORS, (void**)&buffer, NULL, 0);
+    assert(dib_bitmap != NULL);
+    old_bitmap = (HBITMAP)SelectObject(compatible_dc, dib_bitmap);
+    DeleteObject(old_bitmap);
 
     framebuffer = (image_t*)malloc(sizeof(image_t));
     framebuffer->width    = width;
@@ -147,10 +148,8 @@ static context_t *create_context(HWND window, int width, int height) {
     framebuffer->buffer   = buffer;
 
     context = (context_t*)malloc(sizeof(context_t));
-    context->framebuffer = framebuffer;
-    context->cdc         = cdc;
-    context->dib         = dib;
-    context->old         = old;
+    context->framebuffer   = framebuffer;
+    context->compatible_dc = compatible_dc;
     return context;
 }
 
@@ -181,10 +180,7 @@ void window_destroy(window_t *window) {
     ShowWindow(window->handle, SW_HIDE);
     RemoveProp(window->handle, WINDOW_ENTRY_NAME);
 
-    SelectObject(window->context->cdc, window->context->old);
-    DeleteDC(window->context->cdc);
-    DeleteObject(window->context->dib);
-
+    DeleteDC(window->context->compatible_dc);
     DestroyWindow(window->handle);
 
     free(window->context->framebuffer);
@@ -196,21 +192,20 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
-/* private function, implemented in image.c */
+/* private helper function, implemented in image.c */
 void image_blit_bgr(image_t *src, image_t *dst);
 
 void window_draw_image(window_t *window, image_t *image) {
-    HDC wdc = GetDC(window->handle);
+    HDC window_dc = GetDC(window->handle);
     context_t *context = window->context;
     image_t *framebuffer = context->framebuffer;
-
     image_blit_bgr(image, framebuffer);
-    BitBlt(wdc, 0, 0, framebuffer->width, framebuffer->height,
-           context->cdc, 0, 0, SRCCOPY);
-    ReleaseDC(window->handle, wdc);
+    BitBlt(window_dc, 0, 0, framebuffer->width, framebuffer->height,
+           context->compatible_dc, 0, 0, SRCCOPY);
+    ReleaseDC(window->handle, window_dc);
 }
 
-/* input stuff */
+/* input related functions */
 
 void input_poll_events(void) {
     MSG message;
@@ -242,7 +237,7 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
     }
 }
 
-/* time stuff */
+/* time related functions */
 
 double timer_get_time(void) {
     static double period = -1;

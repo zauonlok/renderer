@@ -1,10 +1,10 @@
+#include "platform.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <mach/mach_time.h>
 #import <Cocoa/Cocoa.h>
-#include "platform.h"
 #include "image.h"
 
 /* data structures */
@@ -25,7 +25,7 @@ struct window {
 
 static NSAutoreleasePool *g_autoreleasepool;
 
-/* window stuff */
+/* window related functions */
 
 @interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
@@ -34,10 +34,10 @@ static NSAutoreleasePool *g_autoreleasepool;
     window_t *window;
 }
 
-- (instancetype)initWithWindow:(window_t *)window_ {
+- (instancetype)initWithWindow:(window_t *)aWindow {
     self = [super init];
     if (self != nil) {
-        window = window_;
+        window = aWindow;
     }
     return self;
 }
@@ -75,16 +75,12 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
     window_t *window;
 }
 
-- (instancetype)initWithWindow:(window_t *)window_ {
+- (instancetype)initWithWindow:(window_t *)aWindow {
     self = [super init];
     if (self != nil) {
-        window = window_;
+        window = aWindow;
     }
     return self;
-}
-
-- (BOOL)isOpaque {
-    return YES;  /* pixels will be drawn opaquely */
 }
 
 - (BOOL)acceptsFirstResponder {
@@ -93,8 +89,8 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
 
 - (void)drawRect:(NSRect)dirtyRect {
     image_t *framebuffer = window->context->framebuffer;
-    NSImage *nsimage;
     NSBitmapImageRep *rep;
+    NSImage *nsimage;
 
     rep = [[[NSBitmapImageRep alloc]
             initWithBitmapDataPlanes:&(framebuffer->buffer)
@@ -264,7 +260,7 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
-/* private function, implemented in image.c */
+/* private helper function, implemented in image.c */
 void image_blit_rgb(image_t *src, image_t *dst);
 
 void window_draw_image(window_t *window, image_t *image) {
@@ -272,7 +268,7 @@ void window_draw_image(window_t *window, image_t *image) {
     [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
 }
 
-/* input stuff */
+/* input related functions */
 
 void input_poll_events(void) {
     while (1) {
@@ -310,7 +306,7 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
     }
 }
 
-/* time stuff */
+/* time related functions */
 
 double timer_get_time(void) {
     static double period = -1;
