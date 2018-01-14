@@ -406,6 +406,11 @@ static void swap_points(point_t *a, point_t *b) {
     *b = t;
 }
 
+static void assert_point_valid(point_t point, image_t *image) {
+    assert(point.row >= 0 && point.row < image->height);
+    assert(point.col >= 0 && point.col < image->width);
+}
+
 static int linear_interp_int(int v0, int v1, double d) {
     return (int)(v0 + (v1 - v0) * d + 0.5);
 }
@@ -418,8 +423,7 @@ static point_t linear_interp_point(point_t p0, point_t p1, double d) {
 }
 
 void image_draw_point(image_t *image, color_t color, point_t point) {
-    assert(point.row >= 0 && point.row < image->height);
-    assert(point.col >= 0 && point.col < image->width);
+    assert_point_valid(point, image);
     image_set_color(image, point.row, point.col, color);
 }
 
@@ -427,6 +431,8 @@ void image_draw_line(image_t *image, color_t color,
                      point_t point0, point_t point1) {
     int row_distance = abs(point1.row - point0.row);
     int col_distance = abs(point1.col - point0.col);
+    assert_point_valid(point0, image);
+    assert_point_valid(point1, image);
     if (row_distance == 0 && col_distance == 0) {
         image_draw_point(image, color, point0);
     } else if (row_distance > col_distance) {
@@ -454,6 +460,9 @@ void image_draw_line(image_t *image, color_t color,
 
 void image_draw_triangle(image_t *image, color_t color,
                          point_t point0, point_t point1, point_t point2) {
+    assert_point_valid(point0, image);
+    assert_point_valid(point1, image);
+    assert_point_valid(point2, image);
     image_draw_line(image, color, point0, point1);
     image_draw_line(image, color, point1, point2);
     image_draw_line(image, color, point2, point0);
@@ -497,6 +506,9 @@ static void draw_scanline(image_t *image, color_t color,
 
 void image_fill_triangle(image_t *image, color_t color,
                          point_t point0, point_t point1, point_t point2) {
+    assert_point_valid(point0, image);
+    assert_point_valid(point1, image);
+    assert_point_valid(point2, image);
     sort_points_by_row(&point0, &point1, &point2);
     if (point0.row == point2.row) {
         sort_points_by_col(&point0, &point1, &point2);
