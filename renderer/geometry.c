@@ -1,9 +1,10 @@
+#include "geometry.h"
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include "geometry.h"
 
-/* vec2 stuff */
+/* vec2 related functions */
 
 vec2_t vec2_new(float x, float y) {
     vec2_t v;
@@ -20,7 +21,12 @@ vec2_t vec2_sub(vec2_t a, vec2_t b) {
     return vec2_new(a.x - b.x, a.y - b.y);
 }
 
-/* vec3 stuff */
+void vec2_print(vec2_t v, const char *name) {
+    printf("vec2 %s =\n", name);
+    printf("    %12f    %12f\n", v.x, v.y);
+}
+
+/* vec3 related functions */
 
 vec3_t vec3_new(float x, float y, float z) {
     vec3_t v;
@@ -71,7 +77,12 @@ vec3_t vec3_cross(vec3_t a, vec3_t b) {
                     a.x * b.y - a.y * b.x);
 }
 
-/* vec4 stuff */
+void vec3_print(vec3_t v, const char *name) {
+    printf("vec3 %s =\n", name);
+    printf("    %12f    %12f    %12f\n", v.x, v.y, v.z);
+}
+
+/* vec4 related functions */
 
 vec4_t vec4_new(float x, float y, float z, float w) {
     vec4_t v;
@@ -97,17 +108,12 @@ vec4_t vec4_scale(vec4_t v, float scale) {
     return vec4_new(v.x * scale, v.y * scale, v.z * scale, v.w * scale);
 }
 
-/* mat4 stuff */
-
-mat4_t mat4_identity() {
-    mat4_t m = {
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f
-    };
-    return m;
+void vec4_print(vec4_t v, const char *name) {
+    printf("vec4 %s =\n", name);
+    printf("    %12f    %12f    %12f    %12f\n", v.x, v.y, v.z, v.w);
 }
+
+/* mat4 related functions */
 
 vec4_t mat4_mul_vec4(mat4_t m, vec4_t v) {
     int i, j;
@@ -151,16 +157,16 @@ static float mat3_determinant(mat3_t *m) {
 
 static float mat4_minor(mat4_t *m, int r, int c) {
     int i, j;
-    mat3_t sub_mat;
+    mat3_t submatrix;
     assert(r >= 0 && c >= 0 && r < 4 && c < 4);
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
             int row = (i < r) ? i : i + 1;
             int col = (j < c) ? j : j + 1;
-            sub_mat.m[i][j] = m->m[row][col];
+            submatrix.m[i][j] = m->m[row][col];
         }
     }
-    return mat3_determinant(&sub_mat);
+    return mat3_determinant(&submatrix);
 }
 
 static float mat4_cofactor(mat4_t *m, int r, int c) {
@@ -211,14 +217,35 @@ mat4_t mat4_transpose(mat4_t m) {
     int i, j;
     mat4_t transpose;
     for (i = 0; i < 4; i++) {
-        for (j = i + 1; j < 4; j++) {
+        for (j = 0; j < 4; j++) {
             transpose.m[i][j] = m.m[j][i];
         }
     }
     return transpose;
 }
 
-/* common matrices */
+void mat4_print(mat4_t m, const char *name) {
+    int i, j;
+    printf("mat4 %s =\n", name);
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4; j++) {
+            printf("    %12f", m.m[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+/* transformation matrices */
+
+mat4_t mat4_identity() {
+    mat4_t m = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+    return m;
+}
 
 /*
  * for translation, scaling, and rotation matrices, see
@@ -259,38 +286,41 @@ mat4_t mat4_scaling(float sx, float sy, float sz) {
 
 mat4_t mat4_rotation(float angle, float vx, float vy, float vz) {
     /*
-     * angle: the angle of rotation
+     * angle: the angle of rotation in radians
      * vx, vy, vz: the x, y, and z coordinates of the vector to rotate around
      *
-     * nx*nx*(1-cos)+cos     ny*nx*(1-cos)-nz*sin  nz*nx*(1-cos)+ny*sin
-     * nx*ny*(1-cos)+nz*sin  ny*ny*(1-cos)+cos     nz*ny*(1-cos)-nx*sin
-     * nx*nz*(1-cos)-ny*sin  ny*nz*(1-cos)+nx*sin  nz*nz*(1-cos)+cos
+     * nx*nx*(1-cos)+cos     ny*nx*(1-cos)-nz*sin  nz*nx*(1-cos)+ny*sin  0
+     * nx*ny*(1-cos)+nz*sin  ny*ny*(1-cos)+cos     nz*ny*(1-cos)-nx*sin  0
+     * nx*nz*(1-cos)-ny*sin  ny*nz*(1-cos)+nx*sin  nz*nz*(1-cos)+cos     0
+     * 0                     0                     0                     1
      *
      * nx, ny, nz: normalized coordinates of the vector to rotate around
+     * sin, cos: sin(angle) and cos(angle)
      */
+    vec3_t n = vec3_normalize(vec3_new(vx, vy, vz));
     float c = (float)cos(angle);
     float s = (float)sin(angle);
-    vec3_t n = vec3_normalize(vec3_new(vx, vy, vz));
+    float one_minus_cos = 1.0f - c;
     mat4_t m = mat4_identity();
 
-    m.m[0][0] = (1.0f - c) * n.x * n.x + c;
-    m.m[0][1] = (1.0f - c) * n.y * n.x - s * n.z;
-    m.m[0][2] = (1.0f - c) * n.z * n.x + s * n.y;
+    m.m[0][0] = one_minus_cos * n.x * n.x + c;
+    m.m[0][1] = one_minus_cos * n.y * n.x - s * n.z;
+    m.m[0][2] = one_minus_cos * n.z * n.x + s * n.y;
 
-    m.m[1][0] = (1.0f - c) * n.x * n.y + s * n.z;
-    m.m[1][1] = (1.0f - c) * n.y * n.y + c;
-    m.m[1][2] = (1.0f - c) * n.z * n.y - s * n.x;
+    m.m[1][0] = one_minus_cos * n.x * n.y + s * n.z;
+    m.m[1][1] = one_minus_cos * n.y * n.y + c;
+    m.m[1][2] = one_minus_cos * n.z * n.y - s * n.x;
 
-    m.m[2][0] = (1.0f - c) * n.x * n.z - s * n.y;
-    m.m[2][1] = (1.0f - c) * n.y * n.z + s * n.x;
-    m.m[2][2] = (1.0f - c) * n.z * n.z + c;
+    m.m[2][0] = one_minus_cos * n.x * n.z - s * n.y;
+    m.m[2][1] = one_minus_cos * n.y * n.z + s * n.x;
+    m.m[2][2] = one_minus_cos * n.z * n.z + c;
 
     return m;
 }
 
 mat4_t mat4_rotation_x(float angle) {
     /*
-     * angle: the angle of rotation
+     * angle: the angle of rotation in radians
      *
      *  1  0  0  0
      *  0  c -s  0
@@ -309,7 +339,7 @@ mat4_t mat4_rotation_x(float angle) {
 
 mat4_t mat4_rotation_y(float angle) {
     /*
-     * angle: the angle of rotation
+     * angle: the angle of rotation in radians
      *
      *  c  0  s  0
      *  0  1  0  0
@@ -328,7 +358,7 @@ mat4_t mat4_rotation_y(float angle) {
 
 mat4_t mat4_rotation_z(float angle) {
     /*
-     * angle: the angle of rotation
+     * angle: the angle of rotation in radians
      *
      *  c -s  0  0
      *  s  c  0  0
@@ -378,7 +408,7 @@ mat4_t mat4_ortho(float left, float right, float bottom, float top,
 }
 
 mat4_t mat4_frustum(float left, float right, float bottom, float top,
-                   float near, float far) {
+                    float near, float far) {
     /*
      * left, right: the coordinates for the left and right clipping planes
      * bottom, top: the coordinates for the bottom and top clipping planes
@@ -408,7 +438,7 @@ mat4_t mat4_frustum(float left, float right, float bottom, float top,
 
 mat4_t mat4_orthographic(float fovy, float aspect, float near, float far) {
     /*
-     * fovy: the field of view angle in the y direction
+     * fovy: the field of view angle in the y direction, in radians
      * aspect: the ratio of x (width) to y (height)
      * rear: the distance from the viewer to the near clipping plane
      * far: the distance from the viewer to the far clipping plane
@@ -421,7 +451,7 @@ mat4_t mat4_orthographic(float fovy, float aspect, float near, float far) {
      * zoom_x: 1/(aspect*tan(fovy/2))
      * zoom_y: 1/tan(fovy/2)
      *
-     * equivalent to mat4_ortho as long as the frustum is symmetric
+     * equivalent to mat4_ortho as long as the volume is symmetric
      *     float tan_half_fovy = (float)tan(fovy / 2.0f);
      *     float half_height = near * tan_half_fovy;
      *     float half_width = aspect * half_height;
@@ -444,7 +474,7 @@ mat4_t mat4_orthographic(float fovy, float aspect, float near, float far) {
 
 mat4_t mat4_perspective(float fovy, float aspect, float near, float far) {
     /*
-     * fovy: the field of view angle in the y direction
+     * fovy: the field of view angle in the y direction, in radians
      * aspect: the ratio of x (width) to y (height)
      * rear: the distance from the viewer to the near clipping plane
      * far: the distance from the viewer to the far clipping plane
@@ -496,13 +526,13 @@ mat4_t mat4_camera(vec3_t eye, vec3_t center, vec3_t up) {
      * x_axis.z  y_axis.z  z_axis.z  eye.z
      *        0         0         0      1
      *
-     * z_axis = normalize(eye - center)
-     * x_axis = normalize(cross(up, z_axis))
-     * y_axis = normalize(cross(z_axis, x_axis))
+     * z_axis: normalize(eye-center), the negative front vector
+     * x_axis: normalize(cross(up,z_axis)), the right vector
+     * y_axis: cross(z_axis,x_axis), the up vector
      */
-    vec3_t z_axis = vec3_normalize(vec3_sub(eye, center));
+    vec3_t z_axis = vec3_normalize(vec3_sub(eye, center));  /* right-handed */
     vec3_t x_axis = vec3_normalize(vec3_cross(up, z_axis));
-    vec3_t y_axis = vec3_normalize(vec3_cross(z_axis, x_axis));
+    vec3_t y_axis = vec3_cross(z_axis, x_axis);
     mat4_t m = mat4_identity();
 
     m.m[0][0] = x_axis.x;
@@ -535,11 +565,22 @@ mat4_t mat4_lookat(vec3_t eye, vec3_t center, vec3_t up) {
      * z_axis.x  z_axis.y  z_axis.z  -dot(z_axis,eye)
      *        0         0         0                 1
      *
+     * z_axis: normalize(eye-center), the negative front vector
+     * x_axis: normalize(cross(up,z_axis)), the right vector
+     * y_axis: cross(z_axis,x_axis), the up vector
+     *
      * equivalent to mat4_invert(mat4_camera(eye,center,up))
+     *     camera = translation*rotation
+     *     lookat = invert(camera)
+     *            = invert(rotation)*invert(translation)
+     *            = transpose(rotation)*invert(translation)
+     *
+     * note that the rotation matrix is an orthogonal matrix, which means
+     *     transpose(rotation) == invert(rotation)
      */
-    vec3_t z_axis = vec3_normalize(vec3_sub(eye, center));
+    vec3_t z_axis = vec3_normalize(vec3_sub(eye, center));  /* right-handed */
     vec3_t x_axis = vec3_normalize(vec3_cross(up, z_axis));
-    vec3_t y_axis = vec3_normalize(vec3_cross(z_axis, x_axis));
+    vec3_t y_axis = vec3_cross(z_axis, x_axis);
     mat4_t m = mat4_identity();
 
     m.m[0][0] = x_axis.x;
@@ -564,7 +605,6 @@ mat4_t mat4_lookat(vec3_t eye, vec3_t center, vec3_t up) {
 /*
  * for viewport matrix, see
  * http://www.songho.ca/opengl/gl_transform.html
- * https://github.com/ssloy/tinyrenderer/wiki/Lesson-5:-Moving-the-camera
  */
 
 static const float DEPTH_NEAR = 0.0f;
