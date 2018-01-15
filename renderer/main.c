@@ -91,7 +91,7 @@ color_t fragment_shader(void *varyings_, void *uniforms_) {
     /* calculate specular factor */
     {
         float in_specular = gfx_sample_specular(specular_map, in_texcoord);
-        float base = MAX(reflected.z, 0.0f);
+        float base = MAX(-reflected.z, 0.0f);
         specular = (float)pow(base, in_specular);
     }
     /* calculate diffuse factor */
@@ -127,9 +127,8 @@ void draw_model(context_t *context, model_t *model, image_t *diffuse_map,
     vec3_t center = vec3_new(0.0f, 0.0f, 0.0f);
     vec3_t up = vec3_new(0.0f, 1.0f, 0.0f);
 
-    mat4_t model_view = gfx_lookat_matrix(eye, center, up);
-    float coeff = -1.0f / vec3_length(vec3_sub(eye, center));
-    mat4_t projection = gfx_projection_matrix(coeff);
+    mat4_t model_view = mat4_lookat(eye, center, up);
+    mat4_t projection = mat4_perspective(3.1415f / 2.0f, 1.0f, 1.0f, 100.0f);
 
     mat4_t mvp_matrix = mat4_mul_mat4(projection, model_view);
     mat4_t mvp_it_mat = mat4_inverse_transpose(mvp_matrix);

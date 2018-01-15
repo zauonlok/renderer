@@ -34,7 +34,7 @@ void gfx_clear_buffers(context_t *context) {
     int i;
     memset(framebuffer->buffer, 0, width * height * framebuffer->channels);
     for (i = 0; i < width * height; i++) {
-        depthbuffer[i] = FLT_MIN;
+        depthbuffer[i] = FLT_MAX;
     }
 }
 
@@ -126,7 +126,7 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
                               + screen_coords[1].z * weights.y
                               + screen_coords[2].z * weights.z;
                 int index = y * width + x;
-                if (context->depthbuffer[index] < depth) {
+                if (context->depthbuffer[index] > depth) {
                     color_t color;
                     program->interp_varyings(weights, varyings);
                     color = program->fragment_shader(varyings, uniforms);
@@ -136,42 +136,6 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
             }
         }
     }
-}
-
-/* common matrices */
-
-/*
- * for lookat, projection and viewport matrices, see
- * https://github.com/ssloy/tinyrenderer/wiki/Lesson-4:-Perspective-projection
- * https://github.com/ssloy/tinyrenderer/wiki/Lesson-5:-Moving-the-camera
- * 3D Math Primer for Graphics and Game Development, Chapter 10
- */
-
-mat4_t gfx_lookat_matrix(vec3_t eye, vec3_t center, vec3_t up) {
-    vec3_t zaxis = vec3_normalize(vec3_sub(eye, center));
-    vec3_t xaxis = vec3_normalize(vec3_cross(up, zaxis));
-    vec3_t yaxis = vec3_normalize(vec3_cross(zaxis, xaxis));
-
-    int i;
-    mat4_t lookat = mat4_identity();
-    float xaxis_arr[3], yaxis_arr[3], zaxis_arr[3], center_arr[3];
-    vec3_to_array(xaxis, xaxis_arr);
-    vec3_to_array(yaxis, yaxis_arr);
-    vec3_to_array(zaxis, zaxis_arr);
-    vec3_to_array(center, center_arr);
-    for (i = 0; i < 3; i++) {
-        lookat.m[0][i] = xaxis_arr[i];
-        lookat.m[1][i] = yaxis_arr[i];
-        lookat.m[2][i] = zaxis_arr[i];
-        lookat.m[i][3] = -center_arr[i];
-    }
-    return lookat;
-}
-
-mat4_t gfx_projection_matrix(float coeff) {
-    mat4_t projection = mat4_identity();
-    projection.m[3][2] = coeff;
-    return projection;
 }
 
 /* texture sampling */
