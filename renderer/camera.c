@@ -18,7 +18,7 @@ static const float PITCH_UPPER = 89.0f;
 static const float PITCH_LOWER = -89.0f;
 
 static const float FOVY_DEFAULT = 45.0f;
-static const float FOVY_MINIMUM = 1.0f;
+static const float FOVY_MINIMUM = 15.0f;
 
 static const float DEPTH_NEAR = 0.1f;
 static const float DEPTH_FAR = 100.0f;
@@ -94,6 +94,9 @@ static camopt_t get_default_options(float aspect) {
 
 camera_t *camera_new(vec3_t position, vec3_t forward, float aspect) {
     camera_t *camera = (camera_t*)malloc(sizeof(camera_t));
+    assert(vec3_length(forward) > 1.0e-6f);
+    assert(vec3_length(vec3_cross(forward, WORLD_UP)) > 1.0e-6f);
+    assert(aspect > 0);
 
     camera->position   = position;
 
@@ -195,9 +198,8 @@ static void move_camera(camera_t *camera, window_t *window, float dtime) {
     }
 
     if (vec3_length(direction) > 1.0e-6f) {
-        vec3_t movement;
-        direction = vec3_normalize(direction);
-        movement = vec3_scale(direction, camera->options.move_speed * dtime);
+        float distance = camera->options.move_speed * dtime;
+        vec3_t movement = vec3_scale(vec3_normalize(direction), distance);
         camera->position = vec3_add(camera->position, movement);
     }
 }
