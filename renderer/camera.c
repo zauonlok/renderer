@@ -11,31 +11,37 @@ static const float PI = 3.141592653589793f;
 static const vec3_t WORLD_UP = {0.0f, 1.0f, 0.0f};
 
 static const float MOVE_SPEED = 2.5f;
-static const float ROTATE_SPEED = 0.1f;
-static const float ZOOM_SPEED = 1.0f;
+static const float ROTATE_SPEED = 10.0f;
+static const float ZOOM_SPEED = 100.0f;
 
 static const float PITCH_UPPER = 89.0f;
 static const float PITCH_LOWER = -89.0f;
 
-static const float FOVY_DEFAULT = 45.0f;
+static const float FOVY_DEFAULT = 60.0f;
 static const float FOVY_MINIMUM = 15.0f;
 
-static const float DEPTH_NEAR = 0.1f;
+static const float DEPTH_NEAR = 1.0f;
 static const float DEPTH_FAR = 100.0f;
 
 /* data structure */
 
 struct camera {
+    /* camera position */
     vec3_t position;
+    /* orientation in vector form */
     vec3_t front;
     vec3_t right;
     vec3_t up;
+    /* orientation in Euler angles */
     float pitch;
     float yaw;
+    /* field of view */
     float fovy;
+    /* input history */
     int rotating;
     int last_x_pos;
     int last_y_pos;
+    /* camera options */
     camopt_t options;
 };
 
@@ -55,6 +61,11 @@ static float max_float(float a, float b) {
 
 static float min_float(float a, float b) {
     return a < b ? a : b;
+}
+
+static float clamp_float(float a, float min, float max) {
+    assert(min <= max);
+    return (a < min) ? min : ((a > max) ? max : a);
 }
 
 /* camera creating/releasing */
@@ -86,8 +97,8 @@ static camopt_t get_default_options(float aspect) {
     options.fovy_minimum = FOVY_MINIMUM;
 
     options.aspect       = aspect;
-    options.z_near       = DEPTH_NEAR;
-    options.z_far        = DEPTH_FAR;
+    options.depth_near   = DEPTH_NEAR;
+    options.depth_far    = DEPTH_FAR;
 
     return options;
 }
@@ -128,6 +139,11 @@ camopt_t camera_get_options(camera_t *camera) {
 }
 
 void camera_set_options(camera_t *camera, camopt_t options) {
+    assert(options.pitch_upper >= options.pitch_lower);
+    assert(options.fovy_default >= options.fovy_minimum);
+    assert(options.fovy_minimum > 0);
+    assert(options.aspect > 0);
+    assert(options.depth_far > options.depth_near && options.depth_near > 0);
     camera->options = options;
 }
 
@@ -148,7 +164,7 @@ static void update_orien_vectors(camera_t *camera) {
     camera->up = vec3_cross(camera->right, camera->front);
 }
 
-static void rotate_camera(camera_t *camera, window_t *window, float dtime) {
+static void rotate_camera(camera_t *camera, window_t *window, float delta_time) {
     if (input_button_pressed(window, BUTTON_L)) {
         int x_pos, y_pos;
         input_query_cursor(window, &x_pos, &y_pos);
@@ -156,10 +172,11 @@ static void rotate_camera(camera_t *camera, window_t *window, float dtime) {
             camopt_t options = camera->options;
             int x_offset = x_pos - camera->last_x_pos;
             int y_offset = y_pos - camera->last_y_pos;
-            camera->yaw += x_offset * options.rotate_speed * dtime;
-            camera->pitch += y_offset * options.rotate_speed * dtime;
-            camera->pitch = min_float(camera->pitch, options.pitch_upper);
-            camera->pitch = max_float(camera->pitch, options.pitch_lower);
+            camera->yaw -= x_offset * options.rotate_speed * delta_time;
+            camera->pitch += y_offset * options.rotate_speed * delta_time;
+            camera->pitch = clamp_float(
+                camera->pitch, options.pitch_lower, options.pitch_upper
+            );
             update_orien_vectors(camera);
         } else {
             camera->rotating = 1;
@@ -171,18 +188,21 @@ static void rotate_camera(camera_t *camera, window_t *window, float dtime) {
     }
 }
 
-static void zoom_camera(camera_t *camera, window_t *window, float dtime) {
+static void zoom_camera(camera_t *camera, window_t *window, float delta_time) {
     camopt_t options = camera->options;
+    camera->fovy = clamp_float(
+        camera->fovy, options.fovy_minimum, options.fovy_default
+    );
     if (input_button_pressed(window, BUTTON_R)) {
-        camera->fovy -= options.zoom_speed * dtime;
+        camera->fovy -= options.zoom_speed * delta_time;
         camera->fovy = max_float(camera->fovy, options.fovy_minimum);
     } else {
-        camera->fovy += options.zoom_speed * dtime;
+        camera->fovy += options.zoom_speed * delta_time;
         camera->fovy = min_float(camera->fovy, options.fovy_default);
     }
 }
 
-static void move_camera(camera_t *camera, window_t *window, float dtime) {
+static void move_camera(camera_t *camera, window_t *window, float delta_time) {
     vec3_t direction = vec3_new(0.0f, 0.0f, 0.0f);
     if (input_key_pressed(window, KEY_A)) {
         direction = vec3_sub(direction, camera->right);
@@ -198,16 +218,17 @@ static void move_camera(camera_t *camera, window_t *window, float dtime) {
     }
 
     if (vec3_length(direction) > 1.0e-6f) {
-        float distance = camera->options.move_speed * dtime;
+        float distance = camera->options.move_speed * delta_time;
         vec3_t movement = vec3_scale(vec3_normalize(direction), distance);
         camera->position = vec3_add(camera->position, movement);
     }
 }
 
-void camera_process_input(camera_t *camera, window_t *window, float dtime) {
-    rotate_camera(camera, window, dtime);
-    zoom_camera(camera, window, dtime);
-    move_camera(camera, window, dtime);
+void camera_process_input(camera_t *camera, window_t *window,
+                          float delta_time) {
+    rotate_camera(camera, window, delta_time);
+    zoom_camera(camera, window, delta_time);
+    move_camera(camera, window, delta_time);
 }
 
 /* matrices retrieving */
@@ -221,8 +242,11 @@ mat4_t camera_get_view_matrix(camera_t *camera) {
 
 mat4_t camera_get_proj_matrix(camera_t *camera) {
     camopt_t options = camera->options;
-    return mat4_perspective(camera->fovy, options.aspect,
-                            options.z_near, options.z_far);
+    float fovy = degree_to_radian(camera->fovy);
+    float aspect = options.aspect;
+    float near = options.depth_near;
+    float far = options.depth_far;
+    return mat4_perspective(fovy, aspect, near, far);
 }
 
 mat4_t camera_get_viewproj_matrix(camera_t *camera) {

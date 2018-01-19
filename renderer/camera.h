@@ -19,8 +19,8 @@ typedef struct {
     float fovy_minimum;
     /* perspective */
     float aspect;
-    float z_near;
-    float z_far;
+    float depth_near;
+    float depth_far;
 } camopt_t;
 
 /* camera creating/releasing */
@@ -32,7 +32,7 @@ camopt_t camera_get_options(camera_t *camera);
 void camera_set_options(camera_t *camera, camopt_t options);
 
 /* input processing */
-void camera_process_input(camera_t *camera, window_t *window, float dtime);
+void camera_process_input(camera_t *camera, window_t *window, float delta_time);
 
 /* matrices retrieving */
 mat4_t camera_get_view_matrix(camera_t *camera);

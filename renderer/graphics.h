@@ -4,12 +4,13 @@
 #include "geometry.h"
 #include "image.h"
 
-typedef vec4_t vertex_shader_t(int nth_vertex, void *varyings, void *uniforms);
+typedef vec4_t vertex_shader_t(int nth_vertex, void *attribs,
+                               void *varyings, void *uniforms);
 typedef void interp_varyings_t(vec3_t weights, void *varyings);
 typedef color_t fragment_shader_t(void *varyings, void *uniforms);
 
 typedef struct {
-    image_t *framebuffer;
+    image_t *colorbuffer;
     float *depthbuffer;
     mat4_t viewport;
 } context_t;
@@ -18,6 +19,7 @@ typedef struct {
     vertex_shader_t *vertex_shader;
     fragment_shader_t *fragment_shader;
     interp_varyings_t *interp_varyings;
+    void *attribs;
     void *varyings;
     void *uniforms;
 } program_t;

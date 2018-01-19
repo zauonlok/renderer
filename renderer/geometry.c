@@ -149,13 +149,13 @@ mat4_t mat4_mul_mat4(mat4_t a, mat4_t b) {
 
 typedef struct {float m[3][3];} mat3_t;
 
-static float mat3_determinant(mat3_t *m) {
+static float mat3_determinant(const mat3_t *m) {
     return m->m[0][0] * (m->m[1][1] * m->m[2][2] - m->m[1][2] * m->m[2][1])
            + m->m[0][1] * (m->m[1][2] * m->m[2][0] - m->m[1][0] * m->m[2][2])
            + m->m[0][2] * (m->m[1][0] * m->m[2][1] - m->m[1][1] * m->m[2][0]);
 }
 
-static float mat4_minor(mat4_t *m, int r, int c) {
+static float mat4_minor(const mat4_t *m, int r, int c) {
     int i, j;
     mat3_t submatrix;
     assert(r >= 0 && c >= 0 && r < 4 && c < 4);
@@ -169,15 +169,15 @@ static float mat4_minor(mat4_t *m, int r, int c) {
     return mat3_determinant(&submatrix);
 }
 
-static float mat4_cofactor(mat4_t *m, int r, int c) {
-    float minor, sign;
+static float mat4_cofactor(const mat4_t *m, int r, int c) {
+    float sign, minor;
     assert(r >= 0 && c >= 0 && r < 4 && c < 4);
-    minor = mat4_minor(m, r, c);
     sign = ((r + c) % 2 == 0) ? 1.0f : -1.0f;
+    minor = mat4_minor(m, r, c);
     return sign * minor;
 }
 
-static mat4_t mat4_adjoint(mat4_t *m) {
+static mat4_t mat4_adjoint(const mat4_t *m) {
     int i, j;
     mat4_t adjoint;
     for (i = 0; i < 4; i++) {
@@ -607,9 +607,6 @@ mat4_t mat4_lookat(vec3_t eye, vec3_t center, vec3_t up) {
  * http://www.songho.ca/opengl/gl_transform.html
  */
 
-static const float DEPTH_NEAR = 0.0f;
-static const float DEPTH_FAR = 1.0f;
-
 mat4_t mat4_viewport(int x, int y, int width, int height) {
     /*
      * x, y: the lower left corner of the viewport rectangle
@@ -620,13 +617,15 @@ mat4_t mat4_viewport(int x, int y, int width, int height) {
      *   0    0  (f-n)/2  (f+n)/2
      *   0    0        0        1
      */
+    const float near = 0.0f;
+    const float far = 1.0f;
     mat4_t m = mat4_identity();
     assert(width > 0 && height > 0);
     m.m[0][0] = width / 2.0f;
     m.m[0][3] = x + width / 2.0f;
     m.m[1][1] = height / 2.0f;
     m.m[1][3] = y + height / 2.0f;
-    m.m[2][2] = (DEPTH_FAR - DEPTH_NEAR) / 2.0f;
-    m.m[2][3] = (DEPTH_FAR + DEPTH_NEAR) / 2.0f;
+    m.m[2][2] = (far - near) / 2.0f;
+    m.m[2][3] = (far + near) / 2.0f;
     return m;
 }

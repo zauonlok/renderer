@@ -1,19 +1,16 @@
+#include "graphics.h"
 #include <assert.h>
 #include <float.h>
 #include <stdlib.h>
 #include <string.h>
-#include "graphics.h"
 #include "geometry.h"
 #include "image.h"
-
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 /* context management */
 
 context_t *gfx_create_context(int width, int height) {
     context_t *context = (context_t*)malloc(sizeof(context_t));
-    context->framebuffer = image_create(width, height, 3);
+    context->colorbuffer = image_create(width, height, 3);
     context->depthbuffer = (float*)malloc(sizeof(float) * width * height);
     context->viewport    = mat4_viewport(0, 0, width, height);
     gfx_clear_buffers(context);
@@ -21,18 +18,19 @@ context_t *gfx_create_context(int width, int height) {
 }
 
 void gfx_release_context(context_t *context) {
-    image_release(context->framebuffer);
+    image_release(context->colorbuffer);
     free(context->depthbuffer);
     free(context);
 }
 
 void gfx_clear_buffers(context_t *context) {
-    image_t *framebuffer = context->framebuffer;
+    image_t *colorbuffer = context->colorbuffer;
     float *depthbuffer = context->depthbuffer;
-    int width = framebuffer->width;
-    int height = framebuffer->height;
+    int width = colorbuffer->width;
+    int height = colorbuffer->height;
+    int channels = colorbuffer->channels;
     int i;
-    memset(framebuffer->buffer, 0, width * height * framebuffer->channels);
+    memset(colorbuffer->buffer, 0, width * height * channels);
     for (i = 0; i < width * height; i++) {
         depthbuffer[i] = FLT_MAX;
     }
@@ -42,14 +40,16 @@ void gfx_clear_buffers(context_t *context) {
 
 /*
  * for barycentric coordinates, see http://blackpawn.com/texts/pointinpoly/
- * solve P = A + s * AB + t * AC
- * --> AP = s * AB + t * AC
- * --> s = (AC.y * AP.x - AC.x * AP.y) / (AB.x * AC.y - AB.y * AC.x)
- * --> t = (AB.x * AP.y - AB.y * AP.x) / (AB.x * AC.y - AB.y * AC.x)
  *
- * if s < 0 or t < 0 then we've walked in the wrong direction
- * if s > 1 or t > 1 then we've walked too far in a direction
- * if s + t > 1 then we've crossed the edge BC
+ * solve
+ *     P = A + s * AB + t * AC  -->  AP = s * AB + t * AC
+ * then
+ *     s = (AC.y * AP.x - AC.x * AP.y) / (AB.x * AC.y - AB.y * AC.x)
+ *     t = (AB.x * AP.y - AB.y * AP.x) / (AB.x * AC.y - AB.y * AC.x)
+ *
+ * if s < 0 or t < 0, we've walked in the wrong direction
+ * if s > 1 or t > 1, we've walked too far in a direction
+ * if s + t > 1, we've crossed the edge BC
  * therefore P is in ABC only if (s >= 0) && (t >= 0) && (1 - s - t >= 0)
  *
  * note P = A + s * AB + t * AC
@@ -70,33 +70,43 @@ static vec3_t calculate_weights(vec2_t A, vec2_t B, vec2_t C, vec2_t P) {
 
 typedef struct {float min_x, min_y, max_x, max_y;} box_t;
 
+static float min_float(float a, float b, float c, float lower_bound) {
+    float min = a;
+    min = (b < min) ? b : min;
+    min = (c < min) ? c : min;
+    min = (min < lower_bound) ? lower_bound : min;
+    return min;
+}
+
+static float max_float(float a, float b, float c, float upper_bound) {
+    float max = a;
+    max = (b > max) ? b : max;
+    max = (c > max) ? c : max;
+    max = (max > upper_bound) ? upper_bound : max;
+    return max;
+}
+
 static box_t find_bounding_box(int width, int height,
-                               vec2_t P0, vec2_t P1, vec2_t P2) {
+                               vec2_t p0, vec2_t p1, vec2_t p2) {
     box_t box;
-
-    box.min_x = MIN(P1.x, P0.x);
-    box.min_y = MIN(P1.y, P0.y);
-    box.max_x = MAX(P1.x, P0.x);
-    box.max_y = MAX(P1.y, P0.y);
-
-    box.min_x = MIN(P2.x, box.min_x);
-    box.min_y = MIN(P2.y, box.min_y);
-    box.max_x = MAX(P2.x, box.max_x);
-    box.max_y = MAX(P2.y, box.max_y);
-
-    box.min_x = MAX(0, box.min_x);
-    box.min_y = MAX(0, box.min_y);
-    box.max_x = MIN(width - 1, box.max_x);
-    box.max_y = MIN(height - 1, box.max_y);
-
+    box.min_x = min_float(p0.x, p1.x, p2.x, 0.0f);
+    box.min_y = min_float(p0.y, p1.y, p2.y, 0.0f);
+    box.max_x = max_float(p0.x, p1.x, p2.x, (float)(width - 1));
+    box.max_y = max_float(p0.y, p1.y, p2.y, (float)(height - 1));
     return box;
 }
 
 void gfx_draw_triangle(context_t *context, program_t *program) {
     /* for convenience */
-    int width = context->framebuffer->width;
-    int height = context->framebuffer->height;
+    image_t *colorbuffer = context->colorbuffer;
+    float *depthbuffer = context->depthbuffer;
     mat4_t viewport = context->viewport;
+    int width = context->colorbuffer->width;
+    int height = context->colorbuffer->height;
+    vertex_shader_t *vertex_shader = program->vertex_shader;
+    fragment_shader_t *fragment_shader = program->fragment_shader;
+    interp_varyings_t *interp_varyings = program->interp_varyings;
+    void *attribs = program->attribs;
     void *varyings = program->varyings;
     void *uniforms = program->uniforms;
 
@@ -106,7 +116,7 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
     box_t box;
 
     for (i = 0; i < 3; i++) {
-        vec4_t clip_coord = program->vertex_shader(i, varyings, uniforms);
+        vec4_t clip_coord = vertex_shader(i, attribs, varyings, uniforms);
         vec4_t ndc_coord = vec4_scale(clip_coord, 1.0f / clip_coord.w);
         screen_coords[i] = mat4_mul_vec4(viewport, ndc_coord);
         screen_points[i] = vec2_new(screen_coords[i].x, screen_coords[i].y);
@@ -118,20 +128,20 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
         for (y = (int)box.min_y; y <= box.max_y; y++) {
             vec2_t point = vec2_new((float)x, (float)y);
             vec3_t weights = calculate_weights(screen_points[0],
-                                                screen_points[1],
-                                                screen_points[2],
-                                                point);
+                                               screen_points[1],
+                                               screen_points[2],
+                                               point);
             if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
                 float depth = screen_coords[0].z * weights.x
                               + screen_coords[1].z * weights.y
                               + screen_coords[2].z * weights.z;
                 int index = y * width + x;
-                if (context->depthbuffer[index] > depth) {
+                if (depthbuffer[index] > depth) {
                     color_t color;
-                    program->interp_varyings(weights, varyings);
-                    color = program->fragment_shader(varyings, uniforms);
-                    image_set_color(context->framebuffer, y, x, color);
-                    context->depthbuffer[index] = depth;
+                    interp_varyings(weights, varyings);
+                    color = fragment_shader(varyings, uniforms);
+                    image_set_color(colorbuffer, y, x, color);
+                    depthbuffer[index] = depth;
                 }
             }
         }
