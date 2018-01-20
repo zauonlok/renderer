@@ -6,8 +6,8 @@
 
 typedef vec4_t vertex_shader_t(int nth_vertex, void *attribs,
                                void *varyings, void *uniforms);
-typedef void interp_varyings_t(vec3_t weights, void *varyings);
-typedef color_t fragment_shader_t(void *varyings, void *uniforms);
+typedef void interp_varyings_t(void *varyings, vec3_t weights);
+typedef vec4_t fragment_shader_t(void *varyings, void *uniforms);
 
 typedef struct {
     image_t *colorbuffer;
@@ -16,12 +16,12 @@ typedef struct {
 } context_t;
 
 typedef struct {
-    vertex_shader_t *vertex_shader;
-    fragment_shader_t *fragment_shader;
-    interp_varyings_t *interp_varyings;
     void *attribs;
     void *varyings;
     void *uniforms;
+    vertex_shader_t *vertex_shader;
+    fragment_shader_t *fragment_shader;
+    interp_varyings_t *interp_varyings;
 } program_t;
 
 /* context management */

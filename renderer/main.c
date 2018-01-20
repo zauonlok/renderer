@@ -56,13 +56,13 @@ vec4_t vertex_shader(int nth_vertex, void *attribs_,
     return clip_coord;
 }
 
-void interp_varyings(vec3_t weights, void *varyings_) {
+void interp_varyings(void *varyings_, vec3_t weights) {
     varyings_t *varyings = (varyings_t*)varyings_;
     vec2_t *vs_out_texcoords = varyings->vs_out_texcoords;
     varyings->fs_in_texcoord = gfx_interp_vec2(vs_out_texcoords, weights);
 }
 
-color_t fragment_shader(void *varyings_, void *uniforms_) {
+vec4_t fragment_shader(void *varyings_, void *uniforms_) {
     varyings_t *varyings = (varyings_t*)varyings_;
     uniforms_t *uniforms = (uniforms_t*)uniforms_;
 
@@ -117,7 +117,7 @@ color_t fragment_shader(void *varyings_, void *uniforms_) {
         color.r = (unsigned char)MIN(color_r, 255.0f);
     }
 
-    return color;
+    return vec4_new(color.b / 255.0f, color.g / 255.0f, color.r / 255.0f, 255.0f);
 }
 
 void draw_model(context_t *context, model_t *model, image_t *diffuse_map,
