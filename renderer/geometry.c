@@ -209,7 +209,7 @@ mat4_t mat4_inverse_transpose(mat4_t m) {
     return inverse_transpose;
 }
 
-mat4_t mat4_invert(mat4_t m) {
+mat4_t mat4_inverse(mat4_t m) {
     return mat4_transpose(mat4_inverse_transpose(m));
 }
 
@@ -569,14 +569,14 @@ mat4_t mat4_lookat(vec3_t eye, vec3_t center, vec3_t up) {
      * x_axis: normalize(cross(up,z_axis)), the right vector
      * y_axis: cross(z_axis,x_axis), the up vector
      *
-     * equivalent to mat4_invert(mat4_camera(eye,center,up))
+     * equivalent to mat4_inverse(mat4_camera(eye,center,up))
      *     camera = translation*rotation
-     *     lookat = invert(camera)
-     *            = invert(rotation)*invert(translation)
-     *            = transpose(rotation)*invert(translation)
+     *     lookat = inverse(camera)
+     *            = inverse(rotation)*inverse(translation)
+     *            = transpose(rotation)*inverse(translation)
      *
      * note that the rotation matrix is an orthogonal matrix, which means
-     *     transpose(rotation) == invert(rotation)
+     *     transpose(rotation) == inverse(rotation)
      */
     vec3_t z_axis = vec3_normalize(vec3_sub(eye, center));  /* right-handed */
     vec3_t x_axis = vec3_normalize(vec3_cross(up, z_axis));

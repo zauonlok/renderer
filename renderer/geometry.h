@@ -36,7 +36,7 @@ void vec4_print(vec4_t v, const char *name);
 vec4_t mat4_mul_vec4(mat4_t m, vec4_t v);
 mat4_t mat4_mul_mat4(mat4_t a, mat4_t b);
 mat4_t mat4_inverse_transpose(mat4_t m);
-mat4_t mat4_invert(mat4_t m);
+mat4_t mat4_inverse(mat4_t m);
 mat4_t mat4_transpose(mat4_t m);
 void mat4_print(mat4_t m, const char *name);
 
