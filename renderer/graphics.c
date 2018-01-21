@@ -6,12 +6,14 @@
 #include "geometry.h"
 #include "image.h"
 
+static const int BUFFER_CHANNELS = 3;
+
 /* context management */
 
 context_t *gfx_create_context(int width, int height) {
     context_t *context = (context_t*)malloc(sizeof(context_t));
-    assert(width > 0 && height >0);
-    context->colorbuffer = image_create(width, height, 3);
+    assert(width > 0 && height > 0);
+    context->colorbuffer = image_create(width, height, BUFFER_CHANNELS);
     context->depthbuffer = (float*)malloc(sizeof(float) * width * height);
     context->viewport    = mat4_viewport(0, 0, width, height);
     gfx_clear_buffers(context);
@@ -30,7 +32,7 @@ void gfx_clear_buffers(context_t *context) {
     int width = colorbuffer->width;
     int height = colorbuffer->height;
     int i;
-    memset(colorbuffer->buffer, 0, width * height * colorbuffer->channels);
+    memset(colorbuffer->buffer, 0, width * height * BUFFER_CHANNELS);
     for (i = 0; i < width * height; i++) {
         depthbuffer[i] = FLT_MAX;
     }
@@ -38,25 +40,26 @@ void gfx_clear_buffers(context_t *context) {
 
 /* triangle rasterization */
 
-/*
- * for barycentric coordinates, see http://blackpawn.com/texts/pointinpoly/
- *
- * solve
- *     P = A + s * AB + t * AC  -->  AP = s * AB + t * AC
- * then
- *     s = (AC.y * AP.x - AC.x * AP.y) / (AB.x * AC.y - AB.y * AC.x)
- *     t = (AB.x * AP.y - AB.y * AP.x) / (AB.x * AC.y - AB.y * AC.x)
- *
- * if s < 0 or t < 0, we've walked in the wrong direction
- * if s > 1 or t > 1, we've walked too far in a direction
- * if s + t > 1, we've crossed the edge BC
- * therefore P is in ABC only if (s >= 0) && (t >= 0) && (1 - s - t >= 0)
- *
- * note P = A + s * AB + t * AC
- *        = A + s * (B - A) + t * (C - A)
- *        = (1 - s - t) * A + s * B + t * C
- */
 static vec3_t calculate_weights(vec2_t A, vec2_t B, vec2_t C, vec2_t P) {
+    /*
+     * for barycentric coordinates, see http://blackpawn.com/texts/pointinpoly/
+     *
+     * solve
+     *     P = A + s * AB + t * AC  -->  AP = s * AB + t * AC
+     * then
+     *     s = (AC.y * AP.x - AC.x * AP.y) / (AB.x * AC.y - AB.y * AC.x)
+     *     t = (AB.x * AP.y - AB.y * AP.x) / (AB.x * AC.y - AB.y * AC.x)
+     *
+     * if s < 0 or t < 0, we've walked in the wrong direction
+     * if s > 1 or t > 1, we've walked too far in a direction
+     * if s + t > 1, we've crossed the edge BC
+     * therefore, P is in ABC only if (s >= 0) && (t >= 0) && (1 - s - t >= 0)
+     *
+     * note that
+     *     P = A + s * AB + t * AC
+     *       = A + s * (B - A) + t * (C - A)
+     *       = (1 - s - t) * A + s * B + t * C
+     */
     vec2_t AB = vec2_sub(B, A);
     vec2_t AC = vec2_sub(C, A);
     vec2_t AP = vec2_sub(P, A);
@@ -125,15 +128,17 @@ static float clamp_float(float a, float min, float max) {
     return (a < min) ? min : ((a > max) ? max : a);
 }
 
-static void set_colorbuffer(image_t *colorbuffer, int x, int y, vec4_t color_) {
-    int row = y;
-    int col = x;
-    color_t color;
-    color.b = (unsigned char)(clamp_float(color_.x, 0.0f, 1.0f) * 255.0f);
-    color.g = (unsigned char)(clamp_float(color_.y, 0.0f, 1.0f) * 255.0f);
-    color.r = (unsigned char)(clamp_float(color_.z, 0.0f, 1.0f) * 255.0f);
-    color.a = 255;
-    image_set_color(colorbuffer, row, col, color);
+static void write_fragment_color(image_t *colorbuffer, vec4_t color_,
+                                 int x, int y) {
+    int index = y * colorbuffer->width * BUFFER_CHANNELS + x * BUFFER_CHANNELS;
+    unsigned char *pixel = &(colorbuffer->buffer[index]);
+    float color[4];
+    int i;
+    vec4_to_array(color_, color);
+    for (i = 0; i < BUFFER_CHANNELS; i++) {
+        float clamped = clamp_float(color[i], 0.0f, 1.0f);
+        pixel[i] = (unsigned char)(clamped * 255.0f);
+    }
 }
 
 void gfx_draw_triangle(context_t *context, program_t *program) {
@@ -161,7 +166,8 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
 
     /* perspective division */
     for (i = 0; i < 3; i++) {
-        ndc_coords[i] = vec4_scale(clip_coords[i], 1.0f / clip_coords[i].w);
+        float factor = 1.0f / clip_coords[i].w;
+        ndc_coords[i] = vec4_scale(clip_coords[i], factor);
     }
     /* back-face culling */
     if (is_back_facing(ndc_coords)) {
@@ -187,49 +193,19 @@ void gfx_draw_triangle(context_t *context, program_t *program) {
             if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
                 int index = y * width + x;
                 float depth = calculate_depth(screen_coords, weights);
-                if (context->depthbuffer[index] > depth) {  /* depth test */
+                /* early depth testing */
+                if (context->depthbuffer[index] > depth) {
                     vec4_t color;
                     program->interp_varyings(program->varyings, weights);
                     color = program->fragment_shader(
                         program->varyings, program->uniforms
                     );
-                    set_colorbuffer(context->colorbuffer, x, y, color);
+                    write_fragment_color(context->colorbuffer, color, x, y);
                     context->depthbuffer[index] = depth;
                 }
             }
         }
     }
-}
-
-/* texture sampling */
-
-color_t gfx_sample_texture(image_t *texture, vec2_t texcoord) {
-    float u = texcoord.x;
-    float v = texcoord.y;
-    int row, col;
-    assert(u >= 0.0f && u <= 1.0f && v >= 0.0f && v <= 1.0f);
-    col = (int)((texture->width - 1) * u + 0.5f);
-    row = (int)((texture->height - 1) * v + 0.5f);
-    return image_get_color(texture, row, col);
-}
-
-color_t gfx_sample_diffuse(image_t *diffuse_map, vec2_t texcoord) {
-    return gfx_sample_texture(diffuse_map, texcoord);
-}
-
-vec3_t gfx_sample_normal(image_t *normal_map, vec2_t texcoord) {
-    color_t color = gfx_sample_texture(normal_map, texcoord);
-    vec3_t normal;
-    /* interpret rgb values as xyz directions */
-    normal.x = color.r / 255.0f * 2.0f - 1.0f;
-    normal.y = color.g / 255.0f * 2.0f - 1.0f;
-    normal.z = color.b / 255.0f * 2.0f - 1.0f;
-    return normal;
-}
-
-float gfx_sample_specular(image_t *specular_map, vec2_t texcoord) {
-    color_t color = gfx_sample_texture(specular_map, texcoord);
-    return (float)color.b;
 }
 
 /* vector interpolation */
@@ -275,13 +251,31 @@ vec4_t gfx_interp_vec4(vec4_t vs[3], vec3_t weights_) {
 
 /* utility functions */
 
-/*
- * reflected = 2 * normal * dot(normal, light) - light
- * normal must be normalized
- * light is the inverse of the incident light
- */
-vec3_t gfx_reflect_light(vec3_t normal, vec3_t light) {
-    float n_dot_l = vec3_dot(normal, light);
-    vec3_t two_n_dot = vec3_scale(normal, n_dot_l * 2.0f);
-    return vec3_normalize(vec3_sub(two_n_dot, light));
+vec4_t gfx_sample_texture(image_t *texture, vec2_t texcoord) {
+    float u = texcoord.x;
+    float v = texcoord.y;
+    int x = (int)((texture->width - 1) * u + 0.5f);
+    int y = (int)((texture->height - 1) * v + 0.5f);
+    int channels = texture->channels;
+    int index = y * texture->width * channels + x * channels;
+    unsigned char *pixel = &(texture->buffer[index]);
+    float color[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    int i;
+    assert(u >= 0.0f && u <= 1.0f && v >= 0.0f && v <= 1.0f);
+    assert(channels >= 1 && channels <= 4);
+    for (i = 0; i < channels; i++) {
+        color[i] = pixel[i] / 255.0f;
+    }
+    return vec4_new(color[0], color[1], color[2], color[3]);
+}
+
+vec3_t gfx_reflect_light(vec3_t light, vec3_t normal) {
+    /*
+     * light: the incident vector
+     * normal: the normal vector, should be normalized
+     *
+     * reflected = light - 2 * dot(light, normal) * normal
+     */
+    float factor = 2.0f * vec3_dot(light, normal);
+    return vec3_sub(light, vec3_scale(normal, factor));
 }
