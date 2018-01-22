@@ -285,12 +285,12 @@ mat4_t gfx_normal_matrix(mat4_t model_view_matrix) {
      * transform the normal into eye space, see
      * https://github.com/ssloy/tinyrenderer/wiki/Lesson-5:-Moving-the-camera
      */
-    mat4_t normal_matrix = {
-        0.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 0.0f
-    };
+    mat4_t normal_matrix = {{
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f, 0.0f}
+    }};
     mat4_t inv_tr_matrix = mat4_inverse_transpose(model_view_matrix);
     int i, j;
     for (i = 0; i < 3; i++) {
