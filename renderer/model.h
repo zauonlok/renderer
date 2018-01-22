@@ -7,7 +7,7 @@ typedef struct model model_t;
 
 /* model loading */
 model_t *model_load(const char *filename);
-void model_free(model_t *model);
+void model_release(model_t *model);
 
 /* vertex retrieving */
 int model_get_num_faces(model_t *model);

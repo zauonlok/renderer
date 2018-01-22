@@ -40,5 +40,6 @@ vec4_t gfx_interp_vec4(vec4_t vs[3], vec3_t weights);
 /* utility functions */
 vec4_t gfx_sample_texture(image_t *texture, vec2_t texcoord);
 vec3_t gfx_reflect_light(vec3_t light, vec3_t normal);
+mat4_t gfx_normal_matrix(mat4_t model_view_matrix);
 
 #endif

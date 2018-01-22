@@ -211,7 +211,7 @@ model_t *model_load(const char *filename) {
     }
 }
 
-void model_free(model_t *model) {
+void model_release(model_t *model) {
     free(model->positions);
     free(model->texcoords);
     free(model->normals);

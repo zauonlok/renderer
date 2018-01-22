@@ -279,3 +279,24 @@ vec3_t gfx_reflect_light(vec3_t light, vec3_t normal) {
     float factor = 2.0f * vec3_dot(light, normal);
     return vec3_sub(light, vec3_scale(normal, factor));
 }
+
+mat4_t gfx_normal_matrix(mat4_t model_view_matrix) {
+    /*
+     * transform the normal into eye space, see
+     * https://github.com/ssloy/tinyrenderer/wiki/Lesson-5:-Moving-the-camera
+     */
+    mat4_t normal_matrix = {
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f
+    };
+    mat4_t inv_tr_matrix = mat4_inverse_transpose(model_view_matrix);
+    int i, j;
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j < 3; j++) {
+            normal_matrix.m[i][j] = inv_tr_matrix.m[i][j];
+        }
+    }
+    return normal_matrix;
+}

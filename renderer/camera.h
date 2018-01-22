@@ -24,8 +24,8 @@ typedef struct {
 } camopt_t;
 
 /* camera creating/releasing */
-camera_t *camera_new(vec3_t position, vec3_t forward, float aspect);
-void camera_free(camera_t *camera);
+camera_t *camera_create(vec3_t position, vec3_t forward, float aspect);
+void camera_release(camera_t *camera);
 
 /* camera customizing */
 camopt_t camera_get_options(camera_t *camera);

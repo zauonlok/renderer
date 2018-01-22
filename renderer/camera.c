@@ -103,7 +103,7 @@ static camopt_t get_default_options(float aspect) {
     return options;
 }
 
-camera_t *camera_new(vec3_t position, vec3_t forward, float aspect) {
+camera_t *camera_create(vec3_t position, vec3_t forward, float aspect) {
     camera_t *camera = (camera_t*)malloc(sizeof(camera_t));
     assert(vec3_length(forward) > 1.0e-6f);
     assert(vec3_length(vec3_cross(forward, WORLD_UP)) > 1.0e-6f);
@@ -128,7 +128,7 @@ camera_t *camera_new(vec3_t position, vec3_t forward, float aspect) {
     return camera;
 }
 
-void camera_free(camera_t *camera) {
+void camera_release(camera_t *camera) {
     free(camera);
 }
 
