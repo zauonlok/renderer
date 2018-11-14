@@ -2,7 +2,7 @@
 #include "geometry.h"
 #include "graphics.h"
 #include "image.h"
-#include "model.h"
+#include "mesh.h"
 #include "platform.h"
 #include "shaders/phong_shader.h"
 
@@ -22,20 +22,20 @@ static const vec3_t LIGHT_SPECULAR = {1.0f, 1.0f, 1.0f};
 
 static const float SHININESS = 32.0f;
 
-static const char *MODEL_PATH = "resources/african_head.obj";
+static const char *MESH_PATH = "resources/african_head.obj";
 static const char *DIFFUSE_PATH = "resources/african_head_diffuse.tga";
 static const char *NORMAL_PATH = "resources/african_head_nm.tga";
 static const char *SPECULAR_PATH = "resources/african_head_spec.tga";
 
-/* model drawing */
+/* mesh drawing */
 
-void draw_model(context_t *context, camera_t *camera, model_t *model,
+void draw_mesh(context_t *context, camera_t *camera, mesh_t *mesh,
                 image_t *diffuse_map, image_t *normal_map, image_t *spec_map) {
     phong_attribs_t attribs;
     phong_varyings_t varyings;
     phong_uniforms_t uniforms;
     program_t program;
-    int num_faces = model_get_num_faces(model);
+    int num_faces = mesh_get_num_faces(mesh);
     int i, j;
 
     mat4_t model_matrix = mat4_rotation_y((float)timer_get_time());
@@ -70,8 +70,8 @@ void draw_model(context_t *context, camera_t *camera, model_t *model,
 
     for (i = 0; i < num_faces; i++) {
         for (j = 0; j < 3; j++) {
-            attribs.positions[j] = model_get_position(model, i, j);
-            attribs.texcoords[j] = model_get_texcoord(model, i, j);
+            attribs.positions[j] = mesh_get_position(mesh, i, j);
+            attribs.texcoords[j] = mesh_get_texcoord(mesh, i, j);
         }
         gfx_draw_triangle(context, &program);
     }
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
     context_t *context;
     camera_t *camera;
 
-    model_t *model;
+    mesh_t *mesh;
     image_t *diffuse_map;
     image_t *normal_map;
     image_t *specular_map;
@@ -96,14 +96,14 @@ int main(int argc, char *argv[]) {
     aspect = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
     camera = camera_create(CAMERA_POSITION, CAMERA_FORWARD, aspect);
 
-    /* load model and textures */
+    /* load mesh and textures */
     if (argc == 5) {
-        model = model_load(argv[1]);
+        mesh = mesh_load(argv[1]);
         diffuse_map = image_load(argv[2]);
         normal_map = image_load(argv[3]);
         specular_map = image_load(argv[4]);
     } else {
-        model = model_load(MODEL_PATH);
+        mesh = mesh_load(MESH_PATH);
         diffuse_map = image_load(DIFFUSE_PATH);
         normal_map = image_load(NORMAL_PATH);
         specular_map = image_load(SPECULAR_PATH);
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
         /* render image */
         gfx_clear_buffers(context);
         camera_process_input(camera, window, delta_time);
-        draw_model(context, camera, model,
+        draw_mesh(context, camera, mesh,
                    diffuse_map, normal_map, specular_map);
 
         /* display image */
@@ -133,8 +133,8 @@ int main(int argc, char *argv[]) {
         input_poll_events();
     }
 
-    /* release model and textures */
-    model_release(model);
+    /* release mesh and textures */
+    mesh_release(mesh);
     image_release(diffuse_map);
     image_release(normal_map);
     image_release(specular_map);
