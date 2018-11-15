@@ -14,7 +14,7 @@ typedef struct {
 
 struct window {
     HWND handle;
-    int should_close;
+    int closing;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
     context_t *context;
@@ -48,7 +48,7 @@ static LRESULT CALLBACK process_message(HWND hWnd, UINT uMsg,
     if (window == NULL) {
         return DefWindowProc(hWnd, uMsg, wParam, lParam);
     } else if (uMsg == WM_CLOSE) {
-        window->should_close = 1;
+        window->closing = 1;
         return 0;
     } else if (uMsg == WM_KEYDOWN) {
         handle_key_message(window, wParam, ACTION_DOWN);
@@ -76,20 +76,20 @@ static LRESULT CALLBACK process_message(HWND hWnd, UINT uMsg,
 static void register_class(void) {
     static int initialized = 0;
     if (initialized == 0) {
-        ATOM id;
-        WNDCLASS wc;
-        wc.style         = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc   = process_message;
-        wc.cbClsExtra    = 0;
-        wc.cbWndExtra    = 0;
-        wc.hInstance     = GetModuleHandle(NULL);
-        wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
-        wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-        wc.lpszMenuName  = NULL;
-        wc.lpszClassName = WINDOW_CLASS_NAME;
-        id = RegisterClass(&wc);
-        assert(id != 0);
+        ATOM class_atom;
+        WNDCLASS window_class;
+        window_class.style         = CS_HREDRAW | CS_VREDRAW;
+        window_class.lpfnWndProc   = process_message;
+        window_class.cbClsExtra    = 0;
+        window_class.cbWndExtra    = 0;
+        window_class.hInstance     = GetModuleHandle(NULL);
+        window_class.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
+        window_class.hCursor       = LoadCursor(NULL, IDC_ARROW);
+        window_class.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+        window_class.lpszMenuName  = NULL;
+        window_class.lpszClassName = WINDOW_CLASS_NAME;
+        class_atom = RegisterClass(&window_class);
+        assert(class_atom != 0);
         initialized = 1;
     }
 }
@@ -165,9 +165,9 @@ window_t *window_create(const char *title, int width, int height) {
     context = create_context(handle, width, height);
 
     window = (window_t*)malloc(sizeof(window_t));
-    window->handle       = handle;
-    window->should_close = 0;
-    window->context      = context;
+    window->handle  = handle;
+    window->closing = 0;
+    window->context = context;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
@@ -189,11 +189,8 @@ void window_destroy(window_t *window) {
 }
 
 int window_should_close(window_t *window) {
-    return window->should_close;
+    return window->closing;
 }
-
-/* private helper function, implemented in image.c */
-void image_blit_bgr(image_t *src, image_t *dst);
 
 void window_draw_image(window_t *window, image_t *image) {
     HDC window_dc = GetDC(window->handle);
@@ -216,12 +213,12 @@ void input_poll_events(void) {
 }
 
 int input_key_pressed(window_t *window, keycode_t key) {
-    assert(key < KEY_NUM);
+    assert(key >= 0 && key < KEY_NUM);
     return window->keys[key];
 }
 
 int input_button_pressed(window_t *window, button_t button) {
-    assert(button < BUTTON_NUM);
+    assert(button >= 0 && button < BUTTON_NUM);
     return window->buttons[button];
 }
 
@@ -249,9 +246,4 @@ double timer_get_time(void) {
     }
     QueryPerformanceCounter(&counter);
     return counter.QuadPart * period;
-}
-
-void timer_sleep_for(int milliseconds) {
-    assert(milliseconds > 0);
-    Sleep(milliseconds);
 }
