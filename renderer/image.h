@@ -3,10 +3,7 @@
 
 typedef struct {int row, col;} point_t;
 typedef struct {unsigned char b, g, r, a;} color_t;
-typedef struct {
-    int width, height, channels;
-    unsigned char *buffer;
-} image_t;
+typedef struct {int width, height, channels; unsigned char *buffer;} image_t;
 
 /* image creating/releasing */
 image_t *image_create(int width, int height, int channels);
@@ -22,10 +19,6 @@ void image_flip_h(image_t *image);
 void image_flip_v(image_t *image);
 void image_resize(image_t *image, int width, int height);
 
-/* private blit functions */
-void image_blit_bgr(image_t *src, image_t *dst);
-void image_blit_rgb(image_t *src, image_t *dst);
-
 /* geometry drawing */
 void image_draw_point(image_t *image, color_t color, point_t point);
 void image_draw_line(image_t *image, color_t color,
@@ -34,5 +27,9 @@ void image_draw_triangle(image_t *image, color_t color,
                          point_t point0, point_t point1, point_t point2);
 void image_fill_triangle(image_t *image, color_t color,
                          point_t point0, point_t point1, point_t point2);
+
+/* private blit functions */
+void image_blit_bgr(image_t *src, image_t *dst);
+void image_blit_rgb(image_t *src, image_t *dst);
 
 #endif

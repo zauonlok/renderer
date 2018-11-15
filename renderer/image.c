@@ -287,6 +287,180 @@ void image_resize(image_t *image, int width, int height) {
     free(src.buffer);
 }
 
+/* geometry drawing */
+
+static point_t make_point(int row, int col) {
+    point_t point;
+    point.row = row;
+    point.col = col;
+    return point;
+}
+
+static void swap_points(point_t *a, point_t *b) {
+    point_t t = *a;
+    *a = *b;
+    *b = t;
+}
+
+static int linear_interp_int(int v0, int v1, double d) {
+    return (int)(v0 + (v1 - v0) * d + 0.5);
+}
+
+static unsigned char color2gray(color_t color) {
+    double gray = 0.2989 * color.r + 0.5870 * color.g + 0.1140 * color.b;
+    return (unsigned char)gray;
+}
+
+static void validate_point(point_t point, image_t *image) {
+    assert(point.row >= 0 && point.row < image->height);
+    assert(point.col >= 0 && point.col < image->width);
+}
+
+void image_draw_point(image_t *image, color_t color, point_t point) {
+    int channels = image->channels;
+    unsigned char *pixel;
+    validate_point(point, image);
+    pixel = get_pixel_ptr(image, point.row, point.col);
+    if (channels == 1) {
+        unsigned char gray = color2gray(color);
+        pixel[0] = gray;
+    } else if (channels == 2) {
+        unsigned char gray = color2gray(color);
+        pixel[0] = gray;
+        pixel[1] = color.a;
+    } else if (channels == 3) {
+        pixel[0] = color.b;
+        pixel[1] = color.g;
+        pixel[2] = color.r;
+    } else if (channels == 4) {
+        pixel[0] = color.b;
+        pixel[1] = color.g;
+        pixel[2] = color.r;
+        pixel[3] = color.a;
+    } else {
+        assert(0);
+    }
+}
+
+void image_draw_line(image_t *image, color_t color,
+                     point_t point0, point_t point1) {
+    int row_distance = abs(point1.row - point0.row);
+    int col_distance = abs(point1.col - point0.col);
+    validate_point(point0, image);
+    validate_point(point1, image);
+    if (row_distance == 0 && col_distance == 0) {
+        image_draw_point(image, color, point0);
+    } else if (row_distance > col_distance) {
+        int row;
+        if (point0.row > point1.row) {
+            swap_points(&point0, &point1);
+        }
+        for (row = point0.row; row <= point1.row; row++) {
+            double d = (row - point0.row) / (double)row_distance;
+            int col = linear_interp_int(point0.col, point1.col, d);
+            image_draw_point(image, color, make_point(row, col));
+        }
+    } else {
+        int col;
+        if (point0.col > point1.col) {
+            swap_points(&point0, &point1);
+        }
+        for (col = point0.col; col <= point1.col; col++) {
+            double d = (col - point0.col) / (double)col_distance;
+            int row = linear_interp_int(point0.row, point1.row, d);
+            image_draw_point(image, color, make_point(row, col));
+        }
+    }
+}
+
+void image_draw_triangle(image_t *image, color_t color,
+                         point_t point0, point_t point1, point_t point2) {
+    validate_point(point0, image);
+    validate_point(point1, image);
+    validate_point(point2, image);
+    image_draw_line(image, color, point0, point1);
+    image_draw_line(image, color, point1, point2);
+    image_draw_line(image, color, point2, point0);
+}
+
+static void sort_points_by_row(point_t *p0, point_t *p1, point_t *p2) {
+    if (p0->row > p1->row) {
+        swap_points(p0, p1);
+    }
+    if (p0->row > p2->row) {
+        swap_points(p0, p2);
+    }
+    if (p1->row > p2->row) {
+        swap_points(p1, p2);
+    }
+}
+
+static void sort_points_by_col(point_t *p0, point_t *p1, point_t *p2) {
+    if (p0->col > p1->col) {
+        swap_points(p0, p1);
+    }
+    if (p0->col > p2->col) {
+        swap_points(p0, p2);
+    }
+    if (p1->col > p2->col) {
+        swap_points(p1, p2);
+    }
+}
+
+static void draw_scanline(image_t *image, color_t color,
+                          int col0, int col1, int row) {
+    int col_min = col0 < col1 ? col0 : col1;
+    int col_max = col0 < col1 ? col1 : col0;
+    int col;
+    for (col = col_min; col <= col_max; col++) {
+        image_draw_point(image, color, make_point(row, col));
+    }
+}
+
+void image_fill_triangle(image_t *image, color_t color,
+                         point_t point0, point_t point1, point_t point2) {
+    validate_point(point0, image);
+    validate_point(point1, image);
+    validate_point(point2, image);
+    sort_points_by_row(&point0, &point1, &point2);
+    if (point0.row == point2.row) {
+        sort_points_by_col(&point0, &point1, &point2);
+        draw_scanline(image, color, point0.col, point2.col, point0.row);
+    } else {
+        int total_height = point2.row - point0.row;
+        int upper_height = point1.row - point0.row;
+        int lower_height = point2.row - point1.row;
+
+        /* fill the upper triangle */
+        if (upper_height == 0) {
+            draw_scanline(image, color, point0.col, point1.col, point0.row);
+        } else {
+            int row;
+            for (row = point0.row; row <= point1.row; row++) {
+                double d01 = (row - point0.row) / (double)upper_height;
+                double d02 = (row - point0.row) / (double)total_height;
+                int col01 = linear_interp_int(point0.col, point1.col, d01);
+                int col02 = linear_interp_int(point0.col, point2.col, d02);
+                draw_scanline(image, color, col01, col02, row);
+            }
+        }
+
+        /* fill the lower triangle */
+        if (lower_height == 0) {
+            draw_scanline(image, color, point1.col, point2.col, point1.row);
+        } else {
+            int row;
+            for (row = point1.row; row <= point2.row; row++) {
+                double d02 = (row - point0.row) / (double)total_height;
+                double d12 = (row - point1.row) / (double)lower_height;
+                int col02 = linear_interp_int(point0.col, point2.col, d02);
+                int col12 = linear_interp_int(point1.col, point2.col, d12);
+                draw_scanline(image, color, col02, col12, row);
+            }
+        }
+    }
+}
+
 /* private blit functions */
 
 void image_blit_bgr(image_t *src, image_t *dst) {
@@ -334,173 +508,6 @@ void image_blit_rgb(image_t *src, image_t *dst) {
             } else {
                 unsigned char gray = src_pixel[0];
                 dst_pixel[0] = dst_pixel[1] = dst_pixel[2] = gray;
-            }
-        }
-    }
-}
-
-/* geometry drawing */
-
-static point_t make_point(int row, int col) {
-    point_t point;
-    point.row = row;
-    point.col = col;
-    return point;
-}
-
-static void swap_points(point_t *a, point_t *b) {
-    point_t t = *a;
-    *a = *b;
-    *b = t;
-}
-
-static void assert_point_valid(point_t point, image_t *image) {
-    assert(point.row >= 0 && point.row < image->height);
-    assert(point.col >= 0 && point.col < image->width);
-}
-
-static int linear_interp_int(int v0, int v1, double d) {
-    return (int)(v0 + (v1 - v0) * d + 0.5);
-}
-
-static point_t linear_interp_point(point_t p0, point_t p1, double d) {
-    point_t point;
-    point.row = linear_interp_int(p0.row, p1.row, d);
-    point.col = linear_interp_int(p0.col, p1.col, d);
-    return point;
-}
-
-static void image_set_color(image_t *image, int row, int col, color_t color) {
-    (void)image;
-    (void)row;
-    (void)col;
-    (void)color;
-    assert(0);
-}
-
-void image_draw_point(image_t *image, color_t color, point_t point) {
-    assert_point_valid(point, image);
-    image_set_color(image, point.row, point.col, color);
-}
-
-void image_draw_line(image_t *image, color_t color,
-                     point_t point0, point_t point1) {
-    int row_distance = abs(point1.row - point0.row);
-    int col_distance = abs(point1.col - point0.col);
-    assert_point_valid(point0, image);
-    assert_point_valid(point1, image);
-    if (row_distance == 0 && col_distance == 0) {
-        image_draw_point(image, color, point0);
-    } else if (row_distance > col_distance) {
-        int row;
-        if (point0.row > point1.row) {
-            swap_points(&point0, &point1);
-        }
-        for (row = point0.row; row <= point1.row; row++) {
-            double d = (row - point0.row) / (double)row_distance;
-            int col = linear_interp_int(point0.col, point1.col, d);
-            image_draw_point(image, color, make_point(row, col));
-        }
-    } else {
-        int col;
-        if (point0.col > point1.col) {
-            swap_points(&point0, &point1);
-        }
-        for (col = point0.col; col <= point1.col; col++) {
-            double d = (col - point0.col) / (double)col_distance;
-            int row = linear_interp_int(point0.row, point1.row, d);
-            image_draw_point(image, color, make_point(row, col));
-        }
-    }
-}
-
-void image_draw_triangle(image_t *image, color_t color,
-                         point_t point0, point_t point1, point_t point2) {
-    assert_point_valid(point0, image);
-    assert_point_valid(point1, image);
-    assert_point_valid(point2, image);
-    image_draw_line(image, color, point0, point1);
-    image_draw_line(image, color, point1, point2);
-    image_draw_line(image, color, point2, point0);
-}
-
-static void sort_points_by_row(point_t *p0, point_t *p1, point_t *p2) {
-    if (p0->row > p1->row) {
-        swap_points(p0, p1);
-    }
-    if (p0->row > p2->row) {
-        swap_points(p0, p2);
-    }
-    if (p1->row > p2->row) {
-        swap_points(p1, p2);
-    }
-}
-
-static void sort_points_by_col(point_t *p0, point_t *p1, point_t *p2) {
-    if (p0->col > p1->col) {
-        swap_points(p0, p1);
-    }
-    if (p0->col > p2->col) {
-        swap_points(p0, p2);
-    }
-    if (p1->col > p2->col) {
-        swap_points(p1, p2);
-    }
-}
-
-static void draw_scanline(image_t *image, color_t color,
-                          point_t p0, point_t p1) {
-    point_t point;
-    assert(p0.row == p1.row);
-    if (p0.col > p1.col) {
-        swap_points(&p0, &p1);
-    }
-    for (point = p0; point.col <= p1.col; point.col++) {
-        image_draw_point(image, color, point);
-    }
-}
-
-void image_fill_triangle(image_t *image, color_t color,
-                         point_t point0, point_t point1, point_t point2) {
-    assert_point_valid(point0, image);
-    assert_point_valid(point1, image);
-    assert_point_valid(point2, image);
-    sort_points_by_row(&point0, &point1, &point2);
-    if (point0.row == point2.row) {
-        sort_points_by_col(&point0, &point1, &point2);
-        draw_scanline(image, color, point0, point2);
-    } else {
-        int total_height = point2.row - point0.row;
-        int upper_height = point1.row - point0.row;
-        int lower_height = point2.row - point1.row;
-
-        /* fill the upper triangle */
-        if (upper_height == 0) {
-            draw_scanline(image, color, point0, point1);
-        } else {
-            int row;
-            for (row = point0.row; row <= point1.row; row++) {
-                double d1 = (row - point0.row) / (double)upper_height;
-                double d2 = (row - point0.row) / (double)total_height;
-                point_t p1 = linear_interp_point(point0, point1, d1);
-                point_t p2 = linear_interp_point(point0, point2, d2);
-                p1.row = p2.row = row;
-                draw_scanline(image, color, p1, p2);
-            }
-        }
-
-        /* fill the lower triangle */
-        if (lower_height == 0) {
-            draw_scanline(image, color, point1, point2);
-        } else {
-            int row;
-            for (row = point1.row; row <= point2.row; row++) {
-                double d0 = (row - point0.row) / (double)total_height;
-                double d1 = (row - point1.row) / (double)lower_height;
-                point_t p0 = linear_interp_point(point0, point2, d0);
-                point_t p1 = linear_interp_point(point1, point2, d1);
-                p0.row = p1.row = row;
-                draw_scanline(image, color, p0, p1);
             }
         }
     }
