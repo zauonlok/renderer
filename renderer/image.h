@@ -17,14 +17,14 @@ image_t *image_clone(image_t *image);
 image_t *image_load(const char *filename);
 void image_save(image_t *image, const char *filename);
 
-/* color getting/setting */
-color_t image_get_color(image_t *image, int row, int col);
-void image_set_color(image_t *image, int row, int col, color_t color);
-
 /* image processing */
 void image_flip_h(image_t *image);
 void image_flip_v(image_t *image);
 void image_resize(image_t *image, int width, int height);
+
+/* private blit functions */
+void image_blit_bgr(image_t *src, image_t *dst);
+void image_blit_rgb(image_t *src, image_t *dst);
 
 /* geometry drawing */
 void image_draw_point(image_t *image, color_t color, point_t point);
@@ -34,9 +34,5 @@ void image_draw_triangle(image_t *image, color_t color,
                          point_t point0, point_t point1, point_t point2);
 void image_fill_triangle(image_t *image, color_t color,
                          point_t point0, point_t point1, point_t point2);
-
-/* misc */
-void image_blit_bgr(image_t *src, image_t *dst);
-void image_blit_rgb(image_t *src, image_t *dst);
 
 #endif

@@ -104,7 +104,7 @@ static void load_tga_rle(FILE *file, image_t *image) {
         int pixel_count = (header & 0x7F) + 1;
         int expected_size = buffer_count + pixel_count * channels;
         assert(expected_size <= buffer_size);
-        if (is_rle_packet) {  /* run-length packet */
+        if (is_rle_packet) {  /* rle packet */
             int i, j;
             for (j = 0; j < channels; j++) {
                 pixel[j] = read_byte(file);
@@ -186,70 +186,6 @@ static void save_tga(image_t *image, const char *filename) {
 
     write_bytes(file, image->buffer, get_buffer_size(image));
     fclose(file);
-}
-
-/* color getting/setting */
-
-color_t image_get_color(image_t *image, int row, int col) {
-    int channels = image->channels;
-    color_t color = {0, 0, 0, 255};
-    unsigned char *pixel;
-
-    assert(row >= 0 && row < image->height && col >= 0 && col < image->width);
-
-    pixel = get_pixel_ptr(image, row, col);
-    if (channels == 1) {
-        color.b = color.g = color.r = pixel[0];
-    } else if (channels == 2) {
-        color.b = color.g = color.r = pixel[0];
-        color.a = pixel[1];
-    } else if (channels == 3) {
-        color.b = pixel[0];
-        color.g = pixel[1];
-        color.r = pixel[2];
-    } else if (channels == 4) {
-        color.b = pixel[0];
-        color.g = pixel[1];
-        color.r = pixel[2];
-        color.a = pixel[3];
-    } else {
-        assert(0);
-    }
-
-    return color;
-}
-
-static unsigned char color2gray(color_t color) {
-    int gray = ((int)color.b + (int)color.g + (int)color.r) / 3;
-    return (unsigned char)gray;
-}
-
-void image_set_color(image_t *image, int row, int col, color_t color) {
-    int channels = image->channels;
-    unsigned char *pixel;
-
-    assert(row >= 0 && row < image->height && col >= 0 && col < image->width);
-
-    pixel = get_pixel_ptr(image, row, col);
-    if (channels == 1) {
-        unsigned char gray = color2gray(color);
-        pixel[0] = gray;
-    } else if (channels == 2) {
-        unsigned char gray = color2gray(color);
-        pixel[0] = gray;
-        pixel[1] = color.a;
-    } else if (channels == 3) {
-        pixel[0] = color.b;
-        pixel[1] = color.g;
-        pixel[2] = color.r;
-    } else if (channels == 4) {
-        pixel[0] = color.b;
-        pixel[1] = color.g;
-        pixel[2] = color.r;
-        pixel[3] = color.a;
-    } else {
-        assert(0);
-    }
 }
 
 /* image processing */
@@ -353,42 +289,54 @@ void image_resize(image_t *image, int width, int height) {
 
 /* private blit functions */
 
-static void blit_truecolor(image_t *src, image_t *dst, int swap_rb) {
+void image_blit_bgr(image_t *src, image_t *dst) {
+    int height = src->height < dst->height ? src->height : dst->height;
+    int width = src->width < dst->width ? src->width : dst->width;
     int r, c;
 
+    assert(height > 0 && width > 0);
+    assert(src->channels >= 1 && src->channels <= 4);
     assert(dst->channels == 3 || dst->channels == 4);
 
-    memset(dst->buffer, 0, get_buffer_size(dst));
-    for (r = 0; r < src->height && r < dst->height; r++) {
-        for (c = 0; c < src->width && c < dst->width; c++) {
+    for (r = 0; r < height; r++) {
+        for (c = 0; c < width; c++) {
             unsigned char *src_pixel = get_pixel_ptr(src, r, c);
             unsigned char *dst_pixel = get_pixel_ptr(dst, r, c);
-            if (src->channels == 1 || src->channels == 2) {  /* gray */
+            if (src->channels == 3 || src->channels == 4) {
+                dst_pixel[0] = src_pixel[0];
+                dst_pixel[1] = src_pixel[1];
+                dst_pixel[2] = src_pixel[2];
+            } else {
                 unsigned char gray = src_pixel[0];
                 dst_pixel[0] = dst_pixel[1] = dst_pixel[2] = gray;
-            } else {
-                if (swap_rb) {  /* rgb */
-                    dst_pixel[0] = src_pixel[2];
-                    dst_pixel[1] = src_pixel[1];
-                    dst_pixel[2] = src_pixel[0];
-                } else {        /* bgr */
-                    dst_pixel[0] = src_pixel[0];
-                    dst_pixel[1] = src_pixel[1];
-                    dst_pixel[2] = src_pixel[2];
-                }
             }
         }
     }
 }
 
-void image_blit_bgr(image_t *src, image_t *dst) {
-    int swap_rb = 0;
-    blit_truecolor(src, dst, swap_rb);
-}
-
 void image_blit_rgb(image_t *src, image_t *dst) {
-    int swap_rb = 1;
-    blit_truecolor(src, dst, swap_rb);
+    int height = src->height < dst->height ? src->height : dst->height;
+    int width = src->width < dst->width ? src->width : dst->width;
+    int r, c;
+
+    assert(height > 0 && width > 0);
+    assert(src->channels >= 1 && src->channels <= 4);
+    assert(dst->channels == 3 || dst->channels == 4);
+
+    for (r = 0; r < height; r++) {
+        for (c = 0; c < width; c++) {
+            unsigned char *src_pixel = get_pixel_ptr(src, r, c);
+            unsigned char *dst_pixel = get_pixel_ptr(dst, r, c);
+            if (src->channels == 3 || src->channels == 4) {
+                dst_pixel[0] = src_pixel[2];
+                dst_pixel[1] = src_pixel[1];
+                dst_pixel[2] = src_pixel[0];
+            } else {
+                unsigned char gray = src_pixel[0];
+                dst_pixel[0] = dst_pixel[1] = dst_pixel[2] = gray;
+            }
+        }
+    }
 }
 
 /* geometry drawing */
@@ -420,6 +368,14 @@ static point_t linear_interp_point(point_t p0, point_t p1, double d) {
     point.row = linear_interp_int(p0.row, p1.row, d);
     point.col = linear_interp_int(p0.col, p1.col, d);
     return point;
+}
+
+static void image_set_color(image_t *image, int row, int col, color_t color) {
+    (void)image;
+    (void)row;
+    (void)col;
+    (void)color;
+    assert(0);
 }
 
 void image_draw_point(image_t *image, color_t color, point_t point) {
