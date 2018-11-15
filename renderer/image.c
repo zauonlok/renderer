@@ -427,9 +427,9 @@ void image_fill_triangle(image_t *image, color_t color,
         sort_points_by_col(&point0, &point1, &point2);
         draw_scanline(image, color, point0.col, point2.col, point0.row);
     } else {
-        int total_height = point2.row - point0.row;
         int upper_height = point1.row - point0.row;
         int lower_height = point2.row - point1.row;
+        int total_height = point2.row - point0.row;
 
         /* fill the upper triangle */
         if (upper_height == 0) {
@@ -451,11 +451,11 @@ void image_fill_triangle(image_t *image, color_t color,
         } else {
             int row;
             for (row = point1.row; row <= point2.row; row++) {
-                double d02 = (row - point0.row) / (double)total_height;
                 double d12 = (row - point1.row) / (double)lower_height;
-                int col02 = linear_interp_int(point0.col, point2.col, d02);
+                double d02 = (row - point0.row) / (double)total_height;
                 int col12 = linear_interp_int(point1.col, point2.col, d12);
-                draw_scanline(image, color, col02, col12, row);
+                int col02 = linear_interp_int(point0.col, point2.col, d02);
+                draw_scanline(image, color, col12, col02, row);
             }
         }
     }
