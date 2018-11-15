@@ -21,6 +21,5 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos);
 
 /* time related functions */
 double timer_get_time(void);
-void timer_sleep_for(int milliseconds);
 
 #endif

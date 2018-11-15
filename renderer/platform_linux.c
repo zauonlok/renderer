@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
 #include <sys/time.h>
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
@@ -186,21 +185,19 @@ static void handle_button_event(window_t *window, int button, char action) {
 }
 
 static void process_event(XEvent *event) {
-    static const Atom wm_protocols = XInternAtom(
-        g_display, "WM_PROTOCOLS", True);
-    static const Atom wm_delete_window = XInternAtom(
-        g_display, "WM_DELETE_WINDOW", True);
-
     window_t *window;
     int error = XFindContext(g_display, event->xany.window,
-                              g_context, (XPointer*)&window);
+                             g_context, (XPointer*)&window);
     if (error != 0) {
         return;
     }
 
     if (event->type == ClientMessage) {
+        Atom wm_protocols = XInternAtom(g_display, "WM_PROTOCOLS", True);
         if (event->xclient.message_type == wm_protocols) {
             Atom protocol = event->xclient.data.l[0];
+            Atom wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW",
+                                                True);
             if (protocol == wm_delete_window) {
                 window->closing = 1;
             }
@@ -262,18 +259,5 @@ double timer_get_time(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (double)tv.tv_sec + (double)tv.tv_usec / 1e6;
-#endif
-}
-
-void timer_sleep_for(int milliseconds) {
-#if _POSIX_C_SOURCE >= 199309L
-    struct timespec ts;
-    assert(milliseconds > 0);
-    ts.tv_sec  = milliseconds / 1000;
-    ts.tv_nsec = (milliseconds % 1000) * 1000000;
-    nanosleep(&ts, NULL);
-#else
-    int microseconds = milliseconds * 1000;
-    usleep(microseconds);
 #endif
 }
