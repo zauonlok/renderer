@@ -35,4 +35,7 @@ void image_draw_triangle(image_t *image, color_t color,
 void image_fill_triangle(image_t *image, color_t color,
                          point_t point0, point_t point1, point_t point2);
 
+/* misc */
+void image_blit_bgr(image_t *src, image_t *dst);
+
 #endif

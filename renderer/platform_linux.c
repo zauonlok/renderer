@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/time.h>
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
@@ -17,7 +19,7 @@ typedef struct {
 
 struct window {
     Window handle;
-    int should_close;
+    int closing;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
     context_t *context;
@@ -37,19 +39,18 @@ static void open_display(void) {
 }
 
 static Window create_window(const char *title, int width, int height) {
-    Atom WM_DELETE_WINDOW = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
+    Atom wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
     int screen = XDefaultScreen(g_display);
-    unsigned long black = XBlackPixel(g_display, screen);
-    unsigned long white = XWhitePixel(g_display, screen);
+    unsigned long border = XWhitePixel(g_display, screen);
+    unsigned long background = XBlackPixel(g_display, screen);
     Window root = XRootWindow(g_display, screen);
-    Window window;
-    XTextProperty property;
+    Window handle;
     XSizeHints *size_hints;
     XClassHint *class_hint;
     long mask;
 
-    window = XCreateSimpleWindow(g_display, root, 0, 0, width, height, 0,
-                                 white, black);
+    handle = XCreateSimpleWindow(g_display, root, 0, 0, width, height, 0,
+                                 border, background);
 
     /* not resizable */
     size_hints = XAllocSizeHints();
@@ -58,27 +59,22 @@ static Window create_window(const char *title, int width, int height) {
     size_hints->max_width  = width;
     size_hints->min_height = height;
     size_hints->max_height = height;
-    XSetWMNormalHints(g_display, window, size_hints);
+    XSetWMNormalHints(g_display, handle, size_hints);
     XFree(size_hints);
-
-    /* title bar name */
-    XStringListToTextProperty((char**)&title, 1, &property);
-    XSetWMName(g_display, window, &property);
-    XSetWMIconName(g_display, window, &property);
 
     /* application name */
     class_hint = XAllocClassHint();
     class_hint->res_name  = (char*)title;
     class_hint->res_class = (char*)title;
-    XSetClassHint(g_display, window, class_hint);
+    XSetClassHint(g_display, handle, class_hint);
     XFree(class_hint);
 
     /* event subscription */
     mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask;
-    XSelectInput(g_display, window, mask);
-    XSetWMProtocols(g_display, window, &WM_DELETE_WINDOW, 1);
+    XSelectInput(g_display, handle, mask);
+    XSetWMProtocols(g_display, handle, &wm_delete_window, 1);
 
-    return window;
+    return handle;
 }
 
 static context_t *create_context(int width, int height) {
@@ -112,9 +108,9 @@ window_t *window_create(const char *title, int width, int height) {
     context = create_context(width, height);
 
     window = (window_t*)malloc(sizeof(window_t));
-    window->handle       = handle;
-    window->should_close = 0;
-    window->context      = context;
+    window->handle  = handle;
+    window->closing = 0;
+    window->context = context;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
@@ -141,11 +137,8 @@ void window_destroy(window_t *window) {
 }
 
 int window_should_close(window_t *window) {
-    return window->should_close;
+    return window->closing;
 }
-
-/* private helper function, implemented in image.c */
-void image_blit_bgr(image_t *src, image_t *dst);
 
 void window_draw_image(window_t *window, image_t *image) {
     int screen = XDefaultScreen(g_display);
@@ -193,21 +186,23 @@ static void handle_button_event(window_t *window, int button, char action) {
 }
 
 static void process_event(XEvent *event) {
+    static const Atom wm_protocols = XInternAtom(
+        g_display, "WM_PROTOCOLS", True);
+    static const Atom wm_delete_window = XInternAtom(
+        g_display, "WM_DELETE_WINDOW", True);
+
     window_t *window;
-    Window handle = event->xany.window;
-    int status = XFindContext(g_display, handle, g_context, (XPointer*)&window);
-    if (status != 0) {
+    int error = XFindContext(g_display, event->xany.window,
+                              g_context, (XPointer*)&window);
+    if (error != 0) {
         return;
     }
 
     if (event->type == ClientMessage) {
-        Atom WM_PROTOCOLS = XInternAtom(g_display, "WM_PROTOCOLS", True);
-        if (event->xclient.message_type == WM_PROTOCOLS) {
+        if (event->xclient.message_type == wm_protocols) {
             Atom protocol = event->xclient.data.l[0];
-            Atom WM_DELETE_WINDOW = XInternAtom(g_display, "WM_DELETE_WINDOW",
-                                                True);
-            if (protocol == WM_DELETE_WINDOW) {
-                window->should_close = 1;
+            if (protocol == wm_delete_window) {
+                window->closing = 1;
             }
         }
     } else if (event->type == KeyPress) {
@@ -233,12 +228,12 @@ void input_poll_events(void) {
 }
 
 int input_key_pressed(window_t *window, keycode_t key) {
-    assert(key < KEY_NUM);
+    assert(key >= 0 && key < KEY_NUM);
     return window->keys[key];
 }
 
 int input_button_pressed(window_t *window, button_t button) {
-    assert(button < BUTTON_NUM);
+    assert(button >= 0 && button < BUTTON_NUM);
     return window->buttons[button];
 }
 
@@ -256,18 +251,29 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
     }
 }
 
-/* time stuff */
+/* time related functions */
 
 double timer_get_time(void) {
+#if _POSIX_C_SOURCE >= 199309L
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (double)tv.tv_sec + (double)tv.tv_usec / 1e6;
+#endif
 }
 
 void timer_sleep_for(int milliseconds) {
+#if _POSIX_C_SOURCE >= 199309L
     struct timespec ts;
     assert(milliseconds > 0);
     ts.tv_sec  = milliseconds / 1000;
     ts.tv_nsec = (milliseconds % 1000) * 1000000;
     nanosleep(&ts, NULL);
+#else
+    int microseconds = milliseconds * 1000;
+    usleep(microseconds);
+#endif
 }
