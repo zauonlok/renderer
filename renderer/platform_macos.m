@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <mach/mach_time.h>
 #import <Cocoa/Cocoa.h>
 #include "image.h"
@@ -15,7 +14,7 @@ typedef struct {
 
 struct window {
     NSWindow *handle;
-    int should_close;
+    int closing;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
     context_t *context;
@@ -44,7 +43,7 @@ static NSAutoreleasePool *g_autoreleasepool;
 
 - (BOOL)windowShouldClose:(id)sender {
     (void)sender;
-    window->should_close = 1;
+    window->closing = 1;
     return NO;
 }
 
@@ -228,9 +227,9 @@ window_t *window_create(const char *title, int width, int height) {
     handle = create_window(window, title, width, height);
     context = create_context(width, height);
 
-    window->handle       = handle;
-    window->should_close = 0;
-    window->context      = context;
+    window->handle  = handle;
+    window->closing = 0;
+    window->context = context;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
@@ -239,13 +238,11 @@ window_t *window_create(const char *title, int width, int height) {
 }
 
 void window_destroy(window_t *window) {
-    WindowDelegate *delegate = [window->handle delegate];
     context_t *context = window->context;
 
     [window->handle orderOut:nil];
 
-    [window->handle setDelegate:nil];
-    [delegate release];
+    [[window->handle delegate] release];
     [window->handle close];
 
     [g_autoreleasepool drain];
@@ -257,11 +254,8 @@ void window_destroy(window_t *window) {
 }
 
 int window_should_close(window_t *window) {
-    return window->should_close;
+    return window->closing;
 }
-
-/* private helper function, implemented in image.c */
-void image_blit_rgb(image_t *src, image_t *dst);
 
 void window_draw_image(window_t *window, image_t *image) {
     image_blit_rgb(image, window->context->framebuffer);
@@ -286,12 +280,12 @@ void input_poll_events(void) {
 }
 
 int input_key_pressed(window_t *window, keycode_t key) {
-    assert(key < KEY_NUM);
+    assert(key >= 0 && key < KEY_NUM);
     return window->keys[key];
 }
 
 int input_button_pressed(window_t *window, button_t button) {
-    assert(button < BUTTON_NUM);
+    assert(button >= 0 && button < BUTTON_NUM);
     return window->buttons[button];
 }
 
@@ -316,12 +310,4 @@ double timer_get_time(void) {
         period = (double)info.numer / (double)info.denom / 1e9;
     }
     return mach_absolute_time() * period;
-}
-
-void timer_sleep_for(int milliseconds) {
-    struct timespec ts;
-    assert(milliseconds > 0);
-    ts.tv_sec  = milliseconds / 1000;
-    ts.tv_nsec = (milliseconds % 1000) * 1000000;
-    nanosleep(&ts, NULL);
 }

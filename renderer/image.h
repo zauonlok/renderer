@@ -37,5 +37,6 @@ void image_fill_triangle(image_t *image, color_t color,
 
 /* misc */
 void image_blit_bgr(image_t *src, image_t *dst);
+void image_blit_rgb(image_t *src, image_t *dst);
 
 #endif
