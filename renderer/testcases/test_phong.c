@@ -64,11 +64,13 @@ void run_phong_testcase() {
         /* calculate delta time */
         float curr_time = (float)timer_get_time();
         float delta_time = curr_time - last_time;
+        last_time = curr_time;
 
         /* process events */
         camera_process_input(camera, window, delta_time);
 
         /* setup uniforms */
+        setup_phong_uniforms(model, camera);
 
         /* render image */
         rendertarget_clear(rendertarget, CLEAR_COLOR | CLEAR_DEPTH);

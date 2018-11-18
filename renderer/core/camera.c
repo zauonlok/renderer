@@ -13,8 +13,8 @@ static const float TO_DEGREES = 180 / PI;
 static const vec3_t WORLD_UP = {0, 1, 0};
 
 static const float MOVE_SPEED = 3;
-static const float ROTATE_SPEED = 10;
-static const float ZOOM_SPEED = 100;
+static const float ROTATE_SPEED = 3;
+static const float ZOOM_SPEED = 50;
 
 static const float PITCH_UPPER = 89;
 static const float PITCH_LOWER = -89;
@@ -103,8 +103,8 @@ camera_t *camera_create(vec3_t position, vec3_t forward, float aspect) {
     assert(aspect > 0);
 
     camera->position  = position;
-    camera->pitch     = pitch_from_forward(camera->forward);
-    camera->yaw       = yaw_from_forward(camera->forward);
+    camera->yaw       = yaw_from_forward(forward);
+    camera->pitch     = pitch_from_forward(forward);
     camera->fovy      = FOVY_DEFAULT;
     camera->rotating  = 0;
     camera->last_xpos = 0;

@@ -379,8 +379,8 @@ vec4_t texture_sample(texture_t *texture, float u, float v) {
         vec4_t empty = {0, 0, 0, 0};
         return empty;
     } else {
-        int r = (int)((texture->width - 1) * u + 0.5f);
-        int c = (int)((texture->height - 1) * v + 0.5f);
+        int c = (int)((texture->width - 1) * u + 0.5f);
+        int r = (int)((texture->height - 1) * v + 0.5f);
         int index = r * texture->width + c;
         return texture->buffer[index];
     }
@@ -398,7 +398,7 @@ void colorbuffer_blit_bgr(colorbuffer_t *src, image_t *dst) {
 
     for (r = 0; r < height; r++) {
         for (c = 0; c < width; c++) {
-            int src_index = r * src->width + c;
+            int src_index = (height - 1 - r) * src->width + c;
             int dst_index = r * dst->width * dst->channels + c * dst->channels;
             vec4_t src_value = src->buffer[src_index];
             unsigned char *dst_pixel = &(dst->buffer[dst_index]);
@@ -419,7 +419,7 @@ void colorbuffer_blit_rgb(colorbuffer_t *src, image_t *dst) {
 
     for (r = 0; r < height; r++) {
         for (c = 0; c < width; c++) {
-            int src_index = r * src->width + c;
+            int src_index = (height - 1 - r) * src->width + c;
             int dst_index = r * dst->width * dst->channels + c * dst->channels;
             vec4_t src_value = src->buffer[src_index];
             unsigned char *dst_pixel = &(dst->buffer[dst_index]);
