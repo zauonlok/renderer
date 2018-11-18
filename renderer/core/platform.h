@@ -1,6 +1,7 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
+#include "graphics.h"
 #include "image.h"
 
 typedef struct window window_t;
@@ -11,7 +12,10 @@ typedef enum {BUTTON_L, BUTTON_R, BUTTON_NUM} button_t;
 window_t *window_create(const char *title, int width, int height);
 void window_destroy(window_t *window);
 int window_should_close(window_t *window);
+
+/* render related functions */
 void window_draw_image(window_t *window, image_t *image);
+void window_draw_buffer(window_t *window, colorbuffer_t *buffer);
 
 /* input related functions */
 void input_poll_events(void);

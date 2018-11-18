@@ -49,33 +49,6 @@ image_t *image_clone(image_t *image) {
 
 /* image input/output */
 
-static image_t *load_tga(const char *filename);
-static void save_tga(image_t *image, const char *filename);
-
-static const char *extract_ext(const char *filename) {
-    const char *dot_pos = strrchr(filename, '.');
-    return (dot_pos == NULL) ? "" : dot_pos + 1;
-}
-
-image_t *image_load(const char *filename) {
-    const char *ext = extract_ext(filename);
-    if (strcmp(ext, "tga") == 0) {
-        return load_tga(filename);
-    } else {
-        assert(0);
-        return NULL;
-    }
-}
-
-void image_save(image_t *image, const char *filename) {
-    const char *ext = extract_ext(filename);
-    if (strcmp(ext, "tga") == 0) {
-        save_tga(image, filename);
-    } else {
-        assert(0);
-    }
-}
-
 static unsigned char read_byte(FILE *file) {
     int byte = fgetc(file);
     assert(byte != EOF);
@@ -91,6 +64,8 @@ static void write_bytes(FILE *file, void *buffer, int size) {
     int count = fwrite(buffer, 1, size, file);
     assert(count == size);
 }
+
+#define TGA_HEADER_SIZE 18
 
 static void load_tga_rle(FILE *file, image_t *image) {
     unsigned char pixel[4];
@@ -124,8 +99,6 @@ static void load_tga_rle(FILE *file, image_t *image) {
         }
     }
 }
-
-#define TGA_HEADER_SIZE 18
 
 static image_t *load_tga(const char *filename) {
     unsigned char header[TGA_HEADER_SIZE];
@@ -186,6 +159,32 @@ static void save_tga(image_t *image, const char *filename) {
 
     write_bytes(file, image->buffer, get_buffer_size(image));
     fclose(file);
+}
+
+#undef TGA_HEADER_SIZE
+
+static const char *extract_ext(const char *filename) {
+    const char *dot_pos = strrchr(filename, '.');
+    return (dot_pos == NULL) ? "" : dot_pos + 1;
+}
+
+image_t *image_load(const char *filename) {
+    const char *ext = extract_ext(filename);
+    if (strcmp(ext, "tga") == 0) {
+        return load_tga(filename);
+    } else {
+        assert(0);
+        return NULL;
+    }
+}
+
+void image_save(image_t *image, const char *filename) {
+    const char *ext = extract_ext(filename);
+    if (strcmp(ext, "tga") == 0) {
+        save_tga(image, filename);
+    } else {
+        assert(0);
+    }
 }
 
 /* image processing */
@@ -311,7 +310,7 @@ static unsigned char color2gray(color_t color) {
     return (unsigned char)gray;
 }
 
-static void validate_point(point_t point, image_t *image) {
+static void validate_point(image_t *image, point_t point) {
     assert(point.row >= 0 && point.row < image->height);
     assert(point.col >= 0 && point.col < image->width);
 }
@@ -319,7 +318,7 @@ static void validate_point(point_t point, image_t *image) {
 void image_draw_point(image_t *image, color_t color, point_t point) {
     int channels = image->channels;
     unsigned char *pixel;
-    validate_point(point, image);
+    validate_point(image, point);
     pixel = get_pixel_ptr(image, point.row, point.col);
     if (channels == 1) {
         unsigned char gray = color2gray(color);
@@ -346,8 +345,8 @@ void image_draw_line(image_t *image, color_t color,
                      point_t point0, point_t point1) {
     int row_distance = abs(point1.row - point0.row);
     int col_distance = abs(point1.col - point0.col);
-    validate_point(point0, image);
-    validate_point(point1, image);
+    validate_point(image, point0);
+    validate_point(image, point1);
     if (row_distance == 0 && col_distance == 0) {
         image_draw_point(image, color, point0);
     } else if (row_distance > col_distance) {
@@ -375,9 +374,9 @@ void image_draw_line(image_t *image, color_t color,
 
 void image_draw_triangle(image_t *image, color_t color,
                          point_t point0, point_t point1, point_t point2) {
-    validate_point(point0, image);
-    validate_point(point1, image);
-    validate_point(point2, image);
+    validate_point(image, point0);
+    validate_point(image, point1);
+    validate_point(image, point2);
     image_draw_line(image, color, point0, point1);
     image_draw_line(image, color, point1, point2);
     image_draw_line(image, color, point2, point0);
@@ -419,9 +418,9 @@ static void draw_scanline(image_t *image, color_t color,
 
 void image_fill_triangle(image_t *image, color_t color,
                          point_t point0, point_t point1, point_t point2) {
-    validate_point(point0, image);
-    validate_point(point1, image);
-    validate_point(point2, image);
+    validate_point(image, point0);
+    validate_point(image, point1);
+    validate_point(image, point2);
     sort_points_by_row(&point0, &point1, &point2);
     if (point0.row == point2.row) {
         sort_points_by_col(&point0, &point1, &point2);
@@ -464,11 +463,11 @@ void image_fill_triangle(image_t *image, color_t color,
 /* private blit functions */
 
 void image_blit_bgr(image_t *src, image_t *dst) {
-    int height = src->height < dst->height ? src->height : dst->height;
     int width = src->width < dst->width ? src->width : dst->width;
+    int height = src->height < dst->height ? src->height : dst->height;
     int r, c;
 
-    assert(height > 0 && width > 0);
+    assert(width > 0 && height > 0);
     assert(src->channels >= 1 && src->channels <= 4);
     assert(dst->channels == 3 || dst->channels == 4);
 
@@ -489,11 +488,11 @@ void image_blit_bgr(image_t *src, image_t *dst) {
 }
 
 void image_blit_rgb(image_t *src, image_t *dst) {
-    int height = src->height < dst->height ? src->height : dst->height;
     int width = src->width < dst->width ? src->width : dst->width;
+    int height = src->height < dst->height ? src->height : dst->height;
     int r, c;
 
-    assert(height > 0 && width > 0);
+    assert(width > 0 && height > 0);
     assert(src->channels >= 1 && src->channels <= 4);
     assert(dst->channels == 3 || dst->channels == 4);
 

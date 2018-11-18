@@ -4,56 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "darray.h"
 #include "geometry.h"
-
-/*
- * typesafe dynamic array, see
- * https://github.com/nothings/stb/blob/master/stretchy_buffer.h
- */
-
-#define DARRAY_RAW_DATA(darray) ((int*)(darray) - 2)
-#define DARRAY_CAPACITY(darray) (DARRAY_RAW_DATA(darray)[0])
-#define DARRAY_OCCUPIED(darray) (DARRAY_RAW_DATA(darray)[1])
-
-#define darray_push(darray, value)                                          \
-    do {                                                                    \
-        (darray) = darray_hold(darray, 1, sizeof(*(darray)));               \
-        (darray)[darray_size(darray) - 1] = (value);                        \
-    } while (0)
-
-static int darray_size(void *darray) {
-    return darray != NULL ? DARRAY_OCCUPIED(darray) : 0;
-}
-
-static void darray_free(void *darray) {
-    if (darray != NULL) {
-        free(DARRAY_RAW_DATA(darray));
-    }
-}
-
-static void *darray_hold(void *darray, int count, int itemsize) {
-    if (darray == NULL) {
-        int *base = (int*)malloc(sizeof(int) * 2 + itemsize * count);
-        base[0] = count;  /* capacity */
-        base[1] = count;  /* occupied */
-        return base + 2;
-    } else if (DARRAY_OCCUPIED(darray) + count <= DARRAY_CAPACITY(darray)) {
-        DARRAY_OCCUPIED(darray) += count;
-        return darray;
-    } else {
-        int needed_size = DARRAY_OCCUPIED(darray) + count;
-        int double_curr = DARRAY_CAPACITY(darray) * 2;
-        int capacity = needed_size > double_curr ? needed_size : double_curr;
-        int occupied = needed_size;
-        int size = sizeof(int) * 2 + itemsize * capacity;
-        int *base = (int*)realloc(DARRAY_RAW_DATA(darray), size);
-        base[0] = capacity;
-        base[1] = occupied;
-        return base + 2;
-    }
-}
-
-/* data structure */
 
 struct mesh {
     vec3_t *positions;
@@ -63,11 +15,6 @@ struct mesh {
 };
 
 /* mesh loading/releasing */
-
-static const char *extract_ext(const char *filename) {
-    const char *dot_pos = strrchr(filename, '.');
-    return (dot_pos == NULL) ? "" : dot_pos + 1;
-}
 
 static char *read_line(FILE *file) {
     char *line = NULL;
@@ -99,10 +46,10 @@ static mesh_t *build_mesh(vec3_t *position_darray, int *position_index_darray,
     mesh_t *mesh;
     int i;
 
+    assert(num_faces > 0 && num_faces * 3 == num_indices);
     assert(darray_size(position_index_darray) == num_indices);
     assert(darray_size(texcoord_index_darray) == num_indices);
     assert(darray_size(normal_index_darray) == num_indices);
-    assert(num_faces > 0);
 
     mesh = (mesh_t*)malloc(sizeof(mesh_t));
     mesh->positions = (vec3_t*)malloc(num_indices * sizeof(vec3_t));
@@ -201,6 +148,11 @@ static mesh_t *load_obj(const char *filename) {
     return mesh;
 }
 
+static const char *extract_ext(const char *filename) {
+    const char *dot_pos = strrchr(filename, '.');
+    return (dot_pos == NULL) ? "" : dot_pos + 1;
+}
+
 mesh_t *mesh_load(const char *filename) {
     const char *ext = extract_ext(filename);
     if (strcmp(ext, "obj") == 0) {
@@ -224,23 +176,25 @@ int mesh_get_num_faces(mesh_t *mesh) {
     return mesh->num_faces;
 }
 
+static void validate_vertex(mesh_t *mesh, int nth_face, int nth_vertex) {
+    assert(nth_face >= 0 && nth_face < mesh->num_faces);
+    assert(nth_vertex >= 0 && nth_vertex < 3);
+}
+
 vec3_t mesh_get_position(mesh_t *mesh, int nth_face, int nth_position) {
     int index = nth_face * 3 + nth_position;
-    assert(nth_face >= 0 && nth_face < mesh->num_faces);
-    assert(nth_position >= 0 && nth_position < 3);
+    validate_vertex(mesh, nth_face, nth_position);
     return mesh->positions[index];
 }
 
 vec2_t mesh_get_texcoord(mesh_t *mesh, int nth_face, int nth_texcoord) {
     int index = nth_face * 3 + nth_texcoord;
-    assert(nth_face >= 0 && nth_face < mesh->num_faces);
-    assert(nth_texcoord >= 0 && nth_texcoord < 3);
+    validate_vertex(mesh, nth_face, nth_texcoord);
     return mesh->texcoords[index];
 }
 
 vec3_t mesh_get_normal(mesh_t *mesh, int nth_face, int nth_normal) {
     int index = nth_face * 3 + nth_normal;
-    assert(nth_face >= 0 && nth_face < mesh->num_faces);
-    assert(nth_normal >= 0 && nth_normal < 3);
+    validate_vertex(mesh, nth_face, nth_normal);
     return mesh->normals[index];
 }

@@ -1,23 +1,18 @@
-#include "platform.h"
+#include "../core/platform.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-#include "image.h"
-
-/* data structures */
-
-typedef struct {
-    image_t *framebuffer;
-    HDC compatible_dc;
-} context_t;
+#include "../core/graphics.h"
+#include "../core/image.h"
 
 struct window {
     HWND handle;
     int closing;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
-    context_t *context;
+    image_t *framebuffer;
+    HDC memory_dc;
 };
 
 /* window related functions */
@@ -28,6 +23,10 @@ static const char *WINDOW_ENTRY_NAME = "Entry";
 static const char ACTION_UP = 0;
 static const char ACTION_DOWN = 1;
 
+/*
+ * for virtual-key codes, see
+ * https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes
+ */
 static void handle_key_message(window_t *window, int virtual_key, char action) {
     keycode_t key;
     switch (virtual_key) {
@@ -114,18 +113,22 @@ static HWND create_window(const char *title, int width, int height) {
     return window;
 }
 
-static context_t *create_context(HWND window, int width, int height) {
+/*
+ * for memory device context, see
+ * https://docs.microsoft.com/en-us/windows/desktop/gdi/memory-device-contexts
+ */
+static void create_framebuffer(HWND window, int width, int height,
+                               image_t **out_framebuffer, HDC *out_memory_dc) {
     BITMAPINFOHEADER bi_header;
     HDC window_dc;
-    HDC compatible_dc;
+    HDC memory_dc;
     HBITMAP dib_bitmap;
     HBITMAP old_bitmap;
     unsigned char *buffer;
     image_t *framebuffer;
-    context_t *context;
 
     window_dc = GetDC(window);
-    compatible_dc = CreateCompatibleDC(window_dc);
+    memory_dc = CreateCompatibleDC(window_dc);
     ReleaseDC(window, window_dc);
 
     memset(&bi_header, 0, sizeof(BITMAPINFOHEADER));
@@ -135,10 +138,10 @@ static context_t *create_context(HWND window, int width, int height) {
     bi_header.biPlanes      = 1;
     bi_header.biBitCount    = 32;
     bi_header.biCompression = BI_RGB;
-    dib_bitmap = CreateDIBSection(compatible_dc, (BITMAPINFO*)&bi_header,
+    dib_bitmap = CreateDIBSection(memory_dc, (BITMAPINFO*)&bi_header,
                                   DIB_RGB_COLORS, (void**)&buffer, NULL, 0);
     assert(dib_bitmap != NULL);
-    old_bitmap = (HBITMAP)SelectObject(compatible_dc, dib_bitmap);
+    old_bitmap = (HBITMAP)SelectObject(memory_dc, dib_bitmap);
     DeleteObject(old_bitmap);
 
     framebuffer = (image_t*)malloc(sizeof(image_t));
@@ -147,27 +150,27 @@ static context_t *create_context(HWND window, int width, int height) {
     framebuffer->channels = 4;
     framebuffer->buffer   = buffer;
 
-    context = (context_t*)malloc(sizeof(context_t));
-    context->framebuffer   = framebuffer;
-    context->compatible_dc = compatible_dc;
-    return context;
+    *out_framebuffer = framebuffer;
+    *out_memory_dc = memory_dc;
 }
 
 window_t *window_create(const char *title, int width, int height) {
-    HWND handle;
-    context_t *context;
     window_t *window;
+    HWND handle;
+    image_t *framebuffer;
+    HDC memory_dc;
 
     assert(width > 0 && height > 0);
 
     register_class();
     handle = create_window(title, width, height);
-    context = create_context(handle, width, height);
+    create_framebuffer(handle, width, height, &framebuffer, &memory_dc);
 
     window = (window_t*)malloc(sizeof(window_t));
-    window->handle  = handle;
-    window->closing = 0;
-    window->context = context;
+    window->handle      = handle;
+    window->closing     = 0;
+    window->framebuffer = framebuffer;
+    window->memory_dc   = memory_dc;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
@@ -180,11 +183,10 @@ void window_destroy(window_t *window) {
     ShowWindow(window->handle, SW_HIDE);
     RemoveProp(window->handle, WINDOW_ENTRY_NAME);
 
-    DeleteDC(window->context->compatible_dc);
+    DeleteDC(window->memory_dc);
     DestroyWindow(window->handle);
 
-    free(window->context->framebuffer);
-    free(window->context);
+    free(window->framebuffer);
     free(window);
 }
 
@@ -192,13 +194,27 @@ int window_should_close(window_t *window) {
     return window->closing;
 }
 
+/* render related functions */
+
 void window_draw_image(window_t *window, image_t *image) {
     HDC window_dc = GetDC(window->handle);
-    context_t *context = window->context;
-    image_t *framebuffer = context->framebuffer;
+    HDC memory_dc = window->memory_dc;
+    image_t *framebuffer = window->framebuffer;
+    int width = framebuffer->width;
+    int height = framebuffer->height;
     image_blit_bgr(image, framebuffer);
-    BitBlt(window_dc, 0, 0, framebuffer->width, framebuffer->height,
-           context->compatible_dc, 0, 0, SRCCOPY);
+    BitBlt(window_dc, 0, 0, width, height, memory_dc, 0, 0, SRCCOPY);
+    ReleaseDC(window->handle, window_dc);
+}
+
+void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
+    HDC window_dc = GetDC(window->handle);
+    HDC memory_dc = window->memory_dc;
+    image_t *framebuffer = window->framebuffer;
+    int width = framebuffer->width;
+    int height = framebuffer->height;
+    colorbuffer_blit_bgr(buffer, framebuffer);
+    BitBlt(window_dc, 0, 0, width, height, memory_dc, 0, 0, SRCCOPY);
     ReleaseDC(window->handle, window_dc);
 }
 
@@ -223,14 +239,14 @@ int input_button_pressed(window_t *window, button_t button) {
 }
 
 void input_query_cursor(window_t *window, int *xpos, int *ypos) {
-    POINT pos;
-    GetCursorPos(&pos);
-    ScreenToClient(window->handle, &pos);
+    POINT point;
+    GetCursorPos(&point);
+    ScreenToClient(window->handle, &point);
     if (xpos != NULL) {
-        *xpos = pos.x;
+        *xpos = point.x;
     }
     if (ypos != NULL) {
-        *ypos = pos.y;
+        *ypos = point.y;
     }
 }
 
@@ -242,7 +258,7 @@ double timer_get_time(void) {
     if (period < 0) {
         LARGE_INTEGER frequency;
         QueryPerformanceFrequency(&frequency);
-        period = 1.0 / frequency.QuadPart;
+        period = 1 / (double)frequency.QuadPart;
     }
     QueryPerformanceCounter(&counter);
     return counter.QuadPart * period;
