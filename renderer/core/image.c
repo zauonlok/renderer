@@ -473,7 +473,8 @@ void image_blit_bgr(image_t *src, image_t *dst) {
 
     for (r = 0; r < height; r++) {
         for (c = 0; c < width; c++) {
-            unsigned char *src_pixel = get_pixel_ptr(src, r, c);
+            int src_r = src->height - 1 - r;  /* flip */
+            unsigned char *src_pixel = get_pixel_ptr(src, src_r, c);
             unsigned char *dst_pixel = get_pixel_ptr(dst, r, c);
             if (src->channels == 3 || src->channels == 4) {
                 dst_pixel[0] = src_pixel[0];
@@ -498,7 +499,8 @@ void image_blit_rgb(image_t *src, image_t *dst) {
 
     for (r = 0; r < height; r++) {
         for (c = 0; c < width; c++) {
-            unsigned char *src_pixel = get_pixel_ptr(src, r, c);
+            int src_r = src->height - 1 - r;  /* flip */
+            unsigned char *src_pixel = get_pixel_ptr(src, src_r, c);
             unsigned char *dst_pixel = get_pixel_ptr(dst, r, c);
             if (src->channels == 3 || src->channels == 4) {
                 dst_pixel[0] = src_pixel[2];

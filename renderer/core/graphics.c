@@ -398,7 +398,7 @@ void colorbuffer_blit_bgr(colorbuffer_t *src, image_t *dst) {
 
     for (r = 0; r < height; r++) {
         for (c = 0; c < width; c++) {
-            int src_index = (height - 1 - r) * src->width + c;
+            int src_index = (src->height - 1 - r) * src->width + c;  /* flip */
             int dst_index = r * dst->width * dst->channels + c * dst->channels;
             vec4_t src_value = src->buffer[src_index];
             unsigned char *dst_pixel = &(dst->buffer[dst_index]);
@@ -419,7 +419,7 @@ void colorbuffer_blit_rgb(colorbuffer_t *src, image_t *dst) {
 
     for (r = 0; r < height; r++) {
         for (c = 0; c < width; c++) {
-            int src_index = (height - 1 - r) * src->width + c;
+            int src_index = (src->height - 1 - r) * src->width + c;  /* flip */
             int dst_index = r * dst->width * dst->channels + c * dst->channels;
             vec4_t src_value = src->buffer[src_index];
             unsigned char *dst_pixel = &(dst->buffer[dst_index]);
