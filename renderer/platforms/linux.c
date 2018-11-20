@@ -1,4 +1,4 @@
-#include "platform.h"
+#include "../core/platform.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,21 +7,16 @@
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
-#include "image.h"
-
-/* data structures */
-
-typedef struct {
-    image_t *framebuffer;
-    XImage *ximage;
-} context_t;
+#include "../core/graphics.h"
+#include "../core/image.h"
 
 struct window {
     Window handle;
     int closing;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
-    context_t *context;
+    image_t *surface;
+    XImage *ximage;
 };
 
 /* window related functions */
@@ -43,12 +38,12 @@ static Window create_window(const char *title, int width, int height) {
     unsigned long border = XWhitePixel(g_display, screen);
     unsigned long background = XBlackPixel(g_display, screen);
     Window root = XRootWindow(g_display, screen);
-    Window handle;
+    Window window;
     XSizeHints *size_hints;
     XClassHint *class_hint;
     long mask;
 
-    handle = XCreateSimpleWindow(g_display, root, 0, 0, width, height, 0,
+    window = XCreateSimpleWindow(g_display, root, 0, 0, width, height, 0,
                                  border, background);
 
     /* not resizable */
@@ -58,58 +53,57 @@ static Window create_window(const char *title, int width, int height) {
     size_hints->max_width  = width;
     size_hints->min_height = height;
     size_hints->max_height = height;
-    XSetWMNormalHints(g_display, handle, size_hints);
+    XSetWMNormalHints(g_display, window, size_hints);
     XFree(size_hints);
 
     /* application name */
     class_hint = XAllocClassHint();
     class_hint->res_name  = (char*)title;
     class_hint->res_class = (char*)title;
-    XSetClassHint(g_display, handle, class_hint);
+    XSetClassHint(g_display, window, class_hint);
     XFree(class_hint);
 
     /* event subscription */
     mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask;
-    XSelectInput(g_display, handle, mask);
-    XSetWMProtocols(g_display, handle, &wm_delete_window, 1);
+    XSelectInput(g_display, window, mask);
+    XSetWMProtocols(g_display, window, &wm_delete_window, 1);
 
-    return handle;
+    return window;
 }
 
-static context_t *create_context(int width, int height) {
+static void create_surface(int width, int height
+                           image_t **out_surface, XImage *out_ximage) {
     int screen = XDefaultScreen(g_display);
     int depth = XDefaultDepth(g_display, screen);
     Visual *visual = XDefaultVisual(g_display, screen);
-    image_t *framebuffer = image_create(width, height, 4);
-    unsigned char *buffer = framebuffer->buffer;
+    image_t *surface = image_create(width, height, 4);
     XImage *ximage;
-    context_t *context;
 
     assert(depth == 24 || depth == 32);
     ximage = XCreateImage(g_display, visual, depth, ZPixmap, 0,
-                          (char*)buffer, width, height, 32, 0);
+                          (char*)surface->buffer, width, height, 32, 0);
 
-    context = (context_t*)malloc(sizeof(context_t));
-    context->framebuffer = framebuffer;
-    context->ximage      = ximage;
-    return context;
+    *out_surface = surface;
+    *out_ximage = ximage;
 }
 
 window_t *window_create(const char *title, int width, int height) {
-    Window handle;
-    context_t *context;
     window_t *window;
+    Window handle;
+    image_t *surface;
+    XImage *ximage;
 
     assert(width > 0 && height > 0);
 
     open_display();
     handle = create_window(title, width, height);
-    context = create_context(width, height);
+    create_surface(width, height, &surface, &ximage);
 
     window = (window_t*)malloc(sizeof(window_t));
     window->handle  = handle;
     window->closing = 0;
-    window->context = context;
+    window->surface = surface
+    window->ximage  = ximage
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
@@ -120,18 +114,15 @@ window_t *window_create(const char *title, int width, int height) {
 }
 
 void window_destroy(window_t *window) {
-    context_t *context = window->context;
-
     XUnmapWindow(g_display, window->handle);
     XDeleteContext(g_display, window->handle, g_context);
 
-    context->ximage->data = NULL;
-    XDestroyImage(context->ximage);
+    window->ximage->data = NULL;
+    XDestroyImage(window->ximage);
     XDestroyWindow(g_display, window->handle);
     XFlush(g_display);
 
-    image_release(context->framebuffer);
-    free(context);
+    image_release(window->surface);
     free(window);
 }
 
@@ -142,11 +133,20 @@ int window_should_close(window_t *window) {
 void window_draw_image(window_t *window, image_t *image) {
     int screen = XDefaultScreen(g_display);
     GC gc = XDefaultGC(g_display, screen);
-    context_t *context = window->context;
-    image_t *framebuffer = context->framebuffer;
-    image_blit_bgr(image, framebuffer);
-    XPutImage(g_display, window->handle, gc, context->ximage,
-              0, 0, 0, 0, framebuffer->width, framebuffer->height);
+    image_t *surface = window->surface;
+    image_blit_bgr(image, surface);
+    XPutImage(g_display, window->handle, gc, window->ximage,
+              0, 0, 0, 0, surface->width, surface->height);
+    XFlush(g_display);
+}
+
+void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
+    int screen = XDefaultScreen(g_display);
+    GC gc = XDefaultGC(g_display, screen);
+    image_t *surface = window->surface;
+    colorbuffer_blit_bgr(buffer, surface);
+    XPutImage(g_display, window->handle, gc, window->ximage,
+              0, 0, 0, 0, surface->width, surface->height);
     XFlush(g_display);
 }
 
