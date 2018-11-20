@@ -36,6 +36,7 @@ void camera_process_input(camera_t *camera, window_t *window, float delta_time);
 
 /* property retrieving */
 vec3_t camera_get_position(camera_t *camera);
+vec3_t camera_get_forward(camera_t *camera);
 mat4_t camera_get_view_matrix(camera_t *camera);
 mat4_t camera_get_proj_matrix(camera_t *camera);
 

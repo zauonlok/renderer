@@ -11,7 +11,7 @@ struct window {
     int closing;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
-    image_t *framebuffer;
+    image_t *surface;
     HDC memory_dc;
 };
 
@@ -117,15 +117,15 @@ static HWND create_window(const char *title, int width, int height) {
  * for memory device context, see
  * https://docs.microsoft.com/en-us/windows/desktop/gdi/memory-device-contexts
  */
-static void create_framebuffer(HWND window, int width, int height,
-                               image_t **out_framebuffer, HDC *out_memory_dc) {
+static void create_surface(HWND window, int width, int height,
+                           image_t **out_surface, HDC *out_memory_dc) {
     BITMAPINFOHEADER bi_header;
     HDC window_dc;
     HDC memory_dc;
     HBITMAP dib_bitmap;
     HBITMAP old_bitmap;
     unsigned char *buffer;
-    image_t *framebuffer;
+    image_t *surface;
 
     window_dc = GetDC(window);
     memory_dc = CreateCompatibleDC(window_dc);
@@ -144,33 +144,33 @@ static void create_framebuffer(HWND window, int width, int height,
     old_bitmap = (HBITMAP)SelectObject(memory_dc, dib_bitmap);
     DeleteObject(old_bitmap);
 
-    framebuffer = (image_t*)malloc(sizeof(image_t));
-    framebuffer->width    = width;
-    framebuffer->height   = height;
-    framebuffer->channels = 4;
-    framebuffer->buffer   = buffer;
+    surface = (image_t*)malloc(sizeof(image_t));
+    surface->width    = width;
+    surface->height   = height;
+    surface->channels = 4;
+    surface->buffer   = buffer;
 
-    *out_framebuffer = framebuffer;
+    *out_surface = surface;
     *out_memory_dc = memory_dc;
 }
 
 window_t *window_create(const char *title, int width, int height) {
     window_t *window;
     HWND handle;
-    image_t *framebuffer;
+    image_t *surface;
     HDC memory_dc;
 
     assert(width > 0 && height > 0);
 
     register_class();
     handle = create_window(title, width, height);
-    create_framebuffer(handle, width, height, &framebuffer, &memory_dc);
+    create_surface(handle, width, height, &surface, &memory_dc);
 
     window = (window_t*)malloc(sizeof(window_t));
-    window->handle      = handle;
-    window->closing     = 0;
-    window->framebuffer = framebuffer;
-    window->memory_dc   = memory_dc;
+    window->handle    = handle;
+    window->closing   = 0;
+    window->surface   = surface;
+    window->memory_dc = memory_dc;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
@@ -186,7 +186,7 @@ void window_destroy(window_t *window) {
     DeleteDC(window->memory_dc);
     DestroyWindow(window->handle);
 
-    free(window->framebuffer);
+    free(window->surface);
     free(window);
 }
 
@@ -199,10 +199,10 @@ int window_should_close(window_t *window) {
 void window_draw_image(window_t *window, image_t *image) {
     HDC window_dc = GetDC(window->handle);
     HDC memory_dc = window->memory_dc;
-    image_t *framebuffer = window->framebuffer;
-    int width = framebuffer->width;
-    int height = framebuffer->height;
-    image_blit_bgr(image, framebuffer);
+    image_t *surface = window->surface;
+    int width = surface->width;
+    int height = surface->height;
+    image_blit_bgr(image, surface);
     BitBlt(window_dc, 0, 0, width, height, memory_dc, 0, 0, SRCCOPY);
     ReleaseDC(window->handle, window_dc);
 }
@@ -210,10 +210,10 @@ void window_draw_image(window_t *window, image_t *image) {
 void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
     HDC window_dc = GetDC(window->handle);
     HDC memory_dc = window->memory_dc;
-    image_t *framebuffer = window->framebuffer;
-    int width = framebuffer->width;
-    int height = framebuffer->height;
-    colorbuffer_blit_bgr(buffer, framebuffer);
+    image_t *surface = window->surface;
+    int width = surface->width;
+    int height = surface->height;
+    colorbuffer_blit_bgr(buffer, surface);
     BitBlt(window_dc, 0, 0, width, height, memory_dc, 0, 0, SRCCOPY);
     ReleaseDC(window->handle, window_dc);
 }

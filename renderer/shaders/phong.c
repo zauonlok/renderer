@@ -34,8 +34,7 @@ static vec3_t transform_normal(vec4_t normal, mat4_t normal_matrix) {
  * http://docs.gl/sl4/reflect
  */
 static vec3_t reflect_light(vec3_t light, vec3_t normal) {
-    float factor = 2 * vec3_dot(light, normal);
-    return vec3_sub(light, vec3_scale(normal, factor));
+    return vec3_sub(light, vec3_mul(normal, 2 * vec3_dot(light, normal)));
 }
 
 static float max_float(float a, float b) {
@@ -59,7 +58,7 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
     vec3_t light_dir = vec3_normalize(uniforms->light_dir);
     vec3_t normal = transform_normal(normal_, uniforms->model_it_matrix);
     float diffuse_factor = max_float(-vec3_dot(light_dir, normal), 0);
-    vec3_t diffuse = vec3_scale(vec3_from_vec4(diffuse_), diffuse_factor);
+    vec3_t diffuse = vec3_mul(vec3_from_vec4(diffuse_), diffuse_factor);
 
     /* specular */
     vec3_t reflected = reflect_light(vec3_negative(light_dir), normal);
@@ -67,7 +66,7 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
     vec3_t view_dir = vec3_normalize(view_offset);
     float closeness = max_float(-vec3_dot(reflected, view_dir), 0);
     float specular_factor = (float)pow(closeness, 16) * 0.6f;
-    vec3_t specular = vec3_scale(vec3_from_vec4(specular_), specular_factor);
+    vec3_t specular = vec3_mul(vec3_from_vec4(specular_), specular_factor);
 
     /* assembling */
     float color_r = ambient.x + diffuse.x + specular.x;

@@ -31,7 +31,7 @@ static void setup_phong_uniforms(model_t *model, camera_t *camera) {
     uniforms->viewproj_matrix = viewproj_matrix;
 }
 
-void run_phong_testcase() {
+void test_phong() {
     window_t *window;
     rendertarget_t *rendertarget;
     camera_t *camera;

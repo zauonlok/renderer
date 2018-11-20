@@ -1,5 +1,5 @@
-#ifndef SHADERS_PHONG_H
-#define SHADERS_PHONG_H
+#ifndef SHADER_PHONG_H
+#define SHADER_PHONG_H
 
 #include "../core/apis.h"
 

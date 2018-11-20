@@ -14,12 +14,12 @@ static const vec3_t WORLD_UP = {0, 1, 0};
 
 static const float MOVE_SPEED = 3;
 static const float ROTATE_SPEED = 3;
-static const float ZOOM_SPEED = 50;
+static const float ZOOM_SPEED = 60;
 
 static const float PITCH_UPPER = 89;
 static const float PITCH_LOWER = -89;
 
-static const float FOVY_DEFAULT = 45;
+static const float FOVY_DEFAULT = 50;
 static const float FOVY_MINIMUM = 15;
 
 static const float Z_NEAR = 1;
@@ -27,15 +27,18 @@ static const float Z_FAR = 1000;
 
 struct camera {
     vec3_t position;
-    vec3_t forward;
-    vec3_t right;
-    vec3_t up;
     float yaw;
     float pitch;
     float fovy;
+    /* derived */
+    vec3_t forward;
+    vec3_t right;
+    vec3_t up;
+    /* history */
     int rotating;
     int last_xpos;
     int last_ypos;
+    /* options */
     camopt_t options;
 };
 
@@ -56,7 +59,7 @@ static float yaw_from_forward(vec3_t forward) {
  * for forward vector calculation, see
  * https://learnopengl.com/Getting-started/Camera
  */
-static vec3_t yaw_pitch_to_forward(float yaw_degrees, float pitch_degrees) {
+static vec3_t forward_from_yaw_pitch(float yaw_degrees, float pitch_degrees) {
     float yaw = yaw_degrees * TO_RADIANS;
     float pitch = pitch_degrees * TO_RADIANS;
     float sin_yaw = (float)sin(yaw);
@@ -70,7 +73,7 @@ static vec3_t yaw_pitch_to_forward(float yaw_degrees, float pitch_degrees) {
 }
 
 static void update_basis_vectors(camera_t *camera) {
-    camera->forward = yaw_pitch_to_forward(camera->yaw, camera->pitch);
+    camera->forward = forward_from_yaw_pitch(camera->yaw, camera->pitch);
     camera->right = vec3_cross(camera->forward, WORLD_UP);
     camera->up = vec3_cross(camera->right, camera->forward);
 }
@@ -197,7 +200,7 @@ static void move_camera(camera_t *camera, window_t *window, float delta_time) {
 
     if (vec3_length(direction) > 1e-5f) {
         float distance = camera->options.move_speed * delta_time;
-        vec3_t movement = vec3_scale(vec3_normalize(direction), distance);
+        vec3_t movement = vec3_mul(vec3_normalize(direction), distance);
         camera->position = vec3_add(camera->position, movement);
     }
 }
@@ -213,6 +216,10 @@ void camera_process_input(camera_t *camera, window_t *window,
 
 vec3_t camera_get_position(camera_t *camera) {
     return camera->position;
+}
+
+vec3_t camera_get_forward(camera_t *camera) {
+    return camera->forward;
 }
 
 mat4_t camera_get_view_matrix(camera_t *camera) {

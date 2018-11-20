@@ -52,8 +52,12 @@ vec3_t vec3_sub(vec3_t a, vec3_t b) {
     return vec3_new(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
-vec3_t vec3_scale(vec3_t v, float scale) {
-    return vec3_new(v.x * scale, v.y * scale, v.z * scale);
+vec3_t vec3_mul(vec3_t v, float factor) {
+    return vec3_new(v.x * factor, v.y * factor, v.z * factor);
+}
+
+vec3_t vec3_div(vec3_t v, float divisor) {
+    return vec3_mul(v, 1 / divisor);
 }
 
 float vec3_length(vec3_t v) {
@@ -61,8 +65,7 @@ float vec3_length(vec3_t v) {
 }
 
 vec3_t vec3_normalize(vec3_t v) {
-    float inv_length = 1 / vec3_length(v);
-    return vec3_scale(v, inv_length);
+    return vec3_div(v, vec3_length(v));
 }
 
 float vec3_dot(vec3_t a, vec3_t b) {
@@ -122,16 +125,16 @@ mat4_t mat4_identity(void) {
 }
 
 vec4_t mat4_mul_vec4(mat4_t m, vec4_t v) {
-    float arr[4];
+    float result[4];
     int i;
     for (i = 0; i < 4; i++) {
-        arr[i] = 0;
-        arr[i] += m.m[i][0] * v.x;
-        arr[i] += m.m[i][1] * v.y;
-        arr[i] += m.m[i][2] * v.z;
-        arr[i] += m.m[i][3] * v.w;
+        result[i] = 0;
+        result[i] += m.m[i][0] * v.x;
+        result[i] += m.m[i][1] * v.y;
+        result[i] += m.m[i][2] * v.z;
+        result[i] += m.m[i][3] * v.w;
     }
-    return vec4_new(arr[0], arr[1], arr[2], arr[3]);
+    return vec4_new(result[0], result[1], result[2], result[3]);
 }
 
 mat4_t mat4_mul_mat4(mat4_t a, mat4_t b) {
@@ -153,8 +156,8 @@ mat4_t mat4_inverse(mat4_t m) {
 }
 
 mat4_t mat4_transpose(mat4_t m) {
-    int i, j;
     mat4_t transpose;
+    int i, j;
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
             transpose.m[i][j] = m.m[j][i];

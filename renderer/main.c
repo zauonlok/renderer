@@ -1,6 +1,6 @@
-#include "testcases/test_phong.h"
+#include "tests/test_phong.h"
 
 int main() {
-    run_phong_testcase();
+    test_phong();
     return 0;
 }

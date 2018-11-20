@@ -25,7 +25,7 @@ if defined VS150COMNTOOLS (
 )
 
 set OPTS=/Fe../Viewer /nologo /W4 /D_CRT_SECURE_NO_WARNINGS /O2 /GL
-set SRCS=main.c platforms/win32.c core/*.c shaders/*.c testcases/*.c
+set SRCS=main.c platforms/win32.c core/*.c shaders/*.c tests/*.c
 set LIBS=user32.lib gdi32.lib
 
 cd renderer

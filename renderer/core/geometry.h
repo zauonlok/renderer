@@ -18,7 +18,8 @@ vec3_t vec3_from_vec4(vec4_t v);
 vec3_t vec3_negative(vec3_t v);
 vec3_t vec3_add(vec3_t a, vec3_t b);
 vec3_t vec3_sub(vec3_t a, vec3_t b);
-vec3_t vec3_scale(vec3_t v, float scale);
+vec3_t vec3_mul(vec3_t v, float factor);
+vec3_t vec3_div(vec3_t v, float divisor);
 float vec3_length(vec3_t v);
 vec3_t vec3_normalize(vec3_t v);
 float vec3_dot(vec3_t a, vec3_t b);
@@ -47,8 +48,8 @@ mat4_t mat4_rotate(float angle, float vx, float vy, float vz);
 mat4_t mat4_rotate_x(float angle);
 mat4_t mat4_rotate_y(float angle);
 mat4_t mat4_rotate_z(float angle);
-mat4_t mat4_camera(vec3_t eye, vec3_t center, vec3_t up);
-mat4_t mat4_lookat(vec3_t eye, vec3_t center, vec3_t up);
+mat4_t mat4_camera(vec3_t eye, vec3_t target, vec3_t up);
+mat4_t mat4_lookat(vec3_t eye, vec3_t target, vec3_t up);
 mat4_t mat4_ortho(float left, float right, float bottom, float top,
                   float near, float far);
 mat4_t mat4_frustum(float left, float right, float bottom, float top,

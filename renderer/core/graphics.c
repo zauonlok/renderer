@@ -238,8 +238,8 @@ void graphics_draw_triangle(rendertarget_t *rendertarget, program_t *program) {
 
     /* perspective division */
     for (i = 0; i < 3; i++) {
-        float factor = 1 / clip_coords[i].w;
-        ndc_coords[i] = vec3_scale(vec3_from_vec4(clip_coords[i]), factor);
+        vec3_t clip_coord = vec3_from_vec4(clip_coords[i]);
+        ndc_coords[i] = vec3_div(clip_coord, clip_coords[i].w);
     }
 
     /* back-face culling */

@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define UNUSED(x) ((void)(x))
+
 /* common helper functions */
 
 static int get_buffer_size(image_t *image) {
@@ -58,17 +60,18 @@ static unsigned char read_byte(FILE *file) {
 static void read_bytes(FILE *file, void *buffer, int size) {
     int count = fread(buffer, 1, size, file);
     assert(count == size);
+    UNUSED(count);
 }
 
 static void write_bytes(FILE *file, void *buffer, int size) {
     int count = fwrite(buffer, 1, size, file);
     assert(count == size);
+    UNUSED(count);
 }
 
 #define TGA_HEADER_SIZE 18
 
 static void load_tga_rle(FILE *file, image_t *image) {
-    unsigned char pixel[4];
     unsigned char *buffer = image->buffer;
     int channels = image->channels;
     int buffer_size = get_buffer_size(image);
@@ -78,9 +81,11 @@ static void load_tga_rle(FILE *file, image_t *image) {
         int is_rle_packet = header & 0x80;
         int pixel_count = (header & 0x7F) + 1;
         int expected_size = buffer_count + pixel_count * channels;
+        unsigned char pixel[4];
+        int i, j;
         assert(expected_size <= buffer_size);
+        UNUSED(expected_size);
         if (is_rle_packet) {  /* rle packet */
-            int i, j;
             for (j = 0; j < channels; j++) {
                 pixel[j] = read_byte(file);
             }
@@ -90,7 +95,6 @@ static void load_tga_rle(FILE *file, image_t *image) {
                 }
             }
         } else {              /* raw packet */
-            int i, j;
             for (i = 0; i < pixel_count; i++) {
                 for (j = 0; j < channels; j++) {
                     buffer[buffer_count++] = read_byte(file);
@@ -313,6 +317,8 @@ static unsigned char color2gray(color_t color) {
 static void validate_point(image_t *image, point_t point) {
     assert(point.row >= 0 && point.row < image->height);
     assert(point.col >= 0 && point.col < image->width);
+    UNUSED(image);
+    UNUSED(point);
 }
 
 void image_draw_point(image_t *image, color_t color, point_t point) {
