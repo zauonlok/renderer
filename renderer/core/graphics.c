@@ -66,8 +66,6 @@ void framebuffer_clear(framebuffer_t *framebuffer, clearmask_t clearmask) {
 
 /* triangle rasterization */
 
-typedef struct {int valid; vec2_t ab, ac; float factor;} cache_t;
-
 /*
  * for barycentric coordinates, see
  * http://blackpawn.com/texts/pointinpoly/
@@ -93,30 +91,17 @@ typedef struct {int valid; vec2_t ab, ac; float factor;} cache_t;
  *     weight_B = s
  *     weight_C = t
  */
-static vec3_t calculate_weights(vec2_t abc[3], vec2_t p, cache_t *cache) {
+static vec3_t calculate_weights(vec2_t abc[3], vec2_t p) {
     vec2_t a = abc[0];
     vec2_t b = abc[1];
     vec2_t c = abc[2];
-
-    vec2_t ab, ac, ap;
-    float factor, s, t;
-    vec3_t weights;
-
-    if (cache->valid) {
-        ab = cache->ab;
-        ac = cache->ac;
-        factor = cache->factor;
-    } else {
-        ab = cache->ab = vec2_sub(b, a);
-        ac = cache->ac = vec2_sub(c, a);
-        factor = cache->factor = 1 / (ab.x * ac.y - ab.y * ac.x);
-        cache->valid = 1;
-    }
-
-    ap = vec2_sub(p, a);
-    s = (ac.y * ap.x - ac.x * ap.y) * factor;
-    t = (ab.x * ap.y - ab.y * ap.x) * factor;
-    weights = vec3_new(1 - s - t, s, t);
+    vec2_t ab = vec2_sub(b, a);
+    vec2_t ac = vec2_sub(c, a);
+    vec2_t ap = vec2_sub(p, a);
+    float factor = 1 / (ab.x * ac.y - ab.y * ac.x);
+    float s = (ac.y * ap.x - ac.x * ap.y) * factor;
+    float t = (ab.x * ap.y - ab.y * ap.x) * factor;
+    vec3_t weights = vec3_new(1 - s - t, s, t);
     return weights;
 }
 
@@ -136,18 +121,18 @@ static float max_float(float a, float b, float c, float upper_bound) {
     return max;
 }
 
-typedef struct {float min_x, min_y, max_x, max_y;} box_t;
+typedef struct {float min_x, min_y, max_x, max_y;} bbox_t;
 
-static box_t find_bounding_box(vec2_t abc[3], int width, int height) {
+static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
     vec2_t a = abc[0];
     vec2_t b = abc[1];
     vec2_t c = abc[2];
-    box_t box;
-    box.min_x = min_float(a.x, b.x, c.x, 0);
-    box.min_y = min_float(a.y, b.y, c.y, 0);
-    box.max_x = max_float(a.x, b.x, c.x, (float)(width - 1));
-    box.max_y = max_float(a.y, b.y, c.y, (float)(height - 1));
-    return box;
+    bbox_t bbox;
+    bbox.min_x = min_float(a.x, b.x, c.x, 0);
+    bbox.min_y = min_float(a.y, b.y, c.y, 0);
+    bbox.max_x = max_float(a.x, b.x, c.x, (float)(width - 1));
+    bbox.max_y = max_float(a.y, b.y, c.y, (float)(height - 1));
+    return bbox;
 }
 
 /*
@@ -168,8 +153,7 @@ static int is_back_facing(vec3_t ndc_coords[3]) {
     vec3_t c = ndc_coords[2];
     vec3_t ab = vec3_sub(b, a);
     vec3_t ac = vec3_sub(c, a);
-    int is_clockwise = vec3_cross(ab, ac).z < 0;
-    return is_clockwise;
+    return vec3_cross(ab, ac).z < 0;
 }
 
 /*
@@ -194,14 +178,15 @@ static float calculate_depth(float screen_depths[3], vec3_t weights) {
     return depth0 * weights.x + depth1 * weights.y + depth2 * weights.z;
 }
 
-static void interp_varyings(program_t *program, vec3_t weights) {
-    int num_floats = program->sizeof_varyings / sizeof(float);
-    float *src0 = (float*)program->varyings[0];
-    float *src1 = (float*)program->varyings[1];
-    float *src2 = (float*)program->varyings[2];
-    float *dst = (float*)program->varyings[3];
+static void interp_varyings(void *varyings[4], int sizeof_varyings,
+                            vec3_t weights) {
+    int num_floats = sizeof_varyings / sizeof(float);
+    float *src0 = (float*)varyings[0];
+    float *src1 = (float*)varyings[1];
+    float *src2 = (float*)varyings[2];
+    float *dst = (float*)varyings[3];
     int i;
-    assert(num_floats * (int)sizeof(float) == program->sizeof_varyings);
+    assert(num_floats * (int)sizeof(float) == sizeof_varyings);
     for (i = 0; i < num_floats; i++) {
         dst[i] = 0;
         dst[i] += src0[i] * weights.x;
@@ -217,8 +202,7 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
     vec3_t ndc_coords[3];
     vec2_t screen_points[3];
     float screen_depths[3];
-    cache_t cache;
-    box_t box;
+    bbox_t bbox;
     int i, x, y;
 
     /* calculate clip coordinates */
@@ -255,23 +239,23 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
     }
 
     /* perform rasterization */
-    cache.valid = 0;
-    box = find_bounding_box(screen_points, width, height);
-    for (x = (int)box.min_x; x <= box.max_x; x++) {
-        for (y = (int)box.min_y; y <= box.max_y; y++) {
+    bbox = find_bounding_box(screen_points, width, height);
+    for (x = (int)bbox.min_x; x <= bbox.max_x; x++) {
+        for (y = (int)bbox.min_y; y <= bbox.max_y; y++) {
             vec2_t point = vec2_new((float)x, (float)y);
-            vec3_t weights = calculate_weights(screen_points, point, &cache);
+            vec3_t weights = calculate_weights(screen_points, point);
             if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
                 depthbuffer_t *depthbuffer = framebuffer->depthbuffer;
                 int index = y * width + x;
                 float depth = calculate_depth(screen_depths, weights);
                 /* early depth testing */
-                if (depthbuffer->buffer[index] >= depth) {
+                if (depth <= depthbuffer->buffer[index]) {
                     colorbuffer_t *colorbuffer = framebuffer->colorbuffer;
+                    int varyings_size = program->sizeof_varyings;
                     void *varyings = program->varyings[3];
                     void *uniforms = program->uniforms;
                     vec4_t color;
-                    interp_varyings(program, weights);
+                    interp_varyings(program->varyings, varyings_size, weights);
                     color = program->fragment_shader(varyings, uniforms);
                     colorbuffer->buffer[index] = vec4_saturate(color);
                     depthbuffer->buffer[index] = depth;
@@ -376,8 +360,8 @@ void texture_release(texture_t *texture) {
 
 vec4_t texture_sample(texture_t *texture, float u, float v) {
     if (u < 0 || v < 0 || u > 1 || v > 1) {
-        vec4_t empty = {0, 0, 0, 0};
-        return empty;
+        vec4_t blank = {0, 0, 0, 0};
+        return blank;
     } else {
         int c = (int)((texture->width - 1) * u + 0.5f);
         int r = (int)((texture->height - 1) * v + 0.5f);
