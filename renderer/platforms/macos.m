@@ -247,7 +247,7 @@ void window_draw_image(window_t *window, image_t *image) {
 }
 
 void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
-    colorbuffer_blit_rgb(buffer, surface);
+    colorbuffer_blit_rgb(buffer, window->surface);
     [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
 }
 
