@@ -145,7 +145,7 @@ phong_uniforms_t *phong_get_uniforms(model_t *model) {
     return (phong_uniforms_t*)model->program->uniforms;
 }
 
-void phong_draw_model(rendertarget_t *rendertarget, model_t *model) {
+void phong_draw_model(framebuffer_t *framebuffer, model_t *model) {
     program_t *program = model->program;
     mesh_t *mesh = model->mesh;
     int num_faces = mesh_get_num_faces(mesh);
@@ -157,6 +157,6 @@ void phong_draw_model(rendertarget_t *rendertarget, model_t *model) {
             attribs->local_pos = mesh_get_position(mesh, i, j);
             attribs->texcoord = mesh_get_texcoord(mesh, i, j);
         }
-        graphics_draw_triangle(rendertarget, program);
+        graphics_draw_triangle(framebuffer, program);
     }
 }

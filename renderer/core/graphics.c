@@ -6,10 +6,10 @@
 #include "image.h"
 #include "mesh.h"
 
-/* rendertarget management */
+/* framebuffer management */
 
-rendertarget_t *rendertarget_create(int width, int height) {
-    rendertarget_t *rendertarget;
+framebuffer_t *framebuffer_create(int width, int height) {
+    framebuffer_t *framebuffer;
     colorbuffer_t *colorbuffer;
     depthbuffer_t *depthbuffer;
     int num_elems = width * height;
@@ -26,37 +26,37 @@ rendertarget_t *rendertarget_create(int width, int height) {
     depthbuffer->height = height;
     depthbuffer->buffer = (float*)malloc(sizeof(float) * num_elems);
 
-    rendertarget = (rendertarget_t*)malloc(sizeof(rendertarget_t));
-    rendertarget->width       = width;
-    rendertarget->height      = height;
-    rendertarget->colorbuffer = colorbuffer;
-    rendertarget->depthbuffer = depthbuffer;
+    framebuffer = (framebuffer_t*)malloc(sizeof(framebuffer_t));
+    framebuffer->width       = width;
+    framebuffer->height      = height;
+    framebuffer->colorbuffer = colorbuffer;
+    framebuffer->depthbuffer = depthbuffer;
 
-    rendertarget_clear(rendertarget, CLEAR_COLOR | CLEAR_DEPTH);
-    return rendertarget;
+    framebuffer_clear(framebuffer, CLEAR_COLOR | CLEAR_DEPTH);
+    return framebuffer;
 }
 
-void rendertarget_release(rendertarget_t *rendertarget) {
-    free(rendertarget->colorbuffer->buffer);
-    free(rendertarget->colorbuffer);
-    free(rendertarget->depthbuffer->buffer);
-    free(rendertarget->depthbuffer);
-    free(rendertarget);
+void framebuffer_release(framebuffer_t *framebuffer) {
+    free(framebuffer->colorbuffer->buffer);
+    free(framebuffer->colorbuffer);
+    free(framebuffer->depthbuffer->buffer);
+    free(framebuffer->depthbuffer);
+    free(framebuffer);
 }
 
-void rendertarget_clear(rendertarget_t *rendertarget, clearmask_t clearmask) {
-    int num_elems = rendertarget->width * rendertarget->height;
+void framebuffer_clear(framebuffer_t *framebuffer, clearmask_t clearmask) {
+    int num_elems = framebuffer->width * framebuffer->height;
     int i;
 
     if (clearmask & CLEAR_COLOR) {
-        colorbuffer_t *colorbuffer = rendertarget->colorbuffer;
+        colorbuffer_t *colorbuffer = framebuffer->colorbuffer;
         vec4_t default_color = {0, 0, 0, 1};
         for (i = 0; i < num_elems; i++) {
             colorbuffer->buffer[i] = default_color;
         }
     }
     if (clearmask & CLEAR_DEPTH) {
-        depthbuffer_t *depthbuffer = rendertarget->depthbuffer;
+        depthbuffer_t *depthbuffer = framebuffer->depthbuffer;
         float default_depth = 1;
         for (i = 0; i < num_elems; i++) {
             depthbuffer->buffer[i] = default_depth;
@@ -210,9 +210,9 @@ static void interp_varyings(program_t *program, vec3_t weights) {
     }
 }
 
-void graphics_draw_triangle(rendertarget_t *rendertarget, program_t *program) {
-    int width = rendertarget->width;
-    int height = rendertarget->height;
+void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
+    int width = framebuffer->width;
+    int height = framebuffer->height;
     vec4_t clip_coords[3];
     vec3_t ndc_coords[3];
     vec2_t screen_points[3];
@@ -262,12 +262,12 @@ void graphics_draw_triangle(rendertarget_t *rendertarget, program_t *program) {
             vec2_t point = vec2_new((float)x, (float)y);
             vec3_t weights = calculate_weights(screen_points, point, &cache);
             if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
-                depthbuffer_t *depthbuffer = rendertarget->depthbuffer;
+                depthbuffer_t *depthbuffer = framebuffer->depthbuffer;
                 int index = y * width + x;
                 float depth = calculate_depth(screen_depths, weights);
                 /* early depth testing */
                 if (depthbuffer->buffer[index] >= depth) {
-                    colorbuffer_t *colorbuffer = rendertarget->colorbuffer;
+                    colorbuffer_t *colorbuffer = framebuffer->colorbuffer;
                     void *varyings = program->varyings[3];
                     void *uniforms = program->uniforms;
                     vec4_t color;

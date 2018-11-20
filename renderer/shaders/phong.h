@@ -35,6 +35,6 @@ model_t *phong_create_model(mesh_t *mesh, image_t *normal_map,
                             image_t *diffuse_map, image_t *specular_map);
 void phong_release_model(model_t *model);
 phong_uniforms_t *phong_get_uniforms(model_t *model);
-void phong_draw_model(rendertarget_t *rendertarget, model_t *model);
+void phong_draw_model(framebuffer_t *framebuffer, model_t *model);
 
 #endif

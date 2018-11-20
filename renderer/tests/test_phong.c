@@ -33,7 +33,7 @@ static void setup_phong_uniforms(model_t *model, camera_t *camera) {
 
 void test_phong() {
     window_t *window;
-    rendertarget_t *rendertarget;
+    framebuffer_t *framebuffer;
     camera_t *camera;
     mesh_t *mesh;
     image_t *normal_map;
@@ -43,9 +43,9 @@ void test_phong() {
     float aspect;
     float last_time;
 
-    /* create window, rendertarget, and camera */
+    /* create window, framebuffer, and camera */
     window = window_create(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
-    rendertarget = rendertarget_create(WINDOW_WIDTH, WINDOW_HEIGHT);
+    framebuffer = framebuffer_create(WINDOW_WIDTH, WINDOW_HEIGHT);
     aspect = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
     camera = camera_create(CAMERA_POSITION, CAMERA_FORWARD, aspect);
 
@@ -73,9 +73,9 @@ void test_phong() {
         setup_phong_uniforms(model, camera);
 
         /* render image */
-        rendertarget_clear(rendertarget, CLEAR_COLOR | CLEAR_DEPTH);
-        phong_draw_model(rendertarget, model);
-        window_draw_buffer(window, rendertarget->colorbuffer);
+        framebuffer_clear(framebuffer, CLEAR_COLOR | CLEAR_DEPTH);
+        phong_draw_model(framebuffer, model);
+        window_draw_buffer(window, framebuffer->colorbuffer);
 
         /* read events */
         input_poll_events();
@@ -90,8 +90,8 @@ void test_phong() {
     image_release(diffuse_map);
     image_release(specular_map);
 
-    /* release camera, rendertarget, and window */
+    /* release camera, framebuffer, and window */
     camera_release(camera);
-    rendertarget_release(rendertarget);
+    framebuffer_release(framebuffer);
     window_destroy(window);
 }
