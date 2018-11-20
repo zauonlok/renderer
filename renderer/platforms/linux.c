@@ -72,7 +72,7 @@ static Window create_window(const char *title, int width, int height) {
 }
 
 static void create_surface(int width, int height,
-                           image_t **out_surface, XImage *out_ximage) {
+                           image_t **out_surface, XImage **out_ximage) {
     int screen = XDefaultScreen(g_display);
     int depth = XDefaultDepth(g_display, screen);
     Visual *visual = XDefaultVisual(g_display, screen);
