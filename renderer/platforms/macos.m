@@ -1,26 +1,21 @@
-#include "platform.h"
+#include "../core/platform.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <mach/mach_time.h>
 #import <Cocoa/Cocoa.h>
-#include "image.h"
+#include "../core/graphics.h"
+#include "../core/image.h"
 
-/* data structures */
-
-typedef struct {
-    image_t *framebuffer;
-} context_t;
+#define UNUSED(x) ((void)(x))
 
 struct window {
     NSWindow *handle;
     int closing;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
-    context_t *context;
+    image_t *surface;
 };
-
-/* memory management */
 
 static NSAutoreleasePool *g_autoreleasepool;
 
@@ -42,7 +37,7 @@ static NSAutoreleasePool *g_autoreleasepool;
 }
 
 - (BOOL)windowShouldClose:(id)sender {
-    (void)sender;
+    UNUSED(sender);
     window->closing = 1;
     return NO;
 }
@@ -52,11 +47,11 @@ static NSAutoreleasePool *g_autoreleasepool;
 static const char ACTION_UP = 0;
 static const char ACTION_DOWN = 1;
 
+/*
+ * for virtual keys, see
+ * https://stackoverflow.com/questions/3202629/
+ */
 static void handle_key_event(window_t *window, int virtual_key, char action) {
-    /*
-     * for virtual keys, see
-     * https://stackoverflow.com/questions/3202629/
-     */
     keycode_t key;
     switch (virtual_key) {
         case 0x00: key = KEY_A;   break;
@@ -90,25 +85,20 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
-    image_t *framebuffer = window->context->framebuffer;
-    NSBitmapImageRep *rep;
-    NSImage *nsimage;
-
-    rep = [[[NSBitmapImageRep alloc]
-            initWithBitmapDataPlanes:&(framebuffer->buffer)
-                          pixelsWide:framebuffer->width
-                          pixelsHigh:framebuffer->height
+    image_t *surface = window->surface;
+    NSBitmapImageRep *rep = [[[NSBitmapImageRep alloc]
+            initWithBitmapDataPlanes:&(surface->buffer)
+                          pixelsWide:surface->width
+                          pixelsHigh:surface->height
                        bitsPerSample:8
                      samplesPerPixel:3
                             hasAlpha:NO
                             isPlanar:NO
                       colorSpaceName:NSCalibratedRGBColorSpace
-                         bytesPerRow:framebuffer->width * 4
+                         bytesPerRow:surface->width * 4
                         bitsPerPixel:32] autorelease];
-    assert(rep != nil);
-    nsimage = [[[NSImage alloc] init] autorelease];
+    NSImage *nsimage = [[[NSImage alloc] init] autorelease];
     [nsimage addRepresentation:rep];
-
     [nsimage drawInRect:dirtyRect];
 }
 
@@ -121,22 +111,22 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
 }
 
 - (void)mouseDown:(NSEvent *)event {
-    (void)event;
+    UNUSED(event);
     window->buttons[BUTTON_L] = ACTION_DOWN;
 }
 
 - (void)mouseUp:(NSEvent *)event {
-    (void)event;
+    UNUSED(event);
     window->buttons[BUTTON_L] = ACTION_UP;
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
-    (void)event;
+    UNUSED(event);
     window->buttons[BUTTON_R] = ACTION_DOWN;
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
-    (void)event;
+    UNUSED(event);
     window->buttons[BUTTON_R] = ACTION_UP;
 }
 
@@ -202,8 +192,8 @@ static NSWindow *create_window(window_t *window, const char *title,
 
     delegate = [[WindowDelegate alloc] initWithWindow:window];
     assert(delegate != nil);
-    [handle setDelegate:delegate];  /* setDelegate has @property(assign),
-                                       do not autorelease the delegate */
+    /* setDelegate has @property(assign), do not autorelease the delegate */
+    [handle setDelegate:delegate];
 
     view = [[[ContentView alloc] initWithWindow:window] autorelease];
     assert(view != nil);
@@ -213,26 +203,20 @@ static NSWindow *create_window(window_t *window, const char *title,
     return handle;
 }
 
-static context_t *create_context(int width, int height) {
-    context_t *context = (context_t*)malloc(sizeof(context_t));
-    context->framebuffer = image_create(width, height, 4);
-    return context;
-}
-
 window_t *window_create(const char *title, int width, int height) {
     window_t *window = (window_t*)malloc(sizeof(window_t));
     NSWindow * handle;
-    context_t *context;
+    image_t *surface;
 
     assert(width > 0 && height > 0);
 
     create_application();
     handle = create_window(window, title, width, height);
-    context = create_context(width, height);
+    surface = image_create(width, height, 4);
 
     window->handle  = handle;
     window->closing = 0;
-    window->context = context;
+    window->surface = surface;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
@@ -241,8 +225,6 @@ window_t *window_create(const char *title, int width, int height) {
 }
 
 void window_destroy(window_t *window) {
-    context_t *context = window->context;
-
     [window->handle orderOut:nil];
 
     [[window->handle delegate] release];
@@ -251,8 +233,7 @@ void window_destroy(window_t *window) {
     [g_autoreleasepool drain];
     g_autoreleasepool = [[NSAutoreleasePool alloc] init];
 
-    image_release(context->framebuffer);
-    free(context);
+    image_release(window->surface);
     free(window);
 }
 
@@ -261,7 +242,12 @@ int window_should_close(window_t *window) {
 }
 
 void window_draw_image(window_t *window, image_t *image) {
-    image_blit_rgb(image, window->context->framebuffer);
+    image_blit_rgb(image, window->surface);
+    [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
+}
+
+void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
+    colorbuffer_blit_rgb(buffer, surface);
     [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
 }
 
