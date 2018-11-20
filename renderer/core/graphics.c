@@ -165,9 +165,9 @@ static int is_back_facing(vec3_t ndc_coords[3]) {
 static vec3_t viewport_transform(int width_, int height_, vec3_t ndc_coord) {
     float width = (float)width_;
     float height = (float)height_;
-    float x = (ndc_coord.x + 1) * 0.5f * width;   // [-1, 1] -> [0, 1] -> [0, w]
-    float y = (ndc_coord.y + 1) * 0.5f * height;  // [-1, 1] -> [0, 1] -> [0, h]
-    float z = (ndc_coord.z + 1) * 0.5f;           // [-1, 1] -> [0, 1]
+    float x = (ndc_coord.x + 1) * 0.5f * width;   /* [-1, 1] -> [0, 1] -> [0, w] */
+    float y = (ndc_coord.y + 1) * 0.5f * height;  /* [-1, 1] -> [0, 1] -> [0, h] */
+    float z = (ndc_coord.z + 1) * 0.5f;           /* [-1, 1] -> [0, 1] */
     return vec3_new(x, y, z);
 }
 

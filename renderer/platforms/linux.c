@@ -71,7 +71,7 @@ static Window create_window(const char *title, int width, int height) {
     return window;
 }
 
-static void create_surface(int width, int height
+static void create_surface(int width, int height,
                            image_t **out_surface, XImage *out_ximage) {
     int screen = XDefaultScreen(g_display);
     int depth = XDefaultDepth(g_display, screen);
@@ -102,8 +102,8 @@ window_t *window_create(const char *title, int width, int height) {
     window = (window_t*)malloc(sizeof(window_t));
     window->handle  = handle;
     window->closing = 0;
-    window->surface = surface
-    window->ximage  = ximage
+    window->surface = surface;
+    window->ximage  = ximage;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
