@@ -4,6 +4,8 @@
 #include <time.h>
 #include "tests/test_phong.h"
 
+#define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
+
 typedef void testfunc_t(int argc, char *argv[]);
 typedef struct {const char *testname; testfunc_t *testfunc;} testcase_t;
 
@@ -12,7 +14,9 @@ static testcase_t testcases[] = {
 };
 
 int main(int argc, char *argv[]) {
-    int num_testcases = sizeof(testcases) / sizeof(testcase_t);
+    int num_testcases = ARRAY_LENGTH(testcases);
+    unsigned int seed = (unsigned int)time(NULL);
+    srand(seed);
 
     if (argc > 1) {
         const char *testname = argv[1];
@@ -31,13 +35,8 @@ int main(int argc, char *argv[]) {
             printf("test not found: %s\n", testname);
         }
     } else {
-        testcase_t testcase;
-        unsigned int seed;
-        int index;
-        seed = (unsigned int)time(NULL);
-        srand(seed);
-        index = rand() % num_testcases;
-        testcase = testcases[index];
+        int index = rand() % num_testcases;
+        testcase_t testcase = testcases[index];
         printf("running test: %s\n", testcase.testname);
         testcase.testfunc(argc, argv);
     }

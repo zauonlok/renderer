@@ -1,8 +1,11 @@
 #include "test_phong.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "../core/apis.h"
 #include "../shaders/phong.h"
+
+#define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 
 static const char *WINDOW_TITLE = "Phong Viewer";
 static const int WINDOW_WIDTH = 800;
@@ -12,6 +15,10 @@ static const vec3_t CAMERA_POSITION = {0, 0, 3};
 static const vec3_t CAMERA_FORWARD = {0, 0, -1};
 
 static const vec3_t LIGHT_DIRECTION = {-1, -1, -1};
+
+static const char *MODEL_NAMES[] = {
+    "african_head",
+};
 
 static const char *AFRICAN_HEAD_MESH_PATHS[] = {
     "resources/african_head/head.obj",
@@ -38,8 +45,9 @@ static model_t **create_models(const char *model_name) {
     model_t **models = NULL;
 
     if (strcmp(model_name, "african_head") == 0) {
+        int num_meshes = ARRAY_LENGTH(AFRICAN_HEAD_MESH_PATHS);
         int i;
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < num_meshes; i++) {
             mesh_t *mesh = mesh_load(AFRICAN_HEAD_MESH_PATHS[i]);
             image_t *normal_map = image_load(AFRICAN_HEAD_NORMAL_PATHS[i]);
             image_t *diffuse_map = image_load(AFRICAN_HEAD_DIFFUSE_PATHS[i]);
@@ -106,48 +114,38 @@ void test_phong(int argc, char *argv[]) {
     float aspect;
     float last_time;
 
-    /* create models */
     if (argc > 2) {
         const char *model_name = argv[2];
         models = create_models(model_name);
     } else {
-        models = create_models("african_head");
+        int index = rand() % ARRAY_LENGTH(MODEL_NAMES);
+        const char *model_name = MODEL_NAMES[index];
+        models = create_models(model_name);
     }
 
-    /* create window, framebuffer, and camera */
     window = window_create(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
     framebuffer = framebuffer_create(WINDOW_WIDTH, WINDOW_HEIGHT);
     aspect = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
     camera = camera_create(CAMERA_POSITION, CAMERA_FORWARD, aspect);
 
-    /* event loop */
     last_time = (float)timer_get_time();
     while (!window_should_close(window)) {
-        /* calculate delta time */
         float curr_time = (float)timer_get_time();
         float delta_time = curr_time - last_time;
         last_time = curr_time;
 
-        /* process events */
         camera_process_input(camera, window, delta_time);
-
-        /* update uniforms */
         update_uniforms(models, camera);
 
-        /* render image */
         framebuffer_clear(framebuffer, CLEAR_COLOR | CLEAR_DEPTH);
         draw_models(framebuffer, models);
         window_draw_buffer(window, framebuffer->colorbuffer);
 
-        /* read events */
         input_poll_events();
     }
 
-    /* release models */
-    release_models(models);
-
-    /* release camera, framebuffer, and window */
-    camera_release(camera);
-    framebuffer_release(framebuffer);
     window_destroy(window);
+    framebuffer_release(framebuffer);
+    camera_release(camera);
+    release_models(models);
 }

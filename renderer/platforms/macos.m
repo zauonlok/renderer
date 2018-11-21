@@ -36,7 +36,7 @@ static NSAutoreleasePool *g_autoreleasepool;
     return self;
 }
 
-- (BOOL)windowShouldClose:(id)sender {
+- (BOOL)windowShouldClose:(NSWindow *)sender {
     UNUSED(sender);
     window->closing = 1;
     return NO;
@@ -190,9 +190,12 @@ static NSWindow *create_window(window_t *window, const char *title,
     assert(handle != nil);
     [handle setTitle:[NSString stringWithUTF8String:title]];
 
+    /*
+     * the storage semantics of NSWindow.setDelegate is @property(assign),
+     * or @property(weak) with ARC, we must not autorelease the delegate
+     */
     delegate = [[WindowDelegate alloc] initWithWindow:window];
     assert(delegate != nil);
-    /* setDelegate has @property(assign), do not autorelease the delegate */
     [handle setDelegate:delegate];
 
     view = [[[ContentView alloc] initWithWindow:window] autorelease];
