@@ -44,13 +44,15 @@ struct camera {
 
 /* camera creating/releasing */
 
-static float pitch_from_forward(vec3_t forward) {
+static float pitch_from_forward(vec3_t forward_) {
+    vec3_t forward = vec3_normalize(forward_);
     float angle = (float)acos(vec3_dot(forward, WORLD_UP));
     float pitch = PI / 2 - angle;  /* [0, PI] -> [PI/2, -PI/2] */
     return pitch * TO_DEGREES;
 }
 
-static float yaw_from_forward(vec3_t forward) {
+static float yaw_from_forward(vec3_t forward_) {
+    vec3_t forward = vec3_normalize(forward_);
     float yaw = (float)atan2(forward.z, forward.x);
     return yaw * TO_DEGREES;
 }
@@ -184,23 +186,24 @@ static void rotate_camera(camera_t *camera, window_t *window,
 }
 
 static void move_camera(camera_t *camera, window_t *window, float delta_time) {
-    vec3_t direction = vec3_new(0, 0, 0);
+    vec3_t accumulation = vec3_new(0, 0, 0);
     if (input_key_pressed(window, KEY_A)) {
-        direction = vec3_sub(direction, camera->right);
+        accumulation = vec3_sub(accumulation, camera->right);
     }
     if (input_key_pressed(window, KEY_D)) {
-        direction = vec3_add(direction, camera->right);
+        accumulation = vec3_add(accumulation, camera->right);
     }
     if (input_key_pressed(window, KEY_S)) {
-        direction = vec3_sub(direction, camera->forward);
+        accumulation = vec3_sub(accumulation, camera->forward);
     }
     if (input_key_pressed(window, KEY_W)) {
-        direction = vec3_add(direction, camera->forward);
+        accumulation = vec3_add(accumulation, camera->forward);
     }
 
-    if (vec3_length(direction) > 1e-5f) {
+    if (vec3_length(accumulation) > 1e-5f) {
+        vec3_t direction = vec3_normalize(accumulation);
         float distance = camera->options.move_speed * delta_time;
-        vec3_t movement = vec3_mul(vec3_normalize(direction), distance);
+        vec3_t movement = vec3_mul(direction, distance);
         camera->position = vec3_add(camera->position, movement);
     }
 }

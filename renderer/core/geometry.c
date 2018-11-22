@@ -331,7 +331,8 @@ mat4_t mat4_rotate(float angle, float vx, float vy, float vz) {
  *  0  s  c  0
  *  0  0  0  1
  *
- * reference: https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
+ * reference: http://www.songho.ca/opengl/gl_anglestoaxes.html
+ *            https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
  */
 mat4_t mat4_rotate_x(float angle) {
     float c = (float)cos(angle);
@@ -352,7 +353,8 @@ mat4_t mat4_rotate_x(float angle) {
  * -s  0  c  0
  *  0  0  0  1
  *
- * reference: https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
+ * reference: http://www.songho.ca/opengl/gl_anglestoaxes.html
+ *            https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
  */
 mat4_t mat4_rotate_y(float angle) {
     float c = (float)cos(angle);
@@ -373,7 +375,8 @@ mat4_t mat4_rotate_y(float angle) {
  *  0  0  1  0
  *  0  0  0  1
  *
- * reference: https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
+ * reference: http://www.songho.ca/opengl/gl_anglestoaxes.html
+ *            https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
  */
 mat4_t mat4_rotate_z(float angle) {
     float c = (float)cos(angle);
@@ -388,7 +391,7 @@ mat4_t mat4_rotate_z(float angle) {
 
 /*
  * eye: the position of the eye point
- * target: the position of the reference point
+ * target: the position of the look-at target
  * up: the direction of the up vector
  *
  * x_axis.x  y_axis.x  z_axis.x  eye.x
@@ -430,7 +433,7 @@ mat4_t mat4_camera(vec3_t eye, vec3_t target, vec3_t up) {
 
 /*
  * eye: the position of the eye point
- * target: the position of the reference point
+ * target: the position of the look-at target
  * up: the direction of the up vector
  *
  * x_axis.x  x_axis.y  x_axis.z  -dot(x_axis,eye)
