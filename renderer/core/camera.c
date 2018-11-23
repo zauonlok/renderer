@@ -19,21 +19,21 @@ static const float ZOOM_SPEED = 60;
 static const float PITCH_UPPER = 89;
 static const float PITCH_LOWER = -89;
 
-static const float FOVY_DEFAULT = 50;
-static const float FOVY_MINIMUM = 15;
+static const float FOVY_DEFAULT = 45;
+static const float FOVY_MINIMUM = 25;
 
 static const float Z_NEAR = 1;
 static const float Z_FAR = 1000;
 
 struct camera {
     vec3_t position;
-    float yaw;
-    float pitch;
+    float yaw;          /* h angle */
+    float pitch;        /* v angle */
     float fovy;
     /* derived */
-    vec3_t forward;
-    vec3_t right;
-    vec3_t up;
+    vec3_t forward;     /* -z axis */
+    vec3_t right;       /* +x axis */
+    vec3_t up;          /* +y axis */
     /* history */
     int rotating;
     int last_xpos;
@@ -46,21 +46,17 @@ struct camera {
 
 static float pitch_from_forward(vec3_t forward_) {
     vec3_t forward = vec3_normalize(forward_);
-    float angle = (float)acos(vec3_dot(forward, WORLD_UP));
+    float angle = (float)acos(forward.y);
     float pitch = PI / 2 - angle;  /* [0, PI] -> [PI/2, -PI/2] */
     return pitch * TO_DEGREES;
 }
 
 static float yaw_from_forward(vec3_t forward_) {
     vec3_t forward = vec3_normalize(forward_);
-    float yaw = (float)atan2(forward.z, forward.x);
+    float yaw = (float)atan2(forward.x, forward.z);
     return yaw * TO_DEGREES;
 }
 
-/*
- * for forward vector calculation, see
- * https://learnopengl.com/Getting-started/Camera
- */
 static vec3_t forward_from_yaw_pitch(float yaw_degrees, float pitch_degrees) {
     float yaw = yaw_degrees * TO_RADIANS;
     float pitch = pitch_degrees * TO_RADIANS;
@@ -68,10 +64,10 @@ static vec3_t forward_from_yaw_pitch(float yaw_degrees, float pitch_degrees) {
     float cos_yaw = (float)cos(yaw);
     float sin_pitch = (float)sin(pitch);
     float cos_pitch = (float)cos(pitch);
-    float forward_x = cos_yaw * cos_pitch;
-    float forward_y = sin_pitch;
-    float forward_z = sin_yaw * cos_pitch;
-    return vec3_new(forward_x, forward_y, forward_z);
+    float x = cos_pitch * sin_yaw;
+    float y = sin_pitch;
+    float z = cos_pitch * cos_yaw;
+    return vec3_new(x, y, z);
 }
 
 static void update_basis_vectors(camera_t *camera) {
@@ -165,13 +161,13 @@ static void rotate_camera(camera_t *camera, window_t *window,
         int xpos, ypos;
         input_query_cursor(window, &xpos, &ypos);
         if (camera->rotating) {
-            int h_offset = xpos - camera->last_xpos;
-            int v_offset = ypos - camera->last_ypos;
             camopt_t options = camera->options;
             float pitch_min = options.pitch_lower;
             float pitch_max = options.pitch_upper;
             float factor = options.rotate_speed * delta_time;
-            camera->yaw -= h_offset * factor;
+            int h_offset = xpos - camera->last_xpos;
+            int v_offset = ypos - camera->last_ypos;
+            camera->yaw += h_offset * factor;
             camera->pitch += v_offset * factor;
             camera->pitch = clamp_float(camera->pitch, pitch_min, pitch_max);
             update_basis_vectors(camera);
