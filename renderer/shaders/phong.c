@@ -52,7 +52,7 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
     vec4_t specular_ = texture_sample(uniforms->specular_map, uv.x, uv.y);
 
     /* ambient */
-    vec3_t ambient = vec3_new(0.1f, 0.1f, 0.1f);
+    vec3_t ambient = vec3_new(0.05f, 0.05f, 0.05f);
 
     /* diffuse */
     vec3_t light_dir = vec3_normalize(uniforms->light_dir);
@@ -61,7 +61,7 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
     vec3_t diffuse = vec3_mul(vec3_from_vec4(diffuse_), diffuse_factor);
 
     /* specular */
-    vec3_t reflected = reflect_light(vec3_negative(light_dir), normal);
+    vec3_t reflected = reflect_light(light_dir, normal);
     vec3_t view_offset = vec3_sub(varyings->world_pos, uniforms->camera_pos);
     vec3_t view_dir = vec3_normalize(view_offset);
     float closeness = max_float(-vec3_dot(reflected, view_dir), 0);
