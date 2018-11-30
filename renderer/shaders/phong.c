@@ -1,7 +1,6 @@
 #include "phong.h"
 #include <math.h>
 #include <stdlib.h>
-#include <string.h>
 #include "../core/apis.h"
 
 /* low-level apis */
@@ -47,9 +46,9 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
 
     /* sampling */
     vec2_t uv = varyings->texcoord;
-    vec4_t normal_ = texture_sample(uniforms->normal_map, uv.x, uv.y);
-    vec4_t diffuse_ = texture_sample(uniforms->diffuse_map, uv.x, uv.y);
-    vec4_t specular_ = texture_sample(uniforms->specular_map, uv.x, uv.y);
+    vec4_t normal_ = texture_sample(uniforms->normal_map, uv);
+    vec4_t diffuse_ = texture_sample(uniforms->diffuse_map, uv);
+    vec4_t specular_ = texture_sample(uniforms->specular_map, uv);
 
     /* ambient */
     vec3_t ambient = vec3_new(0.05f, 0.05f, 0.05f);
@@ -75,50 +74,19 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
     return vec4_new(color_r, color_g, color_b, 1);
 }
 
-program_t *phong_create_program(void) {
-    program_t *program;
-    int i;
-
-    program = (program_t*)malloc(sizeof(program_t));
-    for (i = 0; i < 3; i++) {
-        program->attribs[i] = malloc(sizeof(phong_attribs_t));
-        memset(program->attribs[i], 0, sizeof(phong_attribs_t));
-    }
-    for (i = 0; i < 4; i++) {
-        program->varyings[i] = malloc(sizeof(phong_varyings_t));
-        memset(program->varyings[i], 0, sizeof(phong_varyings_t));
-    }
-    program->uniforms = malloc(sizeof(phong_uniforms_t));
-    memset(program->uniforms, 0, sizeof(phong_uniforms_t));
-
-    program->vertex_shader   = phong_vertex_shader;
-    program->fragment_shader = phong_fragment_shader;
-    program->sizeof_varyings = sizeof(phong_varyings_t);
-
-    return program;
-}
-
-void phong_release_program(program_t *program) {
-    int i;
-    for (i = 0; i < 3; i++) {
-        free(program->attribs[i]);
-    }
-    for (i = 0; i < 4; i++) {
-        free(program->varyings[i]);
-    }
-    free(program->uniforms);
-    free(program);
-}
-
 /* high-level apis */
 
 model_t *phong_create_model(mesh_t *mesh, image_t *normal_map,
                             image_t *diffuse_map, image_t *specular_map) {
+    int sizeof_attribs = sizeof(phong_attribs_t);
+    int sizeof_varyings = sizeof(phong_varyings_t);
+    int sizeof_uniforms = sizeof(phong_uniforms_t);
     phong_uniforms_t *uniforms;
     program_t *program;
     model_t *model;
 
-    program = phong_create_program();
+    program = program_create(phong_vertex_shader, phong_fragment_shader,
+                             sizeof_attribs, sizeof_varyings, sizeof_uniforms);
     uniforms = (phong_uniforms_t*)program->uniforms;
     uniforms->normal_map   = texture_from_image(normal_map);
     uniforms->diffuse_map  = texture_from_image(diffuse_map);
@@ -137,7 +105,7 @@ void phong_release_model(model_t *model) {
     texture_release(uniforms->diffuse_map);
     texture_release(uniforms->specular_map);
 
-    phong_release_program(model->program);
+    program_release(model->program);
     free(model);
 }
 

@@ -27,8 +27,6 @@ typedef struct {
 /* low-level apis */
 vec4_t phong_vertex_shader(void *attribs, void *varyings, void *uniforms);
 vec4_t phong_fragment_shader(void *varyings, void *uniforms);
-program_t *phong_create_program(void);
-void phong_release_program(program_t *program);
 
 /* high-level apis */
 model_t *phong_create_model(mesh_t *mesh, image_t *normal_map,

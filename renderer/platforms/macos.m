@@ -245,12 +245,12 @@ int window_should_close(window_t *window) {
 }
 
 void window_draw_image(window_t *window, image_t *image) {
-    image_blit_rgb(image, window->surface);
+    private_blit_rgb_image(image, window->surface);
     [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
 }
 
 void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
-    colorbuffer_blit_rgb(buffer, window->surface);
+    private_blit_rgb_buffer(buffer, window->surface);
     [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
 }
 

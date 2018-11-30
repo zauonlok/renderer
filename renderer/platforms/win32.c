@@ -202,7 +202,7 @@ void window_draw_image(window_t *window, image_t *image) {
     image_t *surface = window->surface;
     int width = surface->width;
     int height = surface->height;
-    image_blit_bgr(image, surface);
+    private_blit_bgr_image(image, surface);
     BitBlt(window_dc, 0, 0, width, height, memory_dc, 0, 0, SRCCOPY);
     ReleaseDC(window->handle, window_dc);
 }
@@ -213,7 +213,7 @@ void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
     image_t *surface = window->surface;
     int width = surface->width;
     int height = surface->height;
-    colorbuffer_blit_bgr(buffer, surface);
+    private_blit_bgr_buffer(buffer, surface);
     BitBlt(window_dc, 0, 0, width, height, memory_dc, 0, 0, SRCCOPY);
     ReleaseDC(window->handle, window_dc);
 }

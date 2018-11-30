@@ -2,15 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "tests/test_base.h"
+#include "tests/test_lambert.h"
 #include "tests/test_phong.h"
-
-#define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 
 typedef void testfunc_t(int argc, char *argv[]);
 typedef struct {const char *testname; testfunc_t *testfunc;} testcase_t;
 
 static testcase_t testcases[] = {
-    {"test_phong", test_phong},
+    {"test_lambert", test_lambert},
+    //{"test_phong", test_phong},
 };
 
 int main(int argc, char *argv[]) {

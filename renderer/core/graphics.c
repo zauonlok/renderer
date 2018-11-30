@@ -64,6 +64,45 @@ void framebuffer_clear(framebuffer_t *framebuffer, clearmask_t clearmask) {
     }
 }
 
+/* program management */
+
+program_t *program_create(
+        vertex_shader_t *vertex_shader, fragment_shader_t *fragment_shader,
+        int sizeof_attribs, int sizeof_varyings, int sizeof_uniforms) {
+    program_t *program;
+    int i;
+
+    program = (program_t*)malloc(sizeof(program_t));
+    for (i = 0; i < 3; i++) {
+        program->attribs[i] = malloc(sizeof_attribs);
+        memset(program->attribs[i], 0, sizeof_attribs);
+    }
+    for (i = 0; i < 4; i++) {
+        program->varyings[i] = malloc(sizeof_varyings);
+        memset(program->varyings[i], 0, sizeof_varyings);
+    }
+    program->uniforms = malloc(sizeof_uniforms);
+    memset(program->uniforms, 0, sizeof_uniforms);
+
+    program->vertex_shader   = vertex_shader;
+    program->fragment_shader = fragment_shader;
+    program->sizeof_varyings = sizeof_varyings;
+
+    return program;
+}
+
+void program_release(program_t *program) {
+    int i;
+    for (i = 0; i < 3; i++) {
+        free(program->attribs[i]);
+    }
+    for (i = 0; i < 4; i++) {
+        free(program->varyings[i]);
+    }
+    free(program->uniforms);
+    free(program);
+}
+
 /* triangle rasterization */
 
 /*
@@ -267,6 +306,13 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
 
 /* texture management */
 
+texture_t *texture_from_file(const char *filename) {
+    image_t *image = image_load(filename);
+    texture_t *texture = texture_from_image(image);
+    image_release(image);
+    return texture;
+}
+
 /*
  * for texture formats, see
  * http://docs.gl/gl2/glTexImage2D
@@ -358,58 +404,16 @@ void texture_release(texture_t *texture) {
     free(texture);
 }
 
-vec4_t texture_sample(texture_t *texture, float u, float v) {
+vec4_t texture_sample(texture_t *texture, vec2_t texcoord) {
+    float u = texcoord.x;
+    float v = texcoord.y;
     if (u < 0 || v < 0 || u > 1 || v > 1) {
         vec4_t blank = {0, 0, 0, 0};
         return blank;
     } else {
-        int c = (int)((texture->width - 1) * u + 0.5f);
-        int r = (int)((texture->height - 1) * v + 0.5f);
+        int c = (int)((texture->width - 1) * u + 0.5);
+        int r = (int)((texture->height - 1) * v + 0.5);
         int index = r * texture->width + c;
         return texture->buffer[index];
-    }
-}
-
-/* private blit functions */
-
-void colorbuffer_blit_bgr(colorbuffer_t *src, image_t *dst) {
-    int width = src->width < dst->width ? src->width : dst->width;
-    int height = src->height < dst->height ? src->height : dst->height;
-    int r, c;
-
-    assert(width > 0 && height > 0);
-    assert(dst->channels == 3 || dst->channels == 4);
-
-    for (r = 0; r < height; r++) {
-        for (c = 0; c < width; c++) {
-            int src_index = (src->height - 1 - r) * src->width + c;  /* flip */
-            int dst_index = r * dst->width * dst->channels + c * dst->channels;
-            vec4_t src_value = src->buffer[src_index];
-            unsigned char *dst_pixel = &(dst->buffer[dst_index]);
-            dst_pixel[2] = (unsigned char)(src_value.x * 255);  /* red */
-            dst_pixel[1] = (unsigned char)(src_value.y * 255);  /* green */
-            dst_pixel[0] = (unsigned char)(src_value.z * 255);  /* blue */
-        }
-    }
-}
-
-void colorbuffer_blit_rgb(colorbuffer_t *src, image_t *dst) {
-    int width = src->width < dst->width ? src->width : dst->width;
-    int height = src->height < dst->height ? src->height : dst->height;
-    int r, c;
-
-    assert(width > 0 && height > 0);
-    assert(dst->channels == 3 || dst->channels == 4);
-
-    for (r = 0; r < height; r++) {
-        for (c = 0; c < width; c++) {
-            int src_index = (src->height - 1 - r) * src->width + c;  /* flip */
-            int dst_index = r * dst->width * dst->channels + c * dst->channels;
-            vec4_t src_value = src->buffer[src_index];
-            unsigned char *dst_pixel = &(dst->buffer[dst_index]);
-            dst_pixel[0] = (unsigned char)(src_value.x * 255);  /* red */
-            dst_pixel[1] = (unsigned char)(src_value.y * 255);  /* green */
-            dst_pixel[2] = (unsigned char)(src_value.z * 255);  /* blue */
-        }
     }
 }

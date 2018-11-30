@@ -134,7 +134,7 @@ void window_draw_image(window_t *window, image_t *image) {
     int screen = XDefaultScreen(g_display);
     GC gc = XDefaultGC(g_display, screen);
     image_t *surface = window->surface;
-    image_blit_bgr(image, surface);
+    private_blit_bgr_image(image, surface);
     XPutImage(g_display, window->handle, gc, window->ximage,
               0, 0, 0, 0, surface->width, surface->height);
     XFlush(g_display);
@@ -144,7 +144,7 @@ void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
     int screen = XDefaultScreen(g_display);
     GC gc = XDefaultGC(g_display, screen);
     image_t *surface = window->surface;
-    colorbuffer_blit_bgr(buffer, surface);
+    private_blit_bgr_buffer(buffer, surface);
     XPutImage(g_display, window->handle, gc, window->ximage,
               0, 0, 0, 0, surface->width, surface->height);
     XFlush(g_display);

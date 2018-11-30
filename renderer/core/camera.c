@@ -5,11 +5,6 @@
 #include "geometry.h"
 #include "platform.h"
 
-#define PI 3.141592653589793f
-
-static const float TO_RADIANS = PI / 180;
-static const float TO_DEGREES = 180 / PI;
-
 static const vec3_t WORLD_UP = {0, 1, 0};
 
 static const float MOVE_SPEED = 3;

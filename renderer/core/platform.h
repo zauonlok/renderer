@@ -26,4 +26,10 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos);
 /* time related functions */
 double timer_get_time(void);
 
+/* private blit functions */
+void private_blit_bgr_image(image_t *src, image_t *dst);
+void private_blit_rgb_image(image_t *src, image_t *dst);
+void private_blit_bgr_buffer(colorbuffer_t *src, image_t *dst);
+void private_blit_rgb_buffer(colorbuffer_t *src, image_t *dst);
+
 #endif

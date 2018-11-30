@@ -1,6 +1,10 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
+#define PI 3.141592653589793f
+#define TO_RADIANS (PI / 180)
+#define TO_DEGREES (180 / PI)
+
 typedef struct {float x, y;} vec2_t;
 typedef struct {float x, y, z;} vec3_t;
 typedef struct {float x, y, z, w;} vec4_t;
@@ -24,12 +28,15 @@ float vec3_length(vec3_t v);
 vec3_t vec3_normalize(vec3_t v);
 float vec3_dot(vec3_t a, vec3_t b);
 vec3_t vec3_cross(vec3_t a, vec3_t b);
+vec3_t vec3_saturate(vec3_t v);
+vec3_t vec3_modulate(vec3_t a, vec3_t b);
 void vec3_print(const char *name, vec3_t v);
 
 /* vec4 related functions */
 vec4_t vec4_new(float x, float y, float z, float w);
 vec4_t vec4_from_vec3(vec3_t v, float w);
 vec4_t vec4_saturate(vec4_t v);
+vec4_t vec4_modulate(vec4_t a, vec4_t b);
 void vec4_print(const char *name, vec4_t v);
 
 /* mat4 related functions */

@@ -79,6 +79,17 @@ vec3_t vec3_cross(vec3_t a, vec3_t b) {
     return vec3_new(x, y, z);
 }
 
+vec3_t vec3_saturate(vec3_t v) {
+    float x = (v.x < 0) ? 0 : ((v.x > 1) ? 1 : v.x);
+    float y = (v.y < 0) ? 0 : ((v.y > 1) ? 1 : v.y);
+    float z = (v.z < 0) ? 0 : ((v.z > 1) ? 1 : v.z);
+    return vec3_new(x, y, z);
+}
+
+vec3_t vec3_modulate(vec3_t a, vec3_t b) {
+    return vec3_new(a.x * b.x, a.y * b.y, a.z * b.z);
+}
+
 void vec3_print(const char *name, vec3_t v) {
     printf("vec3 %s =\n", name);
     printf("    %12f    %12f    %12f\n", v.x, v.y, v.z);
@@ -105,6 +116,10 @@ vec4_t vec4_saturate(vec4_t v) {
     float z = (v.z < 0) ? 0 : ((v.z > 1) ? 1 : v.z);
     float w = (v.w < 0) ? 0 : ((v.w > 1) ? 1 : v.w);
     return vec4_new(x, y, z, w);
+}
+
+vec4_t vec4_modulate(vec4_t a, vec4_t b) {
+    return vec4_new(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
 }
 
 void vec4_print(const char *name, vec4_t v) {
@@ -281,6 +296,7 @@ mat4_t mat4_translate(float dx, float dy, float dz) {
  */
 mat4_t mat4_scale(float sx, float sy, float sz) {
     mat4_t m = mat4_identity();
+    assert(sx != 0 && sy != 0 && sz != 0);
     m.m[0][0] = sx;
     m.m[1][1] = sy;
     m.m[2][2] = sz;
