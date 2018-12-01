@@ -62,6 +62,7 @@ def process_meshes(zip_file):
         with open(filepath, "w") as f:
             f.write(content)
 
+    utils.print_mesh_materials(gltf)
     utils.print_gltf_transforms(gltf)
 
 
