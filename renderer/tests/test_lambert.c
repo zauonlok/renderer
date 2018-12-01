@@ -7,7 +7,7 @@
 #include "../shaders/lambert_shader.h"
 #include "../tests/test_base.h"
 
-static const vec3_t LIGHT_DIRECTION = {0, 0, -1};
+static const vec3_t LIGHT_DIRECTION = {-1, -1, -1};
 
 static const char *MODEL_NAMES[] = {
     "elf_girl",
