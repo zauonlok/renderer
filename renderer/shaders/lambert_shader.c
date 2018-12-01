@@ -9,15 +9,13 @@ vec4_t lambert_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     lambert_varyings_t *varyings = (lambert_varyings_t*)varyings_;
     lambert_uniforms_t *uniforms = (lambert_uniforms_t*)uniforms_;
 
-    vec4_t local_pos = vec4_from_vec3(attribs->local_pos, 1);
-    vec4_t world_pos = mat4_mul_vec4(uniforms->model_matrix, local_pos);
-    vec4_t clip_pos = mat4_mul_vec4(uniforms->viewproj_matrix, world_pos);
+    vec4_t local_pos = vec4_from_vec3(attribs->position, 1);
+    vec4_t clip_pos = mat4_mul_vec4(uniforms->mvp_matrix, local_pos);
 
     vec4_t local_normal = vec4_from_vec3(attribs->normal, 0);
     mat4_t normal_matrix = uniforms->model_it_matrix;
     vec4_t world_normal = mat4_mul_vec4(normal_matrix, local_normal);
 
-    varyings->world_pos = vec3_from_vec4(world_pos);
     varyings->texcoord = attribs->texcoord;
     varyings->normal = vec3_from_vec4(world_normal);
     return clip_pos;
@@ -127,7 +125,7 @@ void lambert_draw_model(framebuffer_t *framebuffer, model_t *model) {
     for (i = 0; i < num_faces; i++) {
         for (j = 0; j < 3; j++) {
             attribs = (lambert_attribs_t*)program->attribs[j];
-            attribs->local_pos = mesh_get_position(mesh, i, j);
+            attribs->position = mesh_get_position(mesh, i, j);
             attribs->texcoord = mesh_get_texcoord(mesh, i, j);
             attribs->normal = mesh_get_normal(mesh, i, j);
         }

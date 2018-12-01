@@ -1,22 +1,22 @@
-#include "test_lambert.h"
+#include "test_blinn.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../core/apis.h"
-#include "../models/lambert_models.h"
-#include "../shaders/lambert_shader.h"
+#include "../models/blinn_models.h"
+#include "../shaders/blinn_shader.h"
 #include "../tests/test_base.h"
 
 static const vec3_t LIGHT_DIRECTION = {0, 0, -1};
 
 static const char *MODEL_NAMES[] = {
-    "elf_girl",
+    "craftsman",
 };
 
 static model_t **create_models(const char *model_name) {
     model_t **models = NULL;
-    if (strcmp(model_name, "elf_girl") == 0) {
-        models = lambert_elf_girl_models();
+    if (strcmp(model_name, "craftsman") == 0) {
+        models = blinn_craftsman_models();
         printf("using model: %s", model_name);
     } else {
         printf("model not found: %s\n", model_name);
@@ -26,6 +26,7 @@ static model_t **create_models(const char *model_name) {
 
 static void tick_function(camera_t *camera, void *userdata) {
     model_t **models = (model_t**)userdata;
+    vec3_t camera_pos = camera_get_position(camera);
     mat4_t view_matrix = camera_get_view_matrix(camera);
     mat4_t proj_matrix = camera_get_proj_matrix(camera);
     mat4_t viewproj_matrix = mat4_mul_mat4(proj_matrix, view_matrix);
@@ -35,12 +36,13 @@ static void tick_function(camera_t *camera, void *userdata) {
     for (i = 0; i < num_models; i++) {
         model_t *model = models[i];
         mat4_t model_matrix = mat4_mul_mat4(rotation_matrix, model->transform);
-        mat4_t mvp_matrix = mat4_mul_mat4(viewproj_matrix, model_matrix);
         mat4_t model_it_matrix = mat4_inverse_transpose(model_matrix);
-        lambert_uniforms_t *uniforms = lambert_get_uniforms(model);
+        blinn_uniforms_t *uniforms = blinn_get_uniforms(model);
         uniforms->light_dir = LIGHT_DIRECTION;
-        uniforms->mvp_matrix = mvp_matrix;
+        uniforms->camera_pos = camera_pos;
+        uniforms->model_matrix = model_matrix;
         uniforms->model_it_matrix = model_it_matrix;
+        uniforms->viewproj_matrix = viewproj_matrix;
     }
 }
 
@@ -50,11 +52,11 @@ static void draw_function(framebuffer_t *framebuffer, void *userdata) {
     int i;
     for (i = 0; i < num_models; i++) {
         model_t *model = models[i];
-        lambert_draw_model(framebuffer, model);
+        blinn_draw_model(framebuffer, model);
     }
 }
 
-void test_lambert(int argc, char *argv[]) {
+void test_blinn(int argc, char *argv[]) {
     model_t **models;
     if (argc > 2) {
         const char *model_name = argv[2];
@@ -66,6 +68,6 @@ void test_lambert(int argc, char *argv[]) {
     }
     if (models) {
         test_base(tick_function, draw_function, models);
-        lambert_release_models(models);
+        blinn_release_models(models);
     }
 }

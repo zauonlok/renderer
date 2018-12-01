@@ -1,7 +1,7 @@
-"""Preprocess the Elf Girl model
+"""Preprocess the Noble Craftsman model
 
 The model is available for download from
-    https://sketchfab.com/models/52f2e84961b94760b7805c178890d644
+    https://sketchfab.com/models/0e8ff87ffaa24731b2474badebca870d
 
 The Python Imaging Library is required
     pip install pillow
@@ -13,49 +13,44 @@ import zipfile
 from PIL import Image
 import utils
 
-SRC_FILENAME = "elf_girl.zip"
-DST_DIRECTORY = "../assets/elf_girl"
+SRC_FILENAME = "the_noble_craftsman.zip"
+DST_DIRECTORY = "../assets/craftsman"
 
 OBJ_FILENAMES = [
-    "face0.obj",
-    "face1.obj",
-    "body0.obj",
-    "body1.obj",
-    "body2.obj",
-    "hair.obj",
-    "ce.obj",
+    "anvil.obj",
+    "smith.obj",
+    "floor.obj",
+    "shoulderpad0.obj",
+    "hammer.obj",
+    "hotiron.obj",
+    "shoulderpad1.obj",
+    "spark.obj",
 ]
 
 IMG_FILENAMES = {
-    "textures/Rig2lambert23SG_baseColor.png": "face.tga",
-    "textures/lambert22SG_baseColor.png": "body.tga",
-    "textures/lambert25SG_baseColor.png": "hair.tga",
-    "textures/pasted__lambert2SG_baseColor.png": "ce.tga",
+    "textures/02_-_Default_baseColor.png": "smith_basecolor.tga",
+    "textures/02_-_Default_emissive.jpg": "smith_emissive.tga",
+    "textures/03_-_Default_baseColor.png": "floor_basecolor.tga",
+    "textures/08_-_Default_baseColor.png": "spark_basecolor.tga",
+    "textures/08_-_Default_emissive.jpg": "spark_emissive.tga",
+    "textures/09_-_Default_baseColor.jpg": "anvil_basecolor.tga",
 }
-
-
-def fix_texcoords(mesh):
-    texcoords = mesh["texcoords"]
-    for i in range(len(texcoords)):
-        u, v = texcoords[i]
-        # the default wrap parameter is GL_REPEAT, which causes the integer part
-        # of texcoords to be ignored, only the fractional part is used, see
-        # http://docs.gl/gl2/glTexParameter
-        texcoords[i] = [u % 1, v % 1]
 
 
 def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
-    assert len(buffer) == 641280
+    assert len(buffer) == 355248
 
     meshes = []
     for mesh in gltf["meshes"]:
         mesh = utils.load_gltf_mesh(gltf, buffer, mesh)
-        fix_texcoords(mesh)
         meshes.append(mesh)
 
-    assert len(OBJ_FILENAMES) == len(meshes)
+    # there are 20 identical spark models, just save the first one
+    assert len(meshes) == 27
+    assert all([x == meshes[7] for x in meshes[8:]])
+
     for filename, mesh in zip(OBJ_FILENAMES, meshes):
         content = utils.dump_mesh_data(mesh)
         filepath = os.path.join(DST_DIRECTORY, filename)
@@ -66,18 +61,12 @@ def process_meshes(zip_file):
 
 
 def process_images(zip_file):
-    for png_filename, tga_filename in IMG_FILENAMES.items():
-        with zip_file.open(png_filename) as f:
+    for old_filename, tga_filename in IMG_FILENAMES.items():
+        with zip_file.open(old_filename) as f:
             image = Image.open(f)
             bands = image.split()
             assert len(bands) in [3, 4]
             image = Image.merge("RGB", bands[:3])
-            # coordinates origin:
-            #     lower left corner: OpenGL, TGA
-            #     upper left corner: WebGL, glTF
-            # references:
-            #     https://github.com/KhronosGroup/glTF/issues/1021
-            #     https://github.com/KhronosGroup/glTF-WebGL-PBR/issues/16
             image = image.transpose(Image.FLIP_TOP_BOTTOM)
             image = image.resize((512, 512), Image.LANCZOS)
             filepath = os.path.join(DST_DIRECTORY, tga_filename)

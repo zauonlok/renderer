@@ -12,22 +12,20 @@ typedef struct {
 } lambert_material_t;
 
 typedef struct {
-    vec3_t local_pos;
+    vec3_t position;
     vec2_t texcoord;
     vec3_t normal;
 } lambert_attribs_t;
 
 typedef struct {
-    vec3_t world_pos;
     vec2_t texcoord;
     vec3_t normal;
 } lambert_varyings_t;
 
 typedef struct {
     vec3_t light_dir;
-    mat4_t model_matrix;
+    mat4_t mvp_matrix;
     mat4_t model_it_matrix;
-    mat4_t viewproj_matrix;
     /* from material */
     vec4_t ambient_factor;
     vec4_t diffuse_factor;
