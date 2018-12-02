@@ -15,7 +15,7 @@ static model_t **create_models(const char *model_name) {
     model_t **models = NULL;
     if (strcmp(model_name, "mccree") == 0) {
         models = constant_mccree_models();
-        printf("using model: %s", model_name);
+        printf("using model: %s\n", model_name);
     } else {
         printf("model not found: %s\n", model_name);
     }
