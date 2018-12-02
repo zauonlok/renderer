@@ -22,7 +22,7 @@ model_t **lambert_elf_girl_models(void) {
     mat4_t transform;
 
     translation = mat4_translate(2.449f, -2.472f, -20.907f);
-    scale = mat4_scale(0.0457f, 0.0457f, 0.0457f);
+    scale = mat4_scale(0.046f, 0.046f, 0.046f);
     rotation = mat4_rotate_x(-90 * TO_RADIANS);
     transform = mat4_mul_mat4(rotation, mat4_mul_mat4(scale, translation));
 

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import functools
 import math
 import struct
@@ -203,25 +201,6 @@ def dump_mesh_data(mesh_data):
     return dump_data
 
 
-def print_mesh_materials(gltf):
-    materials = {}
-    for index, mesh in enumerate(gltf["meshes"]):
-        assert len(mesh["primitives"]) == 1
-        primitive = mesh["primitives"][0]
-        material = primitive["material"]
-        if material not in materials:
-            materials[material] = [index]
-        else:
-            materials[material].append(index)
-
-    for material in sorted(materials):
-        name = gltf["materials"][material].get("name")
-        print("material: {}, name: {}".format(material, name))
-        meshes = materials[material]
-        for mesh in sorted(meshes):
-            print("    mesh: {}".format(mesh))
-
-
 #
 # glTF node loading
 #
@@ -231,9 +210,10 @@ class Node(object):
 
     def __init__(self):
         self.mesh = None
-        self.transform = None
+        self.local_transform = None
+        self.world_transform = None
         self.parent = None
-        self.children = None
+        self.children = []
 
 
 class Transform(object):
@@ -301,26 +281,7 @@ class Transform(object):
         return Transform(data)
 
 
-def _print_transform_recursively(node):
-    if node.mesh is not None:
-        transform = node.transform
-        parent = node.parent
-        while parent:
-            transform = parent.transform * transform
-            parent = parent.parent
-
-        print("    mat4_t {}_transform = {{{{".format(node.mesh))
-        for i in range(4):
-            m0, m1, m2, m3 = transform.data[i]
-            line = "        {{{:.6f}f, {:.6f}f, {:.6f}f, {:.6f}f}},"
-            print(line.format(m0, m1, m2, m3))
-        print("    }};")
-
-    for child in node.children:
-        _print_transform_recursively(child)
-
-
-def print_gltf_transforms(gltf):
+def load_gltf_nodes(gltf):
     assert gltf["scene"] == 0 and len(gltf["scenes"]) == 1
     assert gltf["scenes"][0]["nodes"] == [0]
     num_nodes = len(gltf["nodes"])
@@ -337,7 +298,7 @@ def print_gltf_transforms(gltf):
             assert "scale" not in node_data
             assert "rotation" not in node_data
             assert "translation" not in node_data
-            this_node.transform = Transform.from_matrix(node_data["matrix"])
+            local_transform = Transform.from_matrix(node_data["matrix"])
         else:
             scale = node_data.get("scale", [1, 1, 1])
             rotation = node_data.get("rotation", [0, 0, 0, 1])
@@ -345,13 +306,38 @@ def print_gltf_transforms(gltf):
             scale = Transform.from_scale(scale)
             rotation = Transform.from_rotation(rotation)
             translation = Transform.from_translation(translation)
-            this_node.transform = translation * rotation * scale
+            local_transform = translation * rotation * scale
+        this_node.local_transform = local_transform
 
-        this_node.children = []
         for j in node_data.get("children", []):
             child = nodes[j]
             assert child.parent is None
             child.parent = this_node
             this_node.children.append(child)
 
-    _print_transform_recursively(nodes[0])
+    for node in nodes:
+        transform = node.local_transform
+        parent = node.parent
+        while parent:
+            transform = parent.local_transform * transform
+            parent = parent.parent
+        node.world_transform = transform
+
+    return nodes
+
+
+def load_gltf_transforms(gltf):
+    nodes = load_gltf_nodes(gltf)
+    nodes = [node for node in nodes if node.mesh is not None]
+
+    transforms = []
+    for node in nodes:
+        found = False
+        for transform in transforms:
+            if transform.data == node.world_transform.data:
+                found = True
+                break
+        if not found:
+            transforms.append(node.world_transform)
+
+    return transforms
