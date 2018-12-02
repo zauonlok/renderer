@@ -105,7 +105,7 @@ model_t **constant_mccree_models(void) {
     translation = mat4_translate(0.111f, -1.479f, 0.033f);
     scale = mat4_scale(0.674f, 0.674f, 0.674f);
     root = mat4_mul_mat4(scale, translation);
-    for (i = 0; i < 44; i++) {
+    for (i = 0; i < 46; i++) {
         int transform_index = mesh2transform[i];
         mat4_t transform = mat4_mul_mat4(root, transforms[transform_index]);
         int material_index = mesh2material[i];
