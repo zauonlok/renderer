@@ -3,3 +3,5 @@ Viewer.exe
 
 *.pyc
 *.zip
+
+.vscode
