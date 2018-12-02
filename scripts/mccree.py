@@ -20,18 +20,14 @@ def print_generated_code(gltf):
     print("    constant_material_t materials[{}] = {{".format(num_materials))
     for material in gltf["materials"]:
         ambient = material["pbrMetallicRoughness"]["baseColorFactor"]
-        emissive = material.get("emissiveFactor", None)
-        emissive = None if emissive == [0, 0, 0] else emissive
         amb_r, amb_g, amb_b, _ = ambient
         amb_pattern = "{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}"
         amb_content = amb_pattern.format(amb_r, amb_g, amb_b)
-        if not emissive:
-            print("        {{{}}},".format(amb_content))
-        else:
-            emi_r, emi_g, emi_b = emissive
-            emi_pattern = "{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}"
-            emi_content = emi_pattern.format(emi_r, emi_g, emi_b)
-            print("        {{{}, {}}},".format(amb_content, emi_content))
+        emissive = material.get("emissiveFactor", [0, 0, 0])
+        emi_r, emi_g, emi_b = emissive
+        emi_pattern = "{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}"
+        emi_content = emi_pattern.format(emi_r, emi_g, emi_b)
+        print("        {{{}, {}, NULL}},".format(amb_content, emi_content))
     print("    };")
 
     mesh2material = []
