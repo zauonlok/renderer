@@ -204,10 +204,22 @@ def dump_mesh_data(mesh_data):
 
 
 def print_mesh_materials(gltf):
+    materials = {}
     for index, mesh in enumerate(gltf["meshes"]):
         assert len(mesh["primitives"]) == 1
         primitive = mesh["primitives"][0]
-        print("mesh {}, material: {}".format(index, primitive["material"]))
+        material = primitive["material"]
+        if material not in materials:
+            materials[material] = [index]
+        else:
+            materials[material].append(index)
+
+    for material in sorted(materials):
+        name = gltf["materials"][material].get("name")
+        print("material: {}, name: {}".format(material, name))
+        meshes = materials[material]
+        for mesh in sorted(meshes):
+            print("    mesh: {}".format(mesh))
 
 
 #
