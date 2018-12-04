@@ -217,20 +217,30 @@ static float calculate_depth(float screen_depths[3], vec3_t weights) {
     return depth0 * weights.x + depth1 * weights.y + depth2 * weights.z;
 }
 
+/*
+ * for perspective-correct interpolation, see
+ * https://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf
+ * https://www.khronos.org/registry/OpenGL/specs/gl/glspec33.core.pdf
+ *
+ * equation 15 in reference 1 (page 2) is a simplified 2d version of
+ * equation 3.9 in reference 2 (page 117) which uses barycentric coordinates
+ */
 static void interp_varyings(void *varyings[4], int sizeof_varyings,
-                            vec3_t weights) {
+                            float recip_w[3], vec3_t weights) {
     int num_floats = sizeof_varyings / sizeof(float);
     float *src0 = (float*)varyings[0];
     float *src1 = (float*)varyings[1];
     float *src2 = (float*)varyings[2];
     float *dst = (float*)varyings[3];
+    float weight0 = recip_w[0] * weights.x;
+    float weight1 = recip_w[1] * weights.y;
+    float weight2 = recip_w[2] * weights.z;
+    float factor = 1 / (weight0 + weight1 + weight2);
     int i;
     assert(num_floats * (int)sizeof(float) == sizeof_varyings);
     for (i = 0; i < num_floats; i++) {
-        dst[i] = 0;
-        dst[i] += src0[i] * weights.x;
-        dst[i] += src1[i] * weights.y;
-        dst[i] += src2[i] * weights.z;
+        float sum = src0[i] * weight0 + src1[i] * weight1 + src2[i] * weight2;
+        dst[i] = sum * factor;
     }
 }
 
@@ -241,6 +251,7 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
     vec3_t ndc_coords[3];
     vec2_t screen_points[3];
     float screen_depths[3];
+    float recip_w[3];
     bbox_t bbox;
     int i, x, y;
 
@@ -277,6 +288,11 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
         screen_depths[i] = screen_coord.z;
     }
 
+    /* calculate reciprocals of w */
+    for (i = 0; i < 3; i++) {
+        recip_w[i] = 1 / clip_coords[i].w;
+    }
+
     /* perform rasterization */
     bbox = find_bounding_box(screen_points, width, height);
     for (x = (int)bbox.min_x; x <= bbox.max_x; x++) {
@@ -290,12 +306,11 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
                 /* early depth testing */
                 if (depth <= depthbuffer->buffer[index]) {
                     colorbuffer_t *colorbuffer = framebuffer->colorbuffer;
-                    int varyings_size = program->sizeof_varyings;
-                    void *varyings = program->varyings[3];
-                    void *uniforms = program->uniforms;
                     vec4_t color;
-                    interp_varyings(program->varyings, varyings_size, weights);
-                    color = program->fragment_shader(varyings, uniforms);
+                    interp_varyings(program->varyings, program->sizeof_varyings,
+                                    recip_w, weights);
+                    color = program->fragment_shader(program->varyings[3],
+                                                     program->uniforms);
                     colorbuffer->buffer[index] = vec4_saturate(color);
                     depthbuffer->buffer[index] = depth;
                 }
