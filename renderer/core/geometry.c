@@ -269,7 +269,8 @@ void mat4_print(const char *name, mat4_t m) {
  *  0  0  1 dz
  *  0  0  0  1
  *
- * reference: http://docs.gl/gl2/glTranslate
+ * reference:
+ *     http://docs.gl/gl2/glTranslate
  */
 mat4_t mat4_translate(float dx, float dy, float dz) {
     mat4_t m = mat4_identity();
@@ -287,7 +288,8 @@ mat4_t mat4_translate(float dx, float dy, float dz) {
  *  0  0 sz  0
  *  0  0  0  1
  *
- * reference: http://docs.gl/gl2/glScale
+ * reference:
+ *     http://docs.gl/gl2/glScale
  */
 mat4_t mat4_scale(float sx, float sy, float sz) {
     mat4_t m = mat4_identity();
@@ -310,7 +312,8 @@ mat4_t mat4_scale(float sx, float sy, float sz) {
  * nx, ny, nz: normalized coordinates of the vector, respectively
  * sin, cos: sin(angle) and cos(angle)
  *
- * reference: http://docs.gl/gl2/glRotate
+ * reference:
+ *     http://docs.gl/gl2/glRotate
  */
 mat4_t mat4_rotate(float angle, float vx, float vy, float vz) {
     vec3_t n = vec3_normalize(vec3_new(vx, vy, vz));
@@ -342,8 +345,9 @@ mat4_t mat4_rotate(float angle, float vx, float vy, float vz) {
  *  0  s  c  0
  *  0  0  0  1
  *
- * reference: http://www.songho.ca/opengl/gl_anglestoaxes.html
- *            https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
+ * reference:
+ *     http://www.songho.ca/opengl/gl_anglestoaxes.html
+ *     https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
  */
 mat4_t mat4_rotate_x(float angle) {
     float c = (float)cos(angle);
@@ -364,8 +368,9 @@ mat4_t mat4_rotate_x(float angle) {
  * -s  0  c  0
  *  0  0  0  1
  *
- * reference: http://www.songho.ca/opengl/gl_anglestoaxes.html
- *            https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
+ * reference:
+ *     http://www.songho.ca/opengl/gl_anglestoaxes.html
+ *     https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
  */
 mat4_t mat4_rotate_y(float angle) {
     float c = (float)cos(angle);
@@ -386,8 +391,9 @@ mat4_t mat4_rotate_y(float angle) {
  *  0  0  1  0
  *  0  0  0  1
  *
- * reference: http://www.songho.ca/opengl/gl_anglestoaxes.html
- *            https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
+ * reference:
+ *     http://www.songho.ca/opengl/gl_anglestoaxes.html
+ *     https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
  */
 mat4_t mat4_rotate_z(float angle) {
     float c = (float)cos(angle);
@@ -414,8 +420,9 @@ mat4_t mat4_rotate_z(float angle) {
  * x_axis: normalize(cross(up,z_axis)), the right vector
  * y_axis: cross(z_axis,x_axis), the up vector
  *
- * reference: http://www.songho.ca/opengl/gl_camera.html
- *            https://github.com/g-truc/glm/blob/master/glm/ext/matrix_transform.inl
+ * reference:
+ *     http://www.songho.ca/opengl/gl_camera.html
+ *     https://github.com/g-truc/glm/blob/master/glm/ext/matrix_transform.inl
  */
 mat4_t mat4_camera(vec3_t eye, vec3_t target, vec3_t up) {
     vec3_t z_axis = vec3_normalize(vec3_sub(eye, target));  /* right-handed */
@@ -466,8 +473,9 @@ mat4_t mat4_camera(vec3_t eye, vec3_t target, vec3_t up) {
  * note that the rotation matrix is orthogonal, which means
  *     transpose(rotation) == inverse(rotation)
  *
- * reference: http://www.songho.ca/opengl/gl_camera.html
- *            https://github.com/g-truc/glm/blob/master/glm/ext/matrix_transform.inl
+ * reference:
+ *     http://www.songho.ca/opengl/gl_camera.html
+ *     https://github.com/g-truc/glm/blob/master/glm/ext/matrix_transform.inl
  */
 mat4_t mat4_lookat(vec3_t eye, vec3_t target, vec3_t up) {
     vec3_t z_axis = vec3_normalize(vec3_sub(eye, target));  /* right-handed */
@@ -504,8 +512,9 @@ mat4_t mat4_lookat(vec3_t eye, vec3_t target, vec3_t up) {
  *       0        0  -2/(f-n)  -(f+n)/(f-n)
  *       0        0         0             1
  *
- * reference: http://docs.gl/gl2/glOrtho
- *            http://www.songho.ca/opengl/gl_projectionmatrix.html
+ * reference:
+ *     http://docs.gl/gl2/glOrtho
+ *     http://www.songho.ca/opengl/gl_projectionmatrix.html
  */
 mat4_t mat4_ortho(float left, float right, float bottom, float top,
                   float near, float far) {
@@ -534,8 +543,9 @@ mat4_t mat4_ortho(float left, float right, float bottom, float top,
  *        0         0  -(f+n)/(f-n)  -2fn/(f-n)
  *        0         0            -1           0
  *
- * reference: http://docs.gl/gl2/glFrustum
- *            http://www.songho.ca/opengl/gl_projectionmatrix.html
+ * reference:
+ *     http://docs.gl/gl2/glFrustum
+ *     http://www.songho.ca/opengl/gl_projectionmatrix.html
  */
 mat4_t mat4_frustum(float left, float right, float bottom, float top,
                     float near, float far) {
@@ -568,8 +578,9 @@ mat4_t mat4_frustum(float left, float right, float bottom, float top,
  * equivalent to mat4_ortho as long as the volume is symmetric
  *     mat4_ortho(-xmag, xmag, -ymag, ymag, near, far);
  *
- * reference: http://www.songho.ca/opengl/gl_projectionmatrix.html
- *            https://github.com/KhronosGroup/glTF/tree/master/specification/2.0
+ * reference:
+ *     http://www.songho.ca/opengl/gl_projectionmatrix.html
+ *     https://github.com/KhronosGroup/glTF/tree/master/specification/2.0
  */
 mat4_t mat4_orthographic(float xmag, float ymag, float near, float far) {
     mat4_t m = mat4_identity();
@@ -603,8 +614,9 @@ mat4_t mat4_orthographic(float xmag, float ymag, float near, float far) {
  *     mat4_frustum(-half_width, half_width, -half_height, half_height,
  *                  near, far);
  *
- * reference: http://www.songho.ca/opengl/gl_projectionmatrix.html
- *            https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
+ * reference:
+ *     http://www.songho.ca/opengl/gl_projectionmatrix.html
+ *     https://github.com/g-truc/glm/blob/master/glm/gtx/rotate_vector.inl
  */
 mat4_t mat4_perspective(float fovy, float aspect, float near, float far) {
     float z_range = far - near;
