@@ -39,9 +39,6 @@ program_t *program_create(
     int sizeof_attribs, int sizeof_varyings, int sizeof_uniforms);
 void program_release(program_t *program);
 
-/* triangle rasterization */
-void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program);
-
 /* texture management */
 texture_t *texture_from_file(const char *filename);
 texture_t *texture_from_image(image_t *image);
@@ -49,5 +46,8 @@ texture_t *texture_from_colorbuffer(colorbuffer_t *colorbuffer);
 texture_t *texture_from_depthbuffer(depthbuffer_t *depthbuffer);
 void texture_release(texture_t *texture);
 vec4_t texture_sample(texture_t *texture, vec2_t texcoord);
+
+/* triangle rasterization */
+void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program);
 
 #endif

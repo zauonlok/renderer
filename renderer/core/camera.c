@@ -39,22 +39,20 @@ struct camera {
 
 /* camera creating/releasing */
 
-static float pitch_from_forward(vec3_t forward_) {
-    vec3_t forward = vec3_normalize(forward_);
+static float pitch_from_forward(vec3_t forward) {
     float angle = (float)acos(forward.y);
     float pitch = PI / 2 - angle;  /* [0, PI] -> [PI/2, -PI/2] */
     return pitch * TO_DEGREES;
 }
 
-static float yaw_from_forward(vec3_t forward_) {
-    vec3_t forward = vec3_normalize(forward_);
+static float yaw_from_forward(vec3_t forward) {
     float yaw = (float)atan2(forward.x, forward.z);
     return yaw * TO_DEGREES;
 }
 
-static vec3_t forward_from_yaw_pitch(float yaw_degrees, float pitch_degrees) {
-    float yaw = yaw_degrees * TO_RADIANS;
-    float pitch = pitch_degrees * TO_RADIANS;
+static vec3_t forward_from_yaw_pitch(float yaw_, float pitch_) {
+    float yaw = yaw_ * TO_RADIANS;
+    float pitch = pitch_ * TO_RADIANS;
     float sin_yaw = (float)sin(yaw);
     float cos_yaw = (float)cos(yaw);
     float sin_pitch = (float)sin(pitch);
@@ -91,20 +89,26 @@ static camopt_t get_default_options(float aspect) {
     return options;
 }
 
-camera_t *camera_create(vec3_t position, vec3_t forward, float aspect) {
-    camera_t *camera = (camera_t*)malloc(sizeof(camera_t));
+camera_t *camera_create(vec3_t position, vec3_t forward_, float aspect) {
+    vec3_t forward;
+    camera_t *camera;
 
-    assert(vec3_length(forward) > 1e-5f);
-    assert(vec3_length(vec3_cross(forward, WORLD_UP)) > 1e-5f);
+    assert(vec3_length(forward_) > 1e-5f);
+    assert(vec3_length(vec3_cross(forward_, WORLD_UP)) > 1e-5f);
     assert(aspect > 0);
+
+    forward = vec3_normalize(forward_);
+    camera = (camera_t*)malloc(sizeof(camera_t));
 
     camera->position  = position;
     camera->yaw       = yaw_from_forward(forward);
     camera->pitch     = pitch_from_forward(forward);
     camera->fovy      = FOVY_DEFAULT;
+
     camera->rotating  = 0;
     camera->last_xpos = 0;
     camera->last_ypos = 0;
+
     camera->options   = get_default_options(aspect);
 
     update_basis_vectors(camera);
@@ -124,6 +128,7 @@ camopt_t camera_get_options(camera_t *camera) {
 
 void camera_set_options(camera_t *camera, camopt_t options) {
     assert(options.pitch_upper >= options.pitch_lower);
+    assert(options.pitch_upper < 90 && options.pitch_lower > -90);
     assert(options.fovy_default >= options.fovy_minimum);
     assert(options.fovy_minimum > 0 && options.aspect > 0);
     assert(options.z_far > options.z_near && options.z_near > 0);

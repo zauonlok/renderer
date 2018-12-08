@@ -103,6 +103,120 @@ void program_release(program_t *program) {
     free(program);
 }
 
+/* texture management */
+
+texture_t *texture_from_file(const char *filename) {
+    image_t *image = image_load(filename);
+    texture_t *texture = texture_from_image(image);
+    image_release(image);
+    return texture;
+}
+
+/*
+ * for texture formats, see
+ * http://docs.gl/gl2/glTexImage2D
+ */
+texture_t *texture_from_image(image_t *image) {
+    int width = image->width;
+    int height = image->height;
+    int channels = image->channels;
+    texture_t *texture;
+    int r, c;
+
+    texture = (texture_t*)malloc(sizeof(texture_t));
+    texture->width  = width;
+    texture->height = height;
+    texture->buffer = (vec4_t*)malloc(sizeof(vec4_t) * width * height);
+
+    for (r = 0; r < height; r++) {
+        for (c = 0; c < width; c++) {
+            int img_index = r * width * channels + c * channels;
+            int tex_index = r * width + c;
+            unsigned char *pixel = &image->buffer[img_index];
+            vec4_t *texel = &texture->buffer[tex_index];
+            if (channels == 1) {         /* GL_LUMINANCE */
+                float luminance = pixel[0] / 255.0f;
+                *texel = vec4_new(luminance, luminance, luminance, 1);
+            } else if (channels == 2) {  /* GL_LUMINANCE_ALPHA */
+                float luminance = pixel[0] / 255.0f;
+                float alpha = pixel[1] / 255.0f;
+                *texel = vec4_new(luminance, luminance, luminance, alpha);
+            } else if (channels == 3) {  /* GL_RGB */
+                float blue = pixel[0] / 255.0f;
+                float green = pixel[1] / 255.0f;
+                float red = pixel[2] / 255.0f;
+                *texel = vec4_new(red, green, blue, 1);
+            } else if (channels == 4) {  /* GL_RGBA */
+                float blue = pixel[0] / 255.0f;
+                float green = pixel[1] / 255.0f;
+                float red = pixel[2] / 255.0f;
+                float alpha = pixel[3] / 255.0f;
+                *texel = vec4_new(red, green, blue, alpha);
+            } else {
+                assert(0);
+            }
+        }
+    }
+
+    return texture;
+}
+
+texture_t *texture_from_colorbuffer(colorbuffer_t *colorbuffer) {
+    int width = colorbuffer->width;
+    int height = colorbuffer->height;
+    int num_elems = width * height;
+    texture_t *texture;
+
+    texture = (texture_t*)malloc(sizeof(texture_t));
+    texture->width  = width;
+    texture->height = height;
+    texture->buffer = (vec4_t*)malloc(sizeof(vec4_t) * num_elems);
+    memcpy(texture->buffer, colorbuffer->buffer, sizeof(vec4_t) * num_elems);
+
+    return texture;
+}
+
+texture_t *texture_from_depthbuffer(depthbuffer_t *depthbuffer) {
+    int width = depthbuffer->width;
+    int height = depthbuffer->height;
+    texture_t *texture;
+    int r, c;
+
+    texture = (texture_t*)malloc(sizeof(texture_t));
+    texture->width  = width;
+    texture->height = height;
+    texture->buffer = (vec4_t*)malloc(sizeof(vec4_t) * width * height);
+
+    for (r = 0; r < height; r++) {
+        for (c = 0; c < width; c++) {
+            int index = r * width + c;
+            float depth = depthbuffer->buffer[index];
+            texture->buffer[index] = vec4_new(depth, depth, depth, 1);
+        }
+    }
+
+    return texture;
+}
+
+void texture_release(texture_t *texture) {
+    free(texture->buffer);
+    free(texture);
+}
+
+vec4_t texture_sample(texture_t *texture, vec2_t texcoord) {
+    float u = texcoord.x;
+    float v = texcoord.y;
+    if (u < 0 || v < 0 || u > 1 || v > 1) {
+        vec4_t blank = {0, 0, 0, 0};
+        return blank;
+    } else {
+        int c = (int)((texture->width - 1) * u + 0.5);
+        int r = (int)((texture->height - 1) * v + 0.5);
+        int index = r * texture->width + c;
+        return texture->buffer[index];
+    }
+}
+
 /* triangle rasterization */
 
 /*
@@ -235,12 +349,12 @@ static void interp_varyings(void *varyings[4], int sizeof_varyings,
     float weight0 = recip_w[0] * weights.x;
     float weight1 = recip_w[1] * weights.y;
     float weight2 = recip_w[2] * weights.z;
-    float factor = 1 / (weight0 + weight1 + weight2);
+    float normalizer = 1 / (weight0 + weight1 + weight2);
     int i;
     assert(num_floats * (int)sizeof(float) == sizeof_varyings);
     for (i = 0; i < num_floats; i++) {
         float sum = src0[i] * weight0 + src1[i] * weight1 + src2[i] * weight2;
-        dst[i] = sum * factor;
+        dst[i] = sum * normalizer;
     }
 }
 
@@ -316,119 +430,5 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
                 }
             }
         }
-    }
-}
-
-/* texture management */
-
-texture_t *texture_from_file(const char *filename) {
-    image_t *image = image_load(filename);
-    texture_t *texture = texture_from_image(image);
-    image_release(image);
-    return texture;
-}
-
-/*
- * for texture formats, see
- * http://docs.gl/gl2/glTexImage2D
- */
-texture_t *texture_from_image(image_t *image) {
-    int width = image->width;
-    int height = image->height;
-    int channels = image->channels;
-    texture_t *texture;
-    int r, c;
-
-    texture = (texture_t*)malloc(sizeof(texture_t));
-    texture->width  = width;
-    texture->height = height;
-    texture->buffer = (vec4_t*)malloc(sizeof(vec4_t) * width * height);
-
-    for (r = 0; r < height; r++) {
-        for (c = 0; c < width; c++) {
-            int img_index = r * width * channels + c * channels;
-            int tex_index = r * width + c;
-            unsigned char *pixel = &image->buffer[img_index];
-            vec4_t *texel = &texture->buffer[tex_index];
-            if (channels == 1) {         /* GL_LUMINANCE */
-                float luminance = pixel[0] / 255.0f;
-                *texel = vec4_new(luminance, luminance, luminance, 1);
-            } else if (channels == 2) {  /* GL_LUMINANCE_ALPHA */
-                float luminance = pixel[0] / 255.0f;
-                float alpha = pixel[1] / 255.0f;
-                *texel = vec4_new(luminance, luminance, luminance, alpha);
-            } else if (channels == 3) {  /* GL_RGB */
-                float blue = pixel[0] / 255.0f;
-                float green = pixel[1] / 255.0f;
-                float red = pixel[2] / 255.0f;
-                *texel = vec4_new(red, green, blue, 1);
-            } else if (channels == 4) {  /* GL_RGBA */
-                float blue = pixel[0] / 255.0f;
-                float green = pixel[1] / 255.0f;
-                float red = pixel[2] / 255.0f;
-                float alpha = pixel[3] / 255.0f;
-                *texel = vec4_new(red, green, blue, alpha);
-            } else {
-                assert(0);
-            }
-        }
-    }
-
-    return texture;
-}
-
-texture_t *texture_from_colorbuffer(colorbuffer_t *colorbuffer) {
-    int width = colorbuffer->width;
-    int height = colorbuffer->height;
-    int num_elems = width * height;
-    texture_t *texture;
-
-    texture = (texture_t*)malloc(sizeof(texture_t));
-    texture->width  = width;
-    texture->height = height;
-    texture->buffer = (vec4_t*)malloc(sizeof(vec4_t) * num_elems);
-    memcpy(texture->buffer, colorbuffer->buffer, sizeof(vec4_t) * num_elems);
-
-    return texture;
-}
-
-texture_t *texture_from_depthbuffer(depthbuffer_t *depthbuffer) {
-    int width = depthbuffer->width;
-    int height = depthbuffer->height;
-    texture_t *texture;
-    int r, c;
-
-    texture = (texture_t*)malloc(sizeof(texture_t));
-    texture->width  = width;
-    texture->height = height;
-    texture->buffer = (vec4_t*)malloc(sizeof(vec4_t) * width * height);
-
-    for (r = 0; r < height; r++) {
-        for (c = 0; c < width; c++) {
-            int index = r * width + c;
-            float depth = depthbuffer->buffer[index];
-            texture->buffer[index] = vec4_new(depth, depth, depth, 1);
-        }
-    }
-
-    return texture;
-}
-
-void texture_release(texture_t *texture) {
-    free(texture->buffer);
-    free(texture);
-}
-
-vec4_t texture_sample(texture_t *texture, vec2_t texcoord) {
-    float u = texcoord.x;
-    float v = texcoord.y;
-    if (u < 0 || v < 0 || u > 1 || v > 1) {
-        vec4_t blank = {0, 0, 0, 0};
-        return blank;
-    } else {
-        int c = (int)((texture->width - 1) * u + 0.5);
-        int r = (int)((texture->height - 1) * v + 0.5);
-        int index = r * texture->width + c;
-        return texture->buffer[index];
     }
 }

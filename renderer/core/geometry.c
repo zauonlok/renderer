@@ -40,10 +40,6 @@ vec3_t vec3_from_vec4(vec4_t v) {
     return vec3_new(v.x, v.y, v.z);
 }
 
-vec3_t vec3_negative(vec3_t v) {
-    return vec3_new(-v.x, -v.y, -v.z);
-}
-
 vec3_t vec3_add(vec3_t a, vec3_t b) {
     return vec3_new(a.x + b.x, a.y + b.y, a.z + b.z);
 }
@@ -140,16 +136,16 @@ mat4_t mat4_identity(void) {
 }
 
 vec4_t mat4_mul_vec4(mat4_t m, vec4_t v) {
-    float result[4];
+    float product[4];
     int i;
     for (i = 0; i < 4; i++) {
-        result[i] = 0;
-        result[i] += m.m[i][0] * v.x;
-        result[i] += m.m[i][1] * v.y;
-        result[i] += m.m[i][2] * v.z;
-        result[i] += m.m[i][3] * v.w;
+        float a = m.m[i][0] * v.x;
+        float b = m.m[i][1] * v.y;
+        float c = m.m[i][2] * v.z;
+        float d = m.m[i][3] * v.w;
+        product[i] = a + b + c + d;
     }
-    return vec4_new(result[0], result[1], result[2], result[3]);
+    return vec4_new(product[0], product[1], product[2], product[3]);
 }
 
 mat4_t mat4_mul_mat4(mat4_t a, mat4_t b) {
@@ -188,34 +184,33 @@ mat4_t mat4_transpose(mat4_t m) {
 
 typedef struct {float m[3][3];} mat3_t;
 
-static float mat3_determinant(const mat3_t *m) {
-    float a = +m->m[0][0] * (m->m[1][1] * m->m[2][2] - m->m[1][2] * m->m[2][1]);
-    float b = -m->m[0][1] * (m->m[1][0] * m->m[2][2] - m->m[1][2] * m->m[2][0]);
-    float c = +m->m[0][2] * (m->m[1][0] * m->m[2][1] - m->m[1][1] * m->m[2][0]);
+static float mat3_determinant(mat3_t m) {
+    float a = +m.m[0][0] * (m.m[1][1] * m.m[2][2] - m.m[1][2] * m.m[2][1]);
+    float b = -m.m[0][1] * (m.m[1][0] * m.m[2][2] - m.m[1][2] * m.m[2][0]);
+    float c = +m.m[0][2] * (m.m[1][0] * m.m[2][1] - m.m[1][1] * m.m[2][0]);
     return a + b + c;
 }
 
-static float mat4_minor(const mat4_t *m, int r, int c) {
+static float mat4_minor(mat4_t m, int r, int c) {
     mat3_t submatrix;
     int i, j;
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
             int row = (i < r) ? i : i + 1;
             int col = (j < c) ? j : j + 1;
-            submatrix.m[i][j] = m->m[row][col];
+            submatrix.m[i][j] = m.m[row][col];
         }
     }
-    return mat3_determinant(&submatrix);
+    return mat3_determinant(submatrix);
 }
 
-static float mat4_cofactor(const mat4_t *m, int r, int c) {
-    float sign, minor;
-    sign = ((r + c) % 2 == 0) ? 1.0f : -1.0f;
-    minor = mat4_minor(m, r, c);
+static float mat4_cofactor(mat4_t m, int r, int c) {
+    float sign = ((r + c) % 2 == 0) ? 1.0f : -1.0f;
+    float minor = mat4_minor(m, r, c);
     return sign * minor;
 }
 
-static mat4_t mat4_adjoint(const mat4_t *m) {
+static mat4_t mat4_adjoint(mat4_t m) {
     mat4_t adjoint;
     int i, j;
     for (i = 0; i < 4; i++) {
@@ -231,7 +226,7 @@ mat4_t mat4_inverse_transpose(mat4_t m) {
     float determinant, inv_determinant;
     int i, j;
 
-    adjoint = mat4_adjoint(&m);
+    adjoint = mat4_adjoint(m);
     /* calculate the determinant */
     determinant = 0;
     for (i = 0; i < 4; i++) {
@@ -464,6 +459,7 @@ mat4_t mat4_camera(vec3_t eye, vec3_t target, vec3_t up) {
  * equivalent to mat4_inverse(mat4_camera(eye,target,up))
  *     camera = translation*rotation
  *     lookat = inverse(camera)
+ *            = inverse(translation*rotation)
  *            = inverse(rotation)*inverse(translation)
  *            = transpose(rotation)*inverse(translation)
  *
@@ -557,6 +553,33 @@ mat4_t mat4_frustum(float left, float right, float bottom, float top,
     m.m[2][3] = -2 * near * far / z_range;
     m.m[3][2] = -1;
     m.m[3][3] = 0;
+    return m;
+}
+
+/*
+ * xmag, ymag: the horizontal and vertical magnifications of the view
+ * near, far: the distances to the near and far depth clipping planes
+ *
+ * 1/xmag       0         0             0
+ *      0  1/ymag         0             0
+ *      0       0  -2/(f-n)  -(f+n)/(f-n)
+ *      0       0         0             1
+ *
+ * equivalent to mat4_ortho as long as the volume is symmetric
+ *     mat4_ortho(-xmag, xmag, -ymag, ymag, near, far);
+ *
+ * reference: http://www.songho.ca/opengl/gl_projectionmatrix.html
+ *            https://github.com/KhronosGroup/glTF/tree/master/specification/2.0
+ */
+mat4_t mat4_orthographic(float xmag, float ymag, float near, float far) {
+    mat4_t m = mat4_identity();
+    float z_range = far - near;
+    assert(xmag > 0 && ymag > 0);
+    assert(near > 0 && far > 0 && z_range > 0);
+    m.m[0][0] = 1 / xmag;
+    m.m[1][1] = 1 / ymag;
+    m.m[2][2] = -2 / z_range;
+    m.m[2][3] = -(near + far) / z_range;
     return m;
 }
 

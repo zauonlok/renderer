@@ -19,7 +19,6 @@ void vec2_print(const char *name, vec2_t v);
 /* vec3 related functions */
 vec3_t vec3_new(float x, float y, float z);
 vec3_t vec3_from_vec4(vec4_t v);
-vec3_t vec3_negative(vec3_t v);
 vec3_t vec3_add(vec3_t a, vec3_t b);
 vec3_t vec3_sub(vec3_t a, vec3_t b);
 vec3_t vec3_mul(vec3_t v, float factor);
@@ -61,6 +60,7 @@ mat4_t mat4_ortho(float left, float right, float bottom, float top,
                   float near, float far);
 mat4_t mat4_frustum(float left, float right, float bottom, float top,
                     float near, float far);
+mat4_t mat4_orthographic(float xmag, float ymag, float near, float far);
 mat4_t mat4_perspective(float fovy, float aspect, float near, float far);
 
 #endif
