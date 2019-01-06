@@ -8,17 +8,24 @@
 
 struct window {
     HWND handle;
+    HDC memory_dc;
+    image_t *surface;
+    /* states */
     int closing;
+    double scroll;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
-    image_t *surface;
-    HDC memory_dc;
 };
 
 /* window related functions */
 
+#ifdef UNICODE
+static const wchar_t *WINDOW_CLASS_NAME = L"Class";
+static const wchar_t *WINDOW_ENTRY_NAME = L"Entry";
+#else
 static const char *WINDOW_CLASS_NAME = "Class";
 static const char *WINDOW_ENTRY_NAME = "Entry";
+#endif
 
 static const char ACTION_UP = 0;
 static const char ACTION_DOWN = 1;
@@ -67,6 +74,10 @@ static LRESULT CALLBACK process_message(HWND hWnd, UINT uMsg,
     } else if (uMsg == WM_RBUTTONUP) {
         window->buttons[BUTTON_R] = ACTION_UP;
         return 0;
+    } else if (uMsg == WM_MOUSEWHEEL) {
+        double offset = GET_WHEEL_DELTA_WPARAM(wParam) / (double)WHEEL_DELTA;
+        window->scroll += offset;
+        return 0;
     } else {
         return DefWindowProc(hWnd, uMsg, wParam, lParam);
     }
@@ -93,10 +104,23 @@ static void register_class(void) {
     }
 }
 
-static HWND create_window(const char *title, int width, int height) {
+static const wchar_t *to_wchar_string(const char *source) {
+    static wchar_t target[128];
+    mbstowcs(target, source, 128);
+    return target;
+}
+
+static HWND create_window(const char *title_, int width, int height) {
     DWORD style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
     RECT rect;
-    HWND window;
+    HWND handle;
+
+#ifdef UNICODE
+    const wchar_t *title = to_wchar_string(title_);
+#else
+    const char *title = title_;
+    (void)to_wchar_string;
+#endif
 
     rect.left   = 0;
     rect.top    = 0;
@@ -106,18 +130,18 @@ static HWND create_window(const char *title, int width, int height) {
     width = rect.right - rect.left;
     height = rect.bottom - rect.top;
 
-    window = CreateWindow(WINDOW_CLASS_NAME, title, style,
+    handle = CreateWindow(WINDOW_CLASS_NAME, title, style,
                           CW_USEDEFAULT, CW_USEDEFAULT, width, height,
                           NULL, NULL, GetModuleHandle(NULL), NULL);
-    assert(window != NULL);
-    return window;
+    assert(handle != NULL);
+    return handle;
 }
 
 /*
  * for memory device context, see
  * https://docs.microsoft.com/en-us/windows/desktop/gdi/memory-device-contexts
  */
-static void create_surface(HWND window, int width, int height,
+static void create_surface(HWND handle, int width, int height,
                            image_t **out_surface, HDC *out_memory_dc) {
     BITMAPINFOHEADER bi_header;
     HDC window_dc;
@@ -127,9 +151,9 @@ static void create_surface(HWND window, int width, int height,
     unsigned char *buffer;
     image_t *surface;
 
-    window_dc = GetDC(window);
+    window_dc = GetDC(handle);
     memory_dc = CreateCompatibleDC(window_dc);
-    ReleaseDC(window, window_dc);
+    ReleaseDC(handle, window_dc);
 
     memset(&bi_header, 0, sizeof(BITMAPINFOHEADER));
     bi_header.biSize        = sizeof(BITMAPINFOHEADER);
@@ -168,9 +192,10 @@ window_t *window_create(const char *title, int width, int height) {
 
     window = (window_t*)malloc(sizeof(window_t));
     window->handle    = handle;
-    window->closing   = 0;
-    window->surface   = surface;
     window->memory_dc = memory_dc;
+    window->surface   = surface;
+    window->closing   = 0;
+    window->scroll    = 0;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
@@ -194,28 +219,27 @@ int window_should_close(window_t *window) {
     return window->closing;
 }
 
-/* render related functions */
+void private_blit_bgr_image(image_t *src, image_t *dst);
+void private_blit_bgr_buffer(colorbuffer_t *src, image_t *dst);
 
-void window_draw_image(window_t *window, image_t *image) {
+static void present_surface(window_t *window) {
     HDC window_dc = GetDC(window->handle);
     HDC memory_dc = window->memory_dc;
     image_t *surface = window->surface;
     int width = surface->width;
     int height = surface->height;
-    private_blit_bgr_image(image, surface);
     BitBlt(window_dc, 0, 0, width, height, memory_dc, 0, 0, SRCCOPY);
     ReleaseDC(window->handle, window_dc);
 }
 
+void window_draw_image(window_t *window, image_t *image) {
+    private_blit_bgr_image(image, window->surface);
+    present_surface(window);
+}
+
 void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
-    HDC window_dc = GetDC(window->handle);
-    HDC memory_dc = window->memory_dc;
-    image_t *surface = window->surface;
-    int width = surface->width;
-    int height = surface->height;
-    private_blit_bgr_buffer(buffer, surface);
-    BitBlt(window_dc, 0, 0, width, height, memory_dc, 0, 0, SRCCOPY);
-    ReleaseDC(window->handle, window_dc);
+    private_blit_bgr_buffer(buffer, window->surface);
+    present_surface(window);
 }
 
 /* input related functions */
@@ -230,15 +254,15 @@ void input_poll_events(void) {
 
 int input_key_pressed(window_t *window, keycode_t key) {
     assert(key >= 0 && key < KEY_NUM);
-    return window->keys[key];
+    return window->keys[key] == ACTION_DOWN;
 }
 
 int input_button_pressed(window_t *window, button_t button) {
     assert(button >= 0 && button < BUTTON_NUM);
-    return window->buttons[button];
+    return window->buttons[button] == ACTION_DOWN;
 }
 
-void input_query_cursor(window_t *window, int *xpos, int *ypos) {
+void input_query_cursor(window_t *window, double *xpos, double *ypos) {
     POINT point;
     GetCursorPos(&point);
     ScreenToClient(window->handle, &point);
@@ -250,9 +274,11 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
     }
 }
 
-/* time related functions */
+double input_query_scroll(window_t *window) {
+    return window->scroll;
+}
 
-double timer_get_time(void) {
+double input_get_time(void) {
     static double period = -1;
     LARGE_INTEGER counter;
     if (period < 0) {

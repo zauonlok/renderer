@@ -12,8 +12,6 @@ typedef enum {BUTTON_L, BUTTON_R, BUTTON_NUM} button_t;
 window_t *window_create(const char *title, int width, int height);
 void window_destroy(window_t *window);
 int window_should_close(window_t *window);
-
-/* render related functions */
 void window_draw_image(window_t *window, image_t *image);
 void window_draw_buffer(window_t *window, colorbuffer_t *buffer);
 
@@ -21,15 +19,8 @@ void window_draw_buffer(window_t *window, colorbuffer_t *buffer);
 void input_poll_events(void);
 int input_key_pressed(window_t *window, keycode_t key);
 int input_button_pressed(window_t *window, button_t button);
-void input_query_cursor(window_t *window, int *xpos, int *ypos);
-
-/* time related functions */
-double timer_get_time(void);
-
-/* private blit functions */
-void private_blit_bgr_image(image_t *src, image_t *dst);
-void private_blit_rgb_image(image_t *src, image_t *dst);
-void private_blit_bgr_buffer(colorbuffer_t *src, image_t *dst);
-void private_blit_rgb_buffer(colorbuffer_t *src, image_t *dst);
+void input_query_cursor(window_t *window, double *xpos, double *ypos);
+double input_query_scroll(window_t *window);
+double input_get_time(void);
 
 #endif

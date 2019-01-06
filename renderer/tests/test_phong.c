@@ -30,7 +30,7 @@ static void tick_function(camera_t *camera, void *userdata) {
     mat4_t view_matrix = camera_get_view_matrix(camera);
     mat4_t proj_matrix = camera_get_proj_matrix(camera);
     mat4_t viewproj_matrix = mat4_mul_mat4(proj_matrix, view_matrix);
-    mat4_t rotation_matrix = mat4_rotate_y((float)timer_get_time());
+    mat4_t rotation_matrix = mat4_rotate_y((float)input_get_time());
     int num_models = darray_size(models);
     int i;
     for (i = 0; i < num_models; i++) {

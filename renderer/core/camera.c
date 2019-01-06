@@ -158,15 +158,15 @@ static void zoom_camera(camera_t *camera, window_t *window, float delta_time) {
 static void rotate_camera(camera_t *camera, window_t *window,
                           float delta_time) {
     if (input_button_pressed(window, BUTTON_L)) {
-        int xpos, ypos;
+        double xpos, ypos;
         input_query_cursor(window, &xpos, &ypos);
         if (camera->rotating) {
             camopt_t options = camera->options;
             float pitch_min = options.pitch_lower;
             float pitch_max = options.pitch_upper;
             float factor = options.rotate_speed * delta_time;
-            int h_offset = xpos - camera->last_xpos;
-            int v_offset = ypos - camera->last_ypos;
+            int h_offset = (int)xpos - camera->last_xpos;
+            int v_offset = (int)ypos - camera->last_ypos;
             camera->yaw += h_offset * factor;
             camera->pitch += v_offset * factor;
             camera->pitch = clamp_float(camera->pitch, pitch_min, pitch_max);
@@ -174,8 +174,8 @@ static void rotate_camera(camera_t *camera, window_t *window,
         } else {
             camera->rotating = 1;
         }
-        camera->last_xpos = xpos;
-        camera->last_ypos = ypos;
+        camera->last_xpos = (int)xpos;
+        camera->last_ypos = (int)ypos;
     } else {
         camera->rotating = 0;
     }

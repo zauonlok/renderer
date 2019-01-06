@@ -11,10 +11,12 @@
 
 struct window {
     NSWindow *handle;
+    image_t *surface;
+    /* states */
     int closing;
+    double scroll;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
-    image_t *surface;
 };
 
 static NSAutoreleasePool *g_autoreleasepool;
@@ -48,7 +50,7 @@ static const char ACTION_UP = 0;
 static const char ACTION_DOWN = 1;
 
 /*
- * for virtual keys, see
+ * for virtual-key codes, see
  * https://stackoverflow.com/questions/3202629/
  */
 static void handle_key_event(window_t *window, int virtual_key, char action) {
@@ -128,6 +130,14 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
 - (void)rightMouseUp:(NSEvent *)event {
     UNUSED(event);
     window->buttons[BUTTON_R] = ACTION_UP;
+}
+
+- (void)scrollWheel:(NSEvent *)event {
+    double offset = [event scrollingDeltaY];
+    if ([event hasPreciseScrollingDeltas]) {
+        offset *= 0.1;
+    }
+    window->scroll += offset;
 }
 
 @end
@@ -218,8 +228,9 @@ window_t *window_create(const char *title, int width, int height) {
     surface = image_create(width, height, 4);
 
     window->handle  = handle;
-    window->closing = 0;
     window->surface = surface;
+    window->closing = 0;
+    window->scroll  = 0;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
@@ -243,6 +254,9 @@ void window_destroy(window_t *window) {
 int window_should_close(window_t *window) {
     return window->closing;
 }
+
+void private_blit_rgb_image(image_t *src, image_t *dst);
+void private_blit_rgb_buffer(colorbuffer_t *src, image_t *dst);
 
 void window_draw_image(window_t *window, image_t *image) {
     private_blit_rgb_image(image, window->surface);
@@ -273,28 +287,30 @@ void input_poll_events(void) {
 
 int input_key_pressed(window_t *window, keycode_t key) {
     assert(key >= 0 && key < KEY_NUM);
-    return window->keys[key];
+    return window->keys[key] == ACTION_DOWN;
 }
 
 int input_button_pressed(window_t *window, button_t button) {
     assert(button >= 0 && button < BUTTON_NUM);
-    return window->buttons[button];
+    return window->buttons[button] == ACTION_DOWN;
 }
 
-void input_query_cursor(window_t *window, int *xpos, int *ypos) {
+void input_query_cursor(window_t *window, double *xpos, double *ypos) {
     NSPoint pos = [window->handle mouseLocationOutsideOfEventStream];
     NSRect rect = [[window->handle contentView] frame];
     if (xpos) {
-        *xpos = (int)(pos.x + 0.5);
+        *xpos = pos.x;
     }
     if (ypos) {
-        *ypos = (int)(rect.size.height - 1 - pos.y + 0.5);
+        *ypos = rect.size.height - 1 - pos.y;
     }
 }
 
-/* time related functions */
+double input_query_scroll(window_t *window) {
+    return window->scroll;
+}
 
-double timer_get_time(void) {
+double input_get_time(void) {
     static double period = -1;
     if (period < 0) {
         mach_timebase_info_data_t info;

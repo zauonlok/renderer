@@ -12,11 +12,13 @@
 
 struct window {
     Window handle;
+    XImage *ximage;
+    image_t *surface;
+    /* states */
     int closing;
+    double scroll;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
-    image_t *surface;
-    XImage *ximage;
 };
 
 /* window related functions */
@@ -38,12 +40,12 @@ static Window create_window(const char *title, int width, int height) {
     unsigned long border = XWhitePixel(g_display, screen);
     unsigned long background = XBlackPixel(g_display, screen);
     Window root = XRootWindow(g_display, screen);
-    Window window;
+    Window handle;
     XSizeHints *size_hints;
     XClassHint *class_hint;
     long mask;
 
-    window = XCreateSimpleWindow(g_display, root, 0, 0, width, height, 0,
+    handle = XCreateSimpleWindow(g_display, root, 0, 0, width, height, 0,
                                  border, background);
 
     /* not resizable */
@@ -53,22 +55,22 @@ static Window create_window(const char *title, int width, int height) {
     size_hints->max_width  = width;
     size_hints->min_height = height;
     size_hints->max_height = height;
-    XSetWMNormalHints(g_display, window, size_hints);
+    XSetWMNormalHints(g_display, handle, size_hints);
     XFree(size_hints);
 
     /* application name */
     class_hint = XAllocClassHint();
     class_hint->res_name  = (char*)title;
     class_hint->res_class = (char*)title;
-    XSetClassHint(g_display, window, class_hint);
+    XSetClassHint(g_display, handle, class_hint);
     XFree(class_hint);
 
     /* event subscription */
     mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask;
-    XSelectInput(g_display, window, mask);
-    XSetWMProtocols(g_display, window, &wm_delete_window, 1);
+    XSelectInput(g_display, handle, mask);
+    XSetWMProtocols(g_display, handle, &wm_delete_window, 1);
 
-    return window;
+    return handle;
 }
 
 static void create_surface(int width, int height,
@@ -76,10 +78,11 @@ static void create_surface(int width, int height,
     int screen = XDefaultScreen(g_display);
     int depth = XDefaultDepth(g_display, screen);
     Visual *visual = XDefaultVisual(g_display, screen);
-    image_t *surface = image_create(width, height, 4);
+    image_t *surface;
     XImage *ximage;
 
     assert(depth == 24 || depth == 32);
+    surface = image_create(width, height, 4);
     ximage = XCreateImage(g_display, visual, depth, ZPixmap, 0,
                           (char*)surface->buffer, width, height, 32, 0);
 
@@ -101,9 +104,10 @@ window_t *window_create(const char *title, int width, int height) {
 
     window = (window_t*)malloc(sizeof(window_t));
     window->handle  = handle;
-    window->closing = 0;
-    window->surface = surface;
     window->ximage  = ximage;
+    window->surface = surface;
+    window->closing = 0;
+    window->scroll  = 0;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
 
@@ -130,24 +134,26 @@ int window_should_close(window_t *window) {
     return window->closing;
 }
 
-void window_draw_image(window_t *window, image_t *image) {
+void private_blit_bgr_image(image_t *src, image_t *dst);
+void private_blit_bgr_buffer(colorbuffer_t *src, image_t *dst);
+
+static void present_surface(window_t *window) {
     int screen = XDefaultScreen(g_display);
     GC gc = XDefaultGC(g_display, screen);
     image_t *surface = window->surface;
-    private_blit_bgr_image(image, surface);
     XPutImage(g_display, window->handle, gc, window->ximage,
               0, 0, 0, 0, surface->width, surface->height);
     XFlush(g_display);
 }
 
+void window_draw_image(window_t *window, image_t *image) {
+    private_blit_bgr_image(image, window->surface);
+    present_surface(window);
+}
+
 void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
-    int screen = XDefaultScreen(g_display);
-    GC gc = XDefaultGC(g_display, screen);
-    image_t *surface = window->surface;
-    private_blit_bgr_buffer(buffer, surface);
-    XPutImage(g_display, window->handle, gc, window->ximage,
-              0, 0, 0, 0, surface->width, surface->height);
-    XFlush(g_display);
+    private_blit_bgr_buffer(buffer, window->surface);
+    present_surface(window);
 }
 
 /* input related functions */
@@ -156,7 +162,8 @@ static const char ACTION_UP = 0;
 static const char ACTION_DOWN = 1;
 
 static void handle_key_event(window_t *window, int virtual_key, char action) {
-    KeySym keysym, *keysyms;
+    KeySym *keysyms;
+    KeySym keysym;
     keycode_t key;
     int dummy;
 
@@ -181,27 +188,39 @@ static void handle_button_event(window_t *window, int button, char action) {
         window->buttons[BUTTON_L] = action;
     } else if (button == Button3) {
         window->buttons[BUTTON_R] = action;
+    } else if (button == Button4) {
+        assert(action == ACTION_DOWN);
+        window->scroll += 1;
+    } else if (button == Button5) {
+        assert(action == ACTION_DOWN);
+        window->scroll -= 1;
+    }
+}
+
+static void handle_client_event(window_t *window) {
+    static Atom wm_protocols = XInternAtom(g_display, "WM_PROTOCOLS", True);
+    static Atom wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
+    if (event->xclient.message_type == wm_protocols) {
+        Atom protocol = event->xclient.data.l[0];
+        if (protocol == wm_delete_window) {
+            window->closing = 1;
+        }
     }
 }
 
 static void process_event(XEvent *event) {
+    Window handle;
     window_t *window;
-    int error = XFindContext(g_display, event->xany.window,
-                             g_context, (XPointer*)&window);
+    int error;
+
+    handle = event->xany.window;
+    error = XFindContext(g_display, handle, g_context, (XPointer*)&window);
     if (error != 0) {
         return;
     }
 
     if (event->type == ClientMessage) {
-        Atom wm_protocols = XInternAtom(g_display, "WM_PROTOCOLS", True);
-        if (event->xclient.message_type == wm_protocols) {
-            Atom protocol = event->xclient.data.l[0];
-            Atom wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW",
-                                                True);
-            if (protocol == wm_delete_window) {
-                window->closing = 1;
-            }
-        }
+        handle_client_event(window);
     } else if (event->type == KeyPress) {
         handle_key_event(window, event->xkey.keycode, ACTION_DOWN);
     } else if (event->type == KeyRelease) {
@@ -226,15 +245,15 @@ void input_poll_events(void) {
 
 int input_key_pressed(window_t *window, keycode_t key) {
     assert(key >= 0 && key < KEY_NUM);
-    return window->keys[key];
+    return window->keys[key] == ACTION_DOWN;
 }
 
 int input_button_pressed(window_t *window, button_t button) {
     assert(button >= 0 && button < BUTTON_NUM);
-    return window->buttons[button];
+    return window->buttons[button] == ACTION_DOWN;
 }
 
-void input_query_cursor(window_t *window, int *xpos, int *ypos) {
+void input_query_cursor(window_t *window, double *xpos, double *ypos) {
     Window root, child;
     int root_x, root_y, window_x, window_y;
     unsigned int mask;
@@ -248,9 +267,11 @@ void input_query_cursor(window_t *window, int *xpos, int *ypos) {
     }
 }
 
-/* time related functions */
+double input_query_scroll(window_t *window) {
+    return window->scroll;
+}
 
-double timer_get_time(void) {
+double input_get_time(void) {
 #if _POSIX_C_SOURCE >= 199309L
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);

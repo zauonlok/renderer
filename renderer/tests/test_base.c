@@ -20,9 +20,9 @@ void test_base(tick_func_t tick_func, draw_func_t draw_func, void *userdata) {
     aspect = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
     camera = camera_create(CAMERA_POSITION, CAMERA_FORWARD, aspect);
 
-    last_time = (float)timer_get_time();
+    last_time = (float)input_get_time();
     while (!window_should_close(window)) {
-        float curr_time = (float)timer_get_time();
+        float curr_time = (float)input_get_time();
         float delta_time = curr_time - last_time;
         last_time = curr_time;
 
