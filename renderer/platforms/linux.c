@@ -197,11 +197,11 @@ static void handle_button_event(window_t *window, int button, char action) {
     }
 }
 
-static void handle_client_event(window_t *window) {
-    static Atom wm_protocols = XInternAtom(g_display, "WM_PROTOCOLS", True);
-    static Atom wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
-    if (event->xclient.message_type == wm_protocols) {
-        Atom protocol = event->xclient.data.l[0];
+static void handle_client_event(window_t *window, XClientMessageEvent event) {
+    Atom wm_protocols = XInternAtom(g_display, "WM_PROTOCOLS", True);
+    Atom wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
+    if (event.message_type == wm_protocols) {
+        Atom protocol = event.data.l[0];
         if (protocol == wm_delete_window) {
             window->closing = 1;
         }
@@ -220,7 +220,7 @@ static void process_event(XEvent *event) {
     }
 
     if (event->type == ClientMessage) {
-        handle_client_event(window);
+        handle_client_event(window, event->xclient);
     } else if (event->type == KeyPress) {
         handle_key_event(window, event->xkey.keycode, ACTION_DOWN);
     } else if (event->type == KeyRelease) {
