@@ -198,8 +198,14 @@ static void handle_button_event(window_t *window, int button, char action) {
 }
 
 static void handle_client_event(window_t *window, XClientMessageEvent event) {
-    Atom wm_protocols = XInternAtom(g_display, "WM_PROTOCOLS", True);
-    Atom wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
+    static Atom wm_protocols = None;
+    static Atom wm_delete_window = None;
+    if (wm_protocols == None) {
+        wm_protocols = XInternAtom(g_display, "WM_PROTOCOLS", True);
+        wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
+        assert(wm_protocols != None);
+        assert(wm_delete_window != None);
+    }
     if (event.message_type == wm_protocols) {
         Atom protocol = event.data.l[0];
         if (protocol == wm_delete_window) {

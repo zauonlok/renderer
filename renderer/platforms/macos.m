@@ -184,12 +184,13 @@ static void create_application(void) {
 
 static NSWindow *create_window(window_t *window, const char *title,
                                int width, int height) {
-    NSRect rect = NSMakeRect(0, 0, width, height);
+    NSRect rect;
     NSUInteger mask;
     NSWindow *handle;
     WindowDelegate *delegate;
     ContentView *view;
 
+    rect = NSMakeRect(0, 0, width, height)
     mask = NSWindowStyleMaskTitled
            | NSWindowStyleMaskClosable
            | NSWindowStyleMaskMiniaturizable;
@@ -217,13 +218,14 @@ static NSWindow *create_window(window_t *window, const char *title,
 }
 
 window_t *window_create(const char *title, int width, int height) {
-    window_t *window = (window_t*)malloc(sizeof(window_t));
+    window_t *window;
     NSWindow * handle;
     image_t *surface;
 
     assert(width > 0 && height > 0);
 
     create_application();
+    window = (window_t*)malloc(sizeof(window_t));
     handle = create_window(window, title, width, height);
     surface = image_create(width, height, 4);
 
