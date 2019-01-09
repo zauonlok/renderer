@@ -193,7 +193,7 @@ static void handle_button_event(window_t *window, int xbutton, char pressed) {
         }
     } else if (xbutton == Button4 || xbutton == Button5) {  /* mouse wheel */
         if (window->callbacks.scroll_callback) {
-            double offset = (button == Button4) ? 1 : -1;
+            double offset = (xbutton == Button4) ? 1 : -1;
             window->callbacks.scroll_callback(window, offset);
         }
     }
