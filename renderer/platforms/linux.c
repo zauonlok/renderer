@@ -15,10 +15,11 @@ struct window {
     XImage *ximage;
     image_t *surface;
     /* states */
-    int closing;
-    double scroll;
+    int should_close;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
+    /* callbacks */
+    callbacks_t callbacks;
 };
 
 /* window related functions */
@@ -103,13 +104,13 @@ window_t *window_create(const char *title, int width, int height) {
     create_surface(width, height, &surface, &ximage);
 
     window = (window_t*)malloc(sizeof(window_t));
-    window->handle  = handle;
-    window->ximage  = ximage;
-    window->surface = surface;
-    window->closing = 0;
-    window->scroll  = 0;
+    window->handle       = handle;
+    window->ximage       = ximage;
+    window->surface      = surface;
+    window->should_close = 0;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
+    memset(&window->callbacks, 0, sizeof(window->callbacks));
 
     XSaveContext(g_display, handle, g_context, (XPointer)window);
     XMapWindow(g_display, handle);
@@ -131,7 +132,7 @@ void window_destroy(window_t *window) {
 }
 
 int window_should_close(window_t *window) {
-    return window->closing;
+    return window->should_close;
 }
 
 void private_blit_bgr_image(image_t *src, image_t *dst);
@@ -158,10 +159,7 @@ void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
 
 /* input related functions */
 
-static const char ACTION_UP = 0;
-static const char ACTION_DOWN = 1;
-
-static void handle_key_event(window_t *window, int virtual_key, char action) {
+static void handle_key_event(window_t *window, int virtual_key, char pressed) {
     KeySym *keysyms;
     KeySym keysym;
     keycode_t key;
@@ -179,21 +177,25 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
         default:   key = KEY_NUM; break;
     }
     if (key < KEY_NUM) {
-        window->keys[key] = action;
+        window->keys[key] = pressed;
+        if (window->callbacks.key_callback) {
+            window->callbacks.key_callback(window, key, pressed);
+        }
     }
 }
 
-static void handle_button_event(window_t *window, int button, char action) {
-    if (button == Button1) {
-        window->buttons[BUTTON_L] = action;
-    } else if (button == Button3) {
-        window->buttons[BUTTON_R] = action;
-    } else if (button == Button4) {
-        assert(action == ACTION_DOWN);
-        window->scroll += 1;
-    } else if (button == Button5) {
-        assert(action == ACTION_DOWN);
-        window->scroll -= 1;
+static void handle_button_event(window_t *window, int xbutton, char pressed) {
+    if (xbutton == Button1 || xbutton == Button3) {         /* mouse button */
+        button_t button = (xbutton == Button1) ? BUTTON_L : BUTTON_R;
+        window->buttons[button] = pressed;
+        if (window->callbacks.button_callback) {
+            window->callbacks.button_callback(window, button, pressed);
+        }
+    } else if (xbutton == Button4 || xbutton == Button5) {  /* mouse wheel */
+        if (window->callbacks.scroll_callback) {
+            double offset = (button == Button4) ? 1 : -1;
+            window->callbacks.scroll_callback(window, offset);
+        }
     }
 }
 
@@ -209,7 +211,7 @@ static void handle_client_event(window_t *window, XClientMessageEvent event) {
     if (event.message_type == wm_protocols) {
         Atom protocol = event.data.l[0];
         if (protocol == wm_delete_window) {
-            window->closing = 1;
+            window->should_close = 1;
         }
     }
 }
@@ -228,13 +230,13 @@ static void process_event(XEvent *event) {
     if (event->type == ClientMessage) {
         handle_client_event(window, event->xclient);
     } else if (event->type == KeyPress) {
-        handle_key_event(window, event->xkey.keycode, ACTION_DOWN);
+        handle_key_event(window, event->xkey.keycode, 1);
     } else if (event->type == KeyRelease) {
-        handle_key_event(window, event->xkey.keycode, ACTION_UP);
+        handle_key_event(window, event->xkey.keycode, 0);
     } else if (event->type == ButtonPress) {
-        handle_button_event(window, event->xbutton.button, ACTION_DOWN);
+        handle_button_event(window, event->xbutton.button, 1);
     } else if (event->type == ButtonRelease) {
-        handle_button_event(window, event->xbutton.button, ACTION_UP);
+        handle_button_event(window, event->xbutton.button, 0);
     }
 }
 
@@ -251,12 +253,12 @@ void input_poll_events(void) {
 
 int input_key_pressed(window_t *window, keycode_t key) {
     assert(key >= 0 && key < KEY_NUM);
-    return window->keys[key] == ACTION_DOWN;
+    return window->keys[key];
 }
 
 int input_button_pressed(window_t *window, button_t button) {
     assert(button >= 0 && button < BUTTON_NUM);
-    return window->buttons[button] == ACTION_DOWN;
+    return window->buttons[button];
 }
 
 void input_query_cursor(window_t *window, double *xpos, double *ypos) {
@@ -273,8 +275,8 @@ void input_query_cursor(window_t *window, double *xpos, double *ypos) {
     }
 }
 
-double input_query_scroll(window_t *window) {
-    return window->scroll;
+void input_set_callbacks(window_t *window, callbacks_t callbacks) {
+    window->callbacks = callbacks;
 }
 
 double input_get_time(void) {

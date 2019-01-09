@@ -11,10 +11,11 @@ struct window {
     HDC memory_dc;
     image_t *surface;
     /* states */
-    int closing;
-    double scroll;
+    int should_close;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
+    /* callbacks */
+    callbacks_t callbacks;
 };
 
 /* window related functions */
@@ -27,14 +28,12 @@ static const char *WINDOW_CLASS_NAME = "Class";
 static const char *WINDOW_ENTRY_NAME = "Entry";
 #endif
 
-static const char ACTION_UP = 0;
-static const char ACTION_DOWN = 1;
-
 /*
  * for virtual-key codes, see
  * https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes
  */
-static void handle_key_message(window_t *window, int virtual_key, char action) {
+static void handle_key_message(window_t *window, int virtual_key,
+                               char pressed) {
     keycode_t key;
     switch (virtual_key) {
         case 'A': key = KEY_A;   break;
@@ -44,7 +43,24 @@ static void handle_key_message(window_t *window, int virtual_key, char action) {
         default:  key = KEY_NUM; break;
     }
     if (key < KEY_NUM) {
-        window->keys[key] = action;
+        window->keys[key] = pressed;
+        if (window->callbacks.key_callback) {
+            window->callbacks.key_callback(window, key, pressed);
+        }
+    }
+}
+
+static void handle_button_message(window_t *window, button_t button,
+                                  char pressed) {
+    window->buttons[button] = pressed;
+    if (window->callbacks.button_callback) {
+        window->callbacks.button_callback(window, button, pressed);
+    }
+}
+
+static void handle_scroll_message(window_t *window, double offset) {
+    if (window->callbacks.scroll_callback) {
+        window->callbacks.scroll_callback(window, offset);
     }
 }
 
@@ -54,29 +70,29 @@ static LRESULT CALLBACK process_message(HWND hWnd, UINT uMsg,
     if (window == NULL) {
         return DefWindowProc(hWnd, uMsg, wParam, lParam);
     } else if (uMsg == WM_CLOSE) {
-        window->closing = 1;
+        window->should_close = 1;
         return 0;
     } else if (uMsg == WM_KEYDOWN) {
-        handle_key_message(window, wParam, ACTION_DOWN);
+        handle_key_message(window, wParam, 1);
         return 0;
     } else if (uMsg == WM_KEYUP) {
-        handle_key_message(window, wParam, ACTION_UP);
+        handle_key_message(window, wParam, 0);
         return 0;
     } else if (uMsg == WM_LBUTTONDOWN) {
-        window->buttons[BUTTON_L] = ACTION_DOWN;
+        handle_button_message(window, BUTTON_L, 1);
         return 0;
     } else if (uMsg == WM_RBUTTONDOWN) {
-        window->buttons[BUTTON_R] = ACTION_DOWN;
+        handle_button_message(window, BUTTON_R, 1);
         return 0;
     } else if (uMsg == WM_LBUTTONUP) {
-        window->buttons[BUTTON_L] = ACTION_UP;
+        handle_button_message(window, BUTTON_L, 0);
         return 0;
     } else if (uMsg == WM_RBUTTONUP) {
-        window->buttons[BUTTON_R] = ACTION_UP;
+        handle_button_message(window, BUTTON_R, 0);
         return 0;
     } else if (uMsg == WM_MOUSEWHEEL) {
         double offset = GET_WHEEL_DELTA_WPARAM(wParam) / (double)WHEEL_DELTA;
-        window->scroll += offset;
+        handle_scroll_message(window, offset);
         return 0;
     } else {
         return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -191,13 +207,13 @@ window_t *window_create(const char *title, int width, int height) {
     create_surface(handle, width, height, &surface, &memory_dc);
 
     window = (window_t*)malloc(sizeof(window_t));
-    window->handle    = handle;
-    window->memory_dc = memory_dc;
-    window->surface   = surface;
-    window->closing   = 0;
-    window->scroll    = 0;
+    window->handle       = handle;
+    window->memory_dc    = memory_dc;
+    window->surface      = surface;
+    window->should_close = 0;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
+    memset(&window->callbacks, 0, sizeof(window->callbacks));
 
     SetProp(handle, WINDOW_ENTRY_NAME, window);
     ShowWindow(handle, SW_SHOW);
@@ -216,7 +232,7 @@ void window_destroy(window_t *window) {
 }
 
 int window_should_close(window_t *window) {
-    return window->closing;
+    return window->should_close;
 }
 
 void private_blit_bgr_image(image_t *src, image_t *dst);
@@ -254,12 +270,12 @@ void input_poll_events(void) {
 
 int input_key_pressed(window_t *window, keycode_t key) {
     assert(key >= 0 && key < KEY_NUM);
-    return window->keys[key] == ACTION_DOWN;
+    return window->keys[key];
 }
 
 int input_button_pressed(window_t *window, button_t button) {
     assert(button >= 0 && button < BUTTON_NUM);
-    return window->buttons[button] == ACTION_DOWN;
+    return window->buttons[button];
 }
 
 void input_query_cursor(window_t *window, double *xpos, double *ypos) {
@@ -274,8 +290,8 @@ void input_query_cursor(window_t *window, double *xpos, double *ypos) {
     }
 }
 
-double input_query_scroll(window_t *window) {
-    return window->scroll;
+void input_set_callbacks(window_t *window, callbacks_t callbacks) {
+    window->callbacks = callbacks;
 }
 
 double input_get_time(void) {

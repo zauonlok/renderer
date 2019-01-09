@@ -13,10 +13,11 @@ struct window {
     NSWindow *handle;
     image_t *surface;
     /* states */
-    int closing;
-    double scroll;
+    int should_close;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
+    /* callbacks */
+    callbacks_t callbacks;
 };
 
 static NSAutoreleasePool *g_autoreleasepool;
@@ -40,20 +41,17 @@ static NSAutoreleasePool *g_autoreleasepool;
 
 - (BOOL)windowShouldClose:(NSWindow *)sender {
     UNUSED(sender);
-    window->closing = 1;
+    window->should_close = 1;
     return NO;
 }
 
 @end
 
-static const char ACTION_UP = 0;
-static const char ACTION_DOWN = 1;
-
 /*
  * for virtual-key codes, see
  * https://stackoverflow.com/questions/3202629/
  */
-static void handle_key_event(window_t *window, int virtual_key, char action) {
+static void handle_key_event(window_t *window, int virtual_key, char pressed) {
     keycode_t key;
     switch (virtual_key) {
         case 0x00: key = KEY_A;   break;
@@ -63,7 +61,24 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
         default:   key = KEY_NUM; break;
     }
     if (key < KEY_NUM) {
-        window->keys[key] = action;
+        window->keys[key] = pressed;
+        if (window->callbacks.key_callback) {
+            window->callbacks.key_callback(window, key, pressed);
+        }
+    }
+}
+
+static void handle_button_event(window_t *window, button_t button,
+                                char pressed) {
+    window->buttons[button] = pressed;
+    if (window->callbacks.button_callback) {
+        window->callbacks.button_callback(window, button, pressed);
+    }
+}
+
+static void handle_scroll_event(window_t *window, double offset) {
+    if (window->callbacks.scroll_callback) {
+        window->callbacks.scroll_callback(window, offset);
     }
 }
 
@@ -105,31 +120,31 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
 }
 
 - (void)keyDown:(NSEvent *)event {
-    handle_key_event(window, [event keyCode], ACTION_DOWN);
+    handle_key_event(window, [event keyCode], 1);
 }
 
 - (void)keyUp:(NSEvent *)event {
-    handle_key_event(window, [event keyCode], ACTION_UP);
+    handle_key_event(window, [event keyCode], 0);
 }
 
 - (void)mouseDown:(NSEvent *)event {
     UNUSED(event);
-    window->buttons[BUTTON_L] = ACTION_DOWN;
+    handle_button_event(window, BUTTON_L, 1);
 }
 
 - (void)mouseUp:(NSEvent *)event {
     UNUSED(event);
-    window->buttons[BUTTON_L] = ACTION_UP;
+    handle_button_event(window, BUTTON_L, 0);
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
     UNUSED(event);
-    window->buttons[BUTTON_R] = ACTION_DOWN;
+    handle_button_event(window, BUTTON_R, 1);
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
     UNUSED(event);
-    window->buttons[BUTTON_R] = ACTION_UP;
+    handle_button_event(window, BUTTON_R, 0);
 }
 
 - (void)scrollWheel:(NSEvent *)event {
@@ -137,7 +152,7 @@ static void handle_key_event(window_t *window, int virtual_key, char action) {
     if ([event hasPreciseScrollingDeltas]) {
         offset *= 0.1;
     }
-    window->scroll += offset;
+    handle_scroll_event(window, offset);
 }
 
 @end
@@ -229,12 +244,12 @@ window_t *window_create(const char *title, int width, int height) {
     handle = create_window(window, title, width, height);
     surface = image_create(width, height, 4);
 
-    window->handle  = handle;
-    window->surface = surface;
-    window->closing = 0;
-    window->scroll  = 0;
+    window->handle       = handle;
+    window->surface      = surface;
+    window->should_close = 0;
     memset(window->keys, 0, sizeof(window->keys));
     memset(window->buttons, 0, sizeof(window->buttons));
+    memset(&window->callbacks, 0, sizeof(window->callbacks));
 
     [handle makeKeyAndOrderFront:nil];
     return window;
@@ -254,7 +269,7 @@ void window_destroy(window_t *window) {
 }
 
 int window_should_close(window_t *window) {
-    return window->closing;
+    return window->should_close;
 }
 
 void private_blit_rgb_image(image_t *src, image_t *dst);
@@ -289,12 +304,12 @@ void input_poll_events(void) {
 
 int input_key_pressed(window_t *window, keycode_t key) {
     assert(key >= 0 && key < KEY_NUM);
-    return window->keys[key] == ACTION_DOWN;
+    return window->keys[key];
 }
 
 int input_button_pressed(window_t *window, button_t button) {
     assert(button >= 0 && button < BUTTON_NUM);
-    return window->buttons[button] == ACTION_DOWN;
+    return window->buttons[button];
 }
 
 void input_query_cursor(window_t *window, double *xpos, double *ypos) {
@@ -308,8 +323,8 @@ void input_query_cursor(window_t *window, double *xpos, double *ypos) {
     }
 }
 
-double input_query_scroll(window_t *window) {
-    return window->scroll;
+void input_set_callbacks(window_t *window, callbacks_t callbacks) {
+    window->callbacks = callbacks;
 }
 
 double input_get_time(void) {
