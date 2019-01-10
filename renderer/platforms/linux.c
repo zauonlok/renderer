@@ -14,12 +14,12 @@ struct window {
     Window handle;
     XImage *ximage;
     image_t *surface;
-    /* states */
+    /* common data */
     int should_close;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
-    /* callbacks */
     callbacks_t callbacks;
+    void *userdata;
 };
 
 /* window related functions */
@@ -36,7 +36,6 @@ static void open_display(void) {
 }
 
 static Window create_window(const char *title, int width, int height) {
-    Atom wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
     int screen = XDefaultScreen(g_display);
     unsigned long border = XWhitePixel(g_display, screen);
     unsigned long background = XBlackPixel(g_display, screen);
@@ -44,6 +43,7 @@ static Window create_window(const char *title, int width, int height) {
     Window handle;
     XSizeHints *size_hints;
     XClassHint *class_hint;
+    Atom wm_delete_window;
     long mask;
 
     handle = XCreateSimpleWindow(g_display, root, 0, 0, width, height, 0,
@@ -69,6 +69,7 @@ static Window create_window(const char *title, int width, int height) {
     /* event subscription */
     mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask;
     XSelectInput(g_display, handle, mask);
+    wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
     XSetWMProtocols(g_display, handle, &wm_delete_window, 1);
 
     return handle;
@@ -104,13 +105,10 @@ window_t *window_create(const char *title, int width, int height) {
     create_surface(width, height, &surface, &ximage);
 
     window = (window_t*)malloc(sizeof(window_t));
-    window->handle       = handle;
-    window->ximage       = ximage;
-    window->surface      = surface;
-    window->should_close = 0;
-    memset(window->keys, 0, sizeof(window->keys));
-    memset(window->buttons, 0, sizeof(window->buttons));
-    memset(&window->callbacks, 0, sizeof(window->callbacks));
+    memset(window, 0, sizeof(window_t));
+    window->handle  = handle;
+    window->ximage  = ximage;
+    window->surface = surface;
 
     XSaveContext(g_display, handle, g_context, (XPointer)window);
     XMapWindow(g_display, handle);
@@ -133,6 +131,14 @@ void window_destroy(window_t *window) {
 
 int window_should_close(window_t *window) {
     return window->should_close;
+}
+
+void window_set_userdata(window_t *window, void *userdata) {
+    window->userdata = userdata;
+}
+
+void *window_get_userdata(window_t *window) {
+    return window->userdata;
 }
 
 void private_blit_bgr_image(image_t *src, image_t *dst);
@@ -279,7 +285,7 @@ void input_set_callbacks(window_t *window, callbacks_t callbacks) {
     window->callbacks = callbacks;
 }
 
-double input_get_time(void) {
+double private_get_raw_time(void) {
 #if _POSIX_C_SOURCE >= 199309L
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);

@@ -17,6 +17,8 @@ typedef struct {
 window_t *window_create(const char *title, int width, int height);
 void window_destroy(window_t *window);
 int window_should_close(window_t *window);
+void window_set_userdata(window_t *window, void *userdata);
+void *window_get_userdata(window_t *window);
 void window_draw_image(window_t *window, image_t *image);
 void window_draw_buffer(window_t *window, colorbuffer_t *buffer);
 

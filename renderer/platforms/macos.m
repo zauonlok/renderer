@@ -12,12 +12,12 @@
 struct window {
     NSWindow *handle;
     image_t *surface;
-    /* states */
+    /* common data */
     int should_close;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
-    /* callbacks */
     callbacks_t callbacks;
+    void *userdata;
 };
 
 static NSAutoreleasePool *g_autoreleasepool;
@@ -234,22 +234,14 @@ static NSWindow *create_window(window_t *window, const char *title,
 
 window_t *window_create(const char *title, int width, int height) {
     window_t *window;
-    NSWindow * handle;
-    image_t *surface;
 
     assert(width > 0 && height > 0);
 
     create_application();
     window = (window_t*)malloc(sizeof(window_t));
-    handle = create_window(window, title, width, height);
-    surface = image_create(width, height, 4);
-
-    window->handle       = handle;
-    window->surface      = surface;
-    window->should_close = 0;
-    memset(window->keys, 0, sizeof(window->keys));
-    memset(window->buttons, 0, sizeof(window->buttons));
-    memset(&window->callbacks, 0, sizeof(window->callbacks));
+    memset(window, 0, sizeof(window_t));
+    window->handle  = create_window(window, title, width, height);
+    window->surface = image_create(width, height, 4);
 
     [handle makeKeyAndOrderFront:nil];
     return window;
@@ -272,17 +264,29 @@ int window_should_close(window_t *window) {
     return window->should_close;
 }
 
+void window_set_userdata(window_t *window, void *userdata) {
+    window->userdata = userdata;
+}
+
+void *window_get_userdata(window_t *window) {
+    return window->userdata;
+}
+
 void private_blit_rgb_image(image_t *src, image_t *dst);
 void private_blit_rgb_buffer(colorbuffer_t *src, image_t *dst);
 
+static void present_surface(window_t *window) {
+    [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
+}
+
 void window_draw_image(window_t *window, image_t *image) {
     private_blit_rgb_image(image, window->surface);
-    [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
+    present_surface(window);
 }
 
 void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
     private_blit_rgb_buffer(buffer, window->surface);
-    [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
+    present_surface(window);
 }
 
 /* input related functions */
@@ -327,7 +331,7 @@ void input_set_callbacks(window_t *window, callbacks_t callbacks) {
     window->callbacks = callbacks;
 }
 
-double input_get_time(void) {
+double private_get_raw_time(void) {
     static double period = -1;
     if (period < 0) {
         mach_timebase_info_data_t info;

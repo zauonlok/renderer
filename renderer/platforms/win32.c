@@ -10,12 +10,12 @@ struct window {
     HWND handle;
     HDC memory_dc;
     image_t *surface;
-    /* states */
+    /* common data */
     int should_close;
     char keys[KEY_NUM];
     char buttons[BUTTON_NUM];
-    /* callbacks */
     callbacks_t callbacks;
+    void *userdata;
 };
 
 /* window related functions */
@@ -207,13 +207,10 @@ window_t *window_create(const char *title, int width, int height) {
     create_surface(handle, width, height, &surface, &memory_dc);
 
     window = (window_t*)malloc(sizeof(window_t));
-    window->handle       = handle;
-    window->memory_dc    = memory_dc;
-    window->surface      = surface;
-    window->should_close = 0;
-    memset(window->keys, 0, sizeof(window->keys));
-    memset(window->buttons, 0, sizeof(window->buttons));
-    memset(&window->callbacks, 0, sizeof(window->callbacks));
+    memset(window, 0, sizeof(window_t));
+    window->handle    = handle;
+    window->memory_dc = memory_dc;
+    window->surface   = surface;
 
     SetProp(handle, WINDOW_ENTRY_NAME, window);
     ShowWindow(handle, SW_SHOW);
@@ -233,6 +230,14 @@ void window_destroy(window_t *window) {
 
 int window_should_close(window_t *window) {
     return window->should_close;
+}
+
+void window_set_userdata(window_t *window, void *userdata) {
+    window->userdata = userdata;
+}
+
+void *window_get_userdata(window_t *window) {
+    return window->userdata;
 }
 
 void private_blit_bgr_image(image_t *src, image_t *dst);
@@ -294,7 +299,7 @@ void input_set_callbacks(window_t *window, callbacks_t callbacks) {
     window->callbacks = callbacks;
 }
 
-double input_get_time(void) {
+double private_get_raw_time(void) {
     static double period = -1;
     LARGE_INTEGER counter;
     if (period < 0) {
