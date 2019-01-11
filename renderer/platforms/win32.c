@@ -240,8 +240,8 @@ void *window_get_userdata(window_t *window) {
     return window->userdata;
 }
 
-void private_blit_bgr_image(image_t *src, image_t *dst);
-void private_blit_bgr_buffer(colorbuffer_t *src, image_t *dst);
+void private_blit_image_bgr(image_t *src, image_t *dst);
+void private_blit_buffer_bgr(colorbuffer_t *src, image_t *dst);
 
 static void present_surface(window_t *window) {
     HDC window_dc = GetDC(window->handle);
@@ -254,12 +254,12 @@ static void present_surface(window_t *window) {
 }
 
 void window_draw_image(window_t *window, image_t *image) {
-    private_blit_bgr_image(image, window->surface);
+    private_blit_image_bgr(image, window->surface);
     present_surface(window);
 }
 
 void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
-    private_blit_bgr_buffer(buffer, window->surface);
+    private_blit_buffer_bgr(buffer, window->surface);
     present_surface(window);
 }
 

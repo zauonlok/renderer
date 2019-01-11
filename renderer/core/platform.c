@@ -13,7 +13,7 @@ static unsigned char *get_pixel_ptr(image_t *image, int row, int col) {
     return &(image->buffer[index]);
 }
 
-void private_blit_bgr_image(image_t *src, image_t *dst) {
+void private_blit_image_bgr(image_t *src, image_t *dst) {
     int width = min_integer(src->width, dst->width);
     int height = min_integer(src->height, dst->height);
     int r, c;
@@ -39,7 +39,7 @@ void private_blit_bgr_image(image_t *src, image_t *dst) {
     }
 }
 
-void private_blit_rgb_image(image_t *src, image_t *dst) {
+void private_blit_image_rgb(image_t *src, image_t *dst) {
     int width = min_integer(src->width, dst->width);
     int height = min_integer(src->height, dst->height);
     int r, c;
@@ -74,7 +74,7 @@ static vec4_t get_buffer_val(colorbuffer_t *buffer, int row, int col) {
     return buffer->buffer[index];
 }
 
-void private_blit_bgr_buffer(colorbuffer_t *src, image_t *dst) {
+void private_blit_buffer_bgr(colorbuffer_t *src, image_t *dst) {
     int width = min_integer(src->width, dst->width);
     int height = min_integer(src->height, dst->height);
     int r, c;
@@ -94,7 +94,7 @@ void private_blit_bgr_buffer(colorbuffer_t *src, image_t *dst) {
     }
 }
 
-void private_blit_rgb_buffer(colorbuffer_t *src, image_t *dst) {
+void private_blit_buffer_rgb(colorbuffer_t *src, image_t *dst) {
     int width = min_integer(src->width, dst->width);
     int height = min_integer(src->height, dst->height);
     int r, c;
