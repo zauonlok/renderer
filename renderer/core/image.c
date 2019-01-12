@@ -239,8 +239,8 @@ image_t *image_resize(image_t *source, int width, int height) {
             int src_c0 = (int)mapped_c;
             int src_r1 = bound_index(src_r0 + 1, source->height);
             int src_c1 = bound_index(src_c0 + 1, source->width);
-            double diff_r = mapped_r - src_r0;
-            double diff_c = mapped_c - src_c0;
+            double delta_r = mapped_r - src_r0;
+            double delta_c = mapped_c - src_c0;
 
             unsigned char *pixel_00 = get_pixel_ptr(source, src_r0, src_c0);
             unsigned char *pixel_01 = get_pixel_ptr(source, src_r0, src_c1);
@@ -252,9 +252,9 @@ image_t *image_resize(image_t *source, int width, int height) {
                 double v01 = pixel_01[k];  /* row 0, col 1 */
                 double v10 = pixel_10[k];  /* row 1, col 0 */
                 double v11 = pixel_11[k];  /* row 1, col 1 */
-                double v0 = linear_interp(v00, v01, diff_c);  /* row 0 */
-                double v1 = linear_interp(v10, v11, diff_c);  /* row 1 */
-                double value = linear_interp(v0, v1, diff_r);
+                double v0 = linear_interp(v00, v01, delta_c);  /* row 0 */
+                double v1 = linear_interp(v10, v11, delta_c);  /* row 1 */
+                double value = linear_interp(v0, v1, delta_r);
                 pixel[k] = (unsigned char)(value + 0.5);
             }
         }
