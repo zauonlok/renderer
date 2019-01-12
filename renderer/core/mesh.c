@@ -1,19 +1,17 @@
 #include "mesh.h"
 #include <assert.h>
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "darray.h"
 #include "geometry.h"
 
-#define UNUSED(x) ((void)(x))
-
 struct mesh {
+    int num_faces;
     vec3_t *positions;
     vec2_t *texcoords;
     vec3_t *normals;
-    int num_faces;
+    vec4_t *tangents;
 };
 
 /* mesh loading/releasing */
@@ -54,10 +52,11 @@ static mesh_t *build_mesh(vec3_t *position_darray, int *position_index_darray,
     assert(darray_size(normal_index_darray) == num_indices);
 
     mesh = (mesh_t*)malloc(sizeof(mesh_t));
+    mesh->num_faces = num_faces;
     mesh->positions = (vec3_t*)malloc(num_indices * sizeof(vec3_t));
     mesh->texcoords = (vec2_t*)malloc(num_indices * sizeof(vec2_t));
     mesh->normals   = (vec3_t*)malloc(num_indices * sizeof(vec3_t));
-    mesh->num_faces = num_faces;
+    mesh->tangents  = NULL;
 
     for (i = 0; i < num_indices; i++) {
         int position_index = position_index_darray[i];
@@ -79,6 +78,47 @@ static mesh_t *build_mesh(vec3_t *position_darray, int *position_index_darray,
     return mesh;
 }
 
+static void load_tangents(mesh_t *mesh, const char *obj_filename) {
+    vec4_t *tangent_darray = NULL;
+    int num_tangents;
+    char tan_filename[256];
+    FILE *file;
+    int i;
+
+    assert(strlen(obj_filename) < 256);
+    strcpy(tan_filename, obj_filename);
+    strcpy(strrchr(tan_filename, '.'), ".tan");
+
+    file = fopen(tan_filename, "rb");
+    if (file == NULL) {
+        return;
+    }
+
+    while (1) {
+        int items;
+        char *line = read_line(file);
+        if (line == NULL) {
+            break;
+        }
+        if (strncmp(line, "tan ", 4) == 0) {  /* tangent */
+            vec4_t tangent;
+            items = sscanf(line + 4, "%f %f %f %f",
+                           &tangent.x, &tangent.y, &tangent.z, &tangent.w);
+            assert(items == 4);
+            darray_push(tangent_darray, tangent);
+        }
+    }
+    fclose(file);
+
+    num_tangents = darray_size(tangent_darray);
+    assert(num_tangents == mesh->num_faces * 3);
+    mesh->tangents = (vec4_t*)malloc(num_tangents * sizeof(vec4_t));
+    for (i = 0; i < num_tangents; i++) {
+        mesh->tangents[i] = tangent_darray[i];
+    }
+    darray_free(tangent_darray);
+}
+
 static mesh_t *load_obj(const char *filename) {
     vec3_t *position_darray = NULL;
     vec2_t *texcoord_darray = NULL;
@@ -92,44 +132,37 @@ static mesh_t *load_obj(const char *filename) {
     file = fopen(filename, "rb");
     assert(file != NULL);
     while (1) {
+        int items;
         char *line = read_line(file);
-        char *curr = line;
         if (line == NULL) {
             break;
         }
-        while (isspace(*curr)) {
-            curr += 1;
-        }
-        if (strncmp(curr, "v ", 2) == 0) {          /* position */
+        if (strncmp(line, "v ", 2) == 0) {          /* position */
             vec3_t position;
-            int items = sscanf(curr + 2, "%f %f %f",
-                               &position.x, &position.y, &position.z);
+            items = sscanf(line + 2, "%f %f %f",
+                           &position.x, &position.y, &position.z);
             assert(items == 3);
-            UNUSED(items);
             darray_push(position_darray, position);
-        } else if (strncmp(curr, "vt ", 3) == 0) {  /* texcoord */
+        } else if (strncmp(line, "vt ", 3) == 0) {  /* texcoord */
             vec2_t texcoord;
-            int items = sscanf(curr + 3, "%f %f", &texcoord.x, &texcoord.y);
+            items = sscanf(line + 3, "%f %f", &texcoord.x, &texcoord.y);
             assert(items == 2);
-            UNUSED(items);
             darray_push(texcoord_darray, texcoord);
-        } else if (strncmp(curr, "vn ", 3) == 0) {  /* normal */
+        } else if (strncmp(line, "vn ", 3) == 0) {  /* normal */
             vec3_t normal;
-            int items = sscanf(curr + 3, "%f %f %f",
-                               &normal.x, &normal.y, &normal.z);
+            items = sscanf(line + 3, "%f %f %f",
+                           &normal.x, &normal.y, &normal.z);
             assert(items == 3);
-            UNUSED(items);
             darray_push(normal_darray, normal);
-        } else if (strncmp(curr, "f ", 2) == 0) {   /* face */
+        } else if (strncmp(line, "f ", 2) == 0) {   /* face */
             int i;
             int position_indices[3], texcoord_indices[3], normal_indices[3];
-            int items = sscanf(
-                curr + 2, "%d/%d/%d %d/%d/%d %d/%d/%d",
+            items = sscanf(
+                line + 2, "%d/%d/%d %d/%d/%d %d/%d/%d",
                 &position_indices[0], &texcoord_indices[0], &normal_indices[0],
                 &position_indices[1], &texcoord_indices[1], &normal_indices[1],
                 &position_indices[2], &texcoord_indices[2], &normal_indices[2]);
             assert(items == 9);
-            UNUSED(items);
             for (i = 0; i < 3; i++) {
                 darray_push(position_index_darray, position_indices[i] - 1);
                 darray_push(texcoord_index_darray, texcoord_indices[i] - 1);
@@ -143,13 +176,14 @@ static mesh_t *load_obj(const char *filename) {
     mesh = build_mesh(position_darray, position_index_darray,
                       texcoord_darray, texcoord_index_darray,
                       normal_darray, normal_index_darray);
-
     darray_free(position_darray);
     darray_free(texcoord_darray);
     darray_free(normal_darray);
     darray_free(position_index_darray);
     darray_free(texcoord_index_darray);
     darray_free(normal_index_darray);
+
+    load_tangents(mesh, filename);
 
     return mesh;
 }
@@ -173,6 +207,7 @@ void mesh_release(mesh_t *mesh) {
     free(mesh->positions);
     free(mesh->texcoords);
     free(mesh->normals);
+    free(mesh->tangents);
     free(mesh);
 }
 
@@ -182,13 +217,11 @@ int mesh_get_num_faces(mesh_t *mesh) {
     return mesh->num_faces;
 }
 
-static void validate_vertex(mesh_t *mesh, int nth_face, int nth_vertex) {
-    assert(nth_face >= 0 && nth_face < mesh->num_faces);
-    assert(nth_vertex >= 0 && nth_vertex < 3);
-    UNUSED(mesh);
-    UNUSED(nth_face);
-    UNUSED(nth_vertex);
-}
+#define validate_vertex(mesh, nth_face, nth_vertex)                         \
+    do {                                                                    \
+        assert((nth_face) >= 0 && (nth_face) < (mesh)->num_faces);          \
+        assert((nth_vertex) >= 0 && (nth_vertex) < 3);                      \
+    } while (0)
 
 vec3_t mesh_get_position(mesh_t *mesh, int nth_face, int nth_position) {
     int index = nth_face * 3 + nth_position;
@@ -206,4 +239,15 @@ vec3_t mesh_get_normal(mesh_t *mesh, int nth_face, int nth_normal) {
     int index = nth_face * 3 + nth_normal;
     validate_vertex(mesh, nth_face, nth_normal);
     return mesh->normals[index];
+}
+
+vec4_t mesh_get_tangent(mesh_t *mesh, int nth_face, int nth_tangent) {
+    if (mesh->tangents != NULL) {
+        int index = nth_face * 3 + nth_tangent;
+        validate_vertex(mesh, nth_face, nth_tangent);
+        return mesh->tangents[index];
+    } else {
+        assert(0);
+        return vec4_new(0, 0, 0, 0);
+    }
 }
