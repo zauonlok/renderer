@@ -205,7 +205,7 @@ static NSWindow *create_window(window_t *window, const char *title,
     WindowDelegate *delegate;
     ContentView *view;
 
-    rect = NSMakeRect(0, 0, width, height)
+    rect = NSMakeRect(0, 0, width, height);
     mask = NSWindowStyleMaskTitled
            | NSWindowStyleMaskClosable
            | NSWindowStyleMaskMiniaturizable;
@@ -243,7 +243,7 @@ window_t *window_create(const char *title, int width, int height) {
     window->handle  = create_window(window, title, width, height);
     window->surface = image_create(width, height, 4);
 
-    [handle makeKeyAndOrderFront:nil];
+    [window->handle makeKeyAndOrderFront:nil];
     return window;
 }
 
