@@ -1,9 +1,10 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
+#define EPSILON 1e-6f
 #define PI 3.141592653589793f
-#define TO_RADIANS (PI / 180)
-#define TO_DEGREES (180 / PI)
+#define TO_RADIANS(degrees) ((PI / 180) * degrees)
+#define TO_DEGREES(radians) ((180 / PI) * radians)
 
 typedef struct {float x, y;} vec2_t;
 typedef struct {float x, y, z;} vec3_t;
@@ -14,6 +15,8 @@ typedef struct {float m[4][4];} mat4_t;
 vec2_t vec2_new(float x, float y);
 vec2_t vec2_add(vec2_t a, vec2_t b);
 vec2_t vec2_sub(vec2_t a, vec2_t b);
+vec2_t vec2_mul(vec2_t v, float factor);
+vec2_t vec2_div(vec2_t v, float divisor);
 void vec2_print(const char *name, vec2_t v);
 
 /* vec3 related functions */

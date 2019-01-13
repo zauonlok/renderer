@@ -2,39 +2,16 @@
 #define CAMERA_H
 
 #include "geometry.h"
-#include "platform.h"
 
 typedef struct camera camera_t;
+typedef struct {vec2_t orbit; vec2_t pan; float dolly;} motion_t;
 
-typedef struct {
-    /* camera speed */
-    float move_speed;
-    float rotate_speed;
-    float zoom_speed;
-    /* pitch range */
-    float pitch_upper;
-    float pitch_lower;
-    /* zoom range */
-    float fovy_default;
-    float fovy_minimum;
-    /* perspective */
-    float aspect;
-    float z_near;
-    float z_far;
-} camopt_t;
-
-/* camera creating/releasing */
-camera_t *camera_create(vec3_t position, vec3_t forward, float aspect);
+/* camera creating/releasing/updating */
+camera_t *camera_create(vec3_t position, vec3_t target, float aspect);
 void camera_release(camera_t *camera);
+void camera_orbit_update(camera_t *camera, motion_t motion);
 
-/* camera customizing */
-camopt_t camera_get_options(camera_t *camera);
-void camera_set_options(camera_t *camera, camopt_t options);
-
-/* input processing */
-void camera_process_input(camera_t *camera, window_t *window, float delta_time);
-
-/* property retrieving */
+/* propety retrieving */
 vec3_t camera_get_position(camera_t *camera);
 vec3_t camera_get_forward(camera_t *camera);
 mat4_t camera_get_view_matrix(camera_t *camera);

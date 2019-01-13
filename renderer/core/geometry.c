@@ -21,6 +21,14 @@ vec2_t vec2_sub(vec2_t a, vec2_t b) {
     return vec2_new(a.x - b.x, a.y - b.y);
 }
 
+vec2_t vec2_mul(vec2_t v, float factor) {
+    return vec2_new(v.x * factor, v.y * factor);
+}
+
+vec2_t vec2_div(vec2_t v, float divisor) {
+    return vec2_mul(v, 1 / divisor);
+}
+
 void vec2_print(const char *name, vec2_t v) {
     printf("vec2 %s =\n", name);
     printf("    %12f    %12f\n", v.x, v.y);
