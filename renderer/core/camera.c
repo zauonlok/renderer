@@ -2,25 +2,17 @@
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
-#include <string.h>
 #include "geometry.h"
-
-static const float INERTIA = 0.9f;
-static const vec3_t WORLD_UP = {0, 1, 0};
 
 static const float NEAR = 0.1f;
 static const float FAR = 1000;
 static const float FOVY = TO_RADIANS(45);
+static const vec3_t WORLD_UP = {0, 1, 0};
 
 struct camera {
     vec3_t position;
     vec3_t target;
     float aspect;
-    /* delta data */
-    float delta_theta;
-    float delta_phi;
-    float delta_dolly;
-    vec2_t delta_pan;
 };
 
 /* camera creating/releasing/updating */
@@ -31,7 +23,6 @@ camera_t *camera_create(vec3_t position, vec3_t target, float aspect) {
     assert(vec3_length(vec3_sub(position, target)) > EPSILON && aspect > 0);
 
     camera = (camera_t*)malloc(sizeof(camera_t));
-    memset(camera, 0, sizeof(camera_t));
     camera->position = position;
     camera->target   = target;
     camera->aspect   = aspect;
@@ -43,16 +34,15 @@ void camera_release(camera_t *camera) {
     free(camera);
 }
 
-static vec3_t calculate_pan(camera_t *camera) {
-    vec3_t offset = vec3_sub(camera->target, camera->position);
-    vec3_t forward = vec3_normalize(offset);
+static vec3_t calculate_pan(vec3_t from_camera, motion_t motion) {
+    vec3_t forward = vec3_normalize(from_camera);
     vec3_t left = vec3_cross(WORLD_UP, forward);
     vec3_t up = vec3_cross(forward, left);
 
-    float distance = vec3_length(offset);
+    float distance = vec3_length(from_camera);
     float factor = distance * (float)tan(FOVY / 2) * 2;
-    vec3_t delta_x = vec3_mul(left, camera->delta_pan.x * factor);
-    vec3_t delta_y = vec3_mul(up, camera->delta_pan.y * factor);
+    vec3_t delta_x = vec3_mul(left, motion.pan.x * factor);
+    vec3_t delta_y = vec3_mul(up, motion.pan.y * factor);
     return vec3_add(delta_x, delta_y);
 }
 
@@ -61,16 +51,16 @@ static double clamp_double(double value, double min, double max) {
     return (value < min) ? min : ((value > max) ? max : value);
 }
 
-static vec3_t calculate_offset(camera_t *camera) {
-    vec3_t offset = vec3_sub(camera->position, camera->target);
-    double radius = vec3_length(offset);       /* distance */
-    double theta = atan2(offset.x, offset.z);  /* azimuth angle */
-    double phi = acos(offset.y / radius);      /* polar angle */
+static vec3_t calculate_offset(vec3_t from_target, motion_t motion) {
+    double radius = vec3_length(from_target);
+    double theta = atan2(from_target.x, from_target.z);  /* azimuth angle */
+    double phi = acos(from_target.y / radius);           /* polar angle */
     double factor = PI * 2;
+    vec3_t offset;
 
-    radius *= pow(0.99, camera->delta_dolly);
-    theta -= camera->delta_theta * factor;
-    phi -= camera->delta_phi * factor;
+    radius *= pow(0.95, motion.dolly);
+    theta -= motion.orbit.x * factor;
+    phi -= motion.orbit.y * factor;
     phi = clamp_double(phi, EPSILON, PI - EPSILON);
 
     offset = vec3_new(
@@ -82,23 +72,12 @@ static vec3_t calculate_offset(camera_t *camera) {
 }
 
 void camera_orbit_update(camera_t *camera, motion_t motion) {
-    vec3_t pan;
-    vec3_t offset;
-
-    camera->delta_theta += motion.orbit.x;
-    camera->delta_phi += motion.orbit.y;
-    camera->delta_dolly += motion.dolly;
-    camera->delta_pan = vec2_add(camera->delta_pan, motion.pan);
-
-    pan = calculate_pan(camera);
-    offset = calculate_offset(camera);
+    vec3_t from_target = vec3_sub(camera->position, camera->target);
+    vec3_t from_camera = vec3_sub(camera->target, camera->position);
+    vec3_t pan = calculate_pan(from_camera, motion);
+    vec3_t offset = calculate_offset(from_target, motion);
     camera->target = vec3_add(camera->target, pan);
     camera->position = vec3_add(camera->target, offset);
-
-    camera->delta_theta *= INERTIA;
-    camera->delta_phi *= INERTIA;
-    camera->delta_dolly *= INERTIA;
-    camera->delta_pan = vec2_mul(camera->delta_pan, INERTIA);
 }
 
 /* propety retrieving */
