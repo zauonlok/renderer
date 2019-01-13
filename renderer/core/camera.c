@@ -5,7 +5,6 @@
 #include <string.h>
 #include "geometry.h"
 
-static const float SPEED = 0.001f;
 static const float INERTIA = 0.9f;
 static const vec3_t WORLD_UP = {0, 1, 0};
 
@@ -45,15 +44,15 @@ void camera_release(camera_t *camera) {
 }
 
 static vec3_t calculate_pan(camera_t *camera) {
-    vec3_t position = camera->position;
-    vec3_t target = camera->target;
-
-    vec3_t forward = vec3_normalize(vec3_sub(target, position));
+    vec3_t offset = vec3_sub(camera->target, camera->position);
+    vec3_t forward = vec3_normalize(offset);
     vec3_t left = vec3_cross(WORLD_UP, forward);
     vec3_t up = vec3_cross(forward, left);
 
-    vec3_t delta_x = vec3_mul(left, camera->delta_pan.x * SPEED);
-    vec3_t delta_y = vec3_mul(up, camera->delta_pan.y * SPEED);
+    float distance = vec3_length(offset);
+    float factor = distance * (float)tan(FOVY / 2) * 2;
+    vec3_t delta_x = vec3_mul(left, camera->delta_pan.x * factor);
+    vec3_t delta_y = vec3_mul(up, camera->delta_pan.y * factor);
     return vec3_add(delta_x, delta_y);
 }
 
@@ -67,10 +66,11 @@ static vec3_t calculate_offset(camera_t *camera) {
     double radius = vec3_length(offset);       /* distance */
     double theta = atan2(offset.x, offset.z);  /* azimuth angle */
     double phi = acos(offset.y / radius);      /* polar angle */
+    double factor = PI * 2;
 
-    radius *= pow(0.95, camera->delta_dolly);
-    theta += camera->delta_theta * SPEED;
-    phi += camera->delta_phi * SPEED;
+    radius *= pow(0.99, camera->delta_dolly);
+    theta -= camera->delta_theta * factor;
+    phi -= camera->delta_phi * factor;
     phi = clamp_double(phi, EPSILON, PI - EPSILON);
 
     offset = vec3_new(
@@ -85,8 +85,8 @@ void camera_orbit_update(camera_t *camera, motion_t motion) {
     vec3_t pan;
     vec3_t offset;
 
-    camera->delta_theta -= motion.orbit.x;
-    camera->delta_phi -= motion.orbit.y;
+    camera->delta_theta += motion.orbit.x;
+    camera->delta_phi += motion.orbit.y;
     camera->delta_dolly += motion.dolly;
     camera->delta_pan = vec2_add(camera->delta_pan, motion.pan);
 
