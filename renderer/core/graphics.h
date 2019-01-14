@@ -5,7 +5,6 @@
 #include "image.h"
 #include "mesh.h"
 
-typedef enum {CLEAR_COLOR = 1, CLEAR_DEPTH = 2} clearmask_t;
 typedef struct {int width, height; vec4_t *buffer;} colorbuffer_t;
 typedef struct {int width, height; float *buffer;} depthbuffer_t;
 typedef struct {
@@ -31,7 +30,8 @@ typedef struct {mat4_t transform; mesh_t *mesh; program_t *program;} model_t;
 /* framebuffer management */
 framebuffer_t *framebuffer_create(int width, int height);
 void framebuffer_release(framebuffer_t *framebuffer);
-void framebuffer_clear(framebuffer_t *framebuffer, clearmask_t clearmask);
+void framebuffer_clear_color(framebuffer_t *framebuffer, vec4_t color);
+void framebuffer_clear_depth(framebuffer_t *framebuffer, float depth);
 
 /* program management */
 program_t *program_create(
@@ -42,8 +42,6 @@ void program_release(program_t *program);
 /* texture management */
 texture_t *texture_from_file(const char *filename);
 texture_t *texture_from_image(image_t *image);
-texture_t *texture_from_colorbuffer(colorbuffer_t *colorbuffer);
-texture_t *texture_from_depthbuffer(depthbuffer_t *depthbuffer);
 void texture_release(texture_t *texture);
 vec4_t texture_sample(texture_t *texture, vec2_t texcoord);
 

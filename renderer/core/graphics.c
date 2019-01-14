@@ -8,6 +8,9 @@
 
 /* framebuffer management */
 
+static const vec4_t DEFAULT_COLOR = {0, 0, 0, 1};
+static const float DEFAULT_DEPTH = 1;
+
 framebuffer_t *framebuffer_create(int width, int height) {
     framebuffer_t *framebuffer;
     colorbuffer_t *colorbuffer;
@@ -32,7 +35,9 @@ framebuffer_t *framebuffer_create(int width, int height) {
     framebuffer->colorbuffer = colorbuffer;
     framebuffer->depthbuffer = depthbuffer;
 
-    framebuffer_clear(framebuffer, CLEAR_COLOR | CLEAR_DEPTH);
+    framebuffer_clear_color(framebuffer, DEFAULT_COLOR);
+    framebuffer_clear_depth(framebuffer, DEFAULT_DEPTH);
+
     return framebuffer;
 }
 
@@ -44,23 +49,21 @@ void framebuffer_release(framebuffer_t *framebuffer) {
     free(framebuffer);
 }
 
-void framebuffer_clear(framebuffer_t *framebuffer, clearmask_t clearmask) {
-    int num_elems = framebuffer->width * framebuffer->height;
+void framebuffer_clear_color(framebuffer_t *framebuffer, vec4_t color) {
+    colorbuffer_t *colorbuffer = framebuffer->colorbuffer;
+    int num_elems = colorbuffer->width * colorbuffer->height;
     int i;
-
-    if (clearmask & CLEAR_COLOR) {
-        colorbuffer_t *colorbuffer = framebuffer->colorbuffer;
-        vec4_t default_color = {0, 0, 0, 1};
-        for (i = 0; i < num_elems; i++) {
-            colorbuffer->buffer[i] = default_color;
-        }
+    for (i = 0; i < num_elems; i++) {
+        colorbuffer->buffer[i] = color;
     }
-    if (clearmask & CLEAR_DEPTH) {
-        depthbuffer_t *depthbuffer = framebuffer->depthbuffer;
-        float default_depth = 1;
-        for (i = 0; i < num_elems; i++) {
-            depthbuffer->buffer[i] = default_depth;
-        }
+}
+
+void framebuffer_clear_depth(framebuffer_t *framebuffer, float depth) {
+    depthbuffer_t *depthbuffer = framebuffer->depthbuffer;
+    int num_elems = depthbuffer->width * depthbuffer->height;
+    int i;
+    for (i = 0; i < num_elems; i++) {
+        depthbuffer->buffer[i] = depth;
     }
 }
 
@@ -112,6 +115,10 @@ texture_t *texture_from_file(const char *filename) {
     return texture;
 }
 
+static float uchar_to_float(unsigned char value) {
+    return value / 255.0f;
+}
+
 /*
  * for texture formats, see
  * http://docs.gl/gl2/glTexImage2D
@@ -135,63 +142,26 @@ texture_t *texture_from_image(image_t *image) {
             unsigned char *pixel = &image->buffer[img_index];
             vec4_t *texel = &texture->buffer[tex_index];
             if (channels == 1) {         /* GL_LUMINANCE */
-                float luminance = pixel[0] / 255.0f;
+                float luminance = uchar_to_float(pixel[0]);
                 *texel = vec4_new(luminance, luminance, luminance, 1);
             } else if (channels == 2) {  /* GL_LUMINANCE_ALPHA */
-                float luminance = pixel[0] / 255.0f;
-                float alpha = pixel[1] / 255.0f;
+                float luminance = uchar_to_float(pixel[0]);
+                float alpha = uchar_to_float(pixel[1]);
                 *texel = vec4_new(luminance, luminance, luminance, alpha);
             } else if (channels == 3) {  /* GL_RGB */
-                float blue = pixel[0] / 255.0f;
-                float green = pixel[1] / 255.0f;
-                float red = pixel[2] / 255.0f;
+                float blue = uchar_to_float(pixel[0]);
+                float green = uchar_to_float(pixel[1]);
+                float red = uchar_to_float(pixel[2]);
                 *texel = vec4_new(red, green, blue, 1);
             } else if (channels == 4) {  /* GL_RGBA */
-                float blue = pixel[0] / 255.0f;
-                float green = pixel[1] / 255.0f;
-                float red = pixel[2] / 255.0f;
-                float alpha = pixel[3] / 255.0f;
+                float blue = uchar_to_float(pixel[0]);
+                float green = uchar_to_float(pixel[1]);
+                float red = uchar_to_float(pixel[2]);
+                float alpha = uchar_to_float(pixel[3]);
                 *texel = vec4_new(red, green, blue, alpha);
             } else {
                 assert(0);
             }
-        }
-    }
-
-    return texture;
-}
-
-texture_t *texture_from_colorbuffer(colorbuffer_t *colorbuffer) {
-    int width = colorbuffer->width;
-    int height = colorbuffer->height;
-    int num_elems = width * height;
-    texture_t *texture;
-
-    texture = (texture_t*)malloc(sizeof(texture_t));
-    texture->width  = width;
-    texture->height = height;
-    texture->buffer = (vec4_t*)malloc(sizeof(vec4_t) * num_elems);
-    memcpy(texture->buffer, colorbuffer->buffer, sizeof(vec4_t) * num_elems);
-
-    return texture;
-}
-
-texture_t *texture_from_depthbuffer(depthbuffer_t *depthbuffer) {
-    int width = depthbuffer->width;
-    int height = depthbuffer->height;
-    texture_t *texture;
-    int r, c;
-
-    texture = (texture_t*)malloc(sizeof(texture_t));
-    texture->width  = width;
-    texture->height = height;
-    texture->buffer = (vec4_t*)malloc(sizeof(vec4_t) * width * height);
-
-    for (r = 0; r < height; r++) {
-        for (c = 0; c < width; c++) {
-            int index = r * width + c;
-            float depth = depthbuffer->buffer[index];
-            texture->buffer[index] = vec4_new(depth, depth, depth, 1);
         }
     }
 
@@ -235,7 +205,7 @@ vec4_t texture_sample(texture_t *texture, vec2_t texcoord) {
  *
  * P in ABC if and only if (s >= 0) && (t >= 0) && (1 - s - t >= 0)
  *
- * note
+ * notice
  *     P = A + s * AB + t * AC
  *       = A + s * (B - A) + t * (C - A)
  *       = (1 - s - t) * A + s * B + t * C
@@ -274,17 +244,17 @@ static float max_float(float a, float b, float c, float upper_bound) {
     return max;
 }
 
-typedef struct {float min_x, min_y, max_x, max_y;} bbox_t;
+typedef struct {vec2_t min; vec2_t max;} bbox_t;
 
 static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
     vec2_t a = abc[0];
     vec2_t b = abc[1];
     vec2_t c = abc[2];
     bbox_t bbox;
-    bbox.min_x = min_float(a.x, b.x, c.x, 0);
-    bbox.min_y = min_float(a.y, b.y, c.y, 0);
-    bbox.max_x = max_float(a.x, b.x, c.x, (float)(width - 1));
-    bbox.max_y = max_float(a.y, b.y, c.y, (float)(height - 1));
+    bbox.min.x = min_float(a.x, b.x, c.x, 0);
+    bbox.min.y = min_float(a.y, b.y, c.y, 0);
+    bbox.max.x = max_float(a.x, b.x, c.x, (float)(width - 1));
+    bbox.max.y = max_float(a.y, b.y, c.y, (float)(height - 1));
     return bbox;
 }
 
@@ -359,6 +329,8 @@ static void interp_varyings(void *varyings[4], int sizeof_varyings,
 }
 
 void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
+    colorbuffer_t *colorbuffer = framebuffer->colorbuffer;
+    depthbuffer_t *depthbuffer = framebuffer->depthbuffer;
     int width = framebuffer->width;
     int height = framebuffer->height;
     vec4_t clip_coords[3];
@@ -409,17 +381,15 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
 
     /* perform rasterization */
     bbox = find_bounding_box(screen_points, width, height);
-    for (x = (int)bbox.min_x; x <= bbox.max_x; x++) {
-        for (y = (int)bbox.min_y; y <= bbox.max_y; y++) {
+    for (x = (int)bbox.min.x; x <= bbox.max.x; x++) {
+        for (y = (int)bbox.min.y; y <= bbox.max.y; y++) {
             vec2_t point = vec2_new((float)x, (float)y);
             vec3_t weights = calculate_weights(screen_points, point);
             if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
-                depthbuffer_t *depthbuffer = framebuffer->depthbuffer;
                 int index = y * width + x;
                 float depth = calculate_depth(screen_depths, weights);
                 /* early depth testing */
                 if (depth <= depthbuffer->buffer[index]) {
-                    colorbuffer_t *colorbuffer = framebuffer->colorbuffer;
                     vec4_t color;
                     interp_varyings(program->varyings, program->sizeof_varyings,
                                     recip_w, weights);

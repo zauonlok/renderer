@@ -9,6 +9,9 @@ static const int WINDOW_HEIGHT = 600;
 static const vec3_t CAMERA_POSITION = {0, 0, 3.5};
 static const vec3_t CAMERA_TARGET = {0, 0, 0};
 
+static const vec4_t CLEAR_COLOR = {0, 0, 0, 1};
+static const float CLEAR_DEPTH = 1;
+
 typedef struct {int orbiting, panning; vec2_t orbit_pos, pan_pos;} record_t;
 typedef struct {record_t record; motion_t motion;} context_t;
 
@@ -100,7 +103,8 @@ void test_base(tick_func_t tick_func, draw_func_t draw_func, void *userdata) {
         update_camera(window, camera, &context);
         tick_func(camera, userdata);
 
-        framebuffer_clear(framebuffer, CLEAR_COLOR | CLEAR_DEPTH);
+        framebuffer_clear_color(framebuffer, CLEAR_COLOR);
+        framebuffer_clear_depth(framebuffer, CLEAR_DEPTH);
         draw_func(framebuffer, userdata);
         window_draw_buffer(window, framebuffer->colorbuffer);
 
