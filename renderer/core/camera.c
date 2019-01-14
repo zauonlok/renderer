@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "geometry.h"
+#include "transform.h"
 
 static const float NEAR = 0.1f;
 static const float FAR = 1000;

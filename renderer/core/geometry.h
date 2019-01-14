@@ -9,6 +9,7 @@
 typedef struct {float x, y;} vec2_t;
 typedef struct {float x, y, z;} vec3_t;
 typedef struct {float x, y, z, w;} vec4_t;
+typedef struct {float m[3][3];} mat3_t;
 typedef struct {float m[4][4];} mat4_t;
 
 /* vec2 related functions */
@@ -41,6 +42,15 @@ vec4_t vec4_saturate(vec4_t v);
 vec4_t vec4_modulate(vec4_t a, vec4_t b);
 void vec4_print(const char *name, vec4_t v);
 
+/* mat3 related functions */
+mat3_t mat3_identity(void);
+vec3_t mat3_mul_vec3(mat3_t m, vec3_t v);
+mat3_t mat3_mul_mat3(mat3_t a, mat3_t b);
+mat3_t mat3_inverse(mat3_t m);
+mat3_t mat3_transpose(mat3_t m);
+mat3_t mat3_inverse_transpose(mat3_t m);
+void mat3_print(const char *name, mat3_t m);
+
 /* mat4 related functions */
 mat4_t mat4_identity(void);
 vec4_t mat4_mul_vec4(mat4_t m, vec4_t v);
@@ -49,21 +59,5 @@ mat4_t mat4_inverse(mat4_t m);
 mat4_t mat4_transpose(mat4_t m);
 mat4_t mat4_inverse_transpose(mat4_t m);
 void mat4_print(const char *name, mat4_t m);
-
-/* transformation matrices */
-mat4_t mat4_translate(float dx, float dy, float dz);
-mat4_t mat4_scale(float sx, float sy, float sz);
-mat4_t mat4_rotate(float angle, float vx, float vy, float vz);
-mat4_t mat4_rotate_x(float angle);
-mat4_t mat4_rotate_y(float angle);
-mat4_t mat4_rotate_z(float angle);
-mat4_t mat4_camera(vec3_t eye, vec3_t target, vec3_t up);
-mat4_t mat4_lookat(vec3_t eye, vec3_t target, vec3_t up);
-mat4_t mat4_ortho(float left, float right, float bottom, float top,
-                  float near, float far);
-mat4_t mat4_frustum(float left, float right, float bottom, float top,
-                    float near, float far);
-mat4_t mat4_orthographic(float xmag, float ymag, float near, float far);
-mat4_t mat4_perspective(float fovy, float aspect, float near, float far);
 
 #endif

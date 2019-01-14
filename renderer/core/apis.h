@@ -8,5 +8,6 @@
 #include "image.h"
 #include "mesh.h"
 #include "platform.h"
+#include "transform.h"
 
 #endif
