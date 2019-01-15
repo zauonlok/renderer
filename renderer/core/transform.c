@@ -1,6 +1,6 @@
 #include "transform.h"
 #include <assert.h>
-#include "math.h"
+#include <math.h>
 #include "geometry.h"
 
 /*
@@ -11,7 +11,7 @@
  *  0  0  1 tz
  *  0  0  0  1
  *
- * see: http://docs.gl/gl2/glTranslate
+ * see http://docs.gl/gl2/glTranslate
  */
 mat4_t mat4_translate(float tx, float ty, float tz) {
     mat4_t m = mat4_identity();
@@ -29,7 +29,7 @@ mat4_t mat4_translate(float tx, float ty, float tz) {
  *  0  0 sz  0
  *  0  0  0  1
  *
- * see: http://docs.gl/gl2/glScale
+ * see http://docs.gl/gl2/glScale
  */
 mat4_t mat4_scale(float sx, float sy, float sz) {
     mat4_t m = mat4_identity();
@@ -52,7 +52,7 @@ mat4_t mat4_scale(float sx, float sy, float sz) {
  * nx, ny, nz: the normalized coordinates of the vector, respectively
  * s, c: sin(angle) and cos(angle)
  *
- * see: http://docs.gl/gl2/glRotate
+ * see http://docs.gl/gl2/glRotate
  */
 mat4_t mat4_rotate(float angle, float vx, float vy, float vz) {
     vec3_t n = vec3_normalize(vec3_new(vx, vy, vz));
@@ -83,7 +83,7 @@ mat4_t mat4_rotate(float angle, float vx, float vy, float vz) {
  *  0  s  c  0
  *  0  0  0  1
  *
- * see: http://www.songho.ca/opengl/gl_anglestoaxes.html
+ * see http://www.songho.ca/opengl/gl_anglestoaxes.html
  */
 mat4_t mat4_rotate_x(float angle) {
     float c = (float)cos(angle);
@@ -104,7 +104,7 @@ mat4_t mat4_rotate_x(float angle) {
  * -s  0  c  0
  *  0  0  0  1
  *
- * see: http://www.songho.ca/opengl/gl_anglestoaxes.html
+ * see http://www.songho.ca/opengl/gl_anglestoaxes.html
  */
 mat4_t mat4_rotate_y(float angle) {
     float c = (float)cos(angle);
@@ -125,7 +125,7 @@ mat4_t mat4_rotate_y(float angle) {
  *  0  0  1  0
  *  0  0  0  1
  *
- * see: http://www.songho.ca/opengl/gl_anglestoaxes.html
+ * see http://www.songho.ca/opengl/gl_anglestoaxes.html
  */
 mat4_t mat4_rotate_z(float angle) {
     float c = (float)cos(angle);
@@ -148,11 +148,11 @@ mat4_t mat4_rotate_z(float angle) {
  * z_axis.x  z_axis.y  z_axis.z  -dot(z_axis,eye)
  *        0         0         0                 1
  *
- * z_axis: normalize(eye-target), the negative front vector
+ * z_axis: normalize(eye-target), the backward vector
  * x_axis: normalize(cross(up,z_axis)), the right vector
  * y_axis: cross(z_axis,x_axis), the up vector
  *
- * see: http://www.songho.ca/opengl/gl_camera.html
+ * see http://www.songho.ca/opengl/gl_camera.html
  */
 mat4_t mat4_lookat(vec3_t eye, vec3_t target, vec3_t up) {
     vec3_t z_axis = vec3_normalize(vec3_sub(eye, target));
@@ -189,7 +189,7 @@ mat4_t mat4_lookat(vec3_t eye, vec3_t target, vec3_t up) {
  *       0        0  -2/(f-n)  -(f+n)/(f-n)
  *       0        0         0             1
  *
- * see: http://docs.gl/gl2/glOrtho
+ * see http://docs.gl/gl2/glOrtho
  */
 mat4_t mat4_ortho(float left, float right, float bottom, float top,
                   float near, float far) {
@@ -218,7 +218,7 @@ mat4_t mat4_ortho(float left, float right, float bottom, float top,
  *        0         0  -(f+n)/(f-n)  -2fn/(f-n)
  *        0         0            -1           0
  *
- * see: http://docs.gl/gl2/glFrustum
+ * see http://docs.gl/gl2/glFrustum
  */
 mat4_t mat4_frustum(float left, float right, float bottom, float top,
                     float near, float far) {
@@ -254,7 +254,7 @@ mat4_t mat4_frustum(float left, float right, float bottom, float top,
  *     float bottom = -top;
  *     mat4_ortho(left, right, bottom, top, near, far);
  *
- * see: http://www.songho.ca/opengl/gl_projectionmatrix.html
+ * see http://www.songho.ca/opengl/gl_projectionmatrix.html
  */
 mat4_t mat4_orthographic(float right, float top, float near, float far) {
     float z_range = far - near;
@@ -283,7 +283,7 @@ mat4_t mat4_orthographic(float right, float top, float near, float far) {
  *     float half_w = half_h * aspect;
  *     mat4_frustum(-half_w, half_w, -half_h, half_h, near, far);
  *
- * see: http://www.songho.ca/opengl/gl_projectionmatrix.html
+ * see http://www.songho.ca/opengl/gl_projectionmatrix.html
  */
 mat4_t mat4_perspective(float fovy, float aspect, float near, float far) {
     float z_range = far - near;

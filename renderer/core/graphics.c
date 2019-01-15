@@ -227,37 +227,6 @@ static vec3_t calculate_weights(vec2_t abc[3], vec2_t p) {
     vec3_t weights = vec3_new(1 - s - t, s, t);
     return weights;
 }
-
-static float min_float(float a, float b, float c, float lower_bound) {
-    float min = a;
-    min = (b < min) ? b : min;
-    min = (c < min) ? c : min;
-    min = (min < lower_bound) ? lower_bound : min;
-    return min;
-}
-
-static float max_float(float a, float b, float c, float upper_bound) {
-    float max = a;
-    max = (b > max) ? b : max;
-    max = (c > max) ? c : max;
-    max = (max > upper_bound) ? upper_bound : max;
-    return max;
-}
-
-typedef struct {vec2_t min; vec2_t max;} bbox_t;
-
-static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
-    vec2_t a = abc[0];
-    vec2_t b = abc[1];
-    vec2_t c = abc[2];
-    bbox_t bbox;
-    bbox.min.x = min_float(a.x, b.x, c.x, 0);
-    bbox.min.y = min_float(a.y, b.y, c.y, 0);
-    bbox.max.x = max_float(a.x, b.x, c.x, (float)(width - 1));
-    bbox.max.y = max_float(a.y, b.y, c.y, (float)(height - 1));
-    return bbox;
-}
-
 /*
  * for triangle clipping, see
  * https://www.gamasutra.com/view/news/168577/
@@ -294,6 +263,37 @@ static vec3_t viewport_transform(int width_, int height_, vec3_t ndc_coord) {
     return vec3_new(x, y, z);
 }
 
+static float min_float(float a, float b, float c, float lower_bound) {
+    float min = a;
+    min = (b < min) ? b : min;
+    min = (c < min) ? c : min;
+    min = (min < lower_bound) ? lower_bound : min;
+    return min;
+}
+
+static float max_float(float a, float b, float c, float upper_bound) {
+    float max = a;
+    max = (b > max) ? b : max;
+    max = (c > max) ? c : max;
+    max = (max > upper_bound) ? upper_bound : max;
+    return max;
+}
+
+typedef struct {vec2_t min; vec2_t max;} bbox_t;
+
+static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
+    vec2_t a = abc[0];
+    vec2_t b = abc[1];
+    vec2_t c = abc[2];
+    bbox_t bbox;
+    bbox.min.x = min_float(a.x, b.x, c.x, 0);
+    bbox.min.y = min_float(a.y, b.y, c.y, 0);
+    bbox.max.x = max_float(a.x, b.x, c.x, (float)(width - 1));
+    bbox.max.y = max_float(a.y, b.y, c.y, (float)(height - 1));
+    return bbox;
+}
+
+
 static float calculate_depth(float screen_depths[3], vec3_t weights) {
     float depth0 = screen_depths[0];
     float depth1 = screen_depths[1];
@@ -309,8 +309,8 @@ static float calculate_depth(float screen_depths[3], vec3_t weights) {
  * equation 15 in reference 1 (page 2) is a simplified 2d version of
  * equation 3.9 in reference 2 (page 117) which uses barycentric coordinates
  */
-static void interp_varyings(void *varyings[4], int sizeof_varyings,
-                            float recip_w[3], vec3_t weights) {
+static void interpolate_varyings(void *varyings[4], int sizeof_varyings,
+                                 float recip_w[3], vec3_t weights) {
     int num_floats = sizeof_varyings / sizeof(float);
     float *src0 = (float*)varyings[0];
     float *src1 = (float*)varyings[1];
@@ -335,7 +335,7 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
     int height = framebuffer->height;
     vec4_t clip_coords[3];
     vec3_t ndc_coords[3];
-    vec2_t screen_points[3];
+    vec2_t screen_coords[3];
     float screen_depths[3];
     float recip_w[3];
     bbox_t bbox;
@@ -369,9 +369,9 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
 
     /* calculate screen coordinates */
     for (i = 0; i < 3; i++) {
-        vec3_t screen_coord = viewport_transform(width, height, ndc_coords[i]);
-        screen_points[i] = vec2_new(screen_coord.x, screen_coord.y);
-        screen_depths[i] = screen_coord.z;
+        vec3_t window_coords = viewport_transform(width, height, ndc_coords[i]);
+        screen_coords[i] = vec2_new(window_coords.x, window_coords.y);
+        screen_depths[i] = window_coords.z;
     }
 
     /* calculate reciprocals of w */
@@ -380,19 +380,20 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
     }
 
     /* perform rasterization */
-    bbox = find_bounding_box(screen_points, width, height);
+    bbox = find_bounding_box(screen_coords, width, height);
     for (x = (int)bbox.min.x; x <= bbox.max.x; x++) {
         for (y = (int)bbox.min.y; y <= bbox.max.y; y++) {
             vec2_t point = vec2_new((float)x, (float)y);
-            vec3_t weights = calculate_weights(screen_points, point);
+            vec3_t weights = calculate_weights(screen_coords, point);
             if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
                 int index = y * width + x;
                 float depth = calculate_depth(screen_depths, weights);
                 /* early depth testing */
                 if (depth <= depthbuffer->buffer[index]) {
+                    int sizeof_varyings = program->sizeof_varyings;
                     vec4_t color;
-                    interp_varyings(program->varyings, program->sizeof_varyings,
-                                    recip_w, weights);
+                    interpolate_varyings(program->varyings, sizeof_varyings,
+                                         recip_w, weights);
                     color = program->fragment_shader(program->varyings[3],
                                                      program->uniforms);
                     colorbuffer->buffer[index] = vec4_saturate(color);
