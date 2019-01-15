@@ -5,9 +5,16 @@
 
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 
-typedef void tick_func_t(camera_t *camera, void *userdata);
-typedef void draw_func_t(framebuffer_t *framebuffer, void *userdata);
+typedef struct {
+    window_t *window;
+    framebuffer_t *framebuffer;
+    camera_t *camera;
+    vec3_t light_dir;
+    float delta_time;
+} context_t;
 
-void test_base(tick_func_t tick_func, draw_func_t draw_func, void *userdata);
+typedef void tick_t(context_t *context, void *userdata);
+
+void test_base(tick_t *tick, void *userdata);
 
 #endif

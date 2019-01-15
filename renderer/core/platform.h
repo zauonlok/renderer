@@ -1,11 +1,12 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
+#include "geometry.h"
 #include "graphics.h"
 #include "image.h"
 
 typedef struct window window_t;
-typedef enum {KEY_A, KEY_D, KEY_S, KEY_W, KEY_NUM} keycode_t;
+typedef enum {KEY_A, KEY_D, KEY_S, KEY_W, KEY_SPACE, KEY_NUM} keycode_t;
 typedef enum {BUTTON_L, BUTTON_R, BUTTON_NUM} button_t;
 typedef struct {
     void (*key_callback)(window_t *window, keycode_t key, int pressed);
@@ -26,8 +27,8 @@ void window_draw_buffer(window_t *window, colorbuffer_t *buffer);
 void input_poll_events(void);
 int input_key_pressed(window_t *window, keycode_t key);
 int input_button_pressed(window_t *window, button_t button);
-void input_query_cursor(window_t *window, double *xpos, double *ypos);
+vec2_t input_query_cursor(window_t *window);
 void input_set_callbacks(window_t *window, callbacks_t callbacks);
-double input_get_time(void);
+float input_get_time(void);
 
 #endif

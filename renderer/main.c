@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
             }
         }
         if (testfunc) {
-            printf("running test: %s\n", testname);
+            printf("test: %s\n", testname);
             testfunc(argc, argv);
         } else {
             printf("test not found: %s\n", testname);
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     } else {
         int index = rand() % num_testcases;
         testcase_t testcase = testcases[index];
-        printf("running test: %s\n", testcase.testname);
+        printf("test: %s\n", testcase.testname);
         testcase.testfunc(argc, argv);
     }
 

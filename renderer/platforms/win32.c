@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
+#include "../core/geometry.h"
 #include "../core/graphics.h"
 #include "../core/image.h"
 
@@ -36,11 +37,12 @@ static void handle_key_message(window_t *window, int virtual_key,
                                char pressed) {
     keycode_t key;
     switch (virtual_key) {
-        case 'A': key = KEY_A;   break;
-        case 'D': key = KEY_D;   break;
-        case 'S': key = KEY_S;   break;
-        case 'W': key = KEY_W;   break;
-        default:  key = KEY_NUM; break;
+        case 'A':      key = KEY_A;     break;
+        case 'D':      key = KEY_D;     break;
+        case 'S':      key = KEY_S;     break;
+        case 'W':      key = KEY_W;     break;
+        case VK_SPACE: key = KEY_SPACE; break;
+        default:       key = KEY_NUM;   break;
     }
     if (key < KEY_NUM) {
         window->keys[key] = pressed;
@@ -283,16 +285,11 @@ int input_button_pressed(window_t *window, button_t button) {
     return window->buttons[button];
 }
 
-void input_query_cursor(window_t *window, double *xpos, double *ypos) {
+vec2_t input_query_cursor(window_t *window) {
     POINT point;
     GetCursorPos(&point);
     ScreenToClient(window->handle, &point);
-    if (xpos != NULL) {
-        *xpos = point.x;
-    }
-    if (ypos != NULL) {
-        *ypos = point.y;
-    }
+    return vec2_new((float)point.x, (float)point.y);
 }
 
 void input_set_callbacks(window_t *window, callbacks_t callbacks) {

@@ -35,6 +35,12 @@ void camera_release(camera_t *camera) {
     free(camera);
 }
 
+void camera_set_transform(camera_t *camera, vec3_t position, vec3_t target) {
+    assert(vec3_length(vec3_sub(position, target)) > EPSILON);
+    camera->position = position;
+    camera->target = target;
+}
+
 static vec3_t calculate_pan(vec3_t from_camera, motion_t motion) {
     vec3_t forward = vec3_normalize(from_camera);
     vec3_t left = vec3_cross(WORLD_UP, forward);

@@ -1,5 +1,8 @@
 #include "test_base.h"
+#include <assert.h>
+#include <math.h>
 #include <string.h>
+#include <stdio.h>
 #include "../core/apis.h"
 
 static const char *WINDOW_TITLE = "Viewer";
@@ -9,17 +12,16 @@ static const int WINDOW_HEIGHT = 600;
 static const vec3_t CAMERA_POSITION = {0, 0, 3.5};
 static const vec3_t CAMERA_TARGET = {0, 0, 0};
 
-static const vec4_t CLEAR_COLOR = {0, 0, 0, 1};
-static const float CLEAR_DEPTH = 1;
+static const float LIGHT_THETA = TO_RADIANS(45);
+static const float LIGHT_PHI = TO_RADIANS(45);
+static const float LIGHT_SPEED = PI;
 
-typedef struct {int orbiting, panning; vec2_t orbit_pos, pan_pos;} record_t;
-typedef struct {record_t record; motion_t motion;} context_t;
-
-static vec2_t get_cursor_pos(window_t *window) {
-    double xpos, ypos;
-    input_query_cursor(window, &xpos, &ypos);
-    return vec2_new((float)xpos, (float)ypos);
-}
+typedef struct {
+    motion_t next_motion;
+    int orbiting, panning;
+    vec2_t orbit_pos, pan_pos;
+    float light_theta, light_phi;
+} record_t;
 
 static vec2_t calculate_delta(vec2_t old_pos, vec2_t new_pos) {
     vec2_t delta = vec2_sub(new_pos, old_pos);
@@ -27,25 +29,24 @@ static vec2_t calculate_delta(vec2_t old_pos, vec2_t new_pos) {
 }
 
 static void button_callback(window_t *window, button_t button, int pressed) {
-    context_t *context = (context_t*)window_get_userdata(window);
-    record_t *record = &context->record;
-    motion_t *motion = &context->motion;
-    vec2_t position = get_cursor_pos(window);
+    record_t *record = (record_t*)window_get_userdata(window);
+    motion_t *motion = &record->next_motion;
+    vec2_t cursor_pos = input_query_cursor(window);
     if (button == BUTTON_L) {
         if (pressed) {
             record->orbiting = 1;
-            record->orbit_pos = position;
+            record->orbit_pos = cursor_pos;
         } else {
-            vec2_t delta = calculate_delta(record->orbit_pos, position);
+            vec2_t delta = calculate_delta(record->orbit_pos, cursor_pos);
             record->orbiting = 0;
             motion->orbit = vec2_add(motion->orbit, delta);
         }
     } else if (button == BUTTON_R) {
         if (pressed) {
             record->panning = 1;
-            record->pan_pos = position;
+            record->pan_pos = cursor_pos;
         } else {
-            vec2_t delta = calculate_delta(record->pan_pos, position);
+            vec2_t delta = calculate_delta(record->pan_pos, cursor_pos);
             record->panning = 0;
             motion->pan = vec2_add(motion->pan, delta);
         }
@@ -53,60 +54,126 @@ static void button_callback(window_t *window, button_t button, int pressed) {
 }
 
 static void scroll_callback(window_t *window, double offset) {
-    context_t *context = (context_t*)window_get_userdata(window);
-    context->motion.dolly += (float)offset;
+    record_t *record = (record_t*)window_get_userdata(window);
+    motion_t *motion = &record->next_motion;
+    motion->dolly += (float)offset;
 }
 
 static void update_camera(window_t *window, camera_t *camera,
-                          context_t *context) {
-    record_t *record = &context->record;
-    motion_t *motion = &context->motion;
-    vec2_t position = get_cursor_pos(window);
+                          record_t *record) {
+    motion_t *motion = &record->next_motion;
+    vec2_t cursor_pos = input_query_cursor(window);
     if (record->orbiting) {
-        vec2_t delta = calculate_delta(record->orbit_pos, position);
+        vec2_t delta = calculate_delta(record->orbit_pos, cursor_pos);
         motion->orbit = vec2_add(motion->orbit, delta);
-        record->orbit_pos = position;
+        record->orbit_pos = cursor_pos;
     }
     if (record->panning) {
-        vec2_t delta = calculate_delta(record->pan_pos, position);
+        vec2_t delta = calculate_delta(record->pan_pos, cursor_pos);
         motion->pan = vec2_add(motion->pan, delta);
-        record->pan_pos = position;
+        record->pan_pos = cursor_pos;
     }
-    camera_orbit_update(camera, *motion);
+    if (input_key_pressed(window, KEY_SPACE)) {
+        camera_set_transform(camera, CAMERA_POSITION, CAMERA_TARGET);
+    } else {
+        camera_orbit_update(camera, *motion);
+    }
     memset(motion, 0, sizeof(motion_t));
 }
 
-void test_base(tick_func_t tick_func, draw_func_t draw_func, void *userdata) {
-    callbacks_t callbacks = {NULL, button_callback, scroll_callback};
+static void update_light(window_t *window, float delta_time,
+                         record_t *record) {
+    if (input_key_pressed(window, KEY_SPACE)) {
+        record->light_theta = LIGHT_THETA;
+        record->light_phi = LIGHT_PHI;
+    } else {
+        float angle = LIGHT_SPEED * delta_time;
+        if (input_key_pressed(window, KEY_A)) {
+            record->light_theta -= angle;
+        }
+        if (input_key_pressed(window, KEY_D)) {
+            record->light_theta += angle;
+        }
+        if (input_key_pressed(window, KEY_S)) {
+            float phi_max = PI - EPSILON;
+            record->light_phi += angle;
+            if (record->light_phi > phi_max) {
+                record->light_phi = phi_max;
+            }
+        }
+        if (input_key_pressed(window, KEY_W)) {
+            float phi_min = EPSILON;
+            record->light_phi -= angle;
+            if (record->light_phi < phi_min) {
+                record->light_phi = phi_min;
+            }
+        }
+    }
+}
+
+static vec3_t calculate_light(record_t *record) {
+    float theta = record->light_theta;
+    float phi = record->light_phi;
+    float x = -(float)(sin(phi) * sin(theta));
+    float y = -(float)cos(phi);
+    float z = -(float)(sin(phi) * cos(theta));
+    return vec3_new(x, y, z);
+}
+
+void test_base(tick_t *tick, void *userdata) {
     window_t *window;
     framebuffer_t *framebuffer;
     camera_t *camera;
+    record_t record;
+    callbacks_t callbacks;
     context_t context;
     float aspect;
-    double last_time;
+    float last_time;
+    float report_time;
+    int num_frames;
 
     window = window_create(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
     framebuffer = framebuffer_create(WINDOW_WIDTH, WINDOW_HEIGHT);
     aspect = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
     camera = camera_create(CAMERA_POSITION, CAMERA_TARGET, aspect);
 
+    memset(&record, 0, sizeof(record_t));
+    record.light_theta = LIGHT_THETA;
+    record.light_phi   = LIGHT_PHI;
+
+    memset(&callbacks, 0, sizeof(callbacks_t));
+    callbacks.button_callback = button_callback;
+    callbacks.scroll_callback = scroll_callback;
+
     memset(&context, 0, sizeof(context_t));
-    window_set_userdata(window, &context);
+    context.window      = window;
+    context.framebuffer = framebuffer;
+    context.camera      = camera;
+
+    window_set_userdata(window, &record);
     input_set_callbacks(window, callbacks);
 
-    last_time = input_get_time();
+    num_frames = 0;
+    report_time = last_time = input_get_time();
     while (!window_should_close(window)) {
-        double curr_time = input_get_time();
-        double delta_time = curr_time - last_time;
+        float curr_time = input_get_time();
+        float delta_time = curr_time - last_time;
         last_time = curr_time;
 
-        update_camera(window, camera, &context);
-        tick_func(camera, userdata);
+        update_camera(window, camera, &record);
+        update_light(window, delta_time, &record);
 
-        framebuffer_clear_color(framebuffer, CLEAR_COLOR);
-        framebuffer_clear_depth(framebuffer, CLEAR_DEPTH);
-        draw_func(framebuffer, userdata);
+        context.light_dir = calculate_light(&record);
+        context.delta_time = delta_time;
+        tick(&context, userdata);
+
         window_draw_buffer(window, framebuffer->colorbuffer);
+        num_frames += 1;
+        if (curr_time - report_time >= 1) {
+            printf("fps: %d\n", num_frames);
+            num_frames = 0;
+            report_time = curr_time;
+        }
 
         input_poll_events();
     }

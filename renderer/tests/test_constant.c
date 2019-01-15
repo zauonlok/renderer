@@ -15,7 +15,7 @@ static model_t **create_models(const char *model_name) {
     model_t **models = NULL;
     if (strcmp(model_name, "mccree") == 0) {
         models = constant_mccree_models();
-        printf("using model: %s\n", model_name);
+        printf("model: %s\n", model_name);
     } else {
         printf("model not found: %s\n", model_name);
     }
@@ -49,6 +49,13 @@ static void draw_function(framebuffer_t *framebuffer, void *userdata) {
     }
 }
 
+static void tick(context_t *context, void *userdata) {
+    framebuffer_clear_color(context->framebuffer, vec4_new(0, 0, 0, 1));
+    framebuffer_clear_depth(context->framebuffer, 1);
+    tick_function(context->camera, userdata);
+    draw_function(context->framebuffer, userdata);
+}
+
 void test_constant(int argc, char *argv[]) {
     model_t **models;
     if (argc > 2) {
@@ -60,7 +67,7 @@ void test_constant(int argc, char *argv[]) {
         models = create_models(model_name);
     }
     if (models) {
-        test_base(tick_function, draw_function, models);
+        test_base(tick, models);
         constant_release_models(models);
     }
 }

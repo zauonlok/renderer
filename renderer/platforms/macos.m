@@ -4,6 +4,7 @@
 #include <string.h>
 #include <mach/mach_time.h>
 #import <Cocoa/Cocoa.h>
+#include "../core/geometry.h"
 #include "../core/graphics.h"
 #include "../core/image.h"
 
@@ -54,11 +55,12 @@ static NSAutoreleasePool *g_autoreleasepool;
 static void handle_key_event(window_t *window, int virtual_key, char pressed) {
     keycode_t key;
     switch (virtual_key) {
-        case 0x00: key = KEY_A;   break;
-        case 0x02: key = KEY_D;   break;
-        case 0x01: key = KEY_S;   break;
-        case 0x0D: key = KEY_W;   break;
-        default:   key = KEY_NUM; break;
+        case 0x00: key = KEY_A;     break;
+        case 0x02: key = KEY_D;     break;
+        case 0x01: key = KEY_S;     break;
+        case 0x0D: key = KEY_W;     break;
+        case 0x31: key = KEY_SPACE; break;
+        default:   key = KEY_NUM;   break;
     }
     if (key < KEY_NUM) {
         window->keys[key] = pressed;
@@ -316,15 +318,10 @@ int input_button_pressed(window_t *window, button_t button) {
     return window->buttons[button];
 }
 
-void input_query_cursor(window_t *window, double *xpos, double *ypos) {
-    NSPoint pos = [window->handle mouseLocationOutsideOfEventStream];
+vec2_t input_query_cursor(window_t *window) {
+    NSPoint point = [window->handle mouseLocationOutsideOfEventStream];
     NSRect rect = [[window->handle contentView] frame];
-    if (xpos) {
-        *xpos = pos.x;
-    }
-    if (ypos) {
-        *ypos = rect.size.height - 1 - pos.y;
-    }
+    return vec2_new((float)point.x, (float)(rect.size.height - 1 - point.y));
 }
 
 void input_set_callbacks(window_t *window, callbacks_t callbacks) {
