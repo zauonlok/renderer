@@ -53,27 +53,27 @@ static vec3_t calculate_pan(vec3_t from_camera, motion_t motion) {
     return vec3_add(delta_x, delta_y);
 }
 
-static double clamp_double(double value, double min, double max) {
+static float clamp_float(float value, float min, float max) {
     assert(min <= max);
     return (value < min) ? min : ((value > max) ? max : value);
 }
 
 static vec3_t calculate_offset(vec3_t from_target, motion_t motion) {
-    double radius = vec3_length(from_target);
-    double theta = atan2(from_target.x, from_target.z);  /* azimuth angle */
-    double phi = acos(from_target.y / radius);           /* polar angle */
-    double factor = PI * 2;
+    float radius = vec3_length(from_target);
+    float theta = (float)atan2(from_target.x, from_target.z);  /* azimuth */
+    float phi = (float)acos(from_target.y / radius);           /* polar */
+    float factor = PI * 2;
     vec3_t offset;
 
-    radius *= pow(0.95, motion.dolly);
+    radius *= (float)pow(0.95, motion.dolly);
     theta -= motion.orbit.x * factor;
     phi -= motion.orbit.y * factor;
-    phi = clamp_double(phi, EPSILON, PI - EPSILON);
+    phi = clamp_float(phi, EPSILON, PI - EPSILON);
 
     offset = vec3_new(
-        (float)(radius * sin(phi) * sin(theta)),
-        (float)(radius * cos(phi)),
-        (float)(radius * sin(phi) * cos(theta))
+        radius * (float)sin(phi) * (float)sin(theta),
+        radius * (float)cos(phi),
+        radius * (float)sin(phi) * (float)cos(theta)
     );
     return offset;
 }

@@ -1,5 +1,4 @@
 #include "test_base.h"
-#include <assert.h>
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -53,10 +52,10 @@ static void button_callback(window_t *window, button_t button, int pressed) {
     }
 }
 
-static void scroll_callback(window_t *window, double offset) {
+static void scroll_callback(window_t *window, float offset) {
     record_t *record = (record_t*)window_get_userdata(window);
     motion_t *motion = &record->next_motion;
-    motion->dolly += (float)offset;
+    motion->dolly += offset;
 }
 
 static void update_camera(window_t *window, camera_t *camera,
@@ -114,10 +113,10 @@ static void update_light(window_t *window, float delta_time,
 static vec3_t calculate_light(record_t *record) {
     float theta = record->light_theta;
     float phi = record->light_phi;
-    float x = -(float)(sin(phi) * sin(theta));
-    float y = -(float)cos(phi);
-    float z = -(float)(sin(phi) * cos(theta));
-    return vec3_new(x, y, z);
+    float x = (float)sin(phi) * (float)sin(theta);
+    float y = (float)cos(phi);
+    float z = (float)sin(phi) * (float)cos(theta);
+    return vec3_new(-x, -y, -z);
 }
 
 void test_base(tick_t *tick, void *userdata) {
@@ -146,7 +145,6 @@ void test_base(tick_t *tick, void *userdata) {
     callbacks.scroll_callback = scroll_callback;
 
     memset(&context, 0, sizeof(context_t));
-    context.window      = window;
     context.framebuffer = framebuffer;
     context.camera      = camera;
 
@@ -154,7 +152,8 @@ void test_base(tick_t *tick, void *userdata) {
     input_set_callbacks(window, callbacks);
 
     num_frames = 0;
-    report_time = last_time = input_get_time();
+    last_time = input_get_time();
+    report_time = last_time;
     while (!window_should_close(window)) {
         float curr_time = input_get_time();
         float delta_time = curr_time - last_time;

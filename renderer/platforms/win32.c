@@ -60,7 +60,7 @@ static void handle_button_message(window_t *window, button_t button,
     }
 }
 
-static void handle_scroll_message(window_t *window, double offset) {
+static void handle_scroll_message(window_t *window, float offset) {
     if (window->callbacks.scroll_callback) {
         window->callbacks.scroll_callback(window, offset);
     }
@@ -93,7 +93,7 @@ static LRESULT CALLBACK process_message(HWND hWnd, UINT uMsg,
         handle_button_message(window, BUTTON_R, 0);
         return 0;
     } else if (uMsg == WM_MOUSEWHEEL) {
-        double offset = GET_WHEEL_DELTA_WPARAM(wParam) / (double)WHEEL_DELTA;
+        float offset = GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA;
         handle_scroll_message(window, offset);
         return 0;
     } else {
@@ -122,22 +122,16 @@ static void register_class(void) {
     }
 }
 
-static const wchar_t *to_wchar_string(const char *source) {
-    static wchar_t target[128];
-    mbstowcs(target, source, 128);
-    return target;
-}
-
 static HWND create_window(const char *title_, int width, int height) {
     DWORD style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
     RECT rect;
     HWND handle;
 
 #ifdef UNICODE
-    const wchar_t *title = to_wchar_string(title_);
+    wchar_t title[128];
+    mbstowcs(title, title_, 128);
 #else
     const char *title = title_;
-    (void)to_wchar_string;
 #endif
 
     rect.left   = 0;

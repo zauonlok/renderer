@@ -78,7 +78,7 @@ static void handle_button_event(window_t *window, button_t button,
     }
 }
 
-static void handle_scroll_event(window_t *window, double offset) {
+static void handle_scroll_event(window_t *window, float offset) {
     if (window->callbacks.scroll_callback) {
         window->callbacks.scroll_callback(window, offset);
     }
@@ -150,9 +150,9 @@ static void handle_scroll_event(window_t *window, double offset) {
 }
 
 - (void)scrollWheel:(NSEvent *)event {
-    double offset = [event scrollingDeltaY];
+    float offset = (float)[event scrollingDeltaY];
     if ([event hasPreciseScrollingDeltas]) {
-        offset *= 0.1;
+        offset *= 0.1f;
     }
     handle_scroll_event(window, offset);
 }

@@ -6,7 +6,6 @@
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 
 typedef struct {
-    window_t *window;
     framebuffer_t *framebuffer;
     camera_t *camera;
     vec3_t light_dir;

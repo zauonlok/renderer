@@ -21,11 +21,15 @@ typedef struct {
     void *uniforms;
     vertex_shader_t *vertex_shader;
     fragment_shader_t *fragment_shader;
+    int sizeof_attribs;
     int sizeof_varyings;
+    int sizeof_uniforms;
 } program_t;
 
 typedef struct {int width, height; vec4_t *buffer;} texture_t;
+
 typedef struct {mat4_t transform; mesh_t *mesh; program_t *program;} model_t;
+typedef struct {vec3_t background; model_t **models;} scene_t;
 
 /* framebuffer management */
 framebuffer_t *framebuffer_create(int width, int height);

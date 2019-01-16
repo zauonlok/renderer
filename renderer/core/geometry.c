@@ -209,11 +209,9 @@ mat3_t mat3_inverse_transpose(mat3_t m) {
     int i, j;
 
     adjoint = mat3_adjoint(m);
-    /* calculate the determinant */
     determinant = mat3_determinant(m);
     assert(fabs(determinant) > EPSILON);
     inv_determinant = 1 / determinant;
-    /* inverse_transpose = adjoint / determinant */
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
             inverse_transpose.m[i][j] = adjoint.m[i][j] * inv_determinant;
@@ -328,14 +326,12 @@ mat4_t mat4_inverse_transpose(mat4_t m) {
     int i, j;
 
     adjoint = mat4_adjoint(m);
-    /* calculate the determinant */
     determinant = 0;
     for (i = 0; i < 4; i++) {
         determinant += m.m[0][i] * adjoint.m[0][i];
     }
     assert(fabs(determinant) > EPSILON);
     inv_determinant = 1 / determinant;
-    /* inverse_transpose = adjoint / determinant */
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
             inverse_transpose.m[i][j] = adjoint.m[i][j] * inv_determinant;

@@ -213,7 +213,7 @@ void image_flip_v(image_t *image) {
     }
 }
 
-static double linear_interp(double v0, double v1, double d) {
+static float linear_interp(float v0, float v1, float d) {
     return v0 + (v1 - v0) * d;
 }
 
@@ -224,23 +224,23 @@ static int bound_index(int index, int length) {
 image_t *image_resize(image_t *source, int width, int height) {
     int channels = source->channels;
     image_t *target;
-    double scale_r, scale_c;
+    float scale_r, scale_c;
     int dst_r, dst_c, k;
 
     assert(width > 0 && height > 0);
     target = image_create(width, height, channels);
-    scale_r = source->height / (double)height;
-    scale_c = source->width / (double)width;
+    scale_r = (float)source->height / (float)height;
+    scale_c = (float)source->width / (float)width;
     for (dst_r = 0; dst_r < height; dst_r++) {
         for (dst_c = 0; dst_c < width; dst_c++) {
-            double mapped_r = dst_r * scale_r;
-            double mapped_c = dst_c * scale_c;
+            float mapped_r = (float)dst_r * scale_r;
+            float mapped_c = (float)dst_c * scale_c;
             int src_r0 = (int)mapped_r;
             int src_c0 = (int)mapped_c;
             int src_r1 = bound_index(src_r0 + 1, source->height);
             int src_c1 = bound_index(src_c0 + 1, source->width);
-            double delta_r = mapped_r - src_r0;
-            double delta_c = mapped_c - src_c0;
+            float delta_r = mapped_r - (float)src_r0;
+            float delta_c = mapped_c - (float)src_c0;
 
             unsigned char *pixel_00 = get_pixel_ptr(source, src_r0, src_c0);
             unsigned char *pixel_01 = get_pixel_ptr(source, src_r0, src_c1);
@@ -248,14 +248,14 @@ image_t *image_resize(image_t *source, int width, int height) {
             unsigned char *pixel_11 = get_pixel_ptr(source, src_r1, src_c1);
             unsigned char *pixel = get_pixel_ptr(target, dst_r, dst_c);
             for (k = 0; k < channels; k++) {
-                double v00 = pixel_00[k];  /* row 0, col 0 */
-                double v01 = pixel_01[k];  /* row 0, col 1 */
-                double v10 = pixel_10[k];  /* row 1, col 0 */
-                double v11 = pixel_11[k];  /* row 1, col 1 */
-                double v0 = linear_interp(v00, v01, delta_c);  /* row 0 */
-                double v1 = linear_interp(v10, v11, delta_c);  /* row 1 */
-                double value = linear_interp(v0, v1, delta_r);
-                pixel[k] = (unsigned char)(value + 0.5);
+                float v00 = pixel_00[k];  /* row 0, col 0 */
+                float v01 = pixel_01[k];  /* row 0, col 1 */
+                float v10 = pixel_10[k];  /* row 1, col 0 */
+                float v11 = pixel_11[k];  /* row 1, col 1 */
+                float v0 = linear_interp(v00, v01, delta_c);  /* row 0 */
+                float v1 = linear_interp(v10, v11, delta_c);  /* row 1 */
+                float value = linear_interp(v0, v1, delta_r);
+                pixel[k] = (unsigned char)(value + 0.5f);
             }
         }
     }

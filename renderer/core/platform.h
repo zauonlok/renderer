@@ -11,7 +11,7 @@ typedef enum {BUTTON_L, BUTTON_R, BUTTON_NUM} button_t;
 typedef struct {
     void (*key_callback)(window_t *window, keycode_t key, int pressed);
     void (*button_callback)(window_t *window, button_t button, int pressed);
-    void (*scroll_callback)(window_t *window, double offset);
+    void (*scroll_callback)(window_t *window, float offset);
 } callbacks_t;
 
 /* window related functions */

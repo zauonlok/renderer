@@ -89,7 +89,9 @@ program_t *program_create(
 
     program->vertex_shader   = vertex_shader;
     program->fragment_shader = fragment_shader;
+    program->sizeof_attribs  = sizeof_attribs;
     program->sizeof_varyings = sizeof_varyings;
+    program->sizeof_uniforms = sizeof_uniforms;
 
     return program;
 }
@@ -227,6 +229,7 @@ static vec3_t calculate_weights(vec2_t abc[3], vec2_t p) {
     vec3_t weights = vec3_new(1 - s - t, s, t);
     return weights;
 }
+
 /*
  * for triangle clipping, see
  * https://www.gamasutra.com/view/news/168577/
@@ -252,7 +255,6 @@ static int is_back_facing(vec3_t ndc_coords[3]) {
  * for viewport transform, see
  * http://docs.gl/gl2/glViewport
  * http://docs.gl/gl2/glDepthRange
- * http://www.songho.ca/opengl/gl_transform.html
  */
 static vec3_t viewport_transform(int width_, int height_, vec3_t ndc_coord) {
     float width = (float)width_;
@@ -367,16 +369,16 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
         return;
     }
 
+    /* calculate reciprocals of w */
+    for (i = 0; i < 3; i++) {
+        recip_w[i] = 1 / clip_coords[i].w;
+    }
+
     /* calculate screen coordinates */
     for (i = 0; i < 3; i++) {
         vec3_t window_coords = viewport_transform(width, height, ndc_coords[i]);
         screen_coords[i] = vec2_new(window_coords.x, window_coords.y);
         screen_depths[i] = window_coords.z;
-    }
-
-    /* calculate reciprocals of w */
-    for (i = 0; i < 3; i++) {
-        recip_w[i] = 1 / clip_coords[i].w;
     }
 
     /* perform rasterization */
