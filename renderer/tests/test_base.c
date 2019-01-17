@@ -119,7 +119,7 @@ static vec3_t calculate_light(record_t *record) {
     return vec3_new(-x, -y, -z);
 }
 
-void test_base(tick_t *tick, void *userdata) {
+void test_base(tickfunc_t *tickfunc, void *userdata) {
     window_t *window;
     framebuffer_t *framebuffer;
     camera_t *camera;
@@ -127,7 +127,7 @@ void test_base(tick_t *tick, void *userdata) {
     callbacks_t callbacks;
     context_t context;
     float aspect;
-    float last_time;
+    float prev_time;
     float report_time;
     int num_frames;
 
@@ -152,19 +152,19 @@ void test_base(tick_t *tick, void *userdata) {
     input_set_callbacks(window, callbacks);
 
     num_frames = 0;
-    last_time = input_get_time();
-    report_time = last_time;
+    prev_time = input_get_time();
+    report_time = prev_time;
     while (!window_should_close(window)) {
         float curr_time = input_get_time();
-        float delta_time = curr_time - last_time;
-        last_time = curr_time;
+        float delta_time = curr_time - prev_time;
+        prev_time = curr_time;
 
         update_camera(window, camera, &record);
         update_light(window, delta_time, &record);
 
         context.light_dir = calculate_light(&record);
         context.delta_time = delta_time;
-        tick(&context, userdata);
+        tickfunc(&context, userdata);
 
         window_draw_buffer(window, framebuffer->colorbuffer);
         num_frames += 1;

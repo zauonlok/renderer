@@ -22,7 +22,7 @@ static model_t **create_models(const char *model_name) {
     return models;
 }
 
-static void tick_function(camera_t *camera, vec3_t light_dir, void *userdata) {
+static void tickfunc_function(camera_t *camera, vec3_t light_dir, void *userdata) {
     model_t **models = (model_t**)userdata;
     vec3_t camera_pos = camera_get_position(camera);
     mat4_t view_matrix = camera_get_view_matrix(camera);
@@ -54,10 +54,10 @@ static void draw_function(framebuffer_t *framebuffer, void *userdata) {
     }
 }
 
-static void tick(context_t *context, void *userdata) {
+static void tickfunc(context_t *context, void *userdata) {
     framebuffer_clear_color(context->framebuffer, vec4_new(0, 0, 0, 1));
     framebuffer_clear_depth(context->framebuffer, 1);
-    tick_function(context->camera, context->light_dir, userdata);
+    tickfunc_function(context->camera, context->light_dir, userdata);
     draw_function(context->framebuffer, userdata);
 }
 
@@ -72,7 +72,7 @@ void test_blinn(int argc, char *argv[]) {
         models = create_models(model_name);
     }
     if (models) {
-        test_base(tick, models);
+        test_base(tickfunc, models);
         blinn_release_models(models);
     }
 }

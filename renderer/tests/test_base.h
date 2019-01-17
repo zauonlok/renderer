@@ -12,8 +12,8 @@ typedef struct {
     float delta_time;
 } context_t;
 
-typedef void tick_t(context_t *context, void *userdata);
+typedef void tickfunc_t(context_t *context, void *userdata);
 
-void test_base(tick_t *tick, void *userdata);
+void test_base(tickfunc_t *tickfunc, void *userdata);
 
 #endif
