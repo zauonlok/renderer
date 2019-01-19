@@ -4,7 +4,8 @@
 
 /* low-level apis */
 
-vec4_t constant_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
+vec4_t constant_vertex_shader(void *attribs_, void *varyings_,
+                              void *uniforms_) {
     constant_attribs_t *attribs = (constant_attribs_t*)attribs_;
     constant_varyings_t *varyings = (constant_varyings_t*)varyings_;
     constant_uniforms_t *uniforms = (constant_uniforms_t*)uniforms_;
@@ -15,11 +16,12 @@ vec4_t constant_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) 
     return clip_pos;
 }
 
-static vec4_t calculate_emission(vec2_t uv, constant_uniforms_t *uniforms) {
+static vec4_t calculate_emission(vec2_t texcoord,
+                                 constant_uniforms_t *uniforms) {
     if (uniforms->emission_texture) {
-        vec4_t emission_fac = uniforms->emission_factor;
-        vec4_t emission_tex = texture_sample(uniforms->emission_texture, uv);
-        return vec4_modulate(emission_fac, emission_tex);
+        vec4_t factor = uniforms->emission_factor;
+        vec4_t color = texture_sample(uniforms->emission_texture, texcoord);
+        return vec4_modulate(factor, color);
     } else {
         return uniforms->emission_factor;
     }
@@ -41,7 +43,7 @@ vec4_t constant_fragment_shader(void *varyings_, void *uniforms_) {
 
 /* high-level apis */
 
-model_t *constant_create_model(mat4_t transform, const char *mesh,
+model_t *constant_create_model(const char *mesh_filename, mat4_t transform,
                                constant_material_t material) {
     int sizeof_attribs = sizeof(constant_attribs_t);
     int sizeof_varyings = sizeof(constant_varyings_t);
@@ -62,7 +64,7 @@ model_t *constant_create_model(mat4_t transform, const char *mesh,
 
     model = (model_t*)malloc(sizeof(model_t));
     model->transform = transform;
-    model->mesh      = mesh_load(mesh);
+    model->mesh      = mesh_load(mesh_filename);
     model->program   = program;
 
     return model;
@@ -82,7 +84,7 @@ constant_uniforms_t *constant_get_uniforms(model_t *model) {
     return (constant_uniforms_t*)model->program->uniforms;
 }
 
-void constant_draw_model(framebuffer_t *framebuffer, model_t *model) {
+void constant_draw_model(model_t *model, framebuffer_t *framebuffer) {
     program_t *program = model->program;
     mesh_t *mesh = model->mesh;
     int num_faces = mesh_get_num_faces(mesh);

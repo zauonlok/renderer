@@ -48,10 +48,10 @@ vec4_t blinn_vertex_shader(void *attribs, void *varyings, void *uniforms);
 vec4_t blinn_fragment_shader(void *varyings, void *uniforms);
 
 /* high-level apis */
-model_t *blinn_create_model(mat4_t transform, const char *mesh,
+model_t *blinn_create_model(const char *mesh_filename, mat4_t transform,
                             blinn_material_t material);
 void blinn_release_model(model_t *model);
 blinn_uniforms_t *blinn_get_uniforms(model_t *model);
-void blinn_draw_model(framebuffer_t *framebuffer, model_t *model);
+void blinn_draw_model(model_t *model, framebuffer_t *framebuffer);
 
 #endif

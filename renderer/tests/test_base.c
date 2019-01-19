@@ -1,8 +1,12 @@
 #include "test_base.h"
+#include <assert.h>
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "../core/apis.h"
+
+/* test delegate functions */
 
 static const char *WINDOW_TITLE = "Viewer";
 static const int WINDOW_WIDTH = 800;
@@ -180,4 +184,53 @@ void test_base(tickfunc_t *tickfunc, void *userdata) {
     window_destroy(window);
     framebuffer_release(framebuffer);
     camera_release(camera);
+}
+
+/* scene helper functions */
+
+static int count_num_faces(scene_t *scene) {
+    int num_models = darray_size(scene->models);
+    int num_faces = 0;
+    int i;
+    for (i = 0; i < num_models; i++) {
+        model_t *model = scene->models[i];
+        num_faces += mesh_get_num_faces(model->mesh);
+    }
+    return num_faces;
+}
+
+scene_t *scene_create(scene_entry_t scene_entries[], int num_entries,
+                      const char *scene_name) {
+    scene_t *scene = NULL;
+    assert(num_entries > 0);
+    if (scene_name == NULL) {
+        int index = rand() % num_entries;
+        scene_name = scene_entries[index].scene_name;
+        scene = scene_entries[index].scene_ctor();
+    } else {
+        int i;
+        for (i = 0; i < num_entries; i++) {
+            if (strcmp(scene_name, scene_entries[i].scene_name) == 0) {
+                scene = scene_entries[i].scene_ctor();
+                break;
+            }
+        }
+    }
+    if (scene) {
+        printf("scene: %s\n", scene_name);
+        printf("faces: %d\n", count_num_faces(scene));
+    } else {
+        printf("scene not found: %s\n", scene_name);
+    }
+    return scene;
+}
+
+void scene_release(scene_t *scene, void (*model_dtor)(model_t *model)) {
+    int num_models = darray_size(scene->models);
+    int i;
+    for (i = 0; i < num_models; i++) {
+        model_dtor(scene->models[i]);
+    }
+    darray_free(scene->models);
+    free(scene);
 }

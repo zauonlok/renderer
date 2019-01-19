@@ -15,48 +15,42 @@ SRC_FILENAME = "low_poly_mccree.zip"
 DST_DIRECTORY = "../assets/mccree"
 
 
-def print_generated_code(gltf):
-    num_materials = len(gltf["materials"])
-    print("    constant_material_t materials[{}] = {{".format(num_materials))
-    for material in gltf["materials"]:
-        ambient = material["pbrMetallicRoughness"]["baseColorFactor"]
-        amb_r, amb_g, amb_b, _ = ambient
-        amb_pattern = "{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}"
-        amb_content = amb_pattern.format(amb_r, amb_g, amb_b)
-        emissive = material.get("emissiveFactor", [0, 0, 0])
-        emi_r, emi_g, emi_b = emissive
-        emi_pattern = "{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}"
-        emi_content = emi_pattern.format(emi_r, emi_g, emi_b)
-        print("        {{{}, {}, NULL}},".format(amb_content, emi_content))
-    print("    };")
+def linear_to_srgb(color):
+    red, green, blue = [pow(c, 1 / 2.2) for c in color[:3]]
+    return red, green, blue
 
-    mesh2material = []
-    for mesh in gltf["meshes"]:
-        assert len(mesh["primitives"]) == 1
-        primitive = mesh["primitives"][0]
-        mesh2material.append(primitive["material"])
-    num_meshes = len(gltf["meshes"])
-    print("    int mesh2material[{}] = {{".format(num_meshes))
-    chunk_size = num_meshes / 3 + 1
-    for i in range(0, num_meshes, chunk_size):
-        indices = [str(j) for j in mesh2material[i:(i + chunk_size)]]
-        print("        {}".format(", ".join(indices) + ","))
-    print("    };")
 
+def print_transforms(gltf):
+    row_pattern = "            {{{:+.6f}f, {:+.6f}f, {:+.6f}f, {:+.6f}f}},"
     transforms = utils.load_gltf_transforms(gltf)
     num_transforms = len(transforms)
     print("    mat4_t transforms[{}] = {{".format(num_transforms))
     for transform in transforms:
         print("        {{")
         for i in range(4):
-            m0, m1, m2, m3 = transform.data[i]
-            row_pattern = "            {{{:.6f}f, {:.6f}f, {:.6f}f, {:.6f}f}},"
-            row_content = row_pattern.format(m0, m1, m2, m3)
-            print(row_content)
+            print(row_pattern.format(*transform.data[i]))
         print("        }},")
     print("    };")
 
+
+def print_materials(gltf):
+    color_pattern = "{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}"
+    material_pattern = "        {{{}, {}, NULL}},"
+    num_materials = len(gltf["materials"])
+    print("    constant_material_t materials[{}] = {{".format(num_materials))
+    for material in gltf["materials"]:
+        ambient = material["pbrMetallicRoughness"]["baseColorFactor"]
+        ambient = color_pattern.format(*linear_to_srgb(ambient))
+        emission = material.get("emissiveFactor", [0, 0, 0])
+        emission = color_pattern.format(*linear_to_srgb(emission))
+        print(material_pattern.format(ambient, emission))
+    print("    };")
+
+
+def print_mesh2transform(gltf):
+    num_meshes = len(gltf["meshes"])
     nodes = utils.load_gltf_nodes(gltf)
+    transforms = utils.load_gltf_transforms(gltf)
     nodes = [node for node in nodes if node.mesh is not None]
     mesh2transform = [None] * num_meshes
     for node in nodes:
@@ -72,10 +66,34 @@ def print_generated_code(gltf):
     print("    };")
 
 
+def print_mesh2material(gltf):
+    mesh2material = []
+    for mesh in gltf["meshes"]:
+        assert len(mesh["primitives"]) == 1
+        primitive = mesh["primitives"][0]
+        mesh2material.append(primitive["material"])
+    num_meshes = len(gltf["meshes"])
+    print("    int mesh2material[{}] = {{".format(num_meshes))
+    chunk_size = num_meshes / 3 + 1
+    for i in range(0, num_meshes, chunk_size):
+        indices = []
+        for j in mesh2material[i:(i + chunk_size)]:
+            indices.append("{:2d}".format(j))
+        indices = ", ".join(indices) + ","
+        print("        {}".format(indices))
+    print("    };")
+
+
+def print_generated_code(gltf):
+    print_transforms(gltf)
+    print_materials(gltf)
+    print_mesh2transform(gltf)
+    print_mesh2material(gltf)
+
+
 def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
-    assert len(buffer) == 299192
 
     meshes = []
     for mesh in gltf["meshes"]:

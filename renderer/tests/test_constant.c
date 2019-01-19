@@ -1,73 +1,52 @@
 #include "test_constant.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stddef.h>
 #include "../core/apis.h"
-#include "../models/constant_models.h"
+#include "../scenes/constant_scenes.h"
 #include "../shaders/constant_shader.h"
 #include "../tests/test_base.h"
 
-static const char *MODEL_NAMES[] = {
-    "mccree",
+static scene_entry_t g_scene_entries[] = {
+    {"mccree", constant_mccree_scene},
+    {"elfgirl", constant_elfgirl_scene},
 };
 
-static model_t **create_models(const char *model_name) {
-    model_t **models = NULL;
-    if (strcmp(model_name, "mccree") == 0) {
-        models = constant_mccree_models();
-        printf("model: %s\n", model_name);
-    } else {
-        printf("model not found: %s\n", model_name);
-    }
-    return models;
-}
-
-static void tickfunc_function(camera_t *camera, void *userdata) {
-    model_t **models = (model_t**)userdata;
+static void update_scene(scene_t *scene, camera_t *camera) {
     mat4_t view_matrix = camera_get_view_matrix(camera);
     mat4_t proj_matrix = camera_get_proj_matrix(camera);
     mat4_t viewproj_matrix = mat4_mul_mat4(proj_matrix, view_matrix);
-    mat4_t rotation_matrix = mat4_rotate_y(input_get_time());
-    int num_models = darray_size(models);
+    int num_models = darray_size(scene->models);
     int i;
     for (i = 0; i < num_models; i++) {
-        model_t *model = models[i];
-        mat4_t model_matrix = mat4_mul_mat4(rotation_matrix, model->transform);
-        mat4_t mvp_matrix = mat4_mul_mat4(viewproj_matrix, model_matrix);
+        model_t *model = scene->models[i];
+        mat4_t mvp_matrix = mat4_mul_mat4(viewproj_matrix, model->transform);
         constant_uniforms_t *uniforms = constant_get_uniforms(model);
         uniforms->mvp_matrix = mvp_matrix;
     }
 }
 
-static void draw_function(framebuffer_t *framebuffer, void *userdata) {
-    model_t **models = (model_t**)userdata;
-    int num_models = darray_size(models);
+static void draw_scene(scene_t *scene, framebuffer_t *framebuffer) {
+    int num_models = darray_size(scene->models);
     int i;
+    framebuffer_clear_color(framebuffer, scene->background);
+    framebuffer_clear_depth(framebuffer, 1);
     for (i = 0; i < num_models; i++) {
-        model_t *model = models[i];
-        constant_draw_model(framebuffer, model);
+        model_t *model = scene->models[i];
+        constant_draw_model(model, framebuffer);
     }
 }
 
-static void tickfunc(context_t *context, void *userdata) {
-    framebuffer_clear_color(context->framebuffer, vec4_new(0, 0, 0, 1));
-    framebuffer_clear_depth(context->framebuffer, 1);
-    tickfunc_function(context->camera, userdata);
-    draw_function(context->framebuffer, userdata);
+static void tick_function(context_t *context, void *userdata) {
+    scene_t *scene = (scene_t*)userdata;
+    update_scene(scene, context->camera);
+    draw_scene(scene, context->framebuffer);
 }
 
 void test_constant(int argc, char *argv[]) {
-    model_t **models;
-    if (argc > 2) {
-        const char *model_name = argv[2];
-        models = create_models(model_name);
-    } else {
-        int index = rand() % ARRAY_LENGTH(MODEL_NAMES);
-        const char *model_name = MODEL_NAMES[index];
-        models = create_models(model_name);
-    }
-    if (models) {
-        test_base(tickfunc, models);
-        constant_release_models(models);
+    int num_entries = ARRAY_LENGTH(g_scene_entries);
+    const char *scene_name = (argc > 2) ? argv[2] : NULL;
+    scene_t *scene = scene_create(g_scene_entries, num_entries, scene_name);
+    if (scene) {
+        test_base(tick_function, scene);
+        scene_release(scene, constant_release_model);
     }
 }

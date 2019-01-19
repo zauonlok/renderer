@@ -48,10 +48,10 @@ vec4_t phong_vertex_shader(void *attribs, void *varyings, void *uniforms);
 vec4_t phong_fragment_shader(void *varyings, void *uniforms);
 
 /* high-level apis */
-model_t *phong_create_model(mat4_t transform, const char *mesh,
+model_t *phong_create_model(const char *mesh_filename, mat4_t transform,
                             phong_material_t material);
 void phong_release_model(model_t *model);
 phong_uniforms_t *phong_get_uniforms(model_t *model);
-void phong_draw_model(framebuffer_t *framebuffer, model_t *model);
+void phong_draw_model(model_t *model, framebuffer_t *framebuffer);
 
 #endif

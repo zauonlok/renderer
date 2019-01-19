@@ -24,31 +24,31 @@ vec4_t phong_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     return clip_pos;
 }
 
-static vec4_t calculate_diffuse(vec2_t uv, phong_uniforms_t *uniforms) {
+static vec4_t calculate_diffuse(vec2_t texcoord, phong_uniforms_t *uniforms) {
     if (uniforms->diffuse_texture) {
-        vec4_t diffuse_fac = uniforms->diffuse_factor;
-        vec4_t diffuse_tex = texture_sample(uniforms->diffuse_texture, uv);
-        return vec4_modulate(diffuse_fac, diffuse_tex);
+        vec4_t factor = uniforms->diffuse_factor;
+        vec4_t color = texture_sample(uniforms->diffuse_texture, texcoord);
+        return vec4_modulate(factor, color);
     } else {
         return uniforms->diffuse_factor;
     }
 }
 
-static vec4_t calculate_emission(vec2_t uv, phong_uniforms_t *uniforms) {
+static vec4_t calculate_emission(vec2_t texcoord, phong_uniforms_t *uniforms) {
     if (uniforms->emission_texture) {
-        vec4_t emission_fac = uniforms->emission_factor;
-        vec4_t emission_tex = texture_sample(uniforms->emission_texture, uv);
-        return vec4_modulate(emission_fac, emission_tex);
+        vec4_t factor = uniforms->emission_factor;
+        vec4_t color = texture_sample(uniforms->emission_texture, texcoord);
+        return vec4_modulate(factor, color);
     } else {
         return uniforms->emission_factor;
     }
 }
 
-static vec4_t calculate_specular(vec2_t uv, phong_uniforms_t *uniforms) {
+static vec4_t calculate_specular(vec2_t texcoord, phong_uniforms_t *uniforms) {
     if (uniforms->specular_texture) {
-        vec4_t specular_fac = uniforms->specular_factor;
-        vec4_t specular_tex = texture_sample(uniforms->specular_texture, uv);
-        return vec4_modulate(specular_fac, specular_tex);
+        vec4_t factor = uniforms->specular_factor;
+        vec4_t color = texture_sample(uniforms->specular_texture, texcoord);
+        return vec4_modulate(factor, color);
     } else {
         return uniforms->specular_factor;
     }
@@ -106,7 +106,7 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
 
 /* high-level apis */
 
-model_t *phong_create_model(mat4_t transform, const char *mesh,
+model_t *phong_create_model(const char *mesh_filename, mat4_t transform,
                             phong_material_t material) {
     int sizeof_attribs = sizeof(phong_attribs_t);
     int sizeof_varyings = sizeof(phong_varyings_t);
@@ -138,7 +138,7 @@ model_t *phong_create_model(mat4_t transform, const char *mesh,
 
     model = (model_t*)malloc(sizeof(model_t));
     model->transform = transform;
-    model->mesh      = mesh_load(mesh);
+    model->mesh      = mesh_load(mesh_filename);
     model->program   = program;
 
     return model;
@@ -164,7 +164,7 @@ phong_uniforms_t *phong_get_uniforms(model_t *model) {
     return (phong_uniforms_t*)model->program->uniforms;
 }
 
-void phong_draw_model(framebuffer_t *framebuffer, model_t *model) {
+void phong_draw_model(model_t *model, framebuffer_t *framebuffer) {
     program_t *program = model->program;
     mesh_t *mesh = model->mesh;
     int num_faces = mesh_get_num_faces(mesh);

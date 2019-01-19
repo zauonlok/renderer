@@ -29,7 +29,7 @@ typedef struct {
 typedef struct {int width, height; vec4_t *buffer;} texture_t;
 
 typedef struct {mat4_t transform; mesh_t *mesh; program_t *program;} model_t;
-typedef struct {vec3_t background; model_t **models;} scene_t;
+typedef struct {vec4_t background; model_t **models;} scene_t;
 
 /* framebuffer management */
 framebuffer_t *framebuffer_create(int width, int height);

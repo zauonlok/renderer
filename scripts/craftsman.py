@@ -24,38 +24,45 @@ OBJ_FILENAMES = [
     "hammer.obj",
     "hotiron.obj",
     "shoulderpad1.obj",
-    "spark.obj",
 ]
 
 IMG_FILENAMES = {
-    "textures/02_-_Default_baseColor.png": "smith_basecolor.tga",
-    "textures/02_-_Default_emissive.jpg": "smith_emissive.tga",
-    "textures/03_-_Default_baseColor.png": "floor_basecolor.tga",
-    "textures/08_-_Default_baseColor.png": "spark_basecolor.tga",
-    "textures/08_-_Default_emissive.jpg": "spark_emissive.tga",
-    "textures/09_-_Default_baseColor.jpg": "anvil_basecolor.tga",
+    "textures/02_-_Default_baseColor.png": "smith_diffuse.tga",
+    "textures/02_-_Default_emissive.jpg": "smith_emission.tga",
+    "textures/03_-_Default_baseColor.png": "floor_diffuse.tga",
+    "textures/09_-_Default_baseColor.jpg": "anvil_diffuse.tga",
 }
+
+
+def print_transforms(gltf):
+    row_pattern = "            {{{:10.6f}f, {:10.6f}f, {:10.6f}f, {:10.6f}f}},"
+    transforms = utils.load_gltf_transforms(gltf)[:7]
+    num_transforms = len(transforms)
+    print("    mat4_t transforms[{}] = {{".format(num_transforms))
+    for transform in transforms:
+        print("        {{")
+        for i in range(4):
+            print(row_pattern.format(*transform.data[i]))
+        print("        }},")
+    print("    };")
 
 
 def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
-    assert len(buffer) == 355248
 
     meshes = []
     for mesh in gltf["meshes"]:
         mesh = utils.load_gltf_mesh(gltf, buffer, mesh)
         meshes.append(mesh)
 
-    # there are 20 identical spark models, just save the first one
-    assert len(meshes) == 27
-    assert all([x == meshes[7] for x in meshes[8:]])
-
     for filename, mesh in zip(OBJ_FILENAMES, meshes):
         content = utils.dump_mesh_data(mesh)
         filepath = os.path.join(DST_DIRECTORY, filename)
         with open(filepath, "w") as f:
             f.write(content)
+
+    print_transforms(gltf)
 
 
 def process_images(zip_file):

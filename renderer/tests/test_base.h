@@ -5,6 +5,8 @@
 
 #define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 
+/* test delegate functions */
+
 typedef struct {
     framebuffer_t *framebuffer;
     camera_t *camera;
@@ -15,5 +17,16 @@ typedef struct {
 typedef void tickfunc_t(context_t *context, void *userdata);
 
 void test_base(tickfunc_t *tickfunc, void *userdata);
+
+/* scene helper functions */
+
+typedef struct {
+    const char *scene_name;
+    scene_t *(*scene_ctor)(void);
+} scene_entry_t;
+
+scene_t *scene_create(scene_entry_t scene_entries[], int num_entries,
+                      const char *scene_name);
+void scene_release(scene_t *scene, void (*model_dtor)(model_t *model));
 
 #endif

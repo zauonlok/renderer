@@ -1,7 +1,7 @@
-"""Preprocess the Demon Hunter model
+"""Preprocess the Elf Girl model
 
 The model is available for download from
-    https://sketchfab.com/models/ff6a14371bc347d9a1526f5e64b29327
+    https://sketchfab.com/models/52f2e84961b94760b7805c178890d644
 
 The Python Imaging Library is required
     pip install pillow
@@ -13,34 +13,45 @@ import zipfile
 from PIL import Image
 import utils
 
-SRC_FILENAME = "demon_hunter.zip"
-DST_DIRECTORY = "../assets/demon_hunter"
+SRC_FILENAME = "elf_girl.zip"
+DST_DIRECTORY = "../assets/elfgirl"
 
 OBJ_FILENAMES = [
-    "body.obj",
-    # there are 2 identical crossbow models
-    "crossbow.obj",
-    "crossbow.obj",
-    # there are 2 identical eyeball models
-    "eye.obj",
-    "eye.obj",
-    "floor.obj",
+    "face0.obj",
+    "face1.obj",
+    "body0.obj",
+    "body1.obj",
+    "body2.obj",
+    "hair.obj",
+    "base.obj",
 ]
 
 IMG_FILENAMES = {
-    "textures/DH_crossbow_phong_baseColor.png": "crossbow.tga",
-    "textures/DH_matl1_baseColor.png": "body.tga",
+    "textures/Rig2lambert23SG_baseColor.png": "face.tga",
+    "textures/lambert22SG_baseColor.png": "body.tga",
+    "textures/lambert25SG_baseColor.png": "hair.tga",
+    "textures/pasted__lambert2SG_baseColor.png": "base.tga",
 }
+
+
+def fix_texcoords(mesh):
+    texcoords = mesh["texcoords"]
+    for i in range(len(texcoords)):
+        u, v = texcoords[i]
+        # the default wrap parameter is GL_REPEAT, which causes the integer part
+        # of texcoords to be ignored, only the fractional part is used, see
+        # http://docs.gl/gl2/glTexParameter
+        texcoords[i] = [u % 1, v % 1]
 
 
 def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
-    assert len(buffer) == 445304
 
     meshes = []
     for mesh in gltf["meshes"]:
         mesh = utils.load_gltf_mesh(gltf, buffer, mesh)
+        fix_texcoords(mesh)
         meshes.append(mesh)
 
     assert len(OBJ_FILENAMES) == len(meshes)
@@ -52,12 +63,18 @@ def process_meshes(zip_file):
 
 
 def process_images(zip_file):
-    for old_filename, tga_filename in IMG_FILENAMES.items():
-        with zip_file.open(old_filename) as f:
+    for png_filename, tga_filename in IMG_FILENAMES.items():
+        with zip_file.open(png_filename) as f:
             image = Image.open(f)
             bands = image.split()
             assert len(bands) in [3, 4]
             image = Image.merge("RGB", bands[:3])
+            # coordinates origin:
+            #     lower left corner: OpenGL, TGA
+            #     upper left corner: WebGL, glTF
+            # references:
+            #     https://github.com/KhronosGroup/glTF/issues/1021
+            #     https://github.com/KhronosGroup/glTF-WebGL-PBR/issues/16
             image = image.transpose(Image.FLIP_TOP_BOTTOM)
             image = image.resize((512, 512), Image.LANCZOS)
             filepath = os.path.join(DST_DIRECTORY, tga_filename)

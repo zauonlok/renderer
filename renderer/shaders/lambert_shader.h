@@ -39,10 +39,10 @@ vec4_t lambert_vertex_shader(void *attribs, void *varyings, void *uniforms);
 vec4_t lambert_fragment_shader(void *varyings, void *uniforms);
 
 /* high-level apis */
-model_t *lambert_create_model(mat4_t transform, const char *mesh,
+model_t *lambert_create_model(const char *mesh_filename, mat4_t transform,
                               lambert_material_t material);
 void lambert_release_model(model_t *model);
 lambert_uniforms_t *lambert_get_uniforms(model_t *model);
-void lambert_draw_model(framebuffer_t *framebuffer, model_t *model);
+void lambert_draw_model(model_t *model, framebuffer_t *framebuffer);
 
 #endif
