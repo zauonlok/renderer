@@ -12,7 +12,7 @@ static const char *WINDOW_TITLE = "Viewer";
 static const int WINDOW_WIDTH = 800;
 static const int WINDOW_HEIGHT = 600;
 
-static const vec3_t CAMERA_POSITION = {0, 0, 3.5};
+static const vec3_t CAMERA_POSITION = {0, 0, 2};
 static const vec3_t CAMERA_TARGET = {0, 0, 0};
 
 static const float LIGHT_THETA = TO_RADIANS(45);
@@ -199,6 +199,42 @@ static int count_num_faces(scene_t *scene) {
     return num_faces;
 }
 
+static float min_float(float a, float b) {
+    return a < b ? a : b;
+}
+
+static float max_float(float a, float b) {
+    return a > b ? a : b;
+}
+
+static void calculate_bbox(scene_t *scene,
+                           vec3_t *out_bbmin, vec3_t *out_bbmax,
+                           vec3_t *out_center, vec3_t *out_extend) {
+    int num_models = darray_size(scene->models);
+    vec3_t bbmin = vec3_new(+1e6, +1e6, +1e6);
+    vec3_t bbmax = vec3_new(-1e6, -1e6, -1e6);
+    int i, j, k;
+    for (i = 0; i < num_models; i++) {
+        mesh_t *mesh = scene->models[i]->mesh;
+        int num_faces = mesh_get_num_faces(mesh);
+        for (j = 0; j < num_faces; j++) {
+            for (k = 0; k < 3; k++) {
+                vec3_t position = mesh_get_position(mesh, j, k);
+                bbmin.x = min_float(bbmin.x, position.x);
+                bbmin.y = min_float(bbmin.y, position.y);
+                bbmin.z = min_float(bbmin.z, position.z);
+                bbmax.x = max_float(bbmax.x, position.x);
+                bbmax.y = max_float(bbmax.y, position.y);
+                bbmax.z = max_float(bbmax.z, position.z);
+            }
+        }
+    }
+    *out_bbmin = bbmin;
+    *out_bbmax = bbmax;
+    *out_center = vec3_div(vec3_add(bbmin, bbmax), 2);
+    *out_extend = vec3_sub(bbmax, bbmin);
+}
+
 scene_t *scene_create(scene_entry_t scene_entries[], int num_entries,
                       const char *scene_name) {
     scene_t *scene = NULL;
@@ -217,8 +253,14 @@ scene_t *scene_create(scene_entry_t scene_entries[], int num_entries,
         }
     }
     if (scene) {
+        vec3_t bbmin, bbmax, center, extend;
+        calculate_bbox(scene, &bbmin, &bbmax, &center, &extend);
         printf("scene: %s\n", scene_name);
         printf("faces: %d\n", count_num_faces(scene));
+        printf("bbmin: [%.3f, %.3f, %.3f]\n", bbmin.x, bbmin.y, bbmin.z);
+        printf("bbmax: [%.3f, %.3f, %.3f]\n", bbmax.x, bbmax.y, bbmax.z);
+        printf("center: [%.3f, %.3f, %.3f]\n", center.x, center.y, center.z);
+        printf("extend: [%.3f, %.3f, %.3f]\n", extend.x, extend.y, extend.z);
     } else {
         printf("scene not found: %s\n", scene_name);
     }

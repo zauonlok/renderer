@@ -3,4 +3,6 @@
 
 #include "../core/apis.h"
 
+scene_t *blinn_centaur_scene(void);
+
 #endif

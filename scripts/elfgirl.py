@@ -7,6 +7,8 @@ The Python Imaging Library is required
     pip install pillow
 """
 
+from __future__ import print_function
+
 import json
 import os
 import zipfile

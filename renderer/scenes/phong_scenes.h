@@ -3,4 +3,6 @@
 
 #include "../core/apis.h"
 
+scene_t *constant_ornitier_scene(void);
+
 #endif

@@ -5,10 +5,10 @@
 
 typedef struct {
     vec4_t ambient_factor;
-    vec4_t diffuse_factor;
     vec4_t emission_factor;
-    const char *diffuse_texture;
+    vec4_t diffuse_factor;
     const char *emission_texture;
+    const char *diffuse_texture;
 } lambert_material_t;
 
 typedef struct {
@@ -28,10 +28,10 @@ typedef struct {
     mat4_t model_it_matrix;
     /* from material */
     vec4_t ambient_factor;
-    vec4_t diffuse_factor;
     vec4_t emission_factor;
-    texture_t *diffuse_texture;
+    vec4_t diffuse_factor;
     texture_t *emission_texture;
+    texture_t *diffuse_texture;
 } lambert_uniforms_t;
 
 /* low-level apis */

@@ -1,6 +1,4 @@
 #include "geometry.h"
-#include <assert.h>
-#include <math.h>
 #include <stdio.h>
 
 /* vec2 related functions */
@@ -210,7 +208,6 @@ mat3_t mat3_inverse_transpose(mat3_t m) {
 
     adjoint = mat3_adjoint(m);
     determinant = mat3_determinant(m);
-    assert(fabs(determinant) > EPSILON);
     inv_determinant = 1 / determinant;
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
@@ -330,7 +327,6 @@ mat4_t mat4_inverse_transpose(mat4_t m) {
     for (i = 0; i < 4; i++) {
         determinant += m.m[0][i] * adjoint.m[0][i];
     }
-    assert(fabs(determinant) > EPSILON);
     inv_determinant = 1 / determinant;
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {

@@ -4,6 +4,34 @@
 #include "../core/apis.h"
 #include "../shaders/constant_shader.h"
 
+static scene_t *create_scene(
+        int num_meshes, const char *mesh_names[], const char *emission_names[],
+        mat4_t transforms[], vec4_t background) {
+    vec4_t enabled = vec4_new(1, 1, 1, 1);
+    vec4_t disabled = vec4_new(0, 0, 0, 1);
+    model_t **models = NULL;
+    scene_t *scene;
+    int i;
+
+    for (i = 0; i < num_meshes; i++) {
+        constant_material_t material;
+        model_t *model;
+
+        material.ambient_factor = disabled;
+        material.emission_factor = emission_names[i] ? enabled : disabled;
+        material.emission_texture = emission_names[i];
+
+        model = constant_create_model(mesh_names[i], transforms[i], material);
+        darray_push(models, model);
+    }
+
+    scene = (scene_t*)malloc(sizeof(scene_t));
+    scene->background = background;
+    scene->models     = models;
+
+    return scene;
+}
+
 scene_t *constant_mccree_scene(void) {
     mat4_t transforms[8] = {
         {{
@@ -95,15 +123,17 @@ scene_t *constant_mccree_scene(void) {
          1,  6,  9, 27, 12, 13, 14, 15, 16,  3, 11, 10,  4,  1, 10,  4,
          1, 10,  4,  1,  5,  6,  7,  8,  9,  0,  1,  2,  3,  4,
     };
+    vec4_t background = vec4_new(0.847f, 0.949f, 0.898f, 1);
     model_t **models = NULL;
     scene_t *scene;
     mat4_t scale, translation, root;
+    int num_meshes = 46;
     int i;
 
     translation = mat4_translate(0.111f, -1.479f, 0.033f);
-    scale = mat4_scale(0.674f, 0.674f, 0.674f);
+    scale = mat4_scale(0.299f, 0.299f, 0.299f);
     root = mat4_mul_mat4(scale, translation);
-    for (i = 0; i < 46; i++) {
+    for (i = 0; i < num_meshes; i++) {
         int transform_index = mesh2transform[i];
         int material_index = mesh2material[i];
         mat4_t transform = mat4_mul_mat4(root, transforms[transform_index]);
@@ -117,65 +147,47 @@ scene_t *constant_mccree_scene(void) {
     }
 
     scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background = vec4_new(0.847f, 0.949f, 0.898f, 1);
+    scene->background = background;
     scene->models     = models;
 
     return scene;
 }
 
 scene_t *constant_elfgirl_scene(void) {
-    const char *face0_obj = "assets/elfgirl/face0.obj";
-    const char *face1_obj = "assets/elfgirl/face1.obj";
-    const char *body0_obj = "assets/elfgirl/body0.obj";
-    const char *body1_obj = "assets/elfgirl/body1.obj";
-    const char *body2_obj = "assets/elfgirl/body2.obj";
-    const char *hair_obj = "assets/elfgirl/hair.obj";
-    const char *base_obj = "assets/elfgirl/base.obj";
-    const char *face_tga = "assets/elfgirl/face.tga";
-    const char *body_tga = "assets/elfgirl/body.tga";
-    const char *hair_tga = "assets/elfgirl/hair.tga";
-    const char *base_tga = "assets/elfgirl/base.tga";
-    constant_material_t material;
-    model_t **models = NULL;
-    model_t *model;
+    const char *mesh_names[] = {
+        "assets/elfgirl/face0.obj",
+        "assets/elfgirl/face1.obj",
+        "assets/elfgirl/body0.obj",
+        "assets/elfgirl/body1.obj",
+        "assets/elfgirl/body2.obj",
+        "assets/elfgirl/hair.obj",
+        "assets/elfgirl/base.obj",
+    };
+    const char *emission_names[] = {
+        "assets/elfgirl/face.tga",
+        "assets/elfgirl/face.tga",
+        "assets/elfgirl/body.tga",
+        "assets/elfgirl/body.tga",
+        "assets/elfgirl/body.tga",
+        "assets/elfgirl/hair.tga",
+        "assets/elfgirl/base.tga",
+    };
+    vec4_t background = vec4_new(0.333f, 0.333f, 0.333f, 1);
+    mat4_t transforms[7];
+    mat4_t scale, rotation, translation, transform;
     scene_t *scene;
-    mat4_t scale, rotation, translation;
-    mat4_t transform;
+    int num_meshes = 7;
+    int i;
 
     translation = mat4_translate(2.449f, -2.472f, -20.907f);
-    scale = mat4_scale(0.046f, 0.046f, 0.046f);
     rotation = mat4_rotate_x(TO_RADIANS(-90));
-    transform = mat4_mul_mat4(rotation, mat4_mul_mat4(scale, translation));
+    scale = mat4_scale(0.023f, 0.023f, 0.023f);
+    transform = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    for (i = 0; i < num_meshes; i++) {
+        transforms[i] = transform;
+    }
 
-    material.ambient_factor = vec4_new(0, 0, 0, 1);
-    material.emission_factor = vec4_new(1, 1, 1, 1);
-    material.emission_texture = NULL;
-
-    material.emission_texture = face_tga;
-    model = constant_create_model(face0_obj, transform, material);
-    darray_push(models, model);
-    model = constant_create_model(face1_obj, transform, material);
-    darray_push(models, model);
-
-    material.emission_texture = body_tga;
-    model = constant_create_model(body0_obj, transform, material);
-    darray_push(models, model);
-    model = constant_create_model(body1_obj, transform, material);
-    darray_push(models, model);
-    model = constant_create_model(body2_obj, transform, material);
-    darray_push(models, model);
-
-    material.emission_texture = hair_tga;
-    model = constant_create_model(hair_obj, transform, material);
-    darray_push(models, model);
-
-    material.emission_texture = base_tga;
-    model = constant_create_model(base_obj, transform, material);
-    darray_push(models, model);
-
-    scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background = vec4_new(0.333f, 0.333f, 0.333f, 1);
-    scene->models     = models;
-
+    scene = create_scene(num_meshes, mesh_names, emission_names,
+                         transforms, background);
     return scene;
 }

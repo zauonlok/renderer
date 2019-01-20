@@ -5,12 +5,12 @@
 
 typedef struct {
     vec4_t ambient_factor;
-    vec4_t diffuse_factor;
     vec4_t emission_factor;
+    vec4_t diffuse_factor;
     vec4_t specular_factor;
     float shininess;
-    const char *diffuse_texture;
     const char *emission_texture;
+    const char *diffuse_texture;
     const char *specular_texture;
 } blinn_material_t;
 
@@ -34,12 +34,12 @@ typedef struct {
     mat4_t viewproj_matrix;
     /* from material */
     vec4_t ambient_factor;
-    vec4_t diffuse_factor;
     vec4_t emission_factor;
+    vec4_t diffuse_factor;
     vec4_t specular_factor;
     float shininess;
-    texture_t *diffuse_texture;
     texture_t *emission_texture;
+    texture_t *diffuse_texture;
     texture_t *specular_texture;
 } blinn_uniforms_t;
 

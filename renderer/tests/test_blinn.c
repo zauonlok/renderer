@@ -6,7 +6,7 @@
 #include "../tests/test_base.h"
 
 static scene_entry_t g_scene_entries[] = {
-    {"N/A", NULL},
+    {"centaur", blinn_centaur_scene},
 };
 
 static void update_scene(scene_t *scene, camera_t *camera, vec3_t light_dir) {

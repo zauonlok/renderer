@@ -24,16 +24,6 @@ vec4_t phong_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     return clip_pos;
 }
 
-static vec4_t calculate_diffuse(vec2_t texcoord, phong_uniforms_t *uniforms) {
-    if (uniforms->diffuse_texture) {
-        vec4_t factor = uniforms->diffuse_factor;
-        vec4_t color = texture_sample(uniforms->diffuse_texture, texcoord);
-        return vec4_modulate(factor, color);
-    } else {
-        return uniforms->diffuse_factor;
-    }
-}
-
 static vec4_t calculate_emission(vec2_t texcoord, phong_uniforms_t *uniforms) {
     if (uniforms->emission_texture) {
         vec4_t factor = uniforms->emission_factor;
@@ -41,6 +31,16 @@ static vec4_t calculate_emission(vec2_t texcoord, phong_uniforms_t *uniforms) {
         return vec4_modulate(factor, color);
     } else {
         return uniforms->emission_factor;
+    }
+}
+
+static vec4_t calculate_diffuse(vec2_t texcoord, phong_uniforms_t *uniforms) {
+    if (uniforms->diffuse_texture) {
+        vec4_t factor = uniforms->diffuse_factor;
+        vec4_t color = texture_sample(uniforms->diffuse_texture, texcoord);
+        return vec4_modulate(factor, color);
+    } else {
+        return uniforms->diffuse_factor;
     }
 }
 
@@ -82,8 +82,8 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
     phong_uniforms_t *uniforms = (phong_uniforms_t*)uniforms_;
 
     vec4_t ambient = uniforms->ambient_factor;
-    vec4_t diffuse_ = calculate_diffuse(varyings->texcoord, uniforms);
     vec4_t emission = calculate_emission(varyings->texcoord, uniforms);
+    vec4_t diffuse_ = calculate_diffuse(varyings->texcoord, uniforms);
     vec4_t specular_ = calculate_specular(varyings->texcoord, uniforms);
 
     vec3_t light_dir = vec3_normalize(uniforms->light_dir);
@@ -97,9 +97,9 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
     vec3_t diffuse = vec3_mul(vec3_from_vec4(diffuse_), d_strength);
     vec3_t specular = vec3_mul(vec3_from_vec4(specular_), s_strength);
 
-    float color_r = ambient.x + diffuse.x + specular.x + emission.x;
-    float color_g = ambient.y + diffuse.y + specular.y + emission.y;
-    float color_b = ambient.z + diffuse.z + specular.z + emission.z;
+    float color_r = ambient.x + emission.x + diffuse.x + specular.x;
+    float color_g = ambient.y + emission.y + diffuse.y + specular.y;
+    float color_b = ambient.z + emission.z + diffuse.z + specular.z;
 
     return vec4_new(color_r, color_g, color_b, 1);
 }
@@ -119,17 +119,17 @@ model_t *phong_create_model(const char *mesh_filename, mat4_t transform,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms);
     uniforms = (phong_uniforms_t*)program->uniforms;
     uniforms->ambient_factor = material.ambient_factor;
-    uniforms->diffuse_factor = material.diffuse_factor;
     uniforms->emission_factor = material.emission_factor;
+    uniforms->diffuse_factor = material.diffuse_factor;
     uniforms->specular_factor = material.specular_factor;
     uniforms->shininess = material.shininess;
-    if (material.diffuse_texture) {
-        const char *diffuse_filename = material.diffuse_texture;
-        uniforms->diffuse_texture = texture_from_file(diffuse_filename);
-    }
     if (material.emission_texture) {
         const char *emission_filename = material.emission_texture;
         uniforms->emission_texture = texture_from_file(emission_filename);
+    }
+    if (material.diffuse_texture) {
+        const char *diffuse_filename = material.diffuse_texture;
+        uniforms->diffuse_texture = texture_from_file(diffuse_filename);
     }
     if (material.specular_texture) {
         const char *specular_filename = material.specular_texture;
@@ -146,11 +146,11 @@ model_t *phong_create_model(const char *mesh_filename, mat4_t transform,
 
 void phong_release_model(model_t *model) {
     phong_uniforms_t *uniforms = phong_get_uniforms(model);
-    if (uniforms->diffuse_texture) {
-        texture_release(uniforms->diffuse_texture);
-    }
     if (uniforms->emission_texture) {
         texture_release(uniforms->emission_texture);
+    }
+    if (uniforms->diffuse_texture) {
+        texture_release(uniforms->diffuse_texture);
     }
     if (uniforms->specular_texture) {
         texture_release(uniforms->specular_texture);

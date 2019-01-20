@@ -1,7 +1,7 @@
-"""Preprocess the Noble Craftsman model
+"""Preprocess the Centaur model
 
 The model is available for download from
-    https://sketchfab.com/models/0e8ff87ffaa24731b2474badebca870d
+    https://sketchfab.com/models/0d3f1b4a51144b7fbc4e2ff64d858413
 
 The Python Imaging Library is required
     pip install pillow
@@ -15,38 +15,28 @@ import zipfile
 from PIL import Image
 import utils
 
-SRC_FILENAME = "the_noble_craftsman.zip"
-DST_DIRECTORY = "../assets/craftsman"
+SRC_FILENAME = "centaur.zip"
+DST_DIRECTORY = "../assets/centaur"
 
 OBJ_FILENAMES = [
-    "anvil.obj",
-    "smith.obj",
-    "floor.obj",
-    "shoulderpad0.obj",
-    "hammer.obj",
-    "hotiron.obj",
-    "shoulderpad1.obj",
+    "body.obj",
+    None,
+    "flame.obj",
+    "gas.obj",
 ]
 
 IMG_FILENAMES = {
-    "textures/02_-_Default_baseColor.png": "smith_diffuse.tga",
-    "textures/02_-_Default_emissive.jpg": "smith_emission.tga",
-    "textures/03_-_Default_baseColor.png": "floor_diffuse.tga",
-    "textures/09_-_Default_baseColor.jpg": "anvil_diffuse.tga",
+    # body textures
+    "textures/body_diffuse.jpeg": "body_diffuse.tga",
+    "textures/body_emissive.jpeg": "body_emission.tga",
+    "textures/body_specularGlossiness.png": "body_specular.tga",
+    # flame textures
+    "textures/flame_diffuse.png": "flame_diffuse.tga",
+    "textures/flame_emissive.jpeg": "flame_emission.tga",
+    # gas textures
+    "textures/material_diffuse.jpeg": "gas_diffuse.tga",
+    "textures/material_specularGlossiness.png": "gas_specular.tga",
 }
-
-
-def print_transforms(gltf):
-    row_pattern = "            {{{:10.6f}f, {:10.6f}f, {:10.6f}f, {:10.6f}f}},"
-    transforms = utils.load_gltf_transforms(gltf)[:7]
-    num_transforms = len(transforms)
-    print("    mat4_t transforms[{}] = {{".format(num_transforms))
-    for transform in transforms:
-        print("        {{")
-        for i in range(4):
-            print(row_pattern.format(*transform.data[i]))
-        print("        }},")
-    print("    };")
 
 
 def process_meshes(zip_file):
@@ -58,13 +48,21 @@ def process_meshes(zip_file):
         mesh = utils.load_gltf_mesh(gltf, buffer, mesh)
         meshes.append(mesh)
 
-    for filename, mesh in zip(OBJ_FILENAMES, meshes):
-        content = utils.dump_mesh_data(mesh)
-        filepath = os.path.join(DST_DIRECTORY, filename)
-        with open(filepath, "w") as f:
-            f.write(content)
+    # delete unwanted faces
+    flame_mesh = meshes[2]
+    flame_mesh["indices"] = flame_mesh["indices"][(240 * 3):]
 
-    print_transforms(gltf)
+    for filename, mesh in zip(OBJ_FILENAMES, meshes):
+        if filename:
+            content = utils.dump_mesh_data(mesh)
+            filepath = os.path.join(DST_DIRECTORY, filename)
+            with open(filepath, "w") as f:
+                f.write(content)
+
+
+def gamma_correct(image):
+    lookup_table = [pow(x / 255.0, 1.0 / 2.2) * 255 for x in range(256)] * 3
+    return image.point(lookup_table)
 
 
 def process_images(zip_file):
@@ -72,8 +70,9 @@ def process_images(zip_file):
         with zip_file.open(old_filename) as f:
             image = Image.open(f)
             bands = image.split()
-            assert len(bands) in [3, 4]
             image = Image.merge("RGB", bands[:3])
+            if "specularGlossiness" in old_filename:
+                image = gamma_correct(image)
             image = image.transpose(Image.FLIP_TOP_BOTTOM)
             image = image.resize((512, 512), Image.LANCZOS)
             filepath = os.path.join(DST_DIRECTORY, tga_filename)
