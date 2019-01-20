@@ -61,7 +61,7 @@ def process_meshes(zip_file):
 
 
 def gamma_correct(image):
-    lookup_table = [pow(x / 255.0, 1.0 / 2.2) * 255 for x in range(256)] * 3
+    lookup_table = [pow(x / 255.0, 1 / 2.2) * 255 for x in range(256)] * 3
     return image.point(lookup_table)
 
 

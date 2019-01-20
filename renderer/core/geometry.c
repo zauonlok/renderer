@@ -1,4 +1,5 @@
 #include "geometry.h"
+#include <math.h>
 #include <stdio.h>
 
 /* vec2 related functions */
