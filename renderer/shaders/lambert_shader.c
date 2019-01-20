@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include "../core/apis.h"
 
+/*
+ * for half lambert, see
+ * https://developer.valvesoftware.com/wiki/Half_Lambert
+ */
+static const int USE_HALF_LAMBERT = 1;
+
 /* low-level apis */
 
 vec4_t lambert_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
@@ -48,7 +54,12 @@ static float max_float(float a, float b) {
 }
 
 static float calculate_diffuse_strength(vec3_t light_dir, vec3_t normal) {
-    return max_float(-vec3_dot(light_dir, normal), 0);
+    float l_dot_n = -vec3_dot(light_dir, normal);
+    if (USE_HALF_LAMBERT) {
+        return (l_dot_n * 0.5f + 0.5f) * (l_dot_n * 0.5f + 0.5f);
+    } else {
+        return max_float(l_dot_n, 0);
+    }
 }
 
 vec4_t lambert_fragment_shader(void *varyings_, void *uniforms_) {

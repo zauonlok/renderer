@@ -22,7 +22,7 @@ static scene_t *create_scene(
         material.emission_factor = emission_names[i] ? enabled : disabled;
         material.diffuse_factor = diffuse_names[i] ? enabled : disabled;
         material.specular_factor = specular_name[i] ? enabled : disabled;
-        material.shininess = 16;
+        material.shininess = 32;
         material.emission_texture = emission_names[i];
         material.diffuse_texture = diffuse_names[i];
         material.specular_texture = specular_name[i];
