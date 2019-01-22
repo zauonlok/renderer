@@ -1,9 +1,9 @@
 #include "test_base.h"
 #include <assert.h>
 #include <math.h>
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../core/apis.h"
 
 /* test delegate functions */

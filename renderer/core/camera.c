@@ -70,11 +70,9 @@ static vec3_t calculate_offset(vec3_t from_target, motion_t motion) {
     phi -= motion.orbit.y * factor;
     phi = clamp_float(phi, EPSILON, PI - EPSILON);
 
-    offset = vec3_new(
-        radius * (float)sin(phi) * (float)sin(theta),
-        radius * (float)cos(phi),
-        radius * (float)sin(phi) * (float)cos(theta)
-    );
+    offset = vec3_new(radius * (float)sin(phi) * (float)sin(theta),
+                      radius * (float)cos(phi),
+                      radius * (float)sin(phi) * (float)cos(theta));
     return offset;
 }
 
