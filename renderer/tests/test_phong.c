@@ -1,12 +1,12 @@
-#include "test_phong.h"
 #include <stddef.h>
-#include "../core/apis.h"
+#include "../core/api.h"
 #include "../scenes/phong_scenes.h"
 #include "../shaders/phong_shader.h"
-#include "../tests/test_base.h"
+#include "test_base.h"
+#include "test_phong.h"
 
 static scene_entry_t g_scene_entries[] = {
-    {"ornitier", constant_ornitier_scene},
+    {"ornitier", phong_ornitier_scene},
 };
 
 static void update_scene(scene_t *scene, camera_t *camera, vec3_t light_dir) {

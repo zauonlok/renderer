@@ -1,11 +1,10 @@
-#include "../core/platform.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-#include "../core/geometry.h"
 #include "../core/graphics.h"
 #include "../core/image.h"
+#include "../core/platform.h"
 
 struct window {
     HWND handle;
@@ -237,7 +236,7 @@ void *window_get_userdata(window_t *window) {
 }
 
 void private_blit_image_bgr(image_t *src, image_t *dst);
-void private_blit_buffer_bgr(colorbuffer_t *src, image_t *dst);
+void private_blit_buffer_bgr(framebuffer_t *src, image_t *dst);
 
 static void present_surface(window_t *window) {
     HDC window_dc = GetDC(window->handle);
@@ -254,7 +253,7 @@ void window_draw_image(window_t *window, image_t *image) {
     present_surface(window);
 }
 
-void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
+void window_draw_buffer(window_t *window, framebuffer_t *buffer) {
     private_blit_buffer_bgr(buffer, window->surface);
     present_surface(window);
 }
@@ -279,11 +278,12 @@ int input_button_pressed(window_t *window, button_t button) {
     return window->buttons[button];
 }
 
-vec2_t input_query_cursor(window_t *window) {
+void input_query_cursor(window_t *window, float *xpos, float *ypos) {
     POINT point;
     GetCursorPos(&point);
     ScreenToClient(window->handle, &point);
-    return vec2_new((float)point.x, (float)point.y);
+    *xpos = (float)point.x;
+    *ypos = (float)point.y;
 }
 
 void input_set_callbacks(window_t *window, callbacks_t callbacks) {

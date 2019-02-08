@@ -1,8 +1,7 @@
-#include "lambert_scenes.h"
-#include <stdio.h>
 #include <stdlib.h>
-#include "../core/apis.h"
+#include "../core/api.h"
 #include "../shaders/lambert_shader.h"
+#include "lambert_scenes.h"
 
 static scene_t *create_scene(
         int num_meshes, const char *mesh_names[], const char *emission_names[],

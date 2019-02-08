@@ -1,10 +1,10 @@
-#include "test_base.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../core/apis.h"
+#include "../core/api.h"
+#include "test_base.h"
 
 /* test delegate functions */
 
@@ -31,10 +31,16 @@ static vec2_t calculate_delta(vec2_t old_pos, vec2_t new_pos) {
     return vec2_div(delta, (float)WINDOW_HEIGHT);
 }
 
+vec2_t get_cursor_pos(window_t *window) {
+    float xpos, ypos;
+    input_query_cursor(window, &xpos, &ypos);
+    return vec2_new(xpos, ypos);
+}
+
 static void button_callback(window_t *window, button_t button, int pressed) {
     record_t *record = (record_t*)window_get_userdata(window);
     motion_t *motion = &record->next_motion;
-    vec2_t cursor_pos = input_query_cursor(window);
+    vec2_t cursor_pos = get_cursor_pos(window);
     if (button == BUTTON_L) {
         if (pressed) {
             record->orbiting = 1;
@@ -65,7 +71,7 @@ static void scroll_callback(window_t *window, float offset) {
 static void update_camera(window_t *window, camera_t *camera,
                           record_t *record) {
     motion_t *motion = &record->next_motion;
-    vec2_t cursor_pos = input_query_cursor(window);
+    vec2_t cursor_pos = get_cursor_pos(window);
     if (record->orbiting) {
         vec2_t delta = calculate_delta(record->orbit_pos, cursor_pos);
         motion->orbit = vec2_add(motion->orbit, delta);
@@ -170,7 +176,7 @@ void test_base(tickfunc_t *tickfunc, void *userdata) {
         context.delta_time = delta_time;
         tickfunc(&context, userdata);
 
-        window_draw_buffer(window, framebuffer->colorbuffer);
+        window_draw_buffer(window, framebuffer);
         num_frames += 1;
         if (curr_time - report_time >= 1) {
             printf("fps: %d\n", num_frames);

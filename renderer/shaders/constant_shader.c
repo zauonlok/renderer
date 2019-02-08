@@ -1,8 +1,8 @@
-#include "constant_shader.h"
 #include <stdlib.h>
-#include "../core/apis.h"
+#include "../core/api.h"
+#include "constant_shader.h"
 
-/* low-level apis */
+/* low-level api */
 
 vec4_t constant_vertex_shader(void *attribs_, void *varyings_,
                               void *uniforms_) {
@@ -41,7 +41,7 @@ vec4_t constant_fragment_shader(void *varyings_, void *uniforms_) {
     return vec4_new(color_r, color_g, color_b, 1);
 }
 
-/* high-level apis */
+/* high-level api */
 
 model_t *constant_create_model(const char *mesh_filename, mat4_t transform,
                                constant_material_t material) {
@@ -54,7 +54,7 @@ model_t *constant_create_model(const char *mesh_filename, mat4_t transform,
 
     program = program_create(constant_vertex_shader, constant_fragment_shader,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms);
-    uniforms = (constant_uniforms_t*)program->uniforms;
+    uniforms = (constant_uniforms_t*)program_get_uniforms(program);
     uniforms->ambient_factor = material.ambient_factor;
     uniforms->emission_factor = material.emission_factor;
     if (material.emission_texture) {
@@ -81,7 +81,7 @@ void constant_release_model(model_t *model) {
 }
 
 constant_uniforms_t *constant_get_uniforms(model_t *model) {
-    return (constant_uniforms_t*)model->program->uniforms;
+    return (constant_uniforms_t*)program_get_uniforms(model->program);
 }
 
 void constant_draw_model(model_t *model, framebuffer_t *framebuffer) {
@@ -93,7 +93,7 @@ void constant_draw_model(model_t *model, framebuffer_t *framebuffer) {
 
     for (i = 0; i < num_faces; i++) {
         for (j = 0; j < 3; j++) {
-            attribs = (constant_attribs_t*)program->attribs[j];
+            attribs = (constant_attribs_t*)program_get_attribs(program, j);
             attribs->position = mesh_get_position(mesh, i, j);
             attribs->texcoord = mesh_get_texcoord(mesh, i, j);
         }

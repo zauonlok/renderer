@@ -8,7 +8,7 @@
 
 #define darray_push(darray, value)                                          \
     do {                                                                    \
-        (darray) = darray_hold(darray, 1, sizeof(*(darray)));               \
+        (darray) = darray_hold((darray), 1, sizeof(*(darray)));             \
         (darray)[darray_size(darray) - 1] = (value);                        \
     } while (0)
 

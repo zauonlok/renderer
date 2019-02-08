@@ -1,9 +1,9 @@
-#include "test_constant.h"
 #include <stddef.h>
-#include "../core/apis.h"
+#include "../core/api.h"
 #include "../scenes/constant_scenes.h"
 #include "../shaders/constant_shader.h"
-#include "../tests/test_base.h"
+#include "test_base.h"
+#include "test_constant.h"
 
 static scene_entry_t g_scene_entries[] = {
     {"mccree", constant_mccree_scene},

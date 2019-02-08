@@ -1,7 +1,7 @@
 #ifndef CONSTANT_SHADER_H
 #define CONSTANT_SHADER_H
 
-#include "../core/apis.h"
+#include "../core/api.h"
 
 typedef struct {
     vec4_t ambient_factor;
@@ -26,11 +26,11 @@ typedef struct {
     texture_t *emission_texture;
 } constant_uniforms_t;
 
-/* low-level apis */
+/* low-level api */
 vec4_t constant_vertex_shader(void *attribs, void *varyings, void *uniforms);
 vec4_t constant_fragment_shader(void *varyings, void *uniforms);
 
-/* high-level apis */
+/* high-level api */
 model_t *constant_create_model(const char *mesh_filename, mat4_t transform,
                                constant_material_t material);
 void constant_release_model(model_t *model);

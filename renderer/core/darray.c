@@ -1,6 +1,6 @@
-#include "darray.h"
 #include <assert.h>
 #include <stdlib.h>
+#include "darray.h"
 
 #define DARRAY_RAW_DATA(darray) ((int*)(darray) - 2)
 #define DARRAY_CAPACITY(darray) (DARRAY_RAW_DATA(darray)[0])

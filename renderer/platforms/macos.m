@@ -1,12 +1,11 @@
-#include "../core/platform.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <mach/mach_time.h>
 #import <Cocoa/Cocoa.h>
-#include "../core/geometry.h"
 #include "../core/graphics.h"
 #include "../core/image.h"
+#include "../core/platform.h"
 
 #define UNUSED(x) ((void)(x))
 
@@ -275,7 +274,7 @@ void *window_get_userdata(window_t *window) {
 }
 
 void private_blit_image_rgb(image_t *src, image_t *dst);
-void private_blit_buffer_rgb(colorbuffer_t *src, image_t *dst);
+void private_blit_buffer_rgb(framebuffer_t *src, image_t *dst);
 
 static void present_surface(window_t *window) {
     [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
@@ -286,7 +285,7 @@ void window_draw_image(window_t *window, image_t *image) {
     present_surface(window);
 }
 
-void window_draw_buffer(window_t *window, colorbuffer_t *buffer) {
+void window_draw_buffer(window_t *window, framebuffer_t *buffer) {
     private_blit_buffer_rgb(buffer, window->surface);
     present_surface(window);
 }
@@ -318,10 +317,11 @@ int input_button_pressed(window_t *window, button_t button) {
     return window->buttons[button];
 }
 
-vec2_t input_query_cursor(window_t *window) {
+void input_query_cursor(window_t *window, float *xpos, float *ypos) {
     NSPoint point = [window->handle mouseLocationOutsideOfEventStream];
     NSRect rect = [[window->handle contentView] frame];
-    return vec2_new((float)point.x, (float)(rect.size.height - 1 - point.y));
+    *xpos = (float)point.x;
+    *ypos = (float)(rect.size.height - 1 - point.y);
 }
 
 void input_set_callbacks(window_t *window, callbacks_t callbacks) {

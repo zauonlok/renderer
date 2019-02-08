@@ -1,7 +1,6 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#include "geometry.h"
 #include "graphics.h"
 #include "image.h"
 
@@ -21,13 +20,13 @@ int window_should_close(window_t *window);
 void window_set_userdata(window_t *window, void *userdata);
 void *window_get_userdata(window_t *window);
 void window_draw_image(window_t *window, image_t *image);
-void window_draw_buffer(window_t *window, colorbuffer_t *buffer);
+void window_draw_buffer(window_t *window, framebuffer_t *buffer);
 
 /* input related functions */
 void input_poll_events(void);
 int input_key_pressed(window_t *window, keycode_t key);
 int input_button_pressed(window_t *window, button_t button);
-vec2_t input_query_cursor(window_t *window);
+void input_query_cursor(window_t *window, float *xpos, float *ypos);
 void input_set_callbacks(window_t *window, callbacks_t callbacks);
 float input_get_time(void);
 

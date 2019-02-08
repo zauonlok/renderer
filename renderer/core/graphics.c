@@ -1,73 +1,73 @@
-#include "graphics.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include "geometry.h"
-#include "image.h"
-#include "mesh.h"
+#include "graphics.h"
 
 /* framebuffer management */
 
-static const vec4_t DEFAULT_COLOR = {0, 0, 0, 1};
-static const float DEFAULT_DEPTH = 1;
-
 framebuffer_t *framebuffer_create(int width, int height) {
-    framebuffer_t *framebuffer;
-    colorbuffer_t *colorbuffer;
-    depthbuffer_t *depthbuffer;
+    vec4_t default_color = {0, 0, 0, 1};
+    float default_depth = 1;
     int num_elems = width * height;
+    framebuffer_t *framebuffer;
 
     assert(width > 0 && height > 0);
-
-    colorbuffer = (colorbuffer_t*)malloc(sizeof(colorbuffer_t));
-    colorbuffer->width  = width;
-    colorbuffer->height = height;
-    colorbuffer->buffer = (vec4_t*)malloc(sizeof(vec4_t) * num_elems);
-
-    depthbuffer = (depthbuffer_t*)malloc(sizeof(depthbuffer_t));
-    depthbuffer->width  = width;
-    depthbuffer->height = height;
-    depthbuffer->buffer = (float*)malloc(sizeof(float) * num_elems);
 
     framebuffer = (framebuffer_t*)malloc(sizeof(framebuffer_t));
     framebuffer->width       = width;
     framebuffer->height      = height;
-    framebuffer->colorbuffer = colorbuffer;
-    framebuffer->depthbuffer = depthbuffer;
+    framebuffer->colorbuffer = (vec4_t*)malloc(sizeof(vec4_t) * num_elems);
+    framebuffer->depthbuffer = (float*)malloc(sizeof(float) * num_elems);
 
-    framebuffer_clear_color(framebuffer, DEFAULT_COLOR);
-    framebuffer_clear_depth(framebuffer, DEFAULT_DEPTH);
+    framebuffer_clear_color(framebuffer, default_color);
+    framebuffer_clear_depth(framebuffer, default_depth);
 
     return framebuffer;
 }
 
 void framebuffer_release(framebuffer_t *framebuffer) {
-    free(framebuffer->colorbuffer->buffer);
     free(framebuffer->colorbuffer);
-    free(framebuffer->depthbuffer->buffer);
     free(framebuffer->depthbuffer);
     free(framebuffer);
 }
 
 void framebuffer_clear_color(framebuffer_t *framebuffer, vec4_t color) {
-    colorbuffer_t *colorbuffer = framebuffer->colorbuffer;
-    int num_elems = colorbuffer->width * colorbuffer->height;
+    int num_elems = framebuffer->width * framebuffer->height;
     int i;
     for (i = 0; i < num_elems; i++) {
-        colorbuffer->buffer[i] = color;
+        framebuffer->colorbuffer[i] = color;
     }
 }
 
 void framebuffer_clear_depth(framebuffer_t *framebuffer, float depth) {
-    depthbuffer_t *depthbuffer = framebuffer->depthbuffer;
-    int num_elems = depthbuffer->width * depthbuffer->height;
+    int num_elems = framebuffer->width * framebuffer->height;
     int i;
     for (i = 0; i < num_elems; i++) {
-        depthbuffer->buffer[i] = depth;
+        framebuffer->depthbuffer[i] = depth;
     }
 }
 
 /* program management */
+
+#define MAX_VARYINGS 6
+
+struct program {
+    vertex_shader_t *vertex_shader;
+    fragment_shader_t *fragment_shader;
+    int sizeof_attribs;
+    int sizeof_varyings;
+    int sizeof_uniforms;
+    /* for shaders */
+    void *shader_attribs[3];
+    void *shader_varyings;
+    void *shader_uniforms;
+    /* for clipping */
+    vec4_t in_coords[MAX_VARYINGS];
+    vec4_t out_coords[MAX_VARYINGS];
+    void *in_varyings[MAX_VARYINGS];
+    void *out_varyings[MAX_VARYINGS];
+};
 
 program_t *program_create(
         vertex_shader_t *vertex_shader, fragment_shader_t *fragment_shader,
@@ -75,17 +75,9 @@ program_t *program_create(
     program_t *program;
     int i;
 
+    assert(sizeof_attribs > 0 && sizeof_varyings > 0 && sizeof_uniforms > 0);
+
     program = (program_t*)malloc(sizeof(program_t));
-    for (i = 0; i < 3; i++) {
-        program->attribs[i] = malloc(sizeof_attribs);
-        memset(program->attribs[i], 0, sizeof_attribs);
-    }
-    for (i = 0; i < 4; i++) {
-        program->varyings[i] = malloc(sizeof_varyings);
-        memset(program->varyings[i], 0, sizeof_varyings);
-    }
-    program->uniforms = malloc(sizeof_uniforms);
-    memset(program->uniforms, 0, sizeof_uniforms);
 
     program->vertex_shader   = vertex_shader;
     program->fragment_shader = fragment_shader;
@@ -93,168 +85,216 @@ program_t *program_create(
     program->sizeof_varyings = sizeof_varyings;
     program->sizeof_uniforms = sizeof_uniforms;
 
+    for (i = 0; i < 3; i++) {
+        program->shader_attribs[i] = malloc(sizeof_attribs);
+        memset(program->shader_attribs[i], 0, sizeof_attribs);
+    }
+    program->shader_varyings = malloc(sizeof_varyings);
+    memset(program->shader_varyings, 0, sizeof_varyings);
+    program->shader_uniforms = malloc(sizeof_uniforms);
+    memset(program->shader_uniforms, 0, sizeof_uniforms);
+    for (i = 0; i < MAX_VARYINGS; i++) {
+        program->in_varyings[i] = malloc(sizeof_varyings);
+        memset(program->in_varyings[i], 0, sizeof_varyings);
+        program->out_varyings[i] = malloc(sizeof_varyings);
+        memset(program->out_varyings[i], 0, sizeof_varyings);
+    }
+
     return program;
 }
 
 void program_release(program_t *program) {
     int i;
     for (i = 0; i < 3; i++) {
-        free(program->attribs[i]);
+        free(program->shader_attribs[i]);
     }
-    for (i = 0; i < 4; i++) {
-        free(program->varyings[i]);
+    free(program->shader_varyings);
+    free(program->shader_uniforms);
+    for (i = 0; i < MAX_VARYINGS; i++) {
+        free(program->in_varyings[i]);
+        free(program->out_varyings[i]);
     }
-    free(program->uniforms);
     free(program);
 }
 
-/* texture management */
-
-texture_t *texture_from_file(const char *filename) {
-    image_t *image = image_load(filename);
-    texture_t *texture = texture_from_image(image);
-    image_release(image);
-    return texture;
+void *program_get_attribs(program_t *program, int nth_vertex) {
+    assert(nth_vertex >= 0 && nth_vertex < 3);
+    return program->shader_attribs[nth_vertex];
 }
 
-static float uchar_to_float(unsigned char value) {
-    return value / 255.0f;
+void *program_get_uniforms(program_t *program) {
+    return program->shader_uniforms;
 }
 
-/*
- * for texture formats, see
- * http://docs.gl/gl2/glTexImage2D
- */
-texture_t *texture_from_image(image_t *image) {
-    int width = image->width;
-    int height = image->height;
-    int channels = image->channels;
-    texture_t *texture;
-    int r, c;
-
-    texture = (texture_t*)malloc(sizeof(texture_t));
-    texture->width  = width;
-    texture->height = height;
-    texture->buffer = (vec4_t*)malloc(sizeof(vec4_t) * width * height);
-
-    for (r = 0; r < height; r++) {
-        for (c = 0; c < width; c++) {
-            int img_index = r * width * channels + c * channels;
-            int tex_index = r * width + c;
-            unsigned char *pixel = &image->buffer[img_index];
-            vec4_t *texel = &texture->buffer[tex_index];
-            if (channels == 1) {         /* GL_LUMINANCE */
-                float luminance = uchar_to_float(pixel[0]);
-                *texel = vec4_new(luminance, luminance, luminance, 1);
-            } else if (channels == 2) {  /* GL_LUMINANCE_ALPHA */
-                float luminance = uchar_to_float(pixel[0]);
-                float alpha = uchar_to_float(pixel[1]);
-                *texel = vec4_new(luminance, luminance, luminance, alpha);
-            } else if (channels == 3) {  /* GL_RGB */
-                float blue = uchar_to_float(pixel[0]);
-                float green = uchar_to_float(pixel[1]);
-                float red = uchar_to_float(pixel[2]);
-                *texel = vec4_new(red, green, blue, 1);
-            } else if (channels == 4) {  /* GL_RGBA */
-                float blue = uchar_to_float(pixel[0]);
-                float green = uchar_to_float(pixel[1]);
-                float red = uchar_to_float(pixel[2]);
-                float alpha = uchar_to_float(pixel[3]);
-                *texel = vec4_new(red, green, blue, alpha);
-            } else {
-                assert(0);
-            }
-        }
-    }
-
-    return texture;
-}
-
-void texture_release(texture_t *texture) {
-    free(texture->buffer);
-    free(texture);
-}
-
-vec4_t texture_sample(texture_t *texture, vec2_t texcoord) {
-    float u = texcoord.x;
-    float v = texcoord.y;
-    if (u < 0 || v < 0 || u > 1 || v > 1) {
-        vec4_t blank = {0, 0, 0, 0};
-        return blank;
-    } else {
-        int c = (int)((texture->width - 1) * u + 0.5);
-        int r = (int)((texture->height - 1) * v + 0.5);
-        int index = r * texture->width + c;
-        return texture->buffer[index];
-    }
-}
-
-/* triangle rasterization */
-
-/*
- * for barycentric coordinates, see
- * http://blackpawn.com/texts/pointinpoly/
- *
- * solve
- *     P = A + s * AB + t * AC  -->  AP = s * AB + t * AC
- * then
- *     s = (AC.y * AP.x - AC.x * AP.y) / (AB.x * AC.y - AB.y * AC.x)
- *     t = (AB.x * AP.y - AB.y * AP.x) / (AB.x * AC.y - AB.y * AC.x)
- *
- * if s < 0 or t < 0, we've walked in the wrong direction
- * if s > 1 or t > 1, we've walked too far in a direction
- * if s + t > 1, we've crossed the edge BC
- *
- * P in ABC if and only if (s >= 0) && (t >= 0) && (1 - s - t >= 0)
- *
- * notice
- *     P = A + s * AB + t * AC
- *       = A + s * (B - A) + t * (C - A)
- *       = (1 - s - t) * A + s * B + t * C
- * then
- *     weight_A = 1 - s - t
- *     weight_B = s
- *     weight_C = t
- */
-static vec3_t calculate_weights(vec2_t abc[3], vec2_t p) {
-    vec2_t a = abc[0];
-    vec2_t b = abc[1];
-    vec2_t c = abc[2];
-    vec2_t ab = vec2_sub(b, a);
-    vec2_t ac = vec2_sub(c, a);
-    vec2_t ap = vec2_sub(p, a);
-    float factor = 1 / (ab.x * ac.y - ab.y * ac.x);
-    float s = (ac.y * ap.x - ac.x * ap.y) * factor;
-    float t = (ab.x * ap.y - ab.y * ap.x) * factor;
-    vec3_t weights = vec3_new(1 - s - t, s, t);
-    return weights;
-}
+/* graphics pipeline */
 
 /*
  * for triangle clipping, see
- * https://www.gamasutra.com/view/news/168577/
+ * http://fabiensanglard.net/polygon_codec/
+ * http://graphics.idav.ucdavis.edu/education/GraphicsNotes/Clipping.pdf
  */
-static int is_vertex_invisible(vec4_t clip_coord) {
-    float x = clip_coord.x;
-    float y = clip_coord.y;
-    float z = clip_coord.z;
-    float w = clip_coord.w;
-    return (x < -w || x > w || y < -w || y > w || z < -w || z > w || w <= 0);
+
+typedef enum {
+    POSITIVE_W,
+    POSITIVE_X,
+    NEGATIVE_X,
+    POSITIVE_Y,
+    NEGATIVE_Y,
+    POSITIVE_Z,
+    NEGATIVE_Z,
+} plane_t;
+
+static int is_inside_plane(vec4_t coord, plane_t plane) {
+    switch (plane) {
+        case POSITIVE_W:
+            return coord.w >= EPSILON;
+        case POSITIVE_X:
+            return coord.x <= +coord.w;
+        case NEGATIVE_X:
+            return coord.x >= -coord.w;
+        case POSITIVE_Y:
+            return coord.y <= +coord.w;
+        case NEGATIVE_Y:
+            return coord.y >= -coord.w;
+        case POSITIVE_Z:
+            return coord.z <= +coord.w;
+        case NEGATIVE_Z:
+            return coord.z >= -coord.w;
+        default:
+            assert(0);
+            return 0;
+    }
 }
 
+static float get_intersect_ratio(vec4_t prev, vec4_t curr, plane_t plane) {
+    switch (plane) {
+        case POSITIVE_W:
+            return (prev.w - EPSILON) / (prev.w - curr.w);
+        case POSITIVE_X:
+            return (prev.w - prev.x) / ((prev.w - prev.x) - (curr.w - curr.x));
+        case NEGATIVE_X:
+            return (prev.w + prev.x) / ((prev.w + prev.x) - (curr.w + curr.x));
+        case POSITIVE_Y:
+            return (prev.w - prev.y) / ((prev.w - prev.y) - (curr.w - curr.y));
+        case NEGATIVE_Y:
+            return (prev.w + prev.y) / ((prev.w + prev.y) - (curr.w + curr.y));
+        case POSITIVE_Z:
+            return (prev.w - prev.z) / ((prev.w - prev.z) - (curr.w - curr.z));
+        case NEGATIVE_Z:
+            return (prev.w + prev.z) / ((prev.w + prev.z) - (curr.w + curr.z));
+        default:
+            assert(0);
+            return 0;
+    }
+}
+
+static int clip_to_plane(
+        plane_t plane, int varying_num_floats, int in_num_vertices,
+        vec4_t in_coords[MAX_VARYINGS], void *in_varyings[MAX_VARYINGS],
+        vec4_t out_coords[MAX_VARYINGS], void *out_varyings[MAX_VARYINGS]) {
+    int out_num_vertices = 0;
+    int i, j;
+
+    assert(in_num_vertices >= 3 && in_num_vertices <= MAX_VARYINGS);
+    for (i = 0; i < in_num_vertices; i++) {
+        int prev_index = (i - 1 + in_num_vertices) % in_num_vertices;
+        int curr_index = i;
+        vec4_t prev_coord = in_coords[prev_index];
+        vec4_t curr_coord = in_coords[curr_index];
+        float *prev_varyings = (float*)in_varyings[prev_index];
+        float *curr_varyings = (float*)in_varyings[curr_index];
+        int prev_inside = is_inside_plane(prev_coord, plane);
+        int curr_inside = is_inside_plane(curr_coord, plane);
+
+        if (prev_inside != curr_inside) {
+            vec4_t *dest_coord = &out_coords[out_num_vertices];
+            float *dest_varyings = (float*)out_varyings[out_num_vertices];
+            float ratio = get_intersect_ratio(prev_coord, curr_coord, plane);
+            vec4_t offset = vec4_mul(vec4_sub(curr_coord, prev_coord), ratio);
+
+            *dest_coord = vec4_add(prev_coord, offset);
+            /*
+             * since this computation is performed in clip space before
+             * division by w, clipped varying values are perspective-correct
+             */
+            for (j = 0; j < varying_num_floats; j++) {
+                float prev_val = prev_varyings[j];
+                float curr_val = curr_varyings[j];
+                dest_varyings[j] = prev_val + (curr_val - prev_val) * ratio;
+            }
+            out_num_vertices += 1;
+        }
+
+        if (curr_inside) {
+            vec4_t *dest_coord = &out_coords[out_num_vertices];
+            float *dest_varyings = (float*)out_varyings[out_num_vertices];
+            int sizeof_varyings = varying_num_floats * sizeof(float);
+
+            *dest_coord = curr_coord;
+            memcpy(dest_varyings, curr_varyings, sizeof_varyings);
+            out_num_vertices += 1;
+        }
+    }
+    assert(out_num_vertices <= MAX_VARYINGS);
+    return out_num_vertices;
+}
+
+#define CLIP_IN2OUT(plane, in_num_vertices)                                 \
+    do {                                                                    \
+        num_vertices = clip_to_plane(                                       \
+            plane, varying_num_floats, in_num_vertices,                     \
+            in_coords, in_varyings, out_coords, out_varyings);              \
+        if (num_vertices < 3) {                                             \
+            return 0;                                                       \
+        }                                                                   \
+    } while (0)
+
+#define CLIP_OUT2IN(plane, in_num_vertices)                                 \
+    do {                                                                    \
+        num_vertices = clip_to_plane(                                       \
+            plane, varying_num_floats, in_num_vertices,                     \
+            out_coords, out_varyings, in_coords, in_varyings);              \
+        if (num_vertices < 3) {                                             \
+            return 0;                                                       \
+        }                                                                   \
+    } while (0)
+
+static int clip_triangle(
+        int sizeof_varyings,
+        vec4_t in_coords[MAX_VARYINGS], void *in_varyings[MAX_VARYINGS],
+        vec4_t out_coords[MAX_VARYINGS], void *out_varyings[MAX_VARYINGS]) {
+    int varying_num_floats = sizeof_varyings / sizeof(float);
+    int num_vertices;
+
+    CLIP_IN2OUT(POSITIVE_W, 3);
+    CLIP_OUT2IN(POSITIVE_X, num_vertices);
+    CLIP_IN2OUT(NEGATIVE_X, num_vertices);
+    CLIP_OUT2IN(POSITIVE_Y, num_vertices);
+    CLIP_IN2OUT(NEGATIVE_Y, num_vertices);
+    CLIP_OUT2IN(POSITIVE_Z, num_vertices);
+    CLIP_IN2OUT(NEGATIVE_Z, num_vertices);
+
+    return num_vertices;
+}
+
+/*
+ * for facing determination, see subsection 3.5.1 of
+ * https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
+ */
 static int is_back_facing(vec3_t ndc_coords[3]) {
     vec3_t a = ndc_coords[0];
     vec3_t b = ndc_coords[1];
     vec3_t c = ndc_coords[2];
-    vec3_t ab = vec3_sub(b, a);
-    vec3_t ac = vec3_sub(c, a);
-    return vec3_cross(ab, ac).z < 0;
+    float signed_area = 0;
+    signed_area += a.x * b.y - a.y * b.x;
+    signed_area += b.x * c.y - b.y * c.x;
+    signed_area += c.x * a.y - c.y * a.x;
+    return signed_area <= 0;
 }
 
 /*
- * for viewport transform, see
- * http://docs.gl/gl2/glViewport
- * http://docs.gl/gl2/glDepthRange
+ * for viewport transformation, see subsection 2.12.1 of
+ * https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
  */
 static vec3_t viewport_transform(int width_, int height_, vec3_t ndc_coord) {
     float width = (float)width_;
@@ -295,8 +335,44 @@ static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
     return bbox;
 }
 
+/*
+ * for barycentric coordinates, see
+ * http://blackpawn.com/texts/pointinpoly/
+ *
+ * solve
+ *     P = A + s * AB + t * AC  -->  AP = s * AB + t * AC
+ * then
+ *     s = (AC.y * AP.x - AC.x * AP.y) / (AB.x * AC.y - AB.y * AC.x)
+ *     t = (AB.x * AP.y - AB.y * AP.x) / (AB.x * AC.y - AB.y * AC.x)
+ *
+ * notice
+ *     P = A + s * AB + t * AC
+ *       = A + s * (B - A) + t * (C - A)
+ *       = (1 - s - t) * A + s * B + t * C
+ * then
+ *     weight_A = 1 - s - t
+ *     weight_B = s
+ *     weight_C = t
+ */
+static vec3_t calculate_weights(vec2_t abc[3], vec2_t p) {
+    vec2_t a = abc[0];
+    vec2_t b = abc[1];
+    vec2_t c = abc[2];
+    vec2_t ab = vec2_sub(b, a);
+    vec2_t ac = vec2_sub(c, a);
+    vec2_t ap = vec2_sub(p, a);
+    float factor = 1 / (ab.x * ac.y - ab.y * ac.x);
+    float s = (ac.y * ap.x - ac.x * ap.y) * factor;
+    float t = (ab.x * ap.y - ab.y * ap.x) * factor;
+    vec3_t weights = vec3_new(1 - s - t, s, t);
+    return weights;
+}
 
-static float calculate_depth(float screen_depths[3], vec3_t weights) {
+/*
+ * for depth interpolation, see subsection 3.5.1 of
+ * https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
+ */
+static float interpolate_depth(float screen_depths[3], vec3_t weights) {
     float depth0 = screen_depths[0];
     float depth1 = screen_depths[1];
     float depth2 = screen_depths[2];
@@ -306,18 +382,19 @@ static float calculate_depth(float screen_depths[3], vec3_t weights) {
 /*
  * for perspective-correct interpolation, see
  * https://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf
- * https://www.khronos.org/registry/OpenGL/specs/gl/glspec33.core.pdf
+ * https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
  *
  * equation 15 in reference 1 (page 2) is a simplified 2d version of
- * equation 3.9 in reference 2 (page 117) which uses barycentric coordinates
+ * equation 3.5 in reference 2 (page 58) which uses barycentric coordinates
  */
-static void interpolate_varyings(void *varyings[4], int sizeof_varyings,
-                                 float recip_w[3], vec3_t weights) {
+static void interpolate_varyings(
+        void *src_varyings[3], void *dst_varyings,
+        int sizeof_varyings, vec3_t weights, float recip_w[3]) {
     int num_floats = sizeof_varyings / sizeof(float);
-    float *src0 = (float*)varyings[0];
-    float *src1 = (float*)varyings[1];
-    float *src2 = (float*)varyings[2];
-    float *dst = (float*)varyings[3];
+    float *src0 = (float*)src_varyings[0];
+    float *src1 = (float*)src_varyings[1];
+    float *src2 = (float*)src_varyings[2];
+    float *dst = (float*)dst_varyings;
     float weight0 = recip_w[0] * weights.x;
     float weight1 = recip_w[1] * weights.y;
     float weight2 = recip_w[2] * weights.z;
@@ -330,33 +407,16 @@ static void interpolate_varyings(void *varyings[4], int sizeof_varyings,
     }
 }
 
-void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
-    colorbuffer_t *colorbuffer = framebuffer->colorbuffer;
-    depthbuffer_t *depthbuffer = framebuffer->depthbuffer;
+static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
+                              vec4_t clip_coords[3], void *varyings[3]) {
     int width = framebuffer->width;
     int height = framebuffer->height;
-    vec4_t clip_coords[3];
     vec3_t ndc_coords[3];
     vec2_t screen_coords[3];
     float screen_depths[3];
     float recip_w[3];
     bbox_t bbox;
     int i, x, y;
-
-    /* calculate clip coordinates */
-    for (i = 0; i < 3; i++) {
-        void *attribs = program->attribs[i];
-        void *varyings = program->varyings[i];
-        void *uniforms = program->uniforms;
-        clip_coords[i] = program->vertex_shader(attribs, varyings, uniforms);
-    }
-
-    /* naive view volume culling */
-    for (i = 0; i < 3; i++) {
-        if (is_vertex_invisible(clip_coords[i])) {
-            return;
-        }
-    }
 
     /* perspective division */
     for (i = 0; i < 3; i++) {
@@ -366,19 +426,19 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
 
     /* back-face culling */
     if (is_back_facing(ndc_coords)) {
-        return;
+        return 1;
     }
 
-    /* calculate reciprocals of w */
+    /* reciprocals of w */
     for (i = 0; i < 3; i++) {
         recip_w[i] = 1 / clip_coords[i].w;
     }
 
-    /* calculate screen coordinates */
+    /* viewport transformation */
     for (i = 0; i < 3; i++) {
-        vec3_t window_coords = viewport_transform(width, height, ndc_coords[i]);
-        screen_coords[i] = vec2_new(window_coords.x, window_coords.y);
-        screen_depths[i] = window_coords.z;
+        vec3_t window_coord = viewport_transform(width, height, ndc_coords[i]);
+        screen_coords[i] = vec2_new(window_coord.x, window_coord.y);
+        screen_depths[i] = window_coord.z;
     }
 
     /* perform rasterization */
@@ -389,19 +449,69 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
             vec3_t weights = calculate_weights(screen_coords, point);
             if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
                 int index = y * width + x;
-                float depth = calculate_depth(screen_depths, weights);
+                float depth = interpolate_depth(screen_depths, weights);
                 /* early depth testing */
-                if (depth <= depthbuffer->buffer[index]) {
+                if (depth <= framebuffer->depthbuffer[index]) {
                     int sizeof_varyings = program->sizeof_varyings;
                     vec4_t color;
-                    interpolate_varyings(program->varyings, sizeof_varyings,
-                                         recip_w, weights);
-                    color = program->fragment_shader(program->varyings[3],
-                                                     program->uniforms);
-                    colorbuffer->buffer[index] = vec4_saturate(color);
-                    depthbuffer->buffer[index] = depth;
+                    interpolate_varyings(varyings, program->shader_varyings,
+                                         sizeof_varyings, weights, recip_w);
+                    /* execute fragment shader */
+                    color = program->fragment_shader(program->shader_varyings,
+                                                     program->shader_uniforms);
+                    framebuffer->colorbuffer[index] = vec4_saturate(color);
+                    framebuffer->depthbuffer[index] = depth;
                 }
             }
+        }
+    }
+
+    return 0;
+}
+
+void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
+    int num_vertices;
+    int i;
+
+    /* execute vertex shader */
+    for (i = 0; i < 3; i++) {
+        vec4_t clip_coord = program->vertex_shader(program->shader_attribs[i],
+                                                   program->shader_varyings,
+                                                   program->shader_uniforms);
+        program->in_coords[i] = clip_coord;
+        memcpy(program->in_varyings[i],
+               program->shader_varyings,
+               program->sizeof_varyings);
+    }
+
+    /* triangle clipping */
+    num_vertices = clip_triangle(program->sizeof_varyings,
+                                 program->in_coords, program->in_varyings,
+                                 program->out_coords, program->out_varyings);
+    if (num_vertices < 3) {
+        return;
+    }
+
+    /* triangle assembly */
+    for (i = 0; i < num_vertices - 2; i++) {
+        int index0 = 0;
+        int index1 = i + 1;
+        int index2 = i + 2;
+        vec4_t clip_coords[3];
+        void *varyings[3];
+        int is_culled;
+
+        clip_coords[0] = program->out_coords[index0];
+        clip_coords[1] = program->out_coords[index1];
+        clip_coords[2] = program->out_coords[index2];
+        varyings[0] = program->out_varyings[index0];
+        varyings[1] = program->out_varyings[index1];
+        varyings[2] = program->out_varyings[index2];
+
+        is_culled = rasterize_triangle(framebuffer, program,
+                                       clip_coords, varyings);
+        if (is_culled) {
+            return;
         }
     }
 }

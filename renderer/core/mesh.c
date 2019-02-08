@@ -1,10 +1,10 @@
-#include "mesh.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "darray.h"
 #include "geometry.h"
+#include "mesh.h"
 
 struct mesh {
     int num_faces;

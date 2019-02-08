@@ -1,8 +1,7 @@
-#include "phong_scenes.h"
-#include <stdio.h>
 #include <stdlib.h>
-#include "../core/apis.h"
+#include "../core/api.h"
 #include "../shaders/phong_shader.h"
+#include "phong_scenes.h"
 
 static scene_t *create_scene(
         int num_meshes, const char *mesh_names[], const char *emission_names[],
@@ -38,7 +37,7 @@ static scene_t *create_scene(
     return scene;
 }
 
-scene_t *constant_ornitier_scene(void) {
+scene_t *phong_ornitier_scene(void) {
     const char *mesh_names[] = {
         "assets/ornitier/base.obj",
         "assets/ornitier/body.obj",

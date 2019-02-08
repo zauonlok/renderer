@@ -1,9 +1,9 @@
-#include "test_blinn.h"
 #include <stddef.h>
-#include "../core/apis.h"
+#include "../core/api.h"
 #include "../scenes/blinn_scenes.h"
 #include "../shaders/blinn_shader.h"
-#include "../tests/test_base.h"
+#include "test_base.h"
+#include "test_blinn.h"
 
 static scene_entry_t g_scene_entries[] = {
     {"centaur", blinn_centaur_scene},

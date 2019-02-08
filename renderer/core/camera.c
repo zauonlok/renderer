@@ -1,14 +1,13 @@
-#include "camera.h"
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
+#include "camera.h"
 #include "geometry.h"
-#include "transform.h"
 
 static const float NEAR = 0.1f;
 static const float FAR = 1000;
 static const float FOVY = TO_RADIANS(45);
-static const vec3_t WORLD_UP = {0, 1, 0};
+static const vec3_t UP = {0, 1, 0};
 
 struct camera {
     vec3_t position;
@@ -43,7 +42,7 @@ void camera_set_transform(camera_t *camera, vec3_t position, vec3_t target) {
 
 static vec3_t calculate_pan(vec3_t from_camera, motion_t motion) {
     vec3_t forward = vec3_normalize(from_camera);
-    vec3_t left = vec3_cross(WORLD_UP, forward);
+    vec3_t left = vec3_cross(UP, forward);
     vec3_t up = vec3_cross(forward, left);
 
     float distance = vec3_length(from_camera);
@@ -70,9 +69,10 @@ static vec3_t calculate_offset(vec3_t from_target, motion_t motion) {
     phi -= motion.orbit.y * factor;
     phi = clamp_float(phi, EPSILON, PI - EPSILON);
 
-    offset = vec3_new(radius * (float)sin(phi) * (float)sin(theta),
-                      radius * (float)cos(phi),
-                      radius * (float)sin(phi) * (float)cos(theta));
+    offset.x = radius * (float)sin(phi) * (float)sin(theta);
+    offset.y = radius * (float)cos(phi);
+    offset.z = radius * (float)sin(phi) * (float)cos(theta);
+
     return offset;
 }
 
@@ -96,7 +96,7 @@ vec3_t camera_get_forward(camera_t *camera) {
 }
 
 mat4_t camera_get_view_matrix(camera_t *camera) {
-    return mat4_lookat(camera->position, camera->target, WORLD_UP);
+    return mat4_lookat(camera->position, camera->target, UP);
 }
 
 mat4_t camera_get_proj_matrix(camera_t *camera) {

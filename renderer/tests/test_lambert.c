@@ -1,9 +1,9 @@
-#include "test_lambert.h"
 #include <stddef.h>
-#include "../core/apis.h"
+#include "../core/api.h"
 #include "../scenes/lambert_scenes.h"
 #include "../shaders/lambert_shader.h"
-#include "../tests/test_base.h"
+#include "test_base.h"
+#include "test_lambert.h"
 
 static scene_entry_t g_scene_entries[] = {
     {"craftsman", lambert_craftsman_scene},

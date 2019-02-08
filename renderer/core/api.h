@@ -1,5 +1,5 @@
-#ifndef APIS_H
-#define APIS_H
+#ifndef API_H
+#define API_H
 
 #include "camera.h"
 #include "darray.h"
@@ -8,6 +8,6 @@
 #include "image.h"
 #include "mesh.h"
 #include "platform.h"
-#include "transform.h"
+#include "texture.h"
 
 #endif

@@ -1,8 +1,7 @@
-#include "platform.h"
 #include <assert.h>
-#include "geometry.h"
 #include "graphics.h"
 #include "image.h"
+#include "platform.h"
 
 static int min_integer(int a, int b) {
     return a < b ? a : b;
@@ -69,12 +68,12 @@ static unsigned char float_to_uchar(float value) {
     return (unsigned char)(value * 255);
 }
 
-static vec4_t get_buffer_val(colorbuffer_t *buffer, int row, int col) {
+static vec4_t get_buffer_val(framebuffer_t *buffer, int row, int col) {
     int index = row * buffer->width + col;
-    return buffer->buffer[index];
+    return buffer->colorbuffer[index];
 }
 
-void private_blit_buffer_bgr(colorbuffer_t *src, image_t *dst) {
+void private_blit_buffer_bgr(framebuffer_t *src, image_t *dst) {
     int width = min_integer(src->width, dst->width);
     int height = min_integer(src->height, dst->height);
     int r, c;
@@ -94,7 +93,7 @@ void private_blit_buffer_bgr(colorbuffer_t *src, image_t *dst) {
     }
 }
 
-void private_blit_buffer_rgb(colorbuffer_t *src, image_t *dst) {
+void private_blit_buffer_rgb(framebuffer_t *src, image_t *dst) {
     int width = min_integer(src->width, dst->width);
     int height = min_integer(src->height, dst->height);
     int r, c;

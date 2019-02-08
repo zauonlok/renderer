@@ -1,7 +1,7 @@
-#include "blinn_shader.h"
 #include <math.h>
 #include <stdlib.h>
-#include "../core/apis.h"
+#include "../core/api.h"
+#include "blinn_shader.h"
 
 /*
  * for half lambert, see
@@ -9,7 +9,7 @@
  */
 static const int USE_HALF_LAMBERT = 1;
 
-/* low-level apis */
+/* low-level api */
 
 vec4_t blinn_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     blinn_attribs_t *attribs = (blinn_attribs_t*)attribs_;
@@ -94,11 +94,13 @@ vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_) {
     vec3_t world_pos = varyings->position;
     vec3_t eye_dir = vec3_normalize(vec3_sub(world_pos, uniforms->camera_pos));
 
-    float d_strength = calculate_diffuse_strength(light_dir, normal);
-    float s_strength = calculate_specular_strength(light_dir, eye_dir, normal,
-                                                   uniforms->shininess);
-    vec3_t diffuse = vec3_mul(vec3_from_vec4(diffuse_), d_strength);
-    vec3_t specular = vec3_mul(vec3_from_vec4(specular_), s_strength);
+    float diffuse_strength = calculate_diffuse_strength(light_dir, normal);
+    float shininess = uniforms->shininess;
+    float specular_strength = calculate_specular_strength(light_dir, eye_dir,
+                                                          normal, shininess);
+
+    vec4_t diffuse = vec4_mul(diffuse_, diffuse_strength);
+    vec4_t specular = vec4_mul(specular_, specular_strength);
 
     float color_r = ambient.x + emission.x + diffuse.x + specular.x;
     float color_g = ambient.y + emission.y + diffuse.y + specular.y;
@@ -107,7 +109,7 @@ vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_) {
     return vec4_new(color_r, color_g, color_b, 1);
 }
 
-/* high-level apis */
+/* high-level api */
 
 model_t *blinn_create_model(const char *mesh_filename, mat4_t transform,
                             blinn_material_t material) {
@@ -120,7 +122,7 @@ model_t *blinn_create_model(const char *mesh_filename, mat4_t transform,
 
     program = program_create(blinn_vertex_shader, blinn_fragment_shader,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms);
-    uniforms = (blinn_uniforms_t*)program->uniforms;
+    uniforms = (blinn_uniforms_t*)program_get_uniforms(program);
     uniforms->ambient_factor = material.ambient_factor;
     uniforms->emission_factor = material.emission_factor;
     uniforms->diffuse_factor = material.diffuse_factor;
@@ -164,7 +166,7 @@ void blinn_release_model(model_t *model) {
 }
 
 blinn_uniforms_t *blinn_get_uniforms(model_t *model) {
-    return (blinn_uniforms_t*)model->program->uniforms;
+    return (blinn_uniforms_t*)program_get_uniforms(model->program);
 }
 
 void blinn_draw_model(model_t *model, framebuffer_t *framebuffer) {
@@ -176,7 +178,7 @@ void blinn_draw_model(model_t *model, framebuffer_t *framebuffer) {
 
     for (i = 0; i < num_faces; i++) {
         for (j = 0; j < 3; j++) {
-            attribs = (blinn_attribs_t*)program->attribs[j];
+            attribs = (blinn_attribs_t*)program_get_attribs(program, j);
             attribs->position = mesh_get_position(mesh, i, j);
             attribs->texcoord = mesh_get_texcoord(mesh, i, j);
             attribs->normal = mesh_get_normal(mesh, i, j);
