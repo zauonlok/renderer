@@ -50,7 +50,7 @@ void framebuffer_clear_depth(framebuffer_t *framebuffer, float depth) {
 
 /* program management */
 
-#define MAX_VARYINGS 6
+#define MAX_VARYINGS 10
 
 struct program {
     vertex_shader_t *vertex_shader;
@@ -147,7 +147,7 @@ typedef enum {
 static int is_inside_plane(vec4_t coord, plane_t plane) {
     switch (plane) {
         case POSITIVE_W:
-            return coord.w >= EPSILON;
+            return coord.w >= 0;
         case POSITIVE_X:
             return coord.x <= +coord.w;
         case NEGATIVE_X:
@@ -169,7 +169,7 @@ static int is_inside_plane(vec4_t coord, plane_t plane) {
 static float get_intersect_ratio(vec4_t prev, vec4_t curr, plane_t plane) {
     switch (plane) {
         case POSITIVE_W:
-            return (prev.w - EPSILON) / (prev.w - curr.w);
+            return prev.w / (prev.w - curr.w);
         case POSITIVE_X:
             return (prev.w - prev.x) / ((prev.w - prev.x) - (curr.w - curr.x));
         case NEGATIVE_X:
@@ -434,7 +434,7 @@ static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
         recip_w[i] = 1 / clip_coords[i].w;
     }
 
-    /* viewport transformation */
+    /* viewport mapping */
     for (i = 0; i < 3; i++) {
         vec3_t window_coord = viewport_transform(width, height, ndc_coords[i]);
         screen_coords[i] = vec2_new(window_coord.x, window_coord.y);
@@ -511,7 +511,7 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
         is_culled = rasterize_triangle(framebuffer, program,
                                        clip_coords, varyings);
         if (is_culled) {
-            return;
+            break;
         }
     }
 }
