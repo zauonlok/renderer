@@ -134,6 +134,8 @@ void *program_get_uniforms(program_t *program) {
  * http://graphics.idav.ucdavis.edu/education/GraphicsNotes/Clipping.pdf
  */
 
+#define USE_FULL_CLIPPING 0
+
 typedef enum {
     POSITIVE_W,
     POSITIVE_X,
@@ -267,10 +269,12 @@ static int clip_triangle(
     int num_vertices;
 
     CLIP_IN2OUT(POSITIVE_W, 3);
+#if USE_FULL_CLIPPING
     CLIP_OUT2IN(POSITIVE_X, num_vertices);
     CLIP_IN2OUT(NEGATIVE_X, num_vertices);
     CLIP_OUT2IN(POSITIVE_Y, num_vertices);
     CLIP_IN2OUT(NEGATIVE_Y, num_vertices);
+#endif
     CLIP_OUT2IN(POSITIVE_Z, num_vertices);
     CLIP_IN2OUT(NEGATIVE_Z, num_vertices);
 
