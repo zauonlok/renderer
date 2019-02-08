@@ -141,7 +141,7 @@ typedef enum {
     POSITIVE_Y,
     NEGATIVE_Y,
     POSITIVE_Z,
-    NEGATIVE_Z,
+    NEGATIVE_Z
 } plane_t;
 
 static int is_inside_plane(vec4_t coord, plane_t plane) {

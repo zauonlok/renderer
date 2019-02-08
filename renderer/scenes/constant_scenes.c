@@ -141,7 +141,7 @@ scene_t *constant_mccree_scene(void) {
         const char *obj_template = "assets/mccree/part%d.obj";
         char obj_filename[128];
         model_t *model;
-        snprintf(obj_filename, sizeof(obj_filename), obj_template, i);
+        sprintf(obj_filename, obj_template, i);
         model = constant_create_model(obj_filename, transform, material);
         darray_push(models, model);
     }
