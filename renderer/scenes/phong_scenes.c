@@ -78,7 +78,7 @@ scene_t *phong_ornitier_scene(void) {
     int i;
 
     translation = mat4_translate(5.863f, 156.991f, 110.488f);
-    scale = mat4_scale(0.0017f, 0.0017f, 0.0017f);
+    scale = mat4_scale(0.0014f, 0.0014f, 0.0014f);
     transform = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
         transforms[i] = transform;
