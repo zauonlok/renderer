@@ -27,10 +27,12 @@ vec3_t vec3_add(vec3_t a, vec3_t b);
 vec3_t vec3_sub(vec3_t a, vec3_t b);
 vec3_t vec3_mul(vec3_t v, float factor);
 vec3_t vec3_div(vec3_t v, float divisor);
+vec3_t vec3_negate(vec3_t v);
 float vec3_length(vec3_t v);
 vec3_t vec3_normalize(vec3_t v);
 float vec3_dot(vec3_t a, vec3_t b);
 vec3_t vec3_cross(vec3_t a, vec3_t b);
+vec3_t vec3_lerp(vec3_t a, vec3_t b, float t);
 vec3_t vec3_saturate(vec3_t v);
 vec3_t vec3_modulate(vec3_t a, vec3_t b);
 void vec3_print(const char *name, vec3_t v);
@@ -42,12 +44,15 @@ vec4_t vec4_add(vec4_t a, vec4_t b);
 vec4_t vec4_sub(vec4_t a, vec4_t b);
 vec4_t vec4_mul(vec4_t v, float factor);
 vec4_t vec4_div(vec4_t v, float divisor);
+vec4_t vec4_lerp(vec4_t a, vec4_t b, float t);
 vec4_t vec4_saturate(vec4_t v);
 vec4_t vec4_modulate(vec4_t a, vec4_t b);
 void vec4_print(const char *name, vec4_t v);
 
 /* mat3 related functions */
 mat3_t mat3_identity(void);
+mat3_t mat3_from_cols(vec3_t c0, vec3_t c1, vec3_t c2);
+mat3_t mat3_from_mat4(mat4_t m);
 vec3_t mat3_mul_vec3(mat3_t m, vec3_t v);
 mat3_t mat3_mul_mat3(mat3_t a, mat3_t b);
 mat3_t mat3_inverse(mat3_t m);

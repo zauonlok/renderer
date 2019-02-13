@@ -106,12 +106,12 @@ cubemap_t *cubemap_from_files(const char *positive_x, const char *negative_x,
                               const char *positive_y, const char *negative_y,
                               const char *positive_z, const char *negative_z) {
     cubemap_t *cubemap = (cubemap_t*)malloc(sizeof(cubemap_t));
-    cubemap->faces[0] = texture_from_file(positive_x);
-    cubemap->faces[1] = texture_from_file(negative_x);
-    cubemap->faces[2] = texture_from_file(positive_y);
-    cubemap->faces[3] = texture_from_file(negative_y);
-    cubemap->faces[4] = texture_from_file(positive_z);
-    cubemap->faces[5] = texture_from_file(negative_z);
+    cubemap->faces[0] = texture_from_file(positive_x);  /* right */
+    cubemap->faces[1] = texture_from_file(negative_x);  /* left */
+    cubemap->faces[2] = texture_from_file(positive_y);  /* top */
+    cubemap->faces[3] = texture_from_file(negative_y);  /* bottom */
+    cubemap->faces[4] = texture_from_file(positive_z);  /* front */
+    cubemap->faces[5] = texture_from_file(negative_z);  /* back */
     return cubemap;
 }
 
@@ -119,12 +119,12 @@ cubemap_t *cubemap_from_images(image_t *positive_x, image_t *negative_x,
                                image_t *positive_y, image_t *negative_y,
                                image_t *positive_z, image_t *negative_z) {
     cubemap_t *cubemap = (cubemap_t*)malloc(sizeof(cubemap_t));
-    cubemap->faces[0] = texture_from_image(positive_x);
-    cubemap->faces[1] = texture_from_image(negative_x);
-    cubemap->faces[2] = texture_from_image(positive_y);
-    cubemap->faces[3] = texture_from_image(negative_y);
-    cubemap->faces[4] = texture_from_image(positive_z);
-    cubemap->faces[5] = texture_from_image(negative_z);
+    cubemap->faces[0] = texture_from_image(positive_x);  /* right */
+    cubemap->faces[1] = texture_from_image(negative_x);  /* left */
+    cubemap->faces[2] = texture_from_image(positive_y);  /* top */
+    cubemap->faces[3] = texture_from_image(negative_y);  /* bottom */
+    cubemap->faces[4] = texture_from_image(positive_z);  /* front */
+    cubemap->faces[5] = texture_from_image(negative_z);  /* back */
     return cubemap;
 }
 

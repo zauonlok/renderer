@@ -63,6 +63,10 @@ vec3_t vec3_div(vec3_t v, float divisor) {
     return vec3_mul(v, 1 / divisor);
 }
 
+vec3_t vec3_negate(vec3_t v) {
+    return vec3_new(-v.x, -v.y, -v.z);
+}
+
 float vec3_length(vec3_t v) {
     return (float)sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
@@ -79,6 +83,13 @@ vec3_t vec3_cross(vec3_t a, vec3_t b) {
     float x = a.y * b.z - a.z * b.y;
     float y = a.z * b.x - a.x * b.z;
     float z = a.x * b.y - a.y * b.x;
+    return vec3_new(x, y, z);
+}
+
+vec3_t vec3_lerp(vec3_t a, vec3_t b, float t) {
+    float x = a.x + (b.x - a.x) * t;
+    float y = a.y + (b.y - a.y) * t;
+    float z = a.z + (b.z - a.z) * t;
     return vec3_new(x, y, z);
 }
 
@@ -129,6 +140,14 @@ vec4_t vec4_div(vec4_t v, float divisor) {
     return vec4_mul(v, 1 / divisor);
 }
 
+vec4_t vec4_lerp(vec4_t a, vec4_t b, float t) {
+    float x = a.x + (b.x - a.x) * t;
+    float y = a.y + (b.y - a.y) * t;
+    float z = a.z + (b.z - a.z) * t;
+    float w = a.w + (b.w - a.w) * t;
+    return vec4_new(x, y, z, w);
+}
+
 vec4_t vec4_saturate(vec4_t v) {
     float x = (v.x < 0) ? 0 : ((v.x > 1) ? 1 : v.x);
     float y = (v.y < 0) ? 0 : ((v.y > 1) ? 1 : v.y);
@@ -155,6 +174,34 @@ mat3_t mat3_identity(void) {
         {0, 0, 1},
     }};
     return m;
+}
+
+mat3_t mat3_from_cols(vec3_t c0, vec3_t c1, vec3_t c2) {
+    mat3_t m;
+    m.m[0][0] = c0.x;
+    m.m[1][0] = c0.y;
+    m.m[2][0] = c0.z;
+    m.m[0][1] = c1.x;
+    m.m[1][1] = c1.y;
+    m.m[2][1] = c1.z;
+    m.m[0][2] = c2.x;
+    m.m[1][2] = c2.y;
+    m.m[2][2] = c2.z;
+    return m;
+}
+
+mat3_t mat3_from_mat4(mat4_t m) {
+    mat3_t n;
+    n.m[0][0] = m.m[0][0];
+    n.m[0][1] = m.m[0][1];
+    n.m[0][2] = m.m[0][2];
+    n.m[1][0] = m.m[1][0];
+    n.m[1][1] = m.m[1][1];
+    n.m[1][2] = m.m[1][2];
+    n.m[2][0] = m.m[2][0];
+    n.m[2][1] = m.m[2][1];
+    n.m[2][2] = m.m[2][2];
+    return n;
 }
 
 vec3_t mat3_mul_vec3(mat3_t m, vec3_t v) {
