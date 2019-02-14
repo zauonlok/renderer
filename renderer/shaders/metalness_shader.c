@@ -249,21 +249,21 @@ vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
 static void create_environment(metalness_uniforms_t *uniforms) {
     int i;
     uniforms->diffuse_envmap = cubemap_from_files(
-        "assets/environments/papermill/diffuse_right_0.tga",
-        "assets/environments/papermill/diffuse_left_0.tga",
-        "assets/environments/papermill/diffuse_top_0.tga",
-        "assets/environments/papermill/diffuse_bottom_0.tga",
-        "assets/environments/papermill/diffuse_front_0.tga",
-        "assets/environments/papermill/diffuse_back_0.tga");
+        "assets/common/papermill/diffuse_right_0.tga",
+        "assets/common/papermill/diffuse_left_0.tga",
+        "assets/common/papermill/diffuse_top_0.tga",
+        "assets/common/papermill/diffuse_bottom_0.tga",
+        "assets/common/papermill/diffuse_front_0.tga",
+        "assets/common/papermill/diffuse_back_0.tga");
     cubemap_srgb2linear(uniforms->diffuse_envmap);
     for (i = 0; i < 9; i++) {
         char index = (char)('0' + i);
-        char right[] = "assets/environments/papermill/specular_right_x.tga";
-        char left[] = "assets/environments/papermill/specular_left_x.tga";
-        char top[] = "assets/environments/papermill/specular_top_x.tga";
-        char bottom[] = "assets/environments/papermill/specular_bottom_x.tga";
-        char front[] = "assets/environments/papermill/specular_front_x.tga";
-        char back[] = "assets/environments/papermill/specular_back_x.tga";
+        char right[] = "assets/common/papermill/specular_right_x.tga";
+        char left[] = "assets/common/papermill/specular_left_x.tga";
+        char top[] = "assets/common/papermill/specular_top_x.tga";
+        char bottom[] = "assets/common/papermill/specular_bottom_x.tga";
+        char front[] = "assets/common/papermill/specular_front_x.tga";
+        char back[] = "assets/common/papermill/specular_back_x.tga";
         strrchr(right, 'x')[0] = index;
         strrchr(left, 'x')[0] = index;
         strrchr(top, 'x')[0] = index;
@@ -274,7 +274,7 @@ static void create_environment(metalness_uniforms_t *uniforms) {
             right, left, top, bottom, front, back);
         cubemap_srgb2linear(uniforms->specular_envmaps[i]);
     }
-    uniforms->brdf_lut = texture_from_file("assets/environments/brdf_lut.tga");
+    uniforms->brdf_lut = texture_from_file("assets/common/brdf_lut.tga");
     texture_srgb2linear(uniforms->brdf_lut);
 }
 
