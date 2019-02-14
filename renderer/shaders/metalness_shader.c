@@ -143,7 +143,7 @@ static float max_float(float a, float b) {
 
 static const float LIGHT_INTENSITY = 1;
 
-static vec3_t get_dir_color(vec3_t light_dir, vec3_t normal_dir,
+static vec3_t get_dir_shade(vec3_t light_dir, vec3_t normal_dir,
                             vec3_t view_dir, vec3_t diffuse_color,
                             vec3_t specular_color, float roughness) {
     float n_dot_l = vec3_dot(normal_dir, light_dir);
@@ -160,11 +160,12 @@ static vec3_t get_dir_color(vec3_t light_dir, vec3_t normal_dir,
         vec3_t diffuse_brdf = vec3_div(diffuse_color, PI);
         vec3_t specular_brdf = vec3_mul(f_term, v_term * d_term);
 
-        vec3_t inv_f_term = vec3_sub(vec3_new(1, 1, 1), f_term);
-        vec3_t diffuse_term = vec3_modulate(inv_f_term, diffuse_brdf);
-        vec3_t combined_term = vec3_add(diffuse_term, specular_brdf);
+        float combined_x = (1 - f_term.x) * diffuse_brdf.x + specular_brdf.x;
+        float combined_y = (1 - f_term.y) * diffuse_brdf.y + specular_brdf.y;
+        float combined_z = (1 - f_term.z) * diffuse_brdf.z + specular_brdf.z;
+        vec3_t combined_brdf = vec3_new(combined_x, combined_y, combined_z);
 
-        return vec3_mul(combined_term, n_dot_l * LIGHT_INTENSITY);
+        return vec3_mul(combined_brdf, n_dot_l * LIGHT_INTENSITY);
     } else {
         return vec3_new(0, 0, 0);
     }
@@ -174,7 +175,7 @@ static vec3_t get_incident_dir(vec3_t normal, vec3_t view) {
     return vec3_sub(vec3_mul(normal, 2 * vec3_dot(view, normal)), view);
 }
 
-static vec3_t get_ibl_color(vec3_t normal_dir, vec3_t view_dir,
+static vec3_t get_ibl_shade(vec3_t normal_dir, vec3_t view_dir,
                             vec3_t diffuse_color, vec3_t specular_color,
                             float roughness, metalness_uniforms_t *uniforms) {
     cubemap_t *diffuse_envmap = uniforms->diffuse_envmap;
@@ -182,7 +183,7 @@ static vec3_t get_ibl_color(vec3_t normal_dir, vec3_t view_dir,
     vec3_t diffuse_light = vec3_from_vec4(diffuse_sample);
     vec3_t diffuse_shade = vec3_modulate(diffuse_light, diffuse_color);
 
-    int mip_count = 10;
+    int mip_count = 9;
     int mip_level = (int)(roughness * mip_count + 0.5);
     vec3_t incident_dir = get_incident_dir(normal_dir, view_dir);
     cubemap_t *specular_envmap = uniforms->specular_envmaps[mip_level];
@@ -231,17 +232,16 @@ vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
     vec3_t light_dir = vec3_negate(uniforms->light_dir);
     vec3_t view_dir = vec3_normalize(vec3_sub(camera_pos, world_pos));
 
-    vec3_t dir_color = get_dir_color(light_dir, normal, view_dir,
+    vec3_t dir_shade = get_dir_shade(light_dir, normal, view_dir,
                                      diffuse_color, specular_color, roughness);
-    vec3_t ibl_color = get_ibl_color(normal, view_dir, diffuse_color,
+    vec3_t ibl_shade = get_ibl_shade(normal, view_dir, diffuse_color,
                                      specular_color, roughness, uniforms);
-    vec3_t color = vec3_add(dir_color, ibl_color);
+    vec3_t color = vec3_add(dir_shade, ibl_shade);
 
     color = vec3_mul(color, occlusion);
     color = vec3_add(color, emission);
 
-    color = linear_to_srgb(color);
-    return vec4_from_vec3(color, 1);
+    return vec4_from_vec3(linear_to_srgb(color), 1);
 }
 
 /* high-level api */
@@ -256,20 +256,20 @@ static void create_environment(metalness_uniforms_t *uniforms) {
         "assets/common/papermill/diffuse_front_0.tga",
         "assets/common/papermill/diffuse_back_0.tga");
     cubemap_srgb2linear(uniforms->diffuse_envmap);
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < 10; i++) {
         char index = (char)('0' + i);
-        char right[] = "assets/common/papermill/specular_right_x.tga";
-        char left[] = "assets/common/papermill/specular_left_x.tga";
-        char top[] = "assets/common/papermill/specular_top_x.tga";
-        char bottom[] = "assets/common/papermill/specular_bottom_x.tga";
-        char front[] = "assets/common/papermill/specular_front_x.tga";
-        char back[] = "assets/common/papermill/specular_back_x.tga";
-        strrchr(right, 'x')[0] = index;
-        strrchr(left, 'x')[0] = index;
-        strrchr(top, 'x')[0] = index;
-        strrchr(bottom, 'x')[0] = index;
-        strrchr(front, 'x')[0] = index;
-        strrchr(back, 'x')[0] = index;
+        char right[] = "assets/common/papermill/specular_right_?.tga";
+        char left[] = "assets/common/papermill/specular_left_?.tga";
+        char top[] = "assets/common/papermill/specular_top_?.tga";
+        char bottom[] = "assets/common/papermill/specular_bottom_?.tga";
+        char front[] = "assets/common/papermill/specular_front_?.tga";
+        char back[] = "assets/common/papermill/specular_back_?.tga";
+        strrchr(right, '?')[0] = index;
+        strrchr(left, '?')[0] = index;
+        strrchr(top, '?')[0] = index;
+        strrchr(bottom, '?')[0] = index;
+        strrchr(front, '?')[0] = index;
+        strrchr(back, '?')[0] = index;
         uniforms->specular_envmaps[i] = cubemap_from_files(
             right, left, top, bottom, front, back);
         cubemap_srgb2linear(uniforms->specular_envmaps[i]);
@@ -281,7 +281,7 @@ static void create_environment(metalness_uniforms_t *uniforms) {
 static void release_environment(metalness_uniforms_t *uniforms) {
     int i;
     cubemap_release(uniforms->diffuse_envmap);
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < 10; i++) {
         cubemap_release(uniforms->specular_envmaps[i]);
     }
     texture_release(uniforms->brdf_lut);
