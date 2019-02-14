@@ -87,17 +87,12 @@ void texture_srgb2linear(texture_t *texture) {
 }
 
 vec4_t texture_sample(texture_t *texture, vec2_t texcoord) {
-    float u = texcoord.x;
-    float v = texcoord.y;
-    if (u < 0 || v < 0 || u > 1 || v > 1) {
-        vec4_t blank = {0, 0, 0, 1};
-        return blank;
-    } else {
-        int c = (int)((texture->width - 1) * u + 0.5);
-        int r = (int)((texture->height - 1) * v + 0.5);
-        int index = r * texture->width + c;
-        return texture->buffer[index];
-    }
+    float u = texcoord.x - (float)floor(texcoord.x);
+    float v = texcoord.y - (float)floor(texcoord.y);
+    int c = (int)((texture->width - 1) * u + 0.5);
+    int r = (int)((texture->height - 1) * v + 0.5);
+    int index = r * texture->width + c;
+    return texture->buffer[index];
 }
 
 /* cubemap management */

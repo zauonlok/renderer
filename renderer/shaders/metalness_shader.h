@@ -45,6 +45,10 @@ typedef struct {
     texture_t *normal_texture;
     texture_t *occlusion_texture;
     texture_t *emissive_texture;
+    /* for environment */
+    cubemap_t *diffuse_envmap;
+    cubemap_t *specular_envmaps[10];
+    texture_t *brdf_lut;
 } metalness_uniforms_t;
 
 /* low-level api */
