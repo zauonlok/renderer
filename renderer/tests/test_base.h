@@ -3,8 +3,6 @@
 
 #include "../core/api.h"
 
-#define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
-
 /* test delegate functions */
 
 typedef struct {

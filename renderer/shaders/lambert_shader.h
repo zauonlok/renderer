@@ -4,11 +4,9 @@
 #include "../core/api.h"
 
 typedef struct {
-    vec4_t ambient_factor;
-    vec4_t emission_factor;
-    vec4_t diffuse_factor;
-    const char *emission_texture;
-    const char *diffuse_texture;
+    float ambient;
+    const char *emission;
+    const char *diffuse;
 } lambert_material_t;
 
 typedef struct {
@@ -25,13 +23,11 @@ typedef struct {
 typedef struct {
     vec3_t light_dir;
     mat4_t mvp_matrix;
-    mat4_t model_it_matrix;
+    mat3_t normal_matrix;
     /* from material */
-    vec4_t ambient_factor;
-    vec4_t emission_factor;
-    vec4_t diffuse_factor;
-    texture_t *emission_texture;
-    texture_t *diffuse_texture;
+    float ambient;
+    texture_t *emission;
+    texture_t *diffuse;
 } lambert_uniforms_t;
 
 /* low-level api */
@@ -39,7 +35,7 @@ vec4_t lambert_vertex_shader(void *attribs, void *varyings, void *uniforms);
 vec4_t lambert_fragment_shader(void *varyings, void *uniforms);
 
 /* high-level api */
-model_t *lambert_create_model(const char *mesh_filename, mat4_t transform,
+model_t *lambert_create_model(const char *mesh, mat4_t transform,
                               lambert_material_t material);
 void lambert_release_model(model_t *model);
 lambert_uniforms_t *lambert_get_uniforms(model_t *model);

@@ -2,12 +2,6 @@
 #include "../core/api.h"
 #include "lambert_shader.h"
 
-/*
- * for half lambert, see
- * https://developer.valvesoftware.com/wiki/Half_Lambert
- */
-static const int USE_HALF_LAMBERT = 1;
-
 /* low-level api */
 
 vec4_t lambert_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
@@ -18,73 +12,48 @@ vec4_t lambert_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     vec4_t local_pos = vec4_from_vec3(attribs->position, 1);
     vec4_t clip_pos = mat4_mul_vec4(uniforms->mvp_matrix, local_pos);
 
-    vec4_t local_normal = vec4_from_vec3(attribs->normal, 0);
-    mat4_t normal_matrix = uniforms->model_it_matrix;
-    vec4_t world_normal = mat4_mul_vec4(normal_matrix, local_normal);
+    vec3_t local_normal = attribs->normal;
+    vec3_t world_normal = mat3_mul_vec3(uniforms->normal_matrix, local_normal);
 
     varyings->texcoord = attribs->texcoord;
-    varyings->normal = vec3_from_vec4(world_normal);
+    varyings->normal = world_normal;
     return clip_pos;
-}
-
-static vec4_t calculate_emission(vec2_t texcoord,
-                                 lambert_uniforms_t *uniforms) {
-    if (uniforms->emission_texture) {
-        vec4_t factor = uniforms->emission_factor;
-        vec4_t color = texture_sample(uniforms->emission_texture, texcoord);
-        return vec4_modulate(factor, color);
-    } else {
-        return uniforms->emission_factor;
-    }
-}
-
-static vec4_t calculate_diffuse(vec2_t texcoord,
-                                lambert_uniforms_t *uniforms) {
-    if (uniforms->diffuse_texture) {
-        vec4_t factor = uniforms->diffuse_factor;
-        vec4_t color = texture_sample(uniforms->diffuse_texture, texcoord);
-        return vec4_modulate(factor, color);
-    } else {
-        return uniforms->diffuse_factor;
-    }
 }
 
 static float max_float(float a, float b) {
     return a > b ? a : b;
 }
 
-static float calculate_diffuse_strength(vec3_t light_dir, vec3_t normal) {
-    float l_dot_n = -vec3_dot(light_dir, normal);
-    if (USE_HALF_LAMBERT) {
-        return (l_dot_n * 0.5f + 0.5f) * (l_dot_n * 0.5f + 0.5f);
-    } else {
-        return max_float(l_dot_n, 0);
-    }
-}
-
 vec4_t lambert_fragment_shader(void *varyings_, void *uniforms_) {
     lambert_varyings_t *varyings = (lambert_varyings_t*)varyings_;
     lambert_uniforms_t *uniforms = (lambert_uniforms_t*)uniforms_;
 
-    vec4_t ambient = uniforms->ambient_factor;
-    vec4_t emission = calculate_emission(varyings->texcoord, uniforms);
-    vec4_t diffuse_ = calculate_diffuse(varyings->texcoord, uniforms);
+    vec3_t color = vec3_new(0, 0, 0);
 
-    vec3_t normal = vec3_normalize(varyings->normal);
-    vec3_t light_dir = vec3_normalize(uniforms->light_dir);
-    float diffuse_strength = calculate_diffuse_strength(light_dir, normal);
-    vec4_t diffuse = vec4_mul(diffuse_, diffuse_strength);
+    if (uniforms->diffuse) {
+        vec4_t sample = texture_sample(uniforms->diffuse, varyings->texcoord);
+        vec3_t albedo = vec3_from_vec4(sample);
 
-    float color_r = ambient.x + emission.x + diffuse.x;
-    float color_g = ambient.y + emission.y + diffuse.y;
-    float color_b = ambient.z + emission.z + diffuse.z;
+        vec3_t normal = vec3_normalize(varyings->normal);
+        vec3_t light_dir = vec3_negate(uniforms->light_dir);
+        float strength = max_float(vec3_dot(normal, light_dir), 0);
 
-    return vec4_new(color_r, color_g, color_b, 1);
+        vec3_t diffuse = vec3_mul(albedo, strength + uniforms->ambient);
+        color = vec3_add(color, diffuse);
+    }
+
+    if (uniforms->emission) {
+        vec4_t sample = texture_sample(uniforms->emission, varyings->texcoord);
+        vec3_t emission = vec3_from_vec4(sample);
+        color = vec3_add(color, emission);
+    }
+
+    return vec4_from_vec3(color, 1);
 }
 
 /* high-level api */
 
-model_t *lambert_create_model(const char *mesh_filename, mat4_t transform,
+model_t *lambert_create_model(const char *mesh, mat4_t transform,
                               lambert_material_t material) {
     int sizeof_attribs = sizeof(lambert_attribs_t);
     int sizeof_varyings = sizeof(lambert_varyings_t);
@@ -96,21 +65,17 @@ model_t *lambert_create_model(const char *mesh_filename, mat4_t transform,
     program = program_create(lambert_vertex_shader, lambert_fragment_shader,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms);
     uniforms = (lambert_uniforms_t*)program_get_uniforms(program);
-    uniforms->ambient_factor = material.ambient_factor;
-    uniforms->emission_factor = material.emission_factor;
-    uniforms->diffuse_factor = material.diffuse_factor;
-    if (material.emission_texture) {
-        const char *emission_filename = material.emission_texture;
-        uniforms->emission_texture = texture_from_file(emission_filename);
+    uniforms->ambient = material.ambient;
+    if (material.emission) {
+        uniforms->emission = texture_from_file(material.emission);
     }
-    if (material.diffuse_texture) {
-        const char *diffuse_filename = material.diffuse_texture;
-        uniforms->diffuse_texture = texture_from_file(diffuse_filename);
+    if (material.diffuse) {
+        uniforms->diffuse = texture_from_file(material.diffuse);
     }
 
     model = (model_t*)malloc(sizeof(model_t));
     model->transform = transform;
-    model->mesh      = mesh_load(mesh_filename);
+    model->mesh      = mesh_load(mesh);
     model->program   = program;
 
     return model;
@@ -118,11 +83,11 @@ model_t *lambert_create_model(const char *mesh_filename, mat4_t transform,
 
 void lambert_release_model(model_t *model) {
     lambert_uniforms_t *uniforms = lambert_get_uniforms(model);
-    if (uniforms->emission_texture) {
-        texture_release(uniforms->emission_texture);
+    if (uniforms->emission) {
+        texture_release(uniforms->emission);
     }
-    if (uniforms->diffuse_texture) {
-        texture_release(uniforms->diffuse_texture);
+    if (uniforms->diffuse) {
+        texture_release(uniforms->diffuse);
     }
     program_release(model->program);
     mesh_release(model->mesh);

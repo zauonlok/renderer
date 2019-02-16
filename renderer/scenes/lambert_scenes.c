@@ -1,40 +1,11 @@
+#include <assert.h>
 #include <stdlib.h>
 #include "../core/api.h"
 #include "../shaders/lambert_shader.h"
 #include "lambert_scenes.h"
 
-static scene_t *create_scene(
-        int num_meshes, const char *mesh_names[], const char *emission_names[],
-        const char *diffuse_names[], mat4_t transforms[], vec4_t background) {
-    vec4_t enabled = vec4_new(1, 1, 1, 1);
-    vec4_t disabled = vec4_new(0, 0, 0, 1);
-    model_t **models = NULL;
-    scene_t *scene;
-    int i;
-
-    for (i = 0; i < num_meshes; i++) {
-        lambert_material_t material;
-        model_t *model;
-
-        material.ambient_factor = disabled;
-        material.emission_factor = emission_names[i] ? enabled : disabled;
-        material.diffuse_factor = diffuse_names[i] ? enabled : disabled;
-        material.emission_texture = emission_names[i];
-        material.diffuse_texture = diffuse_names[i];
-
-        model = lambert_create_model(mesh_names[i], transforms[i], material);
-        darray_push(models, model);
-    }
-
-    scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background = background;
-    scene->models     = models;
-
-    return scene;
-}
-
 scene_t *lambert_craftsman_scene(void) {
-    const char *mesh_names[] = {
+    const char *meshes[] = {
         "assets/craftsman/anvil.obj",
         "assets/craftsman/floor.obj",
         "assets/craftsman/hammer.obj",
@@ -43,34 +14,53 @@ scene_t *lambert_craftsman_scene(void) {
         "assets/craftsman/shoulderpad1.obj",
         "assets/craftsman/smith.obj",
     };
-    const char *emission_names[] = {
-        NULL,
-        NULL,
-        "assets/craftsman/smith_emission.tga",
-        "assets/craftsman/smith_emission.tga",
-        "assets/craftsman/smith_emission.tga",
-        "assets/craftsman/smith_emission.tga",
-        "assets/craftsman/smith_emission.tga",
-    };
-    const char *diffuse_names[] = {
-        "assets/craftsman/anvil_diffuse.tga",
-        "assets/craftsman/floor_diffuse.tga",
-        "assets/craftsman/smith_diffuse.tga",
-        "assets/craftsman/smith_diffuse.tga",
-        "assets/craftsman/smith_diffuse.tga",
-        "assets/craftsman/smith_diffuse.tga",
-        "assets/craftsman/smith_diffuse.tga",
+    lambert_material_t materials[] = {
+        {
+            0.5f,
+            NULL,
+            "assets/craftsman/anvil_diffuse.tga",
+        },
+        {
+            0.5f,
+            NULL,
+            "assets/craftsman/floor_diffuse.tga",
+        },
+        {
+            0.5f,
+            "assets/craftsman/smith_emission.tga",
+            "assets/craftsman/smith_diffuse.tga",
+        },
+        {
+            0.5f,
+            "assets/craftsman/smith_emission.tga",
+            "assets/craftsman/smith_diffuse.tga",
+        },
+        {
+            0.5f,
+            "assets/craftsman/smith_emission.tga",
+            "assets/craftsman/smith_diffuse.tga",
+        },
+        {
+            0.5f,
+            "assets/craftsman/smith_emission.tga",
+            "assets/craftsman/smith_diffuse.tga",
+        },
+        {
+            0.5f,
+            "assets/craftsman/smith_emission.tga",
+            "assets/craftsman/smith_diffuse.tga",
+        },
     };
     mat4_t transforms[] = {
         {{
             {  0.936571f,   0.000000f,   0.000000f,   0.000000f},
-            {  0.000000f,   0.000000f,   0.936571f,  -0.000000f},
+            {  0.000000f,   0.000000f,   0.936571f,   0.000000f},
             {  0.000000f,  -0.936571f,   0.000000f,  23.366537f},
             {  0.000000f,   0.000000f,   0.000000f,   1.000000f},
         }},
         {{
             {  1.259828f,   0.000000f,   0.000000f,   1.668093f},
-            {  0.000000f,   0.000000f,   0.885767f,  -0.000000f},
+            {  0.000000f,   0.000000f,   0.885767f,   0.000000f},
             {  0.000000f,  -1.259828f,   0.000000f,  10.833580f},
             {  0.000000f,   0.000000f,   0.000000f,   1.000000f},
         }},
@@ -89,7 +79,7 @@ scene_t *lambert_craftsman_scene(void) {
         {{
             {  1.000000f,   0.000000f,   0.000000f,   0.000000f},
             {  0.000000f,   0.000000f,   1.000000f,   0.000000f},
-            {  0.000000f,  -1.000000f,   0.000000f,  -0.000000f},
+            {  0.000000f,  -1.000000f,   0.000000f,   0.000000f},
             {  0.000000f,   0.000000f,   0.000000f,   1.000000f},
         }},
         {{
@@ -106,19 +96,28 @@ scene_t *lambert_craftsman_scene(void) {
         }},
     };
     vec4_t background = vec4_new(0.078f, 0.082f, 0.102f, 1);
-    mat4_t scale, translation, transform;
+    model_t **models = NULL;
+    model_t *model;
     scene_t *scene;
-    int num_meshes = 7;
+    mat4_t scale, translation, root;
+    int num_meshes = ARRAY_LENGTH(meshes);
     int i;
 
+    assert(ARRAY_LENGTH(materials) == num_meshes);
+    assert(ARRAY_LENGTH(transforms) == num_meshes);
+
     translation = mat4_translate(-1.668f, -27.061f, -10.834f);
-    scale = mat4_scale(0.013f, 0.013f, 0.013f);
-    transform = mat4_mul_mat4(scale, translation);
+    scale = mat4_scale(0.016f, 0.016f, 0.016f);
+    root = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
-        transforms[i] = mat4_mul_mat4(transform, transforms[i]);
+        mat4_t transform = mat4_mul_mat4(root, transforms[i]);
+        model = lambert_create_model(meshes[i], transform, materials[i]);
+        darray_push(models, model);
     }
 
-    scene = create_scene(num_meshes, mesh_names, emission_names,
-                         diffuse_names, transforms, background);
+    scene = (scene_t*)malloc(sizeof(scene_t));
+    scene->background = background;
+    scene->models     = models;
+
     return scene;
 }
