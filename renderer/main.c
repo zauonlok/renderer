@@ -3,19 +3,21 @@
 #include <string.h>
 #include <time.h>
 #include "tests/test_base.h"
-#include "tests/test_constant.h"
 #include "tests/test_lambert.h"
 #include "tests/test_phong.h"
 #include "tests/test_blinn.h"
+#include "tests/test_unlit.h"
+#include "tests/test_metalness.h"
 
 typedef void testfunc_t(int argc, char *argv[]);
 typedef struct {const char *testname; testfunc_t *testfunc;} testcase_t;
 
 static testcase_t g_testcases[] = {
-    {"constant", test_constant},
     {"lambert", test_lambert},
     {"phong", test_phong},
     {"blinn", test_blinn},
+    {"unlit", test_unlit},
+    {"metalness", test_metalness},
 };
 
 int main(int argc, char *argv[]) {
