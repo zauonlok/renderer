@@ -18,9 +18,6 @@ vec4_t texture_sample(texture_t *texture, vec2_t texcoord);
 cubemap_t *cubemap_from_files(const char *positive_x, const char *negative_x,
                               const char *positive_y, const char *negative_y,
                               const char *positive_z, const char *negative_z);
-cubemap_t *cubemap_from_images(image_t *positive_x, image_t *negative_x,
-                               image_t *positive_y, image_t *negative_y,
-                               image_t *positive_z, image_t *negative_z);
 void cubemap_release(cubemap_t *cubemap);
 void cubemap_srgb2linear(cubemap_t *cubemap);
 vec4_t cubemap_sample(cubemap_t *cubemap, vec3_t direction);

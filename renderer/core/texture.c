@@ -97,29 +97,31 @@ vec4_t texture_sample(texture_t *texture, vec2_t texcoord) {
 
 /* cubemap management */
 
+/*
+ * for face uv origin, see
+ * https://stackoverflow.com/questions/11685608/
+ */
 cubemap_t *cubemap_from_files(const char *positive_x, const char *negative_x,
                               const char *positive_y, const char *negative_y,
                               const char *positive_z, const char *negative_z) {
-    cubemap_t *cubemap = (cubemap_t*)malloc(sizeof(cubemap_t));
-    cubemap->faces[0] = texture_from_file(positive_x);  /* right */
-    cubemap->faces[1] = texture_from_file(negative_x);  /* left */
-    cubemap->faces[2] = texture_from_file(positive_y);  /* top */
-    cubemap->faces[3] = texture_from_file(negative_y);  /* bottom */
-    cubemap->faces[4] = texture_from_file(positive_z);  /* front */
-    cubemap->faces[5] = texture_from_file(negative_z);  /* back */
-    return cubemap;
-}
+    cubemap_t *cubemap;
+    image_t *faces[6];
+    int i;
 
-cubemap_t *cubemap_from_images(image_t *positive_x, image_t *negative_x,
-                               image_t *positive_y, image_t *negative_y,
-                               image_t *positive_z, image_t *negative_z) {
-    cubemap_t *cubemap = (cubemap_t*)malloc(sizeof(cubemap_t));
-    cubemap->faces[0] = texture_from_image(positive_x);  /* right */
-    cubemap->faces[1] = texture_from_image(negative_x);  /* left */
-    cubemap->faces[2] = texture_from_image(positive_y);  /* top */
-    cubemap->faces[3] = texture_from_image(negative_y);  /* bottom */
-    cubemap->faces[4] = texture_from_image(positive_z);  /* front */
-    cubemap->faces[5] = texture_from_image(negative_z);  /* back */
+    faces[0] = image_load(positive_x);  /* right */
+    faces[1] = image_load(negative_x);  /* left */
+    faces[2] = image_load(positive_y);  /* top */
+    faces[3] = image_load(negative_y);  /* bottom */
+    faces[4] = image_load(positive_z);  /* front */
+    faces[5] = image_load(negative_z);  /* back */
+
+    cubemap = (cubemap_t*)malloc(sizeof(cubemap_t));
+    for (i = 0; i < 6; i++) {
+        image_flip_v(faces[i]);
+        cubemap->faces[i] = texture_from_image(faces[i]);
+        image_release(faces[i]);
+    }
+
     return cubemap;
 }
 
