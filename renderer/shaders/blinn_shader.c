@@ -3,12 +3,6 @@
 #include "../core/api.h"
 #include "blinn_shader.h"
 
-/*
- * for half lambert, see
- * https://developer.valvesoftware.com/wiki/Half_Lambert
- */
-static const int USE_HALF_LAMBERT = 1;
-
 /* low-level api */
 
 vec4_t blinn_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
@@ -20,98 +14,65 @@ vec4_t blinn_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     vec4_t world_pos = mat4_mul_vec4(uniforms->model_matrix, local_pos);
     vec4_t clip_pos = mat4_mul_vec4(uniforms->viewproj_matrix, world_pos);
 
-    vec4_t local_normal = vec4_from_vec3(attribs->normal, 0);
-    mat4_t normal_matrix = uniforms->model_it_matrix;
-    vec4_t world_normal = mat4_mul_vec4(normal_matrix, local_normal);
+    vec3_t local_normal = attribs->normal;
+    vec3_t world_normal = mat3_mul_vec3(uniforms->normal_matrix, local_normal);
 
     varyings->position = vec3_from_vec4(world_pos);
     varyings->texcoord = attribs->texcoord;
-    varyings->normal = vec3_from_vec4(world_normal);
+    varyings->normal = world_normal;
     return clip_pos;
-}
-
-static vec4_t calculate_emission(vec2_t texcoord, blinn_uniforms_t *uniforms) {
-    if (uniforms->emission_texture) {
-        vec4_t factor = uniforms->emission_factor;
-        vec4_t color = texture_sample(uniforms->emission_texture, texcoord);
-        return vec4_modulate(factor, color);
-    } else {
-        return uniforms->emission_factor;
-    }
-}
-
-static vec4_t calculate_diffuse(vec2_t texcoord, blinn_uniforms_t *uniforms) {
-    if (uniforms->diffuse_texture) {
-        vec4_t factor = uniforms->diffuse_factor;
-        vec4_t color = texture_sample(uniforms->diffuse_texture, texcoord);
-        return vec4_modulate(factor, color);
-    } else {
-        return uniforms->diffuse_factor;
-    }
-}
-
-static vec4_t calculate_specular(vec2_t texcoord, blinn_uniforms_t *uniforms) {
-    if (uniforms->specular_texture) {
-        vec4_t factor = uniforms->specular_factor;
-        vec4_t color = texture_sample(uniforms->specular_texture, texcoord);
-        return vec4_modulate(factor, color);
-    } else {
-        return uniforms->specular_factor;
-    }
 }
 
 static float max_float(float a, float b) {
     return a > b ? a : b;
 }
 
-static float calculate_diffuse_strength(vec3_t light_dir, vec3_t normal) {
-    float l_dot_n = -vec3_dot(light_dir, normal);
-    if (USE_HALF_LAMBERT) {
-        return (l_dot_n * 0.5f + 0.5f) * (l_dot_n * 0.5f + 0.5f);
-    } else {
-        return max_float(l_dot_n, 0);
-    }
-}
-
-static float calculate_specular_strength(vec3_t light_dir, vec3_t eye_dir,
-                                         vec3_t normal, float shininess) {
-    vec3_t halfway = vec3_normalize(vec3_add(light_dir, eye_dir));
-    float base = max_float(-vec3_dot(halfway, normal), 0);
-    return (float)pow(base, shininess);
-}
-
 vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_) {
     blinn_varyings_t *varyings = (blinn_varyings_t*)varyings_;
     blinn_uniforms_t *uniforms = (blinn_uniforms_t*)uniforms_;
 
-    vec4_t ambient = uniforms->ambient_factor;
-    vec4_t emission = calculate_emission(varyings->texcoord, uniforms);
-    vec4_t diffuse_ = calculate_diffuse(varyings->texcoord, uniforms);
-    vec4_t specular_ = calculate_specular(varyings->texcoord, uniforms);
-
-    vec3_t light_dir = vec3_normalize(uniforms->light_dir);
+    vec2_t texcoord = varyings->texcoord;
     vec3_t normal = vec3_normalize(varyings->normal);
-    vec3_t world_pos = varyings->position;
-    vec3_t eye_dir = vec3_normalize(vec3_sub(world_pos, uniforms->camera_pos));
+    vec3_t light_dir = vec3_negate(uniforms->light_dir);
 
-    float diffuse_strength = calculate_diffuse_strength(light_dir, normal);
-    float shininess = uniforms->shininess;
-    float specular_strength = calculate_specular_strength(light_dir, eye_dir,
-                                                          normal, shininess);
+    vec3_t color = vec3_new(0, 0, 0);
 
-    vec4_t diffuse = vec4_mul(diffuse_, diffuse_strength);
-    vec4_t specular = vec4_mul(specular_, specular_strength);
+    if (uniforms->diffuse) {
+        vec4_t sample = texture_sample(uniforms->diffuse, texcoord);
+        vec3_t albedo = vec3_from_vec4(sample);
 
-    float color_r = ambient.x + emission.x + diffuse.x + specular.x;
-    float color_g = ambient.y + emission.y + diffuse.y + specular.y;
-    float color_b = ambient.z + emission.z + diffuse.z + specular.z;
+        float strength = max_float(vec3_dot(normal, light_dir), 0);
+        vec3_t diffuse = vec3_mul(albedo, strength + uniforms->ambient);
+        color = vec3_add(color, diffuse);
+    }
 
-    return vec4_new(color_r, color_g, color_b, 1);
+    if (uniforms->specular) {
+        vec3_t world_pos = varyings->position;
+        vec3_t camera_pos = uniforms->camera_pos;
+        vec3_t view_dir = vec3_normalize(vec3_sub(camera_pos, world_pos));
+        vec3_t half_dir = vec3_normalize(vec3_add(light_dir, view_dir));
+
+        float closeness = vec3_dot(half_dir, normal);
+        if (closeness > 0) {
+            float strength = (float)pow(closeness, uniforms->shininess);
+            vec4_t sample = texture_sample(uniforms->specular, texcoord);
+            vec3_t specular = vec3_mul(vec3_from_vec4(sample), strength);
+            color = vec3_add(color, specular);
+        }
+    }
+
+    if (uniforms->emission) {
+        vec4_t sample = texture_sample(uniforms->emission, texcoord);
+        vec3_t emission = vec3_from_vec4(sample);
+        color = vec3_add(color, emission);
+    }
+
+    return vec4_from_vec3(color, 1);
 }
 
 /* high-level api */
 
-model_t *blinn_create_model(const char *mesh_filename, mat4_t transform,
+model_t *blinn_create_model(const char *mesh, mat4_t transform,
                             blinn_material_t material) {
     int sizeof_attribs = sizeof(blinn_attribs_t);
     int sizeof_varyings = sizeof(blinn_varyings_t);
@@ -123,27 +84,21 @@ model_t *blinn_create_model(const char *mesh_filename, mat4_t transform,
     program = program_create(blinn_vertex_shader, blinn_fragment_shader,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms);
     uniforms = (blinn_uniforms_t*)program_get_uniforms(program);
-    uniforms->ambient_factor = material.ambient_factor;
-    uniforms->emission_factor = material.emission_factor;
-    uniforms->diffuse_factor = material.diffuse_factor;
-    uniforms->specular_factor = material.specular_factor;
+    uniforms->ambient = material.ambient;
     uniforms->shininess = material.shininess;
-    if (material.emission_texture) {
-        const char *emission_filename = material.emission_texture;
-        uniforms->emission_texture = texture_from_file(emission_filename);
+    if (material.emission) {
+        uniforms->emission = texture_from_file(material.emission);
     }
-    if (material.diffuse_texture) {
-        const char *diffuse_filename = material.diffuse_texture;
-        uniforms->diffuse_texture = texture_from_file(diffuse_filename);
+    if (material.diffuse) {
+        uniforms->diffuse = texture_from_file(material.diffuse);
     }
-    if (material.specular_texture) {
-        const char *specular_filename = material.specular_texture;
-        uniforms->specular_texture = texture_from_file(specular_filename);
+    if (material.specular) {
+        uniforms->specular = texture_from_file(material.specular);
     }
 
     model = (model_t*)malloc(sizeof(model_t));
     model->transform = transform;
-    model->mesh      = mesh_load(mesh_filename);
+    model->mesh      = mesh_load(mesh);
     model->program   = program;
 
     return model;
@@ -151,14 +106,14 @@ model_t *blinn_create_model(const char *mesh_filename, mat4_t transform,
 
 void blinn_release_model(model_t *model) {
     blinn_uniforms_t *uniforms = blinn_get_uniforms(model);
-    if (uniforms->emission_texture) {
-        texture_release(uniforms->emission_texture);
+    if (uniforms->emission) {
+        texture_release(uniforms->emission);
     }
-    if (uniforms->diffuse_texture) {
-        texture_release(uniforms->diffuse_texture);
+    if (uniforms->diffuse) {
+        texture_release(uniforms->diffuse);
     }
-    if (uniforms->specular_texture) {
-        texture_release(uniforms->specular_texture);
+    if (uniforms->specular) {
+        texture_release(uniforms->specular);
     }
     program_release(model->program);
     mesh_release(model->mesh);

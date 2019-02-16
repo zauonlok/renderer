@@ -35,13 +35,14 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
     phong_varyings_t *varyings = (phong_varyings_t*)varyings_;
     phong_uniforms_t *uniforms = (phong_uniforms_t*)uniforms_;
 
+    vec2_t texcoord = varyings->texcoord;
     vec3_t normal = vec3_normalize(varyings->normal);
     vec3_t light_dir = vec3_negate(uniforms->light_dir);
 
     vec3_t color = vec3_new(0, 0, 0);
 
     if (uniforms->diffuse) {
-        vec4_t sample = texture_sample(uniforms->diffuse, varyings->texcoord);
+        vec4_t sample = texture_sample(uniforms->diffuse, texcoord);
         vec3_t albedo = vec3_from_vec4(sample);
 
         float strength = max_float(vec3_dot(normal, light_dir), 0);
@@ -55,16 +56,17 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
         vec3_t view_dir = vec3_normalize(vec3_sub(camera_pos, world_pos));
         vec3_t reflected_dir = reflect_light(light_dir, normal);
 
-        float closeness = max_float(vec3_dot(reflected_dir, view_dir), 0);
-        float strength = (float)pow(closeness, uniforms->shininess);
-
-        vec4_t sample = texture_sample(uniforms->specular, varyings->texcoord);
-        vec3_t specular = vec3_mul(vec3_from_vec4(sample), strength);
-        color = vec3_add(color, specular);
+        float closeness = vec3_dot(reflected_dir, view_dir);
+        if (closeness > 0) {
+            float strength = (float)pow(closeness, uniforms->shininess);
+            vec4_t sample = texture_sample(uniforms->specular, texcoord);
+            vec3_t specular = vec3_mul(vec3_from_vec4(sample), strength);
+            color = vec3_add(color, specular);
+        }
     }
 
     if (uniforms->emission) {
-        vec4_t sample = texture_sample(uniforms->emission, varyings->texcoord);
+        vec4_t sample = texture_sample(uniforms->emission, texcoord);
         vec3_t emission = vec3_from_vec4(sample);
         color = vec3_add(color, emission);
     }
