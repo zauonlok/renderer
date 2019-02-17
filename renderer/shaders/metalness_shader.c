@@ -1,31 +1,10 @@
 #include <assert.h>
-#include <math.h>
 #include <stdlib.h>
-#include <string.h>
 #include "../core/api.h"
+#include "pbr_shader.h"
 #include "metalness_shader.h"
 
 /* low-level api */
-
-static mat3_t build_tbn_matrix(metalness_attribs_t *attribs,
-                               metalness_uniforms_t *uniforms) {
-    mat3_t model_matrix = mat3_from_mat4(uniforms->model_matrix);
-    mat3_t normal_matrix = mat3_from_mat4(uniforms->model_it_matrix);
-
-    vec3_t local_normal = attribs->normal;
-    vec3_t world_normal_ = mat3_mul_vec3(normal_matrix, local_normal);
-    vec3_t world_normal = vec3_normalize(world_normal_);
-
-    vec3_t local_tangent = vec3_from_vec4(attribs->tangent);
-    vec3_t world_tangent_ = mat3_mul_vec3(model_matrix, local_tangent);
-    vec3_t world_tangent = vec3_normalize(world_tangent_);
-
-    float handedness = attribs->tangent.w;
-    vec3_t world_bitangent_ = vec3_cross(world_normal, world_tangent);
-    vec3_t world_bitangent = vec3_mul(world_bitangent_, handedness);
-
-    return mat3_from_cols(world_tangent, world_bitangent, world_normal);
-}
 
 vec4_t metalness_vertex_shader(void *attribs_, void *varyings_,
                                void *uniforms_) {
@@ -37,9 +16,12 @@ vec4_t metalness_vertex_shader(void *attribs_, void *varyings_,
     vec4_t world_pos = mat4_mul_vec4(uniforms->model_matrix, local_pos);
     vec4_t clip_pos = mat4_mul_vec4(uniforms->viewproj_matrix, world_pos);
 
+    mat3_t tbn_matrix = pbr_build_tbn(attribs->normal, uniforms->normal_matrix,
+                                      attribs->tangent, uniforms->model_matrix);
+
     varyings->position = vec3_from_vec4(world_pos);
     varyings->texcoord = attribs->texcoord;
-    varyings->tbn_matrix = build_tbn_matrix(attribs, uniforms);
+    varyings->tbn_matrix = tbn_matrix;
     return clip_pos;
 }
 
@@ -71,24 +53,6 @@ static float get_roughness(vec2_t texcoord, metalness_uniforms_t *uniforms) {
     }
 }
 
-static vec3_t get_normal(vec2_t texcoord, mat3_t tbn_matrix,
-                         metalness_uniforms_t *uniforms) {
-    if (uniforms->normal_texture) {
-        vec4_t sample = texture_sample(uniforms->normal_texture, texcoord);
-        float normal_x = sample.x * 2 - 1;
-        float normal_y = sample.y * 2 - 1;
-        float normal_z = sample.z * 2 - 1;
-        vec3_t normal = vec3_new(normal_x, normal_y, normal_z);
-        return vec3_normalize(mat3_mul_vec3(tbn_matrix, normal));
-    } else {
-        float normal_x = tbn_matrix.m[0][2];
-        float normal_y = tbn_matrix.m[1][2];
-        float normal_z = tbn_matrix.m[2][2];
-        vec3_t normal = vec3_new(normal_x, normal_y, normal_z);
-        return vec3_normalize(normal);
-    }
-}
-
 static float get_occlusion(vec2_t texcoord, metalness_uniforms_t *uniforms) {
     if (uniforms->occlusion_texture) {
         vec4_t sample = texture_sample(uniforms->occlusion_texture, texcoord);
@@ -115,114 +79,17 @@ static vec3_t get_specular(vec3_t basecolor, float metallic) {
     return vec3_lerp(vec3_new(0.04f, 0.04f, 0.04f), basecolor, metallic);
 }
 
-static float get_distribution(float n_dot_h, float roughness) {
-    float alpha = roughness * roughness;
-    float alpha2 = alpha * alpha;
-    float factor = (n_dot_h * n_dot_h) * (alpha2 - 1) + 1;
-    return alpha2 / (PI * factor * factor);
-}
-
-static float get_visibility(float n_dot_v, float n_dot_l, float roughness) {
-    float alpha = roughness * roughness;
-    float alpha2 = alpha * alpha;
-    float n_dot_v_2 = n_dot_v * n_dot_v;
-    float n_dot_l_2 = n_dot_l * n_dot_l;
-    float term_v = n_dot_l * (float)sqrt(n_dot_v_2 * (1 - alpha2) + alpha2);
-    float term_l = n_dot_v * (float)sqrt(n_dot_l_2 * (1 - alpha2) + alpha2);
-    return 0.5f / (term_v + term_l);
-}
-
-static vec3_t get_fresnel(float v_dot_h, vec3_t reflectance0) {
-    vec3_t reflectance90 = vec3_new(1, 1, 1);
-    return vec3_lerp(reflectance0, reflectance90, (float)pow(1 - v_dot_h, 5));
-}
-
-static float max_float(float a, float b) {
-    return a > b ? a : b;
-}
-
-static const float LIGHT_INTENSITY = 1;
-
-static vec3_t get_dir_shade(vec3_t light_dir, vec3_t normal_dir,
-                            vec3_t view_dir, vec3_t diffuse_color,
-                            vec3_t specular_color, float roughness) {
-    float n_dot_l = vec3_dot(normal_dir, light_dir);
-    if (n_dot_l > 0) {
-        vec3_t half_dir = vec3_normalize(vec3_add(light_dir, view_dir));
-        float n_dot_v = max_float(vec3_dot(normal_dir, view_dir), 0);
-        float n_dot_h = max_float(vec3_dot(normal_dir, half_dir), 0);
-        float v_dot_h = max_float(vec3_dot(view_dir, half_dir), 0);
-
-        float d_term = get_distribution(n_dot_h, roughness);
-        float v_term = get_visibility(n_dot_v, n_dot_l, roughness);
-        vec3_t f_term = get_fresnel(v_dot_h, specular_color);
-
-        vec3_t diffuse_brdf = vec3_div(diffuse_color, PI);
-        vec3_t specular_brdf = vec3_mul(f_term, v_term * d_term);
-
-        float combined_x = (1 - f_term.x) * diffuse_brdf.x + specular_brdf.x;
-        float combined_y = (1 - f_term.y) * diffuse_brdf.y + specular_brdf.y;
-        float combined_z = (1 - f_term.z) * diffuse_brdf.z + specular_brdf.z;
-        vec3_t combined_brdf = vec3_new(combined_x, combined_y, combined_z);
-
-        return vec3_mul(combined_brdf, n_dot_l * LIGHT_INTENSITY);
-    } else {
-        return vec3_new(0, 0, 0);
-    }
-}
-
-static vec3_t get_incident_dir(vec3_t normal, vec3_t view) {
-    return vec3_sub(vec3_mul(normal, 2 * vec3_dot(view, normal)), view);
-}
-
-static vec3_t get_ibl_shade(vec3_t normal_dir, vec3_t view_dir,
-                            vec3_t diffuse_color, vec3_t specular_color,
-                            float roughness, metalness_uniforms_t *uniforms) {
-    cubemap_t *diffuse_envmap = uniforms->diffuse_envmap;
-    vec4_t diffuse_sample = cubemap_sample(diffuse_envmap, normal_dir);
-    vec3_t diffuse_light = vec3_from_vec4(diffuse_sample);
-    vec3_t diffuse_shade = vec3_modulate(diffuse_light, diffuse_color);
-
-    int mip_count = 9;
-    int mip_level = (int)(roughness * mip_count + 0.5);
-    vec3_t incident_dir = get_incident_dir(normal_dir, view_dir);
-    cubemap_t *specular_envmap = uniforms->specular_envmaps[mip_level];
-    vec4_t specular_sample = cubemap_sample(specular_envmap, incident_dir);
-    vec3_t specular_light_ = vec3_from_vec4(specular_sample);
-
-    float n_dot_v = max_float(vec3_dot(normal_dir, view_dir), 0);
-    vec2_t brdf_texcoord = vec2_new(n_dot_v, roughness);
-    vec4_t brdf_sample = texture_sample(uniforms->brdf_lut, brdf_texcoord);
-    float specular_scale = brdf_sample.x;
-    float specular_bias = brdf_sample.y;
-
-    float specular_x = specular_light_.x * specular_scale + specular_bias;
-    float specular_y = specular_light_.y * specular_scale + specular_bias;
-    float specular_z = specular_light_.z * specular_scale + specular_bias;
-    vec3_t specular_light = vec3_new(specular_x, specular_y, specular_z);
-    vec3_t specular_shade = vec3_modulate(specular_light, specular_color);
-
-    return vec3_add(diffuse_shade, specular_shade);
-}
-
-static vec3_t linear_to_srgb(vec3_t color) {
-    color.x = (float)pow(color.x, 1 / 2.2);
-    color.y = (float)pow(color.y, 1 / 2.2);
-    color.z = (float)pow(color.z, 1 / 2.2);
-    return color;
-}
-
 vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
     metalness_varyings_t *varyings = (metalness_varyings_t*)varyings_;
     metalness_uniforms_t *uniforms = (metalness_uniforms_t*)uniforms_;
 
-    vec2_t texcoord = varyings->texcoord;
-    vec3_t basecolor = get_basecolor(texcoord, uniforms);
-    float metallic = get_metallic(texcoord, uniforms);
-    float roughness = get_roughness(texcoord, uniforms);
-    vec3_t normal = get_normal(texcoord, varyings->tbn_matrix, uniforms);
-    float occlusion = get_occlusion(texcoord, uniforms);
-    vec3_t emission = get_emission(texcoord, uniforms);
+    vec3_t basecolor = get_basecolor(varyings->texcoord, uniforms);
+    float metallic = get_metallic(varyings->texcoord, uniforms);
+    float roughness = get_roughness(varyings->texcoord, uniforms);
+    float occlusion = get_occlusion(varyings->texcoord, uniforms);
+    vec3_t emission = get_emission(varyings->texcoord, uniforms);
+    vec3_t normal = pbr_get_normal(varyings->tbn_matrix, varyings->texcoord,
+                                   uniforms->normal_texture);
 
     vec3_t diffuse_color = get_diffuse(basecolor, metallic);
     vec3_t specular_color = get_specular(basecolor, metallic);
@@ -232,63 +99,25 @@ vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
     vec3_t light_dir = vec3_negate(uniforms->light_dir);
     vec3_t view_dir = vec3_normalize(vec3_sub(camera_pos, world_pos));
 
-    vec3_t dir_shade = get_dir_shade(light_dir, normal, view_dir,
-                                     diffuse_color, specular_color, roughness);
-    vec3_t ibl_shade = get_ibl_shade(normal, view_dir, diffuse_color,
-                                     specular_color, roughness, uniforms);
+    vec3_t dir_shade = pbr_dir_shade(light_dir, roughness,
+                                     normal, view_dir,
+                                     diffuse_color, specular_color);
+    vec3_t ibl_shade = pbr_ibl_shade(uniforms->shared_ibldata, roughness,
+                                     normal, view_dir,
+                                     diffuse_color, specular_color);
     vec3_t color = vec3_add(dir_shade, ibl_shade);
 
     color = vec3_mul(color, occlusion);
     color = vec3_add(color, emission);
 
-    return vec4_from_vec3(linear_to_srgb(color), 1);
+    return vec4_from_vec3(pbr_tone_map(color), 1);
 }
 
 /* high-level api */
 
-static void create_environment(metalness_uniforms_t *uniforms) {
-    int i;
-    uniforms->diffuse_envmap = cubemap_from_files(
-        "assets/common/papermill/diffuse_right_0.tga",
-        "assets/common/papermill/diffuse_left_0.tga",
-        "assets/common/papermill/diffuse_top_0.tga",
-        "assets/common/papermill/diffuse_bottom_0.tga",
-        "assets/common/papermill/diffuse_front_0.tga",
-        "assets/common/papermill/diffuse_back_0.tga");
-    cubemap_srgb2linear(uniforms->diffuse_envmap);
-    for (i = 0; i < 10; i++) {
-        char index = (char)('0' + i);
-        char right[] = "assets/common/papermill/specular_right_?.tga";
-        char left[] = "assets/common/papermill/specular_left_?.tga";
-        char top[] = "assets/common/papermill/specular_top_?.tga";
-        char bottom[] = "assets/common/papermill/specular_bottom_?.tga";
-        char front[] = "assets/common/papermill/specular_front_?.tga";
-        char back[] = "assets/common/papermill/specular_back_?.tga";
-        strrchr(right, '?')[0] = index;
-        strrchr(left, '?')[0] = index;
-        strrchr(top, '?')[0] = index;
-        strrchr(bottom, '?')[0] = index;
-        strrchr(front, '?')[0] = index;
-        strrchr(back, '?')[0] = index;
-        uniforms->specular_envmaps[i] = cubemap_from_files(
-            right, left, top, bottom, front, back);
-        cubemap_srgb2linear(uniforms->specular_envmaps[i]);
-    }
-    uniforms->brdf_lut = texture_from_file("assets/common/brdf_lut.tga");
-    texture_srgb2linear(uniforms->brdf_lut);
-}
-
-static void release_environment(metalness_uniforms_t *uniforms) {
-    int i;
-    cubemap_release(uniforms->diffuse_envmap);
-    for (i = 0; i < 10; i++) {
-        cubemap_release(uniforms->specular_envmaps[i]);
-    }
-    texture_release(uniforms->brdf_lut);
-}
-
-model_t *metalness_create_model(const char *mesh_filename, mat4_t transform,
-                                metalness_material_t material) {
+model_t *metalness_create_model(
+        const char *mesh, mat4_t transform,
+        metalness_material_t material, const char *env_name) {
     int sizeof_attribs = sizeof(metalness_attribs_t);
     int sizeof_varyings = sizeof(metalness_varyings_t);
     int sizeof_uniforms = sizeof(metalness_uniforms_t);
@@ -331,11 +160,11 @@ model_t *metalness_create_model(const char *mesh_filename, mat4_t transform,
         uniforms->emissive_texture = texture_from_file(emissive_filename);
         texture_srgb2linear(uniforms->emissive_texture);
     }
-    create_environment(uniforms);
+    uniforms->shared_ibldata = pbr_acquire_ibldata(env_name);
 
     model = (model_t*)malloc(sizeof(model_t));
     model->transform = transform;
-    model->mesh      = mesh_load(mesh_filename);
+    model->mesh      = mesh_load(mesh);
     model->program   = program;
 
     return model;
@@ -361,7 +190,7 @@ void metalness_release_model(model_t *model) {
     if (uniforms->emissive_texture) {
         texture_release(uniforms->emissive_texture);
     }
-    release_environment(uniforms);
+    pbr_release_ibldata(uniforms->shared_ibldata);
     program_release(model->program);
     mesh_release(model->mesh);
     free(model);

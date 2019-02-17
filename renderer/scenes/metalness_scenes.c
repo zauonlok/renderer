@@ -17,6 +17,7 @@ scene_t *metalness_helmet_scene(void) {
         "assets/helmet/emissive.tga",
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    const char *env_name = "papermill";
     model_t **models = NULL;
     model_t *model;
     scene_t *scene;
@@ -25,7 +26,7 @@ scene_t *metalness_helmet_scene(void) {
     rotation = mat4_rotate_x(TO_RADIANS(90));
     scale = mat4_scale(0.5f, 0.5f, 0.5f);
     root = mat4_mul_mat4(scale, rotation);
-    model = metalness_create_model(mesh, root, material);
+    model = metalness_create_model(mesh, root, material, env_name);
     darray_push(models, model);
 
     scene = (scene_t*)malloc(sizeof(scene_t));

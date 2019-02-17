@@ -21,10 +21,10 @@ static void update_scene(scene_t *scene, camera_t *camera, vec3_t light_dir) {
         mat4_t model_matrix = model->transform;
         mat4_t model_it_matrix = mat4_inverse_transpose(model_matrix);
         metalness_uniforms_t *uniforms = metalness_get_uniforms(model);
-        uniforms->light_dir = light_dir;
+        uniforms->light_dir = vec3_normalize(light_dir);
         uniforms->camera_pos = camera_pos;
         uniforms->model_matrix = model_matrix;
-        uniforms->model_it_matrix = model_it_matrix;
+        uniforms->normal_matrix = mat3_from_mat4(model_it_matrix);
         uniforms->viewproj_matrix = viewproj_matrix;
     }
 }

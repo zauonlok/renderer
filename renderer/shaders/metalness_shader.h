@@ -2,6 +2,7 @@
 #define METALNESS_SHADER_H
 
 #include "../core/api.h"
+#include "pbr_shader.h"
 
 typedef struct {
     vec3_t basecolor_factor;
@@ -33,7 +34,7 @@ typedef struct {
     vec3_t light_dir;
     vec3_t camera_pos;
     mat4_t model_matrix;
-    mat4_t model_it_matrix;
+    mat3_t normal_matrix;
     mat4_t viewproj_matrix;
     /* from material */
     vec3_t basecolor_factor;
@@ -46,9 +47,7 @@ typedef struct {
     texture_t *occlusion_texture;
     texture_t *emissive_texture;
     /* for environment */
-    cubemap_t *diffuse_envmap;
-    cubemap_t *specular_envmaps[10];
-    texture_t *brdf_lut;
+    ibldata_t *shared_ibldata;
 } metalness_uniforms_t;
 
 /* low-level api */
@@ -56,8 +55,9 @@ vec4_t metalness_vertex_shader(void *attribs, void *varyings, void *uniforms);
 vec4_t metalness_fragment_shader(void *varyings, void *uniforms);
 
 /* high-level api */
-model_t *metalness_create_model(const char *mesh_filename, mat4_t transform,
-                                metalness_material_t material);
+model_t *metalness_create_model(
+    const char *mesh, mat4_t transform,
+    metalness_material_t material, const char *env_name);
 void metalness_release_model(model_t *model);
 metalness_uniforms_t *metalness_get_uniforms(model_t *model);
 void metalness_draw_model(model_t *model, framebuffer_t *framebuffer);
