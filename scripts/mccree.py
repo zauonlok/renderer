@@ -87,6 +87,18 @@ def print_generated_code(gltf):
     print_mesh2material(gltf)
 
 
+def make_double_sided(mesh):
+    indices = mesh["indices"]
+
+    flipped = []
+    for i in range(0, len(indices), 3):
+        flipped.append(indices[i + 2])
+        flipped.append(indices[i + 1])
+        flipped.append(indices[i + 0])
+
+    indices += flipped
+
+
 def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
@@ -94,6 +106,7 @@ def process_meshes(zip_file):
     meshes = []
     for mesh in gltf["meshes"]:
         mesh = utils.load_gltf_mesh(gltf, buffer, mesh)
+        make_double_sided(mesh)
         meshes.append(mesh)
 
     for index, mesh in enumerate(meshes):
