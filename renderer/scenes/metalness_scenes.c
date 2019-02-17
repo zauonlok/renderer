@@ -12,7 +12,7 @@ scene_t *metalness_helmet_scene(void) {
         "assets/helmet/metallic.tga",
         1,
         "assets/helmet/roughness.tga",
-        "assets/helmet/normal.tga",
+        NULL,
         "assets/helmet/occlusion.tga",
         "assets/helmet/emissive.tga",
     };

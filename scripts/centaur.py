@@ -54,10 +54,10 @@ def process_meshes(zip_file):
 
     for filename, mesh in zip(OBJ_FILENAMES, meshes):
         if filename:
-            content = utils.dump_mesh_data(mesh)
+            obj_data, _ = utils.dump_mesh_data(mesh)
             filepath = os.path.join(DST_DIRECTORY, filename)
             with open(filepath, "w") as f:
-                f.write(content)
+                f.write(obj_data)
 
 
 def gamma_correct(image):

@@ -3,8 +3,8 @@
 The model is available for download from
     https://sketchfab.com/models/5edb4f4c8a4b47d2a735807f0f4646cc
 
-The Python Imaging Library is required
-    pip install pillow
+The Python Imaging Library and NumPy are required
+    pip install pillow numpy
 """
 
 from __future__ import print_function
@@ -13,6 +13,7 @@ import json
 import os
 import zipfile
 from PIL import Image
+import numpy
 import utils
 
 SRC_FILENAME = "vivi_ornitier.zip"
@@ -28,27 +29,36 @@ OBJ_FILENAMES = [
     "base.obj",
 ]
 
-IMG_FILENAMES = {
-    # base textures
-    "textures/Base_baseColor.png": "base_diffuse.tga",
+EMISSIVE_FILENAMES = {
     "textures/Base_emissive.png": "base_emission.tga",
-    "textures/Base_metallicRoughness.png": "base_specular.tga",
-    # body textures
-    "textures/Body.001_baseColor.png": "body_diffuse.tga",
     "textures/Body.001_emissive.png": "body_emission.tga",
-    "textures/Body.001_metallicRoughness.png": "body_specular.tga",
-    # coat textures
-    "textures/Coat.001_baseColor.png": "coat_diffuse.tga",
-    "textures/Coat.001_metallicRoughness.png": "coat_specular.tga",
-    # hands textures
-    "textures/HandsRod.001_baseColor.png": "hands_diffuse.tga",
-    "textures/HandsRod.001_metallicRoughness.png": "hands_specular.tga",
-    # hat textures
-    "textures/Hat.001_baseColor.png": "hat_diffuse.tga",
-    "textures/Hat.001_metallicRoughness.png": "hat_specular.tga",
-    # legs textures
-    "textures/Legs.001_baseColor.png": "legs_diffuse.tga",
-    "textures/Legs.001_metallicRoughness.png": "legs_specular.tga",
+}
+
+METALLIC_FILENAMES = {
+    "base": [
+        "textures/Base_baseColor.png",
+        "textures/Base_metallicRoughness.png",
+    ],
+    "body": [
+        "textures/Body.001_baseColor.png",
+        "textures/Body.001_metallicRoughness.png",
+    ],
+    "coat": [
+        "textures/Coat.001_baseColor.png",
+        "textures/Coat.001_metallicRoughness.png",
+    ],
+    "hands": [
+        "textures/HandsRod.001_baseColor.png",
+        "textures/HandsRod.001_metallicRoughness.png",
+    ],
+    "hat": [
+        "textures/Hat.001_baseColor.png",
+        "textures/Hat.001_metallicRoughness.png",
+    ],
+    "legs": [
+        "textures/Legs.001_baseColor.png",
+        "textures/Legs.001_metallicRoughness.png",
+    ],
 }
 
 
@@ -63,26 +73,56 @@ def process_meshes(zip_file):
 
     for filename, mesh in zip(OBJ_FILENAMES, meshes):
         if filename:
-            content = utils.dump_mesh_data(mesh)
+            obj_data, _ = utils.dump_mesh_data(mesh)
             filepath = os.path.join(DST_DIRECTORY, filename)
             with open(filepath, "w") as f:
-                f.write(content)
+                f.write(obj_data)
+
+
+def load_rgb_image(zip_file, filename):
+    with zip_file.open(filename) as f:
+        image = Image.open(f)
+        bands = image.split()
+        image = Image.merge("RGB", bands[:3])
+        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        image = image.resize((512, 512), Image.LANCZOS)
+        return image
+
+
+def process_emissive_images(zip_file):
+    for old_filename, tga_filename in EMISSIVE_FILENAMES.items():
+        image = load_rgb_image(zip_file, old_filename)
+        filepath = os.path.join(DST_DIRECTORY, tga_filename)
+        image.save(filepath, rle=True)
+
+
+def process_metallic_images(zip_file):
+    for name, (basecolor_path, metallic_path) in METALLIC_FILENAMES.items():
+        basecolor_image = load_rgb_image(zip_file, basecolor_path)
+        metallic_image = load_rgb_image(zip_file, metallic_path)
+        _, _, metallic_image = metallic_image.split()
+
+        basecolor_array = numpy.array(basecolor_image) / 255.0
+        metallic_array = (numpy.array(metallic_image) / 255.0)[:, :, None]
+
+        diffuse_array = basecolor_array * (1 - metallic_array)
+        specular_array = basecolor_array * metallic_array
+
+        diffuse_image = Image.fromarray(numpy.uint8(diffuse_array * 255.0))
+        specular_image = Image.fromarray(numpy.uint8(specular_array * 255.0))
+
+        diffuse_filename = "{}_diffuse.tga".format(name)
+        specular_filename = "{}_specular.tga".format(name)
+        diffuse_filepath = os.path.join(DST_DIRECTORY, diffuse_filename)
+        specular_filepath = os.path.join(DST_DIRECTORY, specular_filename)
+
+        diffuse_image.save(diffuse_filepath, rle=True)
+        specular_image.save(specular_filepath, rle=True)
 
 
 def process_images(zip_file):
-    for old_filename, tga_filename in IMG_FILENAMES.items():
-        with zip_file.open(old_filename) as f:
-            image = Image.open(f)
-            if "metallicRoughness" in old_filename:
-                _, _, blue = image.split()
-                image = blue
-            else:
-                bands = image.split()
-                image = Image.merge("RGB", bands[:3])
-            image = image.transpose(Image.FLIP_TOP_BOTTOM)
-            image = image.resize((512, 512), Image.LANCZOS)
-            filepath = os.path.join(DST_DIRECTORY, tga_filename)
-            image.save(filepath, rle=True)
+    process_emissive_images(zip_file)
+    process_metallic_images(zip_file)
 
 
 def main():

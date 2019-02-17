@@ -247,7 +247,6 @@ vec4_t mesh_get_tangent(mesh_t *mesh, int nth_face, int nth_tangent) {
         validate_vertex(mesh, nth_face, nth_tangent);
         return mesh->tangents[index];
     } else {
-        assert(0);
         return vec4_new(0, 0, 0, 0);
     }
 }

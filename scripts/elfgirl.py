@@ -56,12 +56,11 @@ def process_meshes(zip_file):
         fix_texcoords(mesh)
         meshes.append(mesh)
 
-    assert len(OBJ_FILENAMES) == len(meshes)
     for filename, mesh in zip(OBJ_FILENAMES, meshes):
-        content = utils.dump_mesh_data(mesh)
+        obj_data, _ = utils.dump_mesh_data(mesh)
         filepath = os.path.join(DST_DIRECTORY, filename)
         with open(filepath, "w") as f:
-            f.write(content)
+            f.write(obj_data)
 
 
 def process_images(zip_file):
@@ -69,7 +68,6 @@ def process_images(zip_file):
         with zip_file.open(png_filename) as f:
             image = Image.open(f)
             bands = image.split()
-            assert len(bands) in [3, 4]
             image = Image.merge("RGB", bands[:3])
             # coordinates origin:
             #     lower left corner: OpenGL, TGA

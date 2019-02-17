@@ -34,16 +34,12 @@ def print_transforms(gltf):
 
 
 def print_materials(gltf):
-    color_pattern = "{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}"
-    material_pattern = "        {{{}, {}, NULL}},"
+    row_pattern = "        {{{{{:.3f}f, {:.3f}f, {:.3f}f}}, NULL}},"
     num_materials = len(gltf["materials"])
-    print("    constant_material_t materials[{}] = {{".format(num_materials))
+    print("    unlit_material_t materials[{}] = {{".format(num_materials))
     for material in gltf["materials"]:
-        ambient = material["pbrMetallicRoughness"]["baseColorFactor"]
-        ambient = color_pattern.format(*linear_to_srgb(ambient))
-        emission = material.get("emissiveFactor", [0, 0, 0])
-        emission = color_pattern.format(*linear_to_srgb(emission))
-        print(material_pattern.format(ambient, emission))
+        color = material["pbrMetallicRoughness"]["baseColorFactor"]
+        print(row_pattern.format(*linear_to_srgb(color)))
     print("    };")
 
 
@@ -101,11 +97,11 @@ def process_meshes(zip_file):
         meshes.append(mesh)
 
     for index, mesh in enumerate(meshes):
-        content = utils.dump_mesh_data(mesh)
+        obj_data, _ = utils.dump_mesh_data(mesh)
         filename = "part{}.obj".format(index)
         filepath = os.path.join(DST_DIRECTORY, filename)
         with open(filepath, "w") as f:
-            f.write(content)
+            f.write(obj_data)
 
     print_generated_code(gltf)
 

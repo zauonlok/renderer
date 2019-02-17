@@ -4,7 +4,7 @@ import struct
 
 
 #
-# glTF mesh loading
+# gltf mesh loading
 #
 
 
@@ -90,6 +90,7 @@ def _parse_accessor_data(gltf, buffer, accessor_index):
 
     element_type = accessor["type"]
     component_type = accessor["componentType"]
+
     num_components = NUM_COMPONENTS[element_type]
     component_size = COMPONENT_SIZE[component_type]
     element_size = num_components * component_size
@@ -119,23 +120,23 @@ def load_gltf_mesh(gltf, buffer, mesh):
     assert len(mesh["primitives"]) == 1
     primitive = mesh["primitives"][0]
     attributes = primitive["attributes"]
-    parser = functools.partial(_parse_accessor_data, gltf, buffer)
+    accessor_parser = functools.partial(_parse_accessor_data, gltf, buffer)
 
-    indices = parser(primitive["indices"])
-    positions = parser(attributes["POSITION"])
+    indices = accessor_parser(primitive["indices"])
+    positions = accessor_parser(attributes["POSITION"])
 
     if "NORMAL" in attributes:
-        normals = parser(attributes["NORMAL"])
+        normals = accessor_parser(attributes["NORMAL"])
     else:
         normals = None
 
     if "TANGENT" in attributes:
-        tangents = parser(attributes["TANGENT"])
+        tangents = accessor_parser(attributes["TANGENT"])
     else:
         tangents = None
 
     if "TEXCOORD_0" in attributes:
-        texcoords = parser(attributes["TEXCOORD_0"])
+        texcoords = accessor_parser(attributes["TEXCOORD_0"])
     else:
         texcoords = None
 
@@ -150,30 +151,8 @@ def load_gltf_mesh(gltf, buffer, mesh):
     return mesh_data
 
 
-def dump_mesh_data(mesh_data):
-    positions = mesh_data["positions"]
-    texcoords = mesh_data["texcoords"]
-    normals = mesh_data["normals"]
-    tangents = mesh_data["tangents"]
-    indices = mesh_data["indices"]
+def _dump_obj_data(positions, texcoords, normals, indices):
     lines = []
-
-    assert len(indices) % 3 == 0
-
-    if texcoords is None:
-        texcoords = [[0, 0]] * len(positions)
-    else:
-        assert len(texcoords) == len(positions)
-
-    if normals is None:
-        normals = [[0, 0, 1]] * len(positions)
-    else:
-        assert len(normals) == len(positions)
-
-    if tangents is None:
-        tangents = [[1, 0, 0, 1]] * len(positions)
-    else:
-        assert len(tangents) == len(positions)
 
     for position in positions:
         p_x, p_y, p_z = position
@@ -197,12 +176,54 @@ def dump_mesh_data(mesh_data):
         )
         lines.append(line)
 
-    dump_data = "\n".join(lines) + "\n"
-    return dump_data
+    obj_data = "\n".join(lines) + "\n"
+    return obj_data
+
+
+def _dump_tan_data(tangents, indices):
+    lines = []
+
+    for i in indices:
+        t_x, t_y, t_z, t_w = tangents[i]
+        line = "tan {:.6f} {:.6f} {:.6f} {:.6f}".format(t_x, t_y, t_z, t_w)
+        lines.append(line)
+
+    tan_data = "\n".join(lines) + "\n"
+    return tan_data
+
+
+def dump_mesh_data(mesh_data):
+    positions = mesh_data["positions"]
+    texcoords = mesh_data["texcoords"]
+    normals = mesh_data["normals"]
+    tangents = mesh_data["tangents"]
+    indices = mesh_data["indices"]
+
+    assert len(indices) % 3 == 0
+
+    if texcoords is None:
+        texcoords = [[0, 0]] * len(positions)
+    else:
+        assert len(texcoords) == len(positions)
+
+    if normals is None:
+        normals = [[0, 0, 1]] * len(positions)
+    else:
+        assert len(normals) == len(positions)
+
+    if tangents is None:
+        tangents = [[1, 0, 0, 1]] * len(positions)
+    else:
+        assert len(tangents) == len(positions)
+
+    obj_data = _dump_obj_data(positions, texcoords, normals, indices)
+    tan_data = _dump_tan_data(tangents, indices)
+
+    return obj_data, tan_data
 
 
 #
-# glTF node loading
+# gltf node loading
 #
 
 
@@ -210,10 +231,10 @@ class Node(object):
 
     def __init__(self):
         self.mesh = None
-        self.local_transform = None
-        self.world_transform = None
         self.parent = None
         self.children = []
+        self.local_transform = None
+        self.world_transform = None
 
 
 class Transform(object):
@@ -260,10 +281,10 @@ class Transform(object):
     @staticmethod
     def from_matrix(matrix):
         data = [
-            [matrix[i] for i in range(0, 16, 4)],
-            [matrix[i] for i in range(1, 16, 4)],
-            [matrix[i] for i in range(2, 16, 4)],
-            [matrix[i] for i in range(3, 16, 4)],
+            [matrix[0], matrix[4], matrix[8],  matrix[12]],
+            [matrix[1], matrix[5], matrix[9],  matrix[13]],
+            [matrix[2], matrix[6], matrix[10], matrix[14]],
+            [matrix[3], matrix[7], matrix[11], matrix[15]],
         ]
         return Transform(data)
 
@@ -282,8 +303,6 @@ class Transform(object):
 
 
 def load_gltf_nodes(gltf):
-    assert gltf["scene"] == 0 and len(gltf["scenes"]) == 1
-    assert gltf["scenes"][0]["nodes"] == [0]
     num_nodes = len(gltf["nodes"])
     nodes = [Node() for _ in range(num_nodes)]
 
@@ -293,6 +312,12 @@ def load_gltf_nodes(gltf):
 
         if "mesh" in node_data:
             this_node.mesh = node_data["mesh"]
+
+        for j in node_data.get("children", []):
+            child = nodes[j]
+            assert child.parent is None
+            child.parent = this_node
+            this_node.children.append(child)
 
         if "matrix" in node_data:
             assert "scale" not in node_data
@@ -308,12 +333,6 @@ def load_gltf_nodes(gltf):
             translation = Transform.from_translation(translation)
             local_transform = translation * rotation * scale
         this_node.local_transform = local_transform
-
-        for j in node_data.get("children", []):
-            child = nodes[j]
-            assert child.parent is None
-            child.parent = this_node
-            this_node.children.append(child)
 
     for node in nodes:
         transform = node.local_transform

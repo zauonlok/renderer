@@ -1,7 +1,6 @@
 #include <assert.h>
 #include "graphics.h"
 #include "image.h"
-#include "platform.h"
 
 static int min_integer(int a, int b) {
     return a < b ? a : b;
