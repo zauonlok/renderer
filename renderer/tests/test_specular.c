@@ -7,6 +7,7 @@
 
 static scene_entry_t g_scene_entries[] = {
     {"crab", specular_crab_scene},
+    {"drone", specular_drone_scene},
 };
 
 static void update_scene(scene_t *scene, camera_t *camera, vec3_t light_dir) {

@@ -39,7 +39,7 @@ def process_mesh(zip_file):
         f.write(obj_data)
 
 
-def load_rgb_image(zip_file, filename):
+def load_image(zip_file, filename):
     with zip_file.open(filename) as f:
         image = Image.open(f)
         bands = image.split()
@@ -49,26 +49,26 @@ def load_rgb_image(zip_file, filename):
         return image
 
 
+def save_image(image, filename):
+    filepath = os.path.join(DST_DIRECTORY, filename)
+    image.save(filepath, rle=True)
+
+
 def process_images(zip_file):
-    basecolor_image = load_rgb_image(zip_file, BASECOLOR_FILEPATH)
-    basecolor_filepath = os.path.join(DST_DIRECTORY, "basecolor.tga")
-    basecolor_image.save(basecolor_filepath, rle=True)
+    basecolor_image = load_image(zip_file, BASECOLOR_FILEPATH)
+    save_image(basecolor_image, "basecolor.tga")
 
-    packed_image = load_rgb_image(zip_file, PACKED_FILEPATH)
+    packed_image = load_image(zip_file, PACKED_FILEPATH)
     _, roughness_image, metallic_image = packed_image.split()
-    metallic_filepath = os.path.join(DST_DIRECTORY, "metallic.tga")
-    metallic_image.save(metallic_filepath, rle=True)
-    roughness_filepath = os.path.join(DST_DIRECTORY, "roughness.tga")
-    roughness_image.save(roughness_filepath, rle=True)
+    save_image(metallic_image, "metallic.tga")
+    save_image(roughness_image, "roughness.tga")
 
-    occlusion_image = load_rgb_image(zip_file, OCCLUSION_FILEPATH)
+    occlusion_image = load_image(zip_file, OCCLUSION_FILEPATH)
     occlusion_image, _, _ = occlusion_image.split()
-    occlusion_filepath = os.path.join(DST_DIRECTORY, "occlusion.tga")
-    occlusion_image.save(occlusion_filepath, rle=True)
+    save_image(occlusion_image, "occlusion.tga")
 
-    emissive_image = load_rgb_image(zip_file, EMISSIVE_FILEPATH)
-    emissive_filepath = os.path.join(DST_DIRECTORY, "emissive.tga")
-    emissive_image.save(emissive_filepath, rle=True)
+    emissive_image = load_image(zip_file, EMISSIVE_FILEPATH)
+    save_image(emissive_image, "emissive.tga")
 
 
 def main():

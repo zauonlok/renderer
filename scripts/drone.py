@@ -1,7 +1,7 @@
-"""Preprocess the Dancing Crab model
+"""Preprocess the Mech Drone model
 
 The model is available for download from
-    https://sketchfab.com/models/280863886fee409ab3c8168f07caa89f
+    https://sketchfab.com/models/8d06874aac5246c59edb4adbe3606e0e
 
 The Python Imaging Library is required
     pip install pillow
@@ -15,14 +15,16 @@ import zipfile
 from PIL import Image
 import utils
 
-SRC_FILENAME = "dancing_crab_-_uca_mjoebergi.zip"
-DST_DIRECTORY = "../assets/crab"
+SRC_FILENAME = "mech_drone.zip"
+DST_DIRECTORY = "../assets/drone"
 
-OBJ_FILENAME = "crab.obj"
+OBJ_FILENAME = "drone.obj"
 
-DIFFUSE_FILENAME = "textures/FullyAssembledinitialShadingGroup1_diffuse.jpeg"
-NORMAL_FILENAME = "textures/FullyAssembledinitialShadingGroup1_normal.png"
-PACKED_FILENAME = "textures/FullyAssembledinitialShadingGroup1_specularGlossiness.png"
+DIFFUSE_FILENAME = "textures/Robot_diffuse.jpeg"
+NORMAL_FILENAME = "textures/Robot_normal.jpeg"
+OCCLUSION_FILENAME = "textures/Robot_occlusion.jpeg"
+EMISSIVE_FILENAME = "textures/Robot_emissive.jpeg"
+PACKED_FILENAME = "textures/Robot_specularGlossiness.png"
 
 
 def process_meshes(zip_file):
@@ -63,7 +65,15 @@ def process_images(zip_file):
     save_image(diffuse_image, "diffuse.tga", True)
 
     normal_image = load_image(zip_file, NORMAL_FILENAME, True)
+    normal_image = normal_image.resize((1024, 1024), Image.LANCZOS)
     save_image(normal_image, "normal.tga", False)
+
+    occlusion_image = load_image(zip_file, OCCLUSION_FILENAME, True)
+    occlusion_image, _, _ = occlusion_image.split()
+    save_image(occlusion_image, "occlusion.tga", True)
+
+    emissive_image = load_image(zip_file, EMISSIVE_FILENAME, True)
+    save_image(emissive_image, "emissive.tga", True)
 
     packed_image = load_image(zip_file, PACKED_FILENAME, False)
     packed_bands = packed_image.split()
