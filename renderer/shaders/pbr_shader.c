@@ -196,8 +196,9 @@ static void free_ibldata(ibldata_t *ibldata) {
 }
 
 ibldata_t *pbr_acquire_ibldata(const char *env_name) {
+    int num_envinfo = ARRAY_SIZE(g_envinfo);
     int i;
-    for (i = 0; i < ARRAY_SIZE(g_envinfo); i++) {
+    for (i = 0; i < num_envinfo; i++) {
         if (strcmp(env_name, g_envinfo[i].env_name) == 0) {
             ibldata_t *ibldata;
             if (g_ibldata[i] == NULL) {
@@ -217,8 +218,9 @@ ibldata_t *pbr_acquire_ibldata(const char *env_name) {
 void pbr_release_ibldata(ibldata_t *ibldata) {
     ibldata->ref_count -= 1;
     if (ibldata->ref_count <= 0) {
+        int num_envinfo = ARRAY_SIZE(g_envinfo);
         int i;
-        for (i = 0; i < ARRAY_SIZE(g_envinfo); i++) {
+        for (i = 0; i < num_envinfo; i++) {
             if (strcmp(ibldata->env_name, g_envinfo[i].env_name) == 0) {
                 assert(g_ibldata[i] == ibldata);
                 free_ibldata(ibldata);
