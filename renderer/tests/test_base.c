@@ -20,7 +20,7 @@ static const float LIGHT_PHI = TO_RADIANS(45);
 static const float LIGHT_SPEED = PI;
 
 typedef struct {
-    motion_t next_motion;
+    motion_t motion;
     int orbiting, panning;
     vec2_t orbit_pos, pan_pos;
     float light_theta, light_phi;
@@ -31,7 +31,7 @@ static vec2_t calculate_delta(vec2_t old_pos, vec2_t new_pos) {
     return vec2_div(delta, (float)WINDOW_HEIGHT);
 }
 
-vec2_t get_cursor_pos(window_t *window) {
+static vec2_t get_cursor_pos(window_t *window) {
     float xpos, ypos;
     input_query_cursor(window, &xpos, &ypos);
     return vec2_new(xpos, ypos);
@@ -39,7 +39,7 @@ vec2_t get_cursor_pos(window_t *window) {
 
 static void button_callback(window_t *window, button_t button, int pressed) {
     record_t *record = (record_t*)window_get_userdata(window);
-    motion_t *motion = &record->next_motion;
+    motion_t *motion = &record->motion;
     vec2_t cursor_pos = get_cursor_pos(window);
     if (button == BUTTON_L) {
         if (pressed) {
@@ -64,13 +64,13 @@ static void button_callback(window_t *window, button_t button, int pressed) {
 
 static void scroll_callback(window_t *window, float offset) {
     record_t *record = (record_t*)window_get_userdata(window);
-    motion_t *motion = &record->next_motion;
+    motion_t *motion = &record->motion;
     motion->dolly += offset;
 }
 
 static void update_camera(window_t *window, camera_t *camera,
                           record_t *record) {
-    motion_t *motion = &record->next_motion;
+    motion_t *motion = &record->motion;
     vec2_t cursor_pos = get_cursor_pos(window);
     if (record->orbiting) {
         vec2_t delta = calculate_delta(record->orbit_pos, cursor_pos);
@@ -213,6 +213,12 @@ static float max_float(float a, float b) {
     return a > b ? a : b;
 }
 
+static vec3_t transform_position(vec3_t position, mat4_t transform) {
+    vec4_t original = vec4_from_vec3(position, 1);
+    vec4_t transformed = mat4_mul_vec4(transform, original);
+    return vec3_from_vec4(transformed);
+}
+
 static void calculate_bbox(scene_t *scene,
                            vec3_t *out_bbmin, vec3_t *out_bbmax,
                            vec3_t *out_center, vec3_t *out_extend) {
@@ -221,11 +227,14 @@ static void calculate_bbox(scene_t *scene,
     vec3_t bbmax = vec3_new(-1e6, -1e6, -1e6);
     int i, j, k;
     for (i = 0; i < num_models; i++) {
-        mesh_t *mesh = scene->models[i]->mesh;
+        model_t *model = scene->models[i];
+        mesh_t *mesh = model->mesh;
+        mat4_t transform = model->transform;
         int num_faces = mesh_get_num_faces(mesh);
         for (j = 0; j < num_faces; j++) {
             for (k = 0; k < 3; k++) {
                 vec3_t position = mesh_get_position(mesh, j, k);
+                position = transform_position(position, transform);
                 bbmin.x = min_float(bbmin.x, position.x);
                 bbmin.y = min_float(bbmin.y, position.y);
                 bbmin.z = min_float(bbmin.z, position.z);

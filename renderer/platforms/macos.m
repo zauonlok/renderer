@@ -328,7 +328,7 @@ void input_set_callbacks(window_t *window, callbacks_t callbacks) {
     window->callbacks = callbacks;
 }
 
-double private_get_raw_time(void) {
+static double get_native_time(void) {
     static double period = -1;
     if (period < 0) {
         mach_timebase_info_data_t info;
@@ -336,4 +336,12 @@ double private_get_raw_time(void) {
         period = (double)info.numer / (double)info.denom / 1e9;
     }
     return mach_absolute_time() * period;
+}
+
+float input_get_time(void) {
+    static double initial = -1;
+    if (initial < 0) {
+        initial = get_native_time();
+    }
+    return (float)(get_native_time() - initial);
 }

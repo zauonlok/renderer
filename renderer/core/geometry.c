@@ -94,9 +94,9 @@ vec3_t vec3_lerp(vec3_t a, vec3_t b, float t) {
 }
 
 vec3_t vec3_saturate(vec3_t v) {
-    float x = (v.x < 0) ? 0 : ((v.x > 1) ? 1 : v.x);
-    float y = (v.y < 0) ? 0 : ((v.y > 1) ? 1 : v.y);
-    float z = (v.z < 0) ? 0 : ((v.z > 1) ? 1 : v.z);
+    float x = v.x < 0 ? 0 : (v.x > 1 ? 1 : v.x);
+    float y = v.y < 0 ? 0 : (v.y > 1 ? 1 : v.y);
+    float z = v.z < 0 ? 0 : (v.z > 1 ? 1 : v.z);
     return vec3_new(x, y, z);
 }
 
@@ -149,10 +149,10 @@ vec4_t vec4_lerp(vec4_t a, vec4_t b, float t) {
 }
 
 vec4_t vec4_saturate(vec4_t v) {
-    float x = (v.x < 0) ? 0 : ((v.x > 1) ? 1 : v.x);
-    float y = (v.y < 0) ? 0 : ((v.y > 1) ? 1 : v.y);
-    float z = (v.z < 0) ? 0 : ((v.z > 1) ? 1 : v.z);
-    float w = (v.w < 0) ? 0 : ((v.w > 1) ? 1 : v.w);
+    float x = v.x < 0 ? 0 : (v.x > 1 ? 1 : v.x);
+    float y = v.y < 0 ? 0 : (v.y > 1 ? 1 : v.y);
+    float z = v.z < 0 ? 0 : (v.z > 1 ? 1 : v.z);
+    float w = v.w < 0 ? 0 : (v.w > 1 ? 1 : v.w);
     return vec4_new(x, y, z, w);
 }
 
@@ -357,8 +357,8 @@ static float mat4_minor(mat4_t m, int r, int c) {
     int i, j;
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
-            int row = (i < r) ? i : i + 1;
-            int col = (j < c) ? j : j + 1;
+            int row = i < r ? i : i + 1;
+            int col = j < c ? j : j + 1;
             cut_down.m[i][j] = m.m[row][col];
         }
     }
@@ -366,7 +366,7 @@ static float mat4_minor(mat4_t m, int r, int c) {
 }
 
 static float mat4_cofactor(mat4_t m, int r, int c) {
-    float sign = ((r + c) % 2 == 0) ? 1.0f : -1.0f;
+    float sign = (r + c) % 2 == 0 ? 1.0f : -1.0f;
     float minor = mat4_minor(m, r, c);
     return sign * minor;
 }

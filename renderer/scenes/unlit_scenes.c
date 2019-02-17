@@ -101,10 +101,10 @@ scene_t *unlit_mccree_scene(void) {
     model_t *model;
     scene_t *scene;
     mat4_t scale, translation, root;
-    int num_meshes = ARRAY_LENGTH(mesh2transform);;
+    int num_meshes = ARRAY_SIZE(mesh2transform);
     int i;
 
-    assert(ARRAY_LENGTH(mesh2material) == num_meshes);
+    assert(ARRAY_SIZE(mesh2material) == num_meshes);
 
     translation = mat4_translate(0.108f, -1.479f, 0.034f);
     scale = mat4_scale(0.337f, 0.337f, 0.337f);
@@ -152,10 +152,10 @@ scene_t *unlit_elfgirl_scene(void) {
     model_t *model;
     scene_t *scene;
     mat4_t scale, rotation, translation, root;
-    int num_meshes = ARRAY_LENGTH(meshes);
+    int num_meshes = ARRAY_SIZE(meshes);
     int i;
 
-    assert(ARRAY_LENGTH(materials) == num_meshes);
+    assert(ARRAY_SIZE(materials) == num_meshes);
 
     translation = mat4_translate(2.449f, -2.472f, -20.907f);
     rotation = mat4_rotate_x(TO_RADIANS(-90));

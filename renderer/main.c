@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "tests/test_base.h"
+#include "core/api.h"
 #include "tests/test_lambert.h"
 #include "tests/test_phong.h"
 #include "tests/test_blinn.h"
@@ -21,7 +21,7 @@ static testcase_t g_testcases[] = {
 };
 
 int main(int argc, char *argv[]) {
-    int num_testcases = ARRAY_LENGTH(g_testcases);
+    int num_testcases = ARRAY_SIZE(g_testcases);
     const char *testname = NULL;
     testfunc_t *testfunc = NULL;
     int i;

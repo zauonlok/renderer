@@ -134,8 +134,6 @@ void *program_get_uniforms(program_t *program) {
  * http://graphics.idav.ucdavis.edu/education/GraphicsNotes/Clipping.pdf
  */
 
-#define USE_FULL_CLIPPING 0
-
 typedef enum {
     POSITIVE_W,
     POSITIVE_X,
@@ -191,7 +189,7 @@ static float get_intersect_ratio(vec4_t prev, vec4_t curr, plane_t plane) {
 }
 
 static int clip_to_plane(
-        plane_t plane, int varying_num_floats, int in_num_vertices,
+        plane_t plane, int in_num_vertices, int varying_num_floats,
         vec4_t in_coords[MAX_VARYINGS], void *in_varyings[MAX_VARYINGS],
         vec4_t out_coords[MAX_VARYINGS], void *out_varyings[MAX_VARYINGS]) {
     int out_num_vertices = 0;
@@ -244,7 +242,7 @@ static int clip_to_plane(
 #define CLIP_IN2OUT(plane, in_num_vertices)                                 \
     do {                                                                    \
         num_vertices = clip_to_plane(                                       \
-            plane, varying_num_floats, in_num_vertices,                     \
+            plane, in_num_vertices, varying_num_floats,                     \
             in_coords, in_varyings, out_coords, out_varyings);              \
         if (num_vertices < 3) {                                             \
             return 0;                                                       \
@@ -254,7 +252,7 @@ static int clip_to_plane(
 #define CLIP_OUT2IN(plane, in_num_vertices)                                 \
     do {                                                                    \
         num_vertices = clip_to_plane(                                       \
-            plane, varying_num_floats, in_num_vertices,                     \
+            plane, in_num_vertices, varying_num_floats,                     \
             out_coords, out_varyings, in_coords, in_varyings);              \
         if (num_vertices < 3) {                                             \
             return 0;                                                       \
@@ -269,7 +267,7 @@ static int clip_triangle(
     int num_vertices;
 
     CLIP_IN2OUT(POSITIVE_W, 3);
-#if USE_FULL_CLIPPING
+#if 0
     CLIP_OUT2IN(POSITIVE_X, num_vertices);
     CLIP_IN2OUT(NEGATIVE_X, num_vertices);
     CLIP_OUT2IN(POSITIVE_Y, num_vertices);
@@ -311,17 +309,17 @@ static vec3_t viewport_transform(int width_, int height_, vec3_t ndc_coord) {
 
 static float min_float(float a, float b, float c, float lower_bound) {
     float min = a;
-    min = (b < min) ? b : min;
-    min = (c < min) ? c : min;
-    min = (min < lower_bound) ? lower_bound : min;
+    min = b < min ? b : min;
+    min = c < min ? c : min;
+    min = min < lower_bound ? lower_bound : min;
     return min;
 }
 
 static float max_float(float a, float b, float c, float upper_bound) {
     float max = a;
-    max = (b > max) ? b : max;
-    max = (c > max) ? c : max;
-    max = (max > upper_bound) ? upper_bound : max;
+    max = b > max ? b : max;
+    max = c > max ? c : max;
+    max = max > upper_bound ? upper_bound : max;
     return max;
 }
 

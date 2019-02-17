@@ -145,9 +145,9 @@ void cubemap_srgb2linear(cubemap_t *cubemap) {
  * https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
  */
 vec4_t cubemap_sample(cubemap_t *cubemap, vec3_t direction) {
-    float abs_x = (direction.x > 0) ? direction.x : -direction.x;
-    float abs_y = (direction.y > 0) ? direction.y : -direction.y;
-    float abs_z = (direction.z > 0) ? direction.z : -direction.z;
+    float abs_x = (float)fabs(direction.x);
+    float abs_y = (float)fabs(direction.y);
+    float abs_z = (float)fabs(direction.z);
     int face_index;
     float ma, sc, tc;
     vec2_t texcoord;

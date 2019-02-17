@@ -38,10 +38,10 @@ scene_t *blinn_centaur_scene(void) {
     model_t *model;
     scene_t *scene;
     mat4_t scale, rotation, translation, root;
-    int num_meshes = ARRAY_LENGTH(meshes);
+    int num_meshes = ARRAY_SIZE(meshes);
     int i;
 
-    assert(ARRAY_LENGTH(materials) == num_meshes);
+    assert(ARRAY_SIZE(materials) == num_meshes);
 
     translation = mat4_translate(0.154f, -7.579f, -30.749f);
     rotation = mat4_rotate_x(TO_RADIANS(-90));

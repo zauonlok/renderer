@@ -193,14 +193,14 @@ static void handle_key_event(window_t *window, int virtual_key, char pressed) {
 
 static void handle_button_event(window_t *window, int xbutton, char pressed) {
     if (xbutton == Button1 || xbutton == Button3) {         /* mouse button */
-        button_t button = (xbutton == Button1) ? BUTTON_L : BUTTON_R;
+        button_t button = xbutton == Button1 ? BUTTON_L : BUTTON_R;
         window->buttons[button] = pressed;
         if (window->callbacks.button_callback) {
             window->callbacks.button_callback(window, button, pressed);
         }
     } else if (xbutton == Button4 || xbutton == Button5) {  /* mouse wheel */
         if (window->callbacks.scroll_callback) {
-            float offset = (xbutton == Button4) ? 1 : -1;
+            float offset = xbutton == Button4 ? 1 : -1;
             window->callbacks.scroll_callback(window, offset);
         }
     }
@@ -282,7 +282,7 @@ void input_set_callbacks(window_t *window, callbacks_t callbacks) {
     window->callbacks = callbacks;
 }
 
-double private_get_raw_time(void) {
+static double get_native_time(void) {
 #if _POSIX_C_SOURCE >= 199309L
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -292,4 +292,12 @@ double private_get_raw_time(void) {
     gettimeofday(&tv, NULL);
     return (double)tv.tv_sec + (double)tv.tv_usec / 1e6;
 #endif
+}
+
+float input_get_time(void) {
+    static double initial = -1;
+    if (initial < 0) {
+        initial = get_native_time();
+    }
+    return (float)(get_native_time() - initial);
 }

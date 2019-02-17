@@ -138,7 +138,7 @@ static vec3_t get_fresnel(float v_dot_h, vec3_t reflectance0) {
 }
 
 static float max_float(float a, float b) {
-    return (a > b) ? a : b;
+    return a > b ? a : b;
 }
 
 static const float LIGHT_INTENSITY = 1;

@@ -290,7 +290,7 @@ void input_set_callbacks(window_t *window, callbacks_t callbacks) {
     window->callbacks = callbacks;
 }
 
-double private_get_raw_time(void) {
+static double get_native_time(void) {
     static double period = -1;
     LARGE_INTEGER counter;
     if (period < 0) {
@@ -300,4 +300,12 @@ double private_get_raw_time(void) {
     }
     QueryPerformanceCounter(&counter);
     return counter.QuadPart * period;
+}
+
+float input_get_time(void) {
+    static double initial = -1;
+    if (initial < 0) {
+        initial = get_native_time();
+    }
+    return (float)(get_native_time() - initial);
 }

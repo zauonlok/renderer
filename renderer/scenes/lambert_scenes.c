@@ -100,11 +100,11 @@ scene_t *lambert_craftsman_scene(void) {
     model_t *model;
     scene_t *scene;
     mat4_t scale, translation, root;
-    int num_meshes = ARRAY_LENGTH(meshes);
+    int num_meshes = ARRAY_SIZE(meshes);
     int i;
 
-    assert(ARRAY_LENGTH(materials) == num_meshes);
-    assert(ARRAY_LENGTH(transforms) == num_meshes);
+    assert(ARRAY_SIZE(materials) == num_meshes);
+    assert(ARRAY_SIZE(transforms) == num_meshes);
 
     translation = mat4_translate(-1.668f, -27.061f, -10.834f);
     scale = mat4_scale(0.016f, 0.016f, 0.016f);

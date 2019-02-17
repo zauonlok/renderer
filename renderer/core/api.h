@@ -6,10 +6,9 @@
 #include "geometry.h"
 #include "graphics.h"
 #include "image.h"
+#include "macro.h"
 #include "mesh.h"
 #include "platform.h"
 #include "texture.h"
-
-#define ARRAY_LENGTH(array) (sizeof((array)) / sizeof((array)[0]))
 
 #endif

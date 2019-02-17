@@ -132,7 +132,7 @@ static void save_tga(image_t *image, const char *filename) {
     assert(file != NULL);
 
     memset(header, 0, TGA_HEADER_SIZE);
-    header[2]  = (image->channels == 1) ? 3 : 2;  /* image type */
+    header[2]  = image->channels == 1 ? 3 : 2;    /* image type */
     header[12] = image->width & 0xFF;             /* width, lsb */
     header[13] = (image->width >> 8) & 0xFF;      /* width, msb */
     header[14] = image->height & 0xFF;            /* height, lsb */
@@ -148,7 +148,7 @@ static void save_tga(image_t *image, const char *filename) {
 
 static const char *extract_ext(const char *filename) {
     const char *dot_pos = strrchr(filename, '.');
-    return (dot_pos == NULL) ? "" : dot_pos + 1;
+    return dot_pos == NULL ? "" : dot_pos + 1;
 }
 
 image_t *image_load(const char *filename) {
@@ -218,7 +218,7 @@ static float linear_interp(float v0, float v1, float d) {
 }
 
 static int bound_index(int index, int length) {
-    return (index > length - 1) ? length - 1 : index;
+    return index > length - 1 ? length - 1 : index;
 }
 
 image_t *image_resize(image_t *source, int width, int height) {

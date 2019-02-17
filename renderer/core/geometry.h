@@ -1,11 +1,6 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-#define EPSILON 1e-6f
-#define PI 3.141592653589793f
-#define TO_RADIANS(degrees) ((PI / 180) * degrees)
-#define TO_DEGREES(radians) ((180 / PI) * radians)
-
 typedef struct {float x, y;} vec2_t;
 typedef struct {float x, y, z;} vec3_t;
 typedef struct {float x, y, z, w;} vec4_t;

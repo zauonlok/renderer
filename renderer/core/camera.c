@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "camera.h"
 #include "geometry.h"
+#include "macro.h"
 
 static const float NEAR = 0.1f;
 static const float FAR = 1000;
@@ -54,7 +55,7 @@ static vec3_t calculate_pan(vec3_t from_camera, motion_t motion) {
 
 static float clamp_float(float value, float min, float max) {
     assert(min <= max);
-    return (value < min) ? min : ((value > max) ? max : value);
+    return value < min ? min : (value > max ? max : value);
 }
 
 static vec3_t calculate_offset(vec3_t from_target, motion_t motion) {

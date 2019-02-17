@@ -190,7 +190,7 @@ static mesh_t *load_obj(const char *filename) {
 
 static const char *extract_ext(const char *filename) {
     const char *dot_pos = strrchr(filename, '.');
-    return (dot_pos == NULL) ? "" : dot_pos + 1;
+    return dot_pos == NULL ? "" : dot_pos + 1;
 }
 
 mesh_t *mesh_load(const char *filename) {

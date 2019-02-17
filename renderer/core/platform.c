@@ -112,13 +112,3 @@ void private_blit_buffer_rgb(framebuffer_t *src, image_t *dst) {
         }
     }
 }
-
-double private_get_raw_time(void);
-
-float input_get_time(void) {
-    static double initial = -1;
-    if (initial < 0) {
-        initial = private_get_raw_time();
-    }
-    return (float)(private_get_raw_time() - initial);
-}
