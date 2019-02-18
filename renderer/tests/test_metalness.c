@@ -8,6 +8,7 @@
 static scene_entry_t g_scene_entries[] = {
     {"helmet", metalness_helmet_scene},
     {"ponycar", metalness_ponycar_scene},
+    {"dieselpunk", metalness_dieselpunk_scene},
 };
 
 static void update_scene(scene_t *scene, camera_t *camera, vec3_t light_dir) {
