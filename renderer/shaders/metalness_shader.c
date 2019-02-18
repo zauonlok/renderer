@@ -71,14 +71,6 @@ static vec3_t get_emission(vec2_t texcoord, metalness_uniforms_t *uniforms) {
     }
 }
 
-static vec3_t get_diffuse(vec3_t basecolor, float metallic) {
-    return vec3_mul(basecolor, (1 - 0.04f) * (1 - metallic));
-}
-
-static vec3_t get_specular(vec3_t basecolor, float metallic) {
-    return vec3_lerp(vec3_new(0.04f, 0.04f, 0.04f), basecolor, metallic);
-}
-
 vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
     metalness_varyings_t *varyings = (metalness_varyings_t*)varyings_;
     metalness_uniforms_t *uniforms = (metalness_uniforms_t*)uniforms_;
@@ -91,8 +83,9 @@ vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
     vec3_t normal = pbr_get_normal(varyings->tbn_matrix, varyings->texcoord,
                                    uniforms->normal_texture);
 
-    vec3_t diffuse_color = get_diffuse(basecolor, metallic);
-    vec3_t specular_color = get_specular(basecolor, metallic);
+    vec3_t dielectric_specular = vec3_new(0.04f, 0.04f, 0.04f);
+    vec3_t diffuse_color = vec3_mul(basecolor, (1 - 0.04f) * (1 - metallic));
+    vec3_t specular_color = vec3_lerp(dielectric_specular, basecolor, metallic);
 
     vec3_t world_pos = varyings->position;
     vec3_t camera_pos = uniforms->camera_pos;
