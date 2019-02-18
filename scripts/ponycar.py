@@ -34,7 +34,7 @@ INTERIOR_NORMAL_PATH = "textures/Interior_SG_normal.jpg"
 INTERIOR_PACKED_PATH = "textures/Interior_SG_metallicRoughness.png"
 
 
-def process_mesh(zip_file):
+def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
 
@@ -113,7 +113,7 @@ def main():
         os.makedirs(DST_DIRECTORY)
 
     with zipfile.ZipFile(SRC_FILENAME) as zip_file:
-        process_mesh(zip_file)
+        process_meshes(zip_file)
         process_images(zip_file)
 
 

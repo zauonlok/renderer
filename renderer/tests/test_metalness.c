@@ -7,6 +7,7 @@
 
 static scene_entry_t g_scene_entries[] = {
     {"helmet", metalness_helmet_scene},
+    {"helmet2", metalness_helmet2_scene},
     {"ponycar", metalness_ponycar_scene},
     {"dieselpunk", metalness_dieselpunk_scene},
 };

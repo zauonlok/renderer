@@ -35,6 +35,35 @@ scene_t *metalness_helmet_scene(void) {
     return scene;
 }
 
+scene_t *metalness_helmet2_scene(void) {
+    const char *mesh = "assets/helmet2/helmet.obj";
+    metalness_material_t material = {
+        {1, 1, 1},
+        "assets/helmet2/basecolor.tga",
+        1,
+        "assets/helmet2/metallic.tga",
+        1,
+        "assets/helmet2/roughness.tga",
+        "assets/helmet2/normal.tga",
+        "assets/helmet2/occlusion.tga",
+        "assets/helmet2/emissive.tga",
+    };
+    vec4_t background = vec4_new(0.224f, 0.294f, 0.294f, 1);
+    const char *env_name = "papermill";
+    model_t **models = NULL;
+    scene_t *scene;
+
+    mat4_t root = mat4_scale(0.5f, 0.5f, 0.5f);
+    model_t *model = metalness_create_model(mesh, root, material, env_name);
+    darray_push(models, model);
+
+    scene = (scene_t*)malloc(sizeof(scene_t));
+    scene->background = background;
+    scene->models     = models;
+
+    return scene;
+}
+
 scene_t *metalness_ponycar_scene(void) {
     const char *meshes[] = {
         "assets/ponycar/body.obj",
