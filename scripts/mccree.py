@@ -111,7 +111,7 @@ def process_meshes(zip_file):
 
     for index, mesh in enumerate(meshes):
         obj_data, _ = utils.dump_mesh_data(mesh)
-        filename = "part{}.obj".format(index)
+        filename = "mccree{}.obj".format(index)
         filepath = os.path.join(DST_DIRECTORY, filename)
         with open(filepath, "w") as f:
             f.write(obj_data)

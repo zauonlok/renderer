@@ -114,7 +114,7 @@ scene_t *unlit_mccree_scene(void) {
         int material_index = mesh2material[i];
         mat4_t transform = mat4_mul_mat4(root, transforms[transform_index]);
         unlit_material_t material = materials[material_index];
-        const char *obj_template = "assets/mccree/part%d.obj";
+        const char *obj_template = "assets/mccree/mccree%d.obj";
         char obj_filename[64];
         sprintf(obj_filename, obj_template, i);
         model = unlit_create_model(obj_filename, transform, material);
