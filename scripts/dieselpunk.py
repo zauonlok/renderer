@@ -89,8 +89,8 @@ def process_yingham_images(zip_file):
     save_image(normal_image, "yingham_normal.tga", size=(1024, 1024))
 
     packed_image = load_image(zip_file, YINGHAM_PACKED_PATH)
-    assert len(packed_image.split()) == 1
-    roughness_image = packed_image.convert("L")
+    assert packed_image.mode == "P"
+    _, roughness_image, _, _ = packed_image.convert("RGBA").split()
     save_image(roughness_image, "yingham_roughness.tga")
 
 
@@ -99,8 +99,8 @@ def process_ground_images(zip_file):
     save_image(basecolor_image, "ground_basecolor.tga")
 
     packed_image = load_image(zip_file, GROUND_PACKED_PATH)
-    assert len(packed_image.split()) == 1
-    roughness_image = packed_image.convert("L")
+    assert packed_image.mode == "P"
+    _, roughness_image, _, _ = packed_image.convert("RGBA").split()
     save_image(roughness_image, "ground_roughness.tga")
 
 
