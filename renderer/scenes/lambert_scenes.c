@@ -220,8 +220,8 @@ scene_t *lambert_craftsman_scene(void) {
     int num_sparks = ARRAY_SIZE(spark_transforms);
     int i;
 
-    assert(ARRAY_SIZE(materials) <= num_meshes);
-    assert(ARRAY_SIZE(transforms) == num_meshes);
+    assert((int)ARRAY_SIZE(materials) <= num_meshes);
+    assert((int)ARRAY_SIZE(transforms) == num_meshes);
 
     translation = mat4_translate(-1.668f, -27.061f, -10.834f);
     scale = mat4_scale(0.016f, 0.016f, 0.016f);
