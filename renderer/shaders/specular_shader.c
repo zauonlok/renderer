@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "../core/api.h"
-#include "pbr_shader.h"
+#include "pbr_helper.h"
 #include "specular_shader.h"
 
 /* low-level api */

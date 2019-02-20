@@ -1,5 +1,5 @@
-#ifndef PBR_SHADER_H
-#define PBR_SHADER_H
+#ifndef PBR_HELPER_H
+#define PBR_HELPER_H
 
 #include "../core/api.h"
 

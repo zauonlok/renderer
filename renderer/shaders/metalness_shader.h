@@ -2,7 +2,7 @@
 #define METALNESS_SHADER_H
 
 #include "../core/api.h"
-#include "pbr_shader.h"
+#include "pbr_helper.h"
 
 typedef struct {
     vec4_t basecolor_factor;

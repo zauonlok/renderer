@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../core/api.h"
-#include "pbr_shader.h"
+#include "pbr_helper.h"
 
 /* shading related functions */
 
