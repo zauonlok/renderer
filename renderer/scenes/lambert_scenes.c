@@ -229,7 +229,7 @@ scene_t *lambert_craftsman_scene(void) {
     for (i = 0; i < num_meshes; i++) {
         mat4_t transform = mat4_mul_mat4(root, transforms[i]);
         lambert_material_t material;
-        if (i < ARRAY_SIZE(materials)) {
+        if (i < (int)ARRAY_SIZE(materials)) {
             material = materials[i];
         } else {
             material = materials[ARRAY_SIZE(materials) - 1];
