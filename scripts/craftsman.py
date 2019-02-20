@@ -26,19 +26,22 @@ OBJ_FILENAMES = [
     "hammer.obj",
     "hotiron.obj",
     "shoulderpad1.obj",
+    "spark.obj"
 ]
 
 IMG_FILENAMES = {
     "textures/02_-_Default_baseColor.png": "smith_diffuse.tga",
     "textures/02_-_Default_emissive.jpg": "smith_emission.tga",
     "textures/03_-_Default_baseColor.png": "floor_diffuse.tga",
+    "textures/08_-_Default_baseColor.png": "spark_diffuse.tga",
+    "textures/08_-_Default_emissive.jpg": "spark_emission.tga",
     "textures/09_-_Default_baseColor.jpg": "anvil_diffuse.tga",
 }
 
 
 def print_transforms(gltf):
     row_pattern = "            {{{:10.6f}f, {:10.6f}f, {:10.6f}f, {:10.6f}f}},"
-    transforms = utils.load_gltf_transforms(gltf)[:7]
+    transforms = utils.load_gltf_transforms(gltf)
     num_transforms = len(transforms)
     print("    mat4_t transforms[{}] = {{".format(num_transforms))
     for transform in transforms:
