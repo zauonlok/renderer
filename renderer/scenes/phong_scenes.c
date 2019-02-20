@@ -9,6 +9,7 @@ scene_t *phong_ornitier_scene(void) {
         "assets/ornitier/base.obj",
         "assets/ornitier/body.obj",
         "assets/ornitier/coat.obj",
+        "assets/ornitier/feuga.obj",
         "assets/ornitier/hands.obj",
         "assets/ornitier/hat.obj",
         "assets/ornitier/legs.obj",
@@ -40,6 +41,15 @@ scene_t *phong_ornitier_scene(void) {
             "assets/ornitier/coat_specular.tga",
             0,
             0,
+        },
+        {
+            0.5f,
+            32,
+            "assets/ornitier/feuga_emission.tga",
+            "assets/ornitier/feuga_diffuse.tga",
+            NULL,
+            1,
+            1,
         },
         {
             0.5f,
@@ -79,8 +89,8 @@ scene_t *phong_ornitier_scene(void) {
 
     assert(ARRAY_SIZE(materials) == num_meshes);
 
-    translation = mat4_translate(5.863f, 156.991f, 110.488f);
-    scale = mat4_scale(0.0016f, 0.0016f, 0.0016f);
+    translation = mat4_translate(-111.550f, -67.795f, 178.647f);
+    scale = mat4_scale(0.00095f, 0.00095f, 0.00095f);
     root = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
         model = phong_create_model(meshes[i], root, materials[i]);

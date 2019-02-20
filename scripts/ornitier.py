@@ -20,7 +20,7 @@ SRC_FILENAME = "vivi_ornitier.zip"
 DST_DIRECTORY = "../assets/ornitier"
 
 OBJ_FILENAMES = [
-    None,
+    "feuga.obj",
     "legs.obj",
     "body.obj",
     "hat.obj",
@@ -72,11 +72,10 @@ def process_meshes(zip_file):
         meshes.append(mesh)
 
     for filename, mesh in zip(OBJ_FILENAMES, meshes):
-        if filename:
-            obj_data, _ = utils.dump_mesh_data(mesh)
-            filepath = os.path.join(DST_DIRECTORY, filename)
-            with open(filepath, "w") as f:
-                f.write(obj_data)
+        obj_data, _ = utils.dump_mesh_data(mesh)
+        filepath = os.path.join(DST_DIRECTORY, filename)
+        with open(filepath, "w") as f:
+            f.write(obj_data)
 
 
 def load_image(zip_file, filename):
@@ -90,6 +89,19 @@ def load_image(zip_file, filename):
 def save_image(image, filename):
     filepath = os.path.join(DST_DIRECTORY, filename)
     image.save(filepath, rle=True)
+
+
+def process_feuga_images(zip_file):
+    basecolor_image = load_image(zip_file, "textures/Feuga_baseColor.png")
+    _, _, _, alpha = basecolor_image.split()
+    albedo = Image.new("L", (512, 512), color=160)
+    diffuse_image = Image.merge("RGBA", [albedo, albedo, albedo, alpha])
+    save_image(diffuse_image, "feuga_diffuse.tga")
+
+    linear_emission = [1.000, 0.553, 0.072]
+    srgb_emission = [int(pow(x, 1 / 2.2) * 255) for x in linear_emission]
+    emission_image = Image.new("RGB", (512, 512), color=tuple(srgb_emission))
+    save_image(emission_image, "feuga_emission.tga")
 
 
 def process_emissive_images(zip_file):
@@ -120,6 +132,7 @@ def process_metallic_images(zip_file):
 
 
 def process_images(zip_file):
+    process_feuga_images(zip_file)
     process_emissive_images(zip_file)
     process_metallic_images(zip_file)
 
