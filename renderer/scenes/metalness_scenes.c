@@ -38,28 +38,54 @@ scene_t *metalness_helmet_scene(void) {
 }
 
 scene_t *metalness_helmet2_scene(void) {
-    const char *mesh = "assets/helmet2/helmet.obj";
-    metalness_material_t material = {
-        {1, 1, 1, 1},
-        "assets/helmet2/basecolor.tga",
-        1,
-        "assets/helmet2/metallic.tga",
-        1,
-        "assets/helmet2/roughness.tga",
-        "assets/helmet2/normal.tga",
-        "assets/helmet2/occlusion.tga",
-        "assets/helmet2/emissive.tga",
-        0,
-        0,
+    const char *meshes[] = {
+        "assets/helmet2/glass.obj",
+        "assets/helmet2/helmet.obj",
+    };
+    metalness_material_t materials[] = {
+        {
+            {0.336f, 0.336f, 0.336f, 0.306f},
+            NULL,
+            0.729f,
+            NULL,
+            0.240f,
+            "assets/helmet2/glass_roughness.tga",
+            NULL,
+            NULL,
+            NULL,
+            0,
+            1,
+        },
+        {
+            {1, 1, 1, 1},
+            "assets/helmet2/helmet_basecolor.tga",
+            1,
+            "assets/helmet2/helmet_metallic.tga",
+            1,
+            "assets/helmet2/helmet_roughness.tga",
+            "assets/helmet2/helmet_normal.tga",
+            "assets/helmet2/helmet_occlusion.tga",
+            "assets/helmet2/helmet_emissive.tga",
+            0,
+            0,
+        },
     };
     vec4_t background = vec4_new(0.224f, 0.294f, 0.294f, 1);
     const char *env_name = "papermill";
     model_t **models = NULL;
+    model_t *model;
     scene_t *scene;
+    mat4_t root;
+    int num_meshes = ARRAY_SIZE(meshes);
+    int i;
 
-    mat4_t root = mat4_scale(0.5f, 0.5f, 0.5f);
-    model_t *model = metalness_create_model(mesh, root, material, env_name);
-    darray_push(models, model);
+    assert(ARRAY_SIZE(materials) == num_meshes);
+
+    root = mat4_scale(0.5f, 0.5f, 0.5f);
+    for (i = 0; i < num_meshes; i++) {
+        model = metalness_create_model(meshes[i], root, materials[i], env_name);
+        darray_push(models, model);
+    }
 
     scene = (scene_t*)malloc(sizeof(scene_t));
     scene->background = background;
