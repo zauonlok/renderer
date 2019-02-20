@@ -5,7 +5,7 @@
 #include "pbr_shader.h"
 
 typedef struct {
-    vec3_t basecolor_factor;
+    vec4_t basecolor_factor;
     const char *basecolor_texture;              /* in srgb space */
     float metallic_factor;
     const char *metallic_texture;
@@ -15,6 +15,9 @@ typedef struct {
     const char *normal_texture;
     const char *occlusion_texture;
     const char *emissive_texture;               /* in srgb space */
+    /* render settings */
+    int double_sided;
+    int enable_blend;
 } metalness_material_t;
 
 typedef struct {
@@ -37,7 +40,7 @@ typedef struct {
     mat3_t normal_matrix;
     mat4_t viewproj_matrix;
     /* from material */
-    vec3_t basecolor_factor;
+    vec4_t basecolor_factor;
     texture_t *basecolor_texture;
     float metallic_factor;
     texture_t *metallic_texture;

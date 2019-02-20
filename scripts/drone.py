@@ -38,50 +38,45 @@ def process_meshes(zip_file):
     with open(obj_filepath, "w") as f:
         f.write(obj_data)
 
-    tan_filepath = os.path.join(DST_DIRECTORY, OBJ_FILENAME[:-4] + ".tan")
+    tan_filepath = obj_filepath[:-4] + ".tan"
     with open(tan_filepath, "w") as f:
         f.write(tan_data)
 
 
-def load_image(zip_file, filename, rgb_only):
+def load_image(zip_file, filename):
     with zip_file.open(filename) as f:
         image = Image.open(f)
-        if rgb_only:
-            bands = image.split()
-            image = Image.merge("RGB", bands[:3])
         image = image.transpose(Image.FLIP_TOP_BOTTOM)
         return image
 
 
-def save_image(image, filename, resize_first):
-    if resize_first:
-        image = image.resize((512, 512), Image.LANCZOS)
+def save_image(image, filename, size=(512, 512)):
+    image = image.resize(size, Image.LANCZOS)
     filepath = os.path.join(DST_DIRECTORY, filename)
     image.save(filepath, rle=True)
 
 
 def process_images(zip_file):
-    diffuse_image = load_image(zip_file, DIFFUSE_FILENAME, True)
-    save_image(diffuse_image, "diffuse.tga", True)
+    diffuse_image = load_image(zip_file, DIFFUSE_FILENAME)
+    save_image(diffuse_image, "diffuse.tga")
 
-    normal_image = load_image(zip_file, NORMAL_FILENAME, True)
-    normal_image = normal_image.resize((1024, 1024), Image.LANCZOS)
-    save_image(normal_image, "normal.tga", False)
+    normal_image = load_image(zip_file, NORMAL_FILENAME)
+    save_image(normal_image, "normal.tga", size=(1024, 1024))
 
-    occlusion_image = load_image(zip_file, OCCLUSION_FILENAME, True)
+    occlusion_image = load_image(zip_file, OCCLUSION_FILENAME)
     occlusion_image, _, _ = occlusion_image.split()
-    save_image(occlusion_image, "occlusion.tga", True)
+    save_image(occlusion_image, "occlusion.tga")
 
-    emissive_image = load_image(zip_file, EMISSIVE_FILENAME, True)
-    save_image(emissive_image, "emissive.tga", True)
+    emissive_image = load_image(zip_file, EMISSIVE_FILENAME)
+    save_image(emissive_image, "emissive.tga")
 
-    packed_image = load_image(zip_file, PACKED_FILENAME, False)
+    packed_image = load_image(zip_file, PACKED_FILENAME)
     packed_bands = packed_image.split()
 
     specular_image = Image.merge("RGB", packed_bands[:3])
     glossiness_image = packed_bands[3]
-    save_image(specular_image, "specular.tga", True)
-    save_image(glossiness_image, "glossiness.tga", True)
+    save_image(specular_image, "specular.tga")
+    save_image(glossiness_image, "glossiness.tga")
 
 
 def main():

@@ -34,7 +34,7 @@ def print_transforms(gltf):
 
 
 def print_materials(gltf):
-    row_pattern = "        {{{{{:.3f}f, {:.3f}f, {:.3f}f}}, NULL}},"
+    row_pattern = "        {{{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}, NULL, 1, 0}},"
     num_materials = len(gltf["materials"])
     print("    unlit_material_t materials[{}] = {{".format(num_materials))
     for material in gltf["materials"]:
@@ -87,18 +87,6 @@ def print_generated_code(gltf):
     print_mesh2material(gltf)
 
 
-def make_double_sided(mesh):
-    indices = mesh["indices"]
-
-    flipped = []
-    for i in range(0, len(indices), 3):
-        flipped.append(indices[i + 2])
-        flipped.append(indices[i + 1])
-        flipped.append(indices[i + 0])
-
-    indices += flipped
-
-
 def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
@@ -106,7 +94,6 @@ def process_meshes(zip_file):
     meshes = []
     for mesh in gltf["meshes"]:
         mesh = utils.load_gltf_mesh(gltf, buffer, mesh)
-        make_double_sided(mesh)
         meshes.append(mesh)
 
     for index, mesh in enumerate(meshes):
@@ -116,7 +103,7 @@ def process_meshes(zip_file):
         with open(filepath, "w") as f:
             f.write(obj_data)
 
-    print_generated_code(gltf)
+    # print_generated_code(gltf)
 
 
 def main():

@@ -20,6 +20,8 @@ scene_t *phong_ornitier_scene(void) {
             "assets/ornitier/base_emission.tga",
             "assets/ornitier/base_diffuse.tga",
             "assets/ornitier/base_specular.tga",
+            0,
+            0,
         },
         {
             0.5f,
@@ -27,6 +29,8 @@ scene_t *phong_ornitier_scene(void) {
             "assets/ornitier/body_emission.tga",
             "assets/ornitier/body_diffuse.tga",
             "assets/ornitier/body_specular.tga",
+            0,
+            0,
         },
         {
             0.5f,
@@ -34,6 +38,8 @@ scene_t *phong_ornitier_scene(void) {
             NULL,
             "assets/ornitier/coat_diffuse.tga",
             "assets/ornitier/coat_specular.tga",
+            0,
+            0,
         },
         {
             0.5f,
@@ -41,6 +47,8 @@ scene_t *phong_ornitier_scene(void) {
             NULL,
             "assets/ornitier/hands_diffuse.tga",
             "assets/ornitier/hands_specular.tga",
+            0,
+            0,
         },
         {
             0.5f,
@@ -48,6 +56,8 @@ scene_t *phong_ornitier_scene(void) {
             NULL,
             "assets/ornitier/hat_diffuse.tga",
             "assets/ornitier/hat_specular.tga",
+            0,
+            0,
         },
         {
             0.5f,
@@ -55,6 +65,8 @@ scene_t *phong_ornitier_scene(void) {
             NULL,
             "assets/ornitier/legs_diffuse.tga",
             "assets/ornitier/legs_specular.tga",
+            0,
+            0,
         },
     };
     vec4_t background = vec4_new(0.314f, 0.235f, 0.278f, 1);

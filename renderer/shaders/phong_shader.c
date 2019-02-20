@@ -40,6 +40,7 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
     vec3_t light_dir = vec3_negate(uniforms->light_dir);
 
     vec3_t color = vec3_new(0, 0, 0);
+    float alpha = 1;
 
     if (uniforms->diffuse) {
         vec4_t sample = texture_sample(uniforms->diffuse, texcoord);
@@ -47,7 +48,9 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
 
         float strength = max_float(vec3_dot(normal, light_dir), 0);
         vec3_t diffuse = vec3_mul(albedo, strength + uniforms->ambient);
+
         color = vec3_add(color, diffuse);
+        alpha = sample.w;
     }
 
     if (uniforms->specular) {
@@ -71,7 +74,7 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
         color = vec3_add(color, emission);
     }
 
-    return vec4_from_vec3(color, 1);
+    return vec4_from_vec3(color, alpha);
 }
 
 /* high-level api */
@@ -86,7 +89,8 @@ model_t *phong_create_model(const char *mesh, mat4_t transform,
     model_t *model;
 
     program = program_create(phong_vertex_shader, phong_fragment_shader,
-                             sizeof_attribs, sizeof_varyings, sizeof_uniforms);
+                             sizeof_attribs, sizeof_varyings, sizeof_uniforms,
+                             material.double_sided, material.enable_blend);
     uniforms = (phong_uniforms_t*)program_get_uniforms(program);
     uniforms->ambient = material.ambient;
     uniforms->shininess = material.shininess;
@@ -101,9 +105,10 @@ model_t *phong_create_model(const char *mesh, mat4_t transform,
     }
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->transform = transform;
     model->mesh      = mesh_load(mesh);
+    model->transform = transform;
     model->program   = program;
+    model->is_opaque = !material.enable_blend;
 
     return model;
 }

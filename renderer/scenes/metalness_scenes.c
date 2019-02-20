@@ -7,7 +7,7 @@
 scene_t *metalness_helmet_scene(void) {
     const char *mesh = "assets/helmet/helmet.obj";
     metalness_material_t material = {
-        {1, 1, 1},
+        {1, 1, 1, 1},
         "assets/helmet/basecolor.tga",
         1,
         "assets/helmet/metallic.tga",
@@ -16,6 +16,8 @@ scene_t *metalness_helmet_scene(void) {
         NULL,
         "assets/helmet/occlusion.tga",
         "assets/helmet/emissive.tga",
+        0,
+        0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     const char *env_name = "papermill";
@@ -38,7 +40,7 @@ scene_t *metalness_helmet_scene(void) {
 scene_t *metalness_helmet2_scene(void) {
     const char *mesh = "assets/helmet2/helmet.obj";
     metalness_material_t material = {
-        {1, 1, 1},
+        {1, 1, 1, 1},
         "assets/helmet2/basecolor.tga",
         1,
         "assets/helmet2/metallic.tga",
@@ -47,6 +49,8 @@ scene_t *metalness_helmet2_scene(void) {
         "assets/helmet2/normal.tga",
         "assets/helmet2/occlusion.tga",
         "assets/helmet2/emissive.tga",
+        0,
+        0,
     };
     vec4_t background = vec4_new(0.224f, 0.294f, 0.294f, 1);
     const char *env_name = "papermill";
@@ -72,7 +76,7 @@ scene_t *metalness_ponycar_scene(void) {
     };
     metalness_material_t materials[] = {
         {
-            {1, 1, 1},
+            {1, 1, 1, 1},
             "assets/ponycar/body_basecolor.tga",
             1,
             "assets/ponycar/body_metallic.tga",
@@ -81,9 +85,11 @@ scene_t *metalness_ponycar_scene(void) {
             "assets/ponycar/body_normal.tga",
             NULL,
             "assets/ponycar/body_emissive.tga",
+            0,
+            0,
         },
         {
-            {1, 1, 1},
+            {1, 1, 1, 1},
             "assets/ponycar/interior_basecolor.tga",
             1,
             "assets/ponycar/interior_metallic.tga",
@@ -92,9 +98,11 @@ scene_t *metalness_ponycar_scene(void) {
             "assets/ponycar/interior_normal.tga",
             NULL,
             NULL,
+            0,
+            0,
         },
         {
-            {1, 1, 1},
+            {1, 1, 1, 0.5f},
             "assets/ponycar/body_basecolor.tga",
             1,
             "assets/ponycar/body_metallic.tga",
@@ -103,6 +111,8 @@ scene_t *metalness_ponycar_scene(void) {
             "assets/ponycar/body_normal.tga",
             NULL,
             "assets/ponycar/body_emissive.tga",
+            0,
+            1,
         },
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
@@ -140,7 +150,7 @@ scene_t *metalness_dieselpunk_scene(void) {
     };
     metalness_material_t materials[] = {
         {
-            {1, 1, 1},
+            {1, 1, 1, 1},
             "assets/dieselpunk/ground_basecolor.tga",
             0,
             NULL,
@@ -149,9 +159,11 @@ scene_t *metalness_dieselpunk_scene(void) {
             NULL,
             NULL,
             NULL,
+            1,
+            1,
         },
         {
-            {1, 1, 1},
+            {1, 1, 1, 1},
             "assets/dieselpunk/mech_basecolor.tga",
             1,
             "assets/dieselpunk/mech_metallic.tga",
@@ -160,9 +172,11 @@ scene_t *metalness_dieselpunk_scene(void) {
             "assets/dieselpunk/mech_normal.tga",
             NULL,
             NULL,
+            0,
+            0,
         },
         {
-            {1, 1, 1},
+            {1, 1, 1, 1},
             "assets/dieselpunk/yingham_basecolor.tga",
             0,
             NULL,
@@ -171,6 +185,8 @@ scene_t *metalness_dieselpunk_scene(void) {
             "assets/dieselpunk/yingham_normal.tga",
             NULL,
             NULL,
+            0,
+            0,
         },
     };
     vec4_t background = vec4_new(0.314f, 0.255f, 0.255f, 1);

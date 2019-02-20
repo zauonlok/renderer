@@ -9,6 +9,9 @@ typedef struct {
     const char *emission;
     const char *diffuse;
     const char *specular;
+    /* render settings */
+    int double_sided;
+    int enable_blend;
 } blinn_material_t;
 
 typedef struct {

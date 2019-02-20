@@ -6,7 +6,7 @@
 scene_t *specular_crab_scene(void) {
     const char *mesh = "assets/crab/crab.obj";
     specular_material_t material = {
-        {1, 1, 1},
+        {1, 1, 1, 1},
         "assets/crab/diffuse.tga",
         {1, 1, 1},
         "assets/crab/specular.tga",
@@ -15,6 +15,8 @@ scene_t *specular_crab_scene(void) {
         "assets/crab/normal.tga",
         NULL,
         NULL,
+        0,
+        0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     const char *env_name = "papermill";
@@ -37,7 +39,7 @@ scene_t *specular_crab_scene(void) {
 scene_t *specular_drone_scene(void) {
     const char *mesh = "assets/drone/drone.obj";
     specular_material_t material = {
-        {1, 1, 1},
+        {1, 1, 1, 1},
         "assets/drone/diffuse.tga",
         {1, 1, 1},
         "assets/drone/specular.tga",
@@ -46,6 +48,8 @@ scene_t *specular_drone_scene(void) {
         "assets/drone/normal.tga",
         "assets/drone/occlusion.tga",
         "assets/drone/emissive.tga",
+        0,
+        0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     const char *env_name = "papermill";

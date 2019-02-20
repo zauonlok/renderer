@@ -5,7 +5,7 @@
 #include "pbr_shader.h"
 
 typedef struct {
-    vec3_t diffuse_factor;
+    vec4_t diffuse_factor;
     const char *diffuse_texture;                /* in srgb space */
     vec3_t specular_factor;
     const char *specular_texture;               /* in srgb space */
@@ -15,6 +15,9 @@ typedef struct {
     const char *normal_texture;
     const char *occlusion_texture;
     const char *emissive_texture;               /* in srgb space */
+    /* render settings */
+    int double_sided;
+    int enable_blend;
 } specular_material_t;
 
 typedef struct {
@@ -37,7 +40,7 @@ typedef struct {
     mat3_t normal_matrix;
     mat4_t viewproj_matrix;
     /* from material */
-    vec3_t diffuse_factor;
+    vec4_t diffuse_factor;
     texture_t *diffuse_texture;
     vec3_t specular_factor;
     texture_t *specular_texture;

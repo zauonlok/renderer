@@ -79,27 +79,29 @@ def process_meshes(zip_file):
                 f.write(obj_data)
 
 
-def load_rgb_image(zip_file, filename):
+def load_image(zip_file, filename):
     with zip_file.open(filename) as f:
         image = Image.open(f)
-        bands = image.split()
-        image = Image.merge("RGB", bands[:3])
         image = image.transpose(Image.FLIP_TOP_BOTTOM)
         image = image.resize((512, 512), Image.LANCZOS)
         return image
 
 
+def save_image(image, filename):
+    filepath = os.path.join(DST_DIRECTORY, filename)
+    image.save(filepath, rle=True)
+
+
 def process_emissive_images(zip_file):
     for old_filename, tga_filename in EMISSIVE_FILENAMES.items():
-        image = load_rgb_image(zip_file, old_filename)
-        filepath = os.path.join(DST_DIRECTORY, tga_filename)
-        image.save(filepath, rle=True)
+        image = load_image(zip_file, old_filename)
+        save_image(image, tga_filename)
 
 
 def process_metallic_images(zip_file):
     for name, (basecolor_path, metallic_path) in METALLIC_FILENAMES.items():
-        basecolor_image = load_rgb_image(zip_file, basecolor_path)
-        metallic_image = load_rgb_image(zip_file, metallic_path)
+        basecolor_image = load_image(zip_file, basecolor_path)
+        metallic_image = load_image(zip_file, metallic_path)
         _, _, metallic_image = metallic_image.split()
 
         basecolor_array = numpy.array(basecolor_image) / 255.0
@@ -113,11 +115,8 @@ def process_metallic_images(zip_file):
 
         diffuse_filename = "{}_diffuse.tga".format(name)
         specular_filename = "{}_specular.tga".format(name)
-        diffuse_filepath = os.path.join(DST_DIRECTORY, diffuse_filename)
-        specular_filepath = os.path.join(DST_DIRECTORY, specular_filename)
-
-        diffuse_image.save(diffuse_filepath, rle=True)
-        specular_image.save(specular_filepath, rle=True)
+        save_image(diffuse_image, diffuse_filename)
+        save_image(specular_image, specular_filename)
 
 
 def process_images(zip_file):

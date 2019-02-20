@@ -26,5 +26,6 @@ typedef struct {
 scene_t *scene_create(scene_entry_t scene_entries[], int num_entries,
                       const char *scene_name);
 void scene_release(scene_t *scene, void (*model_dtor)(model_t *model));
+void scene_sort_models(scene_t *scene, mat4_t view_matrix);
 
 #endif

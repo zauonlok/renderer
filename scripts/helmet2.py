@@ -44,35 +44,31 @@ def process_mesh(zip_file):
 def load_image(zip_file, filename):
     with zip_file.open(filename) as f:
         image = Image.open(f)
-        bands = image.split()
-        image = Image.merge("RGB", bands[:3])
         image = image.transpose(Image.FLIP_TOP_BOTTOM)
         return image
 
 
-def save_image(image, filename, resize_first):
-    if resize_first:
-        image = image.resize((512, 512), Image.LANCZOS)
+def save_image(image, filename, size=(512, 512)):
+    image = image.resize(size, Image.LANCZOS)
     filepath = os.path.join(DST_DIRECTORY, filename)
     image.save(filepath, rle=True)
 
 
 def process_images(zip_file):
     basecolor_image = load_image(zip_file, BASECOLOR_PATH)
-    save_image(basecolor_image, "basecolor.tga", True)
+    save_image(basecolor_image, "basecolor.tga")
 
     normal_image = load_image(zip_file, NORMAL_PATH)
-    normal_image = normal_image.resize((1024, 1024), Image.LANCZOS)
-    save_image(normal_image, "normal.tga", False)
+    save_image(normal_image, "normal.tga", size=(1024, 1024))
 
     emissive_image = load_image(zip_file, EMISSIVE_PATH)
-    save_image(emissive_image, "emissive.tga", True)
+    save_image(emissive_image, "emissive.tga")
 
     packed_image = load_image(zip_file, PACKED_PATH)
     occlusion_image, roughness_image, metallic_image = packed_image.split()
-    save_image(metallic_image, "metallic.tga", True)
-    save_image(roughness_image, "roughness.tga", True)
-    save_image(occlusion_image, "occlusion.tga", True)
+    save_image(metallic_image, "metallic.tga")
+    save_image(roughness_image, "roughness.tga")
+    save_image(occlusion_image, "occlusion.tga")
 
 
 def main():

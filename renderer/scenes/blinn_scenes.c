@@ -17,6 +17,8 @@ scene_t *blinn_centaur_scene(void) {
             "assets/centaur/body_emission.tga",
             "assets/centaur/body_diffuse.tga",
             "assets/centaur/body_specular.tga",
+            0,
+            0,
         },
         {
             0.5f,
@@ -24,6 +26,8 @@ scene_t *blinn_centaur_scene(void) {
             "assets/centaur/flame_emission.tga",
             "assets/centaur/flame_diffuse.tga",
             NULL,
+            0,
+            1,
         },
         {
             0.5f,
@@ -31,6 +35,8 @@ scene_t *blinn_centaur_scene(void) {
             NULL,
             "assets/centaur/gas_diffuse.tga",
             "assets/centaur/gas_specular.tga",
+            0,
+            0,
         },
     };
     vec4_t background = vec4_new(0.368f, 0.392f, 0.337f, 1);

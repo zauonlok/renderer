@@ -22,6 +22,7 @@ static void update_scene(scene_t *scene, camera_t *camera) {
         unlit_uniforms_t *uniforms = unlit_get_uniforms(model);
         uniforms->mvp_matrix = mvp_matrix;
     }
+    scene_sort_models(scene, view_matrix);
 }
 
 static void draw_scene(scene_t *scene, framebuffer_t *framebuffer) {

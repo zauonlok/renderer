@@ -69,8 +69,6 @@ def process_images(zip_file):
     for old_filename, tga_filename in IMG_FILENAMES.items():
         with zip_file.open(old_filename) as f:
             image = Image.open(f)
-            bands = image.split()
-            image = Image.merge("RGB", bands[:3])
             if "specularGlossiness" in old_filename:
                 image = gamma_correct(image)
             image = image.transpose(Image.FLIP_TOP_BOTTOM)

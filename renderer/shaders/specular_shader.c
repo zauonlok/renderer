@@ -25,11 +25,10 @@ vec4_t specular_vertex_shader(void *attribs_, void *varyings_,
     return clip_pos;
 }
 
-static vec3_t get_diffuse(vec2_t texcoord, specular_uniforms_t *uniforms) {
+static vec4_t get_diffuse(vec2_t texcoord, specular_uniforms_t *uniforms) {
     if (uniforms->diffuse_texture) {
-        vec3_t factor = uniforms->diffuse_factor;
-        vec4_t color = texture_sample(uniforms->diffuse_texture, texcoord);
-        return vec3_modulate(factor, vec3_from_vec4(color));
+        vec4_t sample = texture_sample(uniforms->diffuse_texture, texcoord);
+        return vec4_modulate(uniforms->diffuse_factor, sample);
     } else {
         return uniforms->diffuse_factor;
     }
@@ -80,13 +79,16 @@ vec4_t specular_fragment_shader(void *varyings_, void *uniforms_) {
     specular_varyings_t *varyings = (specular_varyings_t*)varyings_;
     specular_uniforms_t *uniforms = (specular_uniforms_t*)uniforms_;
 
-    vec3_t diffuse = get_diffuse(varyings->texcoord, uniforms);
+    vec4_t diffuse_ = get_diffuse(varyings->texcoord, uniforms);
     vec3_t specular = get_specular(varyings->texcoord, uniforms);
     float glossiness = get_glossiness(varyings->texcoord, uniforms);
     float occlusion = get_occlusion(varyings->texcoord, uniforms);
     vec3_t emission = get_emission(varyings->texcoord, uniforms);
     vec3_t normal = pbr_get_normal(varyings->tbn_matrix, varyings->texcoord,
                                    uniforms->normal_texture);
+
+    vec3_t diffuse = vec3_from_vec4(diffuse_);
+    float alpha = diffuse_.w;
 
     vec3_t diffuse_color = vec3_mul(diffuse, 1 - max_component(specular));
     vec3_t specular_color = specular;
@@ -108,7 +110,7 @@ vec4_t specular_fragment_shader(void *varyings_, void *uniforms_) {
     color = vec3_mul(color, occlusion);
     color = vec3_add(color, emission);
 
-    return vec4_from_vec3(pbr_tone_map(color), 1);
+    return vec4_from_vec3(pbr_tone_map(color), alpha);
 }
 
 /* high-level api */
@@ -126,7 +128,8 @@ model_t *specular_create_model(
     assert(material.glossiness_factor >= 0 && material.glossiness_factor <= 1);
 
     program = program_create(specular_vertex_shader, specular_fragment_shader,
-                             sizeof_attribs, sizeof_varyings, sizeof_uniforms);
+                             sizeof_attribs, sizeof_varyings, sizeof_uniforms,
+                             material.double_sided, material.enable_blend);
     uniforms = (specular_uniforms_t*)program_get_uniforms(program);
     uniforms->diffuse_factor = material.diffuse_factor;
     uniforms->specular_factor = material.specular_factor;
@@ -161,9 +164,10 @@ model_t *specular_create_model(
     uniforms->shared_ibldata = pbr_acquire_ibldata(env_name);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->transform = transform;
     model->mesh      = mesh_load(mesh);
+    model->transform = transform;
     model->program   = program;
+    model->is_opaque = !material.enable_blend;
 
     return model;
 }

@@ -42,14 +42,12 @@ def process_mesh(zip_file):
 def load_image(zip_file, filename):
     with zip_file.open(filename) as f:
         image = Image.open(f)
-        bands = image.split()
-        image = Image.merge("RGB", bands[:3])
         image = image.transpose(Image.FLIP_TOP_BOTTOM)
-        image = image.resize((512, 512), Image.LANCZOS)
         return image
 
 
 def save_image(image, filename):
+    image = image.resize((512, 512), Image.LANCZOS)
     filepath = os.path.join(DST_DIRECTORY, filename)
     image.save(filepath, rle=True)
 

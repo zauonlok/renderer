@@ -21,10 +21,9 @@ vec4_t unlit_fragment_shader(void *varyings_, void *uniforms_) {
 
     if (uniforms->texture) {
         vec4_t sample = texture_sample(uniforms->texture, varyings->texcoord);
-        vec3_t color = vec3_modulate(uniforms->factor, vec3_from_vec4(sample));
-        return vec4_from_vec3(color, 1);
+        return vec4_modulate(uniforms->factor, sample);
     } else {
-        return vec4_from_vec3(uniforms->factor, 1);
+        return uniforms->factor;
     }
 }
 
@@ -40,7 +39,8 @@ model_t *unlit_create_model(const char *mesh, mat4_t transform,
     model_t *model;
 
     program = program_create(unlit_vertex_shader, unlit_fragment_shader,
-                             sizeof_attribs, sizeof_varyings, sizeof_uniforms);
+                             sizeof_attribs, sizeof_varyings, sizeof_uniforms,
+                             material.double_sided, material.enable_blend);
     uniforms = (unlit_uniforms_t*)program_get_uniforms(program);
     uniforms->factor = material.factor;
     if (material.texture) {
@@ -48,9 +48,10 @@ model_t *unlit_create_model(const char *mesh, mat4_t transform,
     }
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->transform = transform;
     model->mesh      = mesh_load(mesh);
+    model->transform = transform;
     model->program   = program;
+    model->is_opaque = !material.enable_blend;
 
     return model;
 }

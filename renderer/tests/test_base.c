@@ -233,14 +233,14 @@ static void calculate_bbox(scene_t *scene,
         int num_faces = mesh_get_num_faces(mesh);
         for (j = 0; j < num_faces; j++) {
             for (k = 0; k < 3; k++) {
-                vec3_t position = mesh_get_position(mesh, j, k);
-                position = transform_position(position, transform);
-                bbmin.x = min_float(bbmin.x, position.x);
-                bbmin.y = min_float(bbmin.y, position.y);
-                bbmin.z = min_float(bbmin.z, position.z);
-                bbmax.x = max_float(bbmax.x, position.x);
-                bbmax.y = max_float(bbmax.y, position.y);
-                bbmax.z = max_float(bbmax.z, position.z);
+                vec3_t local_pos = mesh_get_position(mesh, j, k);
+                vec3_t world_pos = transform_position(local_pos, transform);
+                bbmin.x = min_float(bbmin.x, world_pos.x);
+                bbmin.y = min_float(bbmin.y, world_pos.y);
+                bbmin.z = min_float(bbmin.z, world_pos.z);
+                bbmax.x = max_float(bbmax.x, world_pos.x);
+                bbmax.y = max_float(bbmax.y, world_pos.y);
+                bbmax.z = max_float(bbmax.z, world_pos.z);
             }
         }
     }
@@ -290,4 +290,32 @@ void scene_release(scene_t *scene, void (*model_dtor)(model_t *model)) {
     }
     darray_free(scene->models);
     free(scene);
+}
+
+static int compare_models(const void *model1_, const void *model2_) {
+    model_t *model1 = *(model_t**)model1_;
+    model_t *model2 = *(model_t**)model2_;
+
+    if (model1->is_opaque && model2->is_opaque) {
+        return model1->distance < model2->distance ? -1 : 1;
+    } else if (model1->is_opaque && !model2->is_opaque) {
+        return -1;
+    } else if (!model1->is_opaque && model2->is_opaque) {
+        return 1;
+    } else {
+        return model1->distance < model2->distance ? 1 : -1;
+    }
+}
+
+void scene_sort_models(scene_t *scene, mat4_t view_matrix) {
+    int num_models = darray_size(scene->models);
+    int i;
+    for (i = 0; i < num_models; i++) {
+        model_t *model = scene->models[i];
+        vec4_t local_pos = vec4_new(0, 0, 0, 1);
+        vec4_t world_pos = mat4_mul_vec4(model->transform, local_pos);
+        vec4_t view_pos = mat4_mul_vec4(view_matrix, world_pos);
+        model->distance = -view_pos.z;
+    }
+    qsort(scene->models, num_models, sizeof(model_t*), compare_models);
 }

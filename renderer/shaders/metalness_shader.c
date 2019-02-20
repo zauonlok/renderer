@@ -25,11 +25,10 @@ vec4_t metalness_vertex_shader(void *attribs_, void *varyings_,
     return clip_pos;
 }
 
-static vec3_t get_basecolor(vec2_t texcoord, metalness_uniforms_t *uniforms) {
+static vec4_t get_basecolor(vec2_t texcoord, metalness_uniforms_t *uniforms) {
     if (uniforms->basecolor_texture) {
-        vec3_t factor = uniforms->basecolor_factor;
-        vec4_t color = texture_sample(uniforms->basecolor_texture, texcoord);
-        return vec3_modulate(factor, vec3_from_vec4(color));
+        vec4_t sample = texture_sample(uniforms->basecolor_texture, texcoord);
+        return vec4_modulate(uniforms->basecolor_factor, sample);
     } else {
         return uniforms->basecolor_factor;
     }
@@ -75,13 +74,16 @@ vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
     metalness_varyings_t *varyings = (metalness_varyings_t*)varyings_;
     metalness_uniforms_t *uniforms = (metalness_uniforms_t*)uniforms_;
 
-    vec3_t basecolor = get_basecolor(varyings->texcoord, uniforms);
+    vec4_t basecolor_ = get_basecolor(varyings->texcoord, uniforms);
     float metallic = get_metallic(varyings->texcoord, uniforms);
     float roughness = get_roughness(varyings->texcoord, uniforms);
     float occlusion = get_occlusion(varyings->texcoord, uniforms);
     vec3_t emission = get_emission(varyings->texcoord, uniforms);
     vec3_t normal = pbr_get_normal(varyings->tbn_matrix, varyings->texcoord,
                                    uniforms->normal_texture);
+
+    vec3_t basecolor = vec3_from_vec4(basecolor_);
+    float alpha = basecolor_.w;
 
     vec3_t dielectric_specular = vec3_new(0.04f, 0.04f, 0.04f);
     vec3_t diffuse_color = vec3_mul(basecolor, (1 - 0.04f) * (1 - metallic));
@@ -103,7 +105,7 @@ vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
     color = vec3_mul(color, occlusion);
     color = vec3_add(color, emission);
 
-    return vec4_from_vec3(pbr_tone_map(color), 1);
+    return vec4_from_vec3(pbr_tone_map(color), alpha);
 }
 
 /* high-level api */
@@ -122,7 +124,8 @@ model_t *metalness_create_model(
     assert(material.roughness_factor >= 0 && material.roughness_factor <= 1);
 
     program = program_create(metalness_vertex_shader, metalness_fragment_shader,
-                             sizeof_attribs, sizeof_varyings, sizeof_uniforms);
+                             sizeof_attribs, sizeof_varyings, sizeof_uniforms,
+                             material.double_sided, material.enable_blend);
     uniforms = (metalness_uniforms_t*)program_get_uniforms(program);
     uniforms->basecolor_factor = material.basecolor_factor;
     uniforms->metallic_factor = material.metallic_factor;
@@ -156,9 +159,10 @@ model_t *metalness_create_model(
     uniforms->shared_ibldata = pbr_acquire_ibldata(env_name);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->transform = transform;
     model->mesh      = mesh_load(mesh);
+    model->transform = transform;
     model->program   = program;
+    model->is_opaque = !material.enable_blend;
 
     return model;
 }

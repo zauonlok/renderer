@@ -67,8 +67,6 @@ def process_images(zip_file):
     for png_filename, tga_filename in IMG_FILENAMES.items():
         with zip_file.open(png_filename) as f:
             image = Image.open(f)
-            bands = image.split()
-            image = Image.merge("RGB", bands[:3])
             # coordinates origin:
             #     lower left corner: OpenGL, TGA
             #     upper left corner: WebGL, glTF

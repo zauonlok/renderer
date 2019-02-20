@@ -59,48 +59,43 @@ def process_meshes(zip_file):
 def load_image(zip_file, filename):
     with zip_file.open(filename) as f:
         image = Image.open(f)
-        bands = image.split()
-        image = Image.merge("RGB", bands[:3])
         image = image.transpose(Image.FLIP_TOP_BOTTOM)
         return image
 
 
-def save_image(image, filename, resize_first):
-    if resize_first:
-        image = image.resize((512, 512), Image.LANCZOS)
+def save_image(image, filename, size=(512, 512)):
+    image = image.resize(size, Image.LANCZOS)
     filepath = os.path.join(DST_DIRECTORY, filename)
     image.save(filepath, rle=True)
 
 
 def process_body_images(zip_file):
     basecolor_image = load_image(zip_file, BODY_BASECOLOR_PATH)
-    save_image(basecolor_image, "body_basecolor.tga", True)
+    save_image(basecolor_image, "body_basecolor.tga")
 
     emissive_image = load_image(zip_file, BODY_EMISSIVE_PATH)
-    save_image(emissive_image, "body_emissive.tga", True)
+    save_image(emissive_image, "body_emissive.tga")
 
     normal_image = load_image(zip_file, BODY_NORMAL_PATH)
-    normal_image = normal_image.resize((1024, 1024), Image.LANCZOS)
-    save_image(normal_image, "body_normal.tga", False)
+    save_image(normal_image, "body_normal.tga", size=(1024, 1024))
 
     packed_image = load_image(zip_file, BODY_PACKED_PATH)
     _, roughness_image, metallic_image = packed_image.split()
-    save_image(metallic_image, "body_metallic.tga", True)
-    save_image(roughness_image, "body_roughness.tga", True)
+    save_image(metallic_image, "body_metallic.tga")
+    save_image(roughness_image, "body_roughness.tga")
 
 
 def process_interior_images(zip_file):
     basecolor_image = load_image(zip_file, INTERIOR_BASECOLOR_PATH)
-    save_image(basecolor_image, "interior_basecolor.tga", True)
+    save_image(basecolor_image, "interior_basecolor.tga")
 
     normal_image = load_image(zip_file, INTERIOR_NORMAL_PATH)
-    normal_image = normal_image.resize((1024, 1024), Image.LANCZOS)
-    save_image(normal_image, "interior_normal.tga", False)
+    save_image(normal_image, "interior_normal.tga", size=(1024, 1024))
 
     packed_image = load_image(zip_file, INTERIOR_PACKED_PATH)
     _, roughness_image, metallic_image = packed_image.split()
-    save_image(metallic_image, "interior_metallic.tga", True)
-    save_image(roughness_image, "interior_roughness.tga", True)
+    save_image(metallic_image, "interior_metallic.tga")
+    save_image(roughness_image, "interior_roughness.tga")
 
 
 def process_images(zip_file):

@@ -28,6 +28,7 @@ static void update_scene(scene_t *scene, camera_t *camera, vec3_t light_dir) {
         uniforms->normal_matrix = mat3_from_mat4(model_it_matrix);
         uniforms->viewproj_matrix = viewproj_matrix;
     }
+    scene_sort_models(scene, view_matrix);
 }
 
 static void draw_scene(scene_t *scene, framebuffer_t *framebuffer) {

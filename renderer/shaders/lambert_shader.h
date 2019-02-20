@@ -7,6 +7,9 @@ typedef struct {
     float ambient;
     const char *emission;
     const char *diffuse;
+    /* render settings */
+    int double_sided;
+    int enable_blend;
 } lambert_material_t;
 
 typedef struct {

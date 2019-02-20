@@ -58,6 +58,8 @@ struct program {
     int sizeof_attribs;
     int sizeof_varyings;
     int sizeof_uniforms;
+    int double_sided;
+    int enable_blend;
     /* for shaders */
     void *shader_attribs[3];
     void *shader_varyings;
@@ -71,7 +73,8 @@ struct program {
 
 program_t *program_create(
         vertex_shader_t *vertex_shader, fragment_shader_t *fragment_shader,
-        int sizeof_attribs, int sizeof_varyings, int sizeof_uniforms) {
+        int sizeof_attribs, int sizeof_varyings, int sizeof_uniforms,
+        int double_sided, int enable_blend) {
     program_t *program;
     int i;
 
@@ -84,6 +87,8 @@ program_t *program_create(
     program->sizeof_attribs  = sizeof_attribs;
     program->sizeof_varyings = sizeof_varyings;
     program->sizeof_uniforms = sizeof_uniforms;
+    program->double_sided    = double_sided;
+    program->enable_blend    = enable_blend;
 
     for (i = 0; i < 3; i++) {
         program->shader_attribs[i] = malloc(sizeof_attribs);
@@ -409,10 +414,36 @@ static void interpolate_varyings(
     }
 }
 
+static void draw_fragment(framebuffer_t *framebuffer, program_t *program,
+                          int index, float depth) {
+    /* execute fragment shader */
+    vec4_t color = program->fragment_shader(program->shader_varyings,
+                                            program->shader_uniforms);
+    color = vec4_saturate(color);
+
+    /* perform blending */
+    if (program->enable_blend) {
+        vec3_t src_color = vec3_from_vec4(color);
+        float src_alpha = color.w;
+        vec3_t dst_color = vec3_from_vec4(framebuffer->colorbuffer[index]);
+        color.x = src_color.x * src_alpha + dst_color.x * (1 - src_alpha);
+        color.y = src_color.y * src_alpha + dst_color.y * (1 - src_alpha);
+        color.z = src_color.z * src_alpha + dst_color.z * (1 - src_alpha);
+        color.w = 1;
+    }
+
+    /* write color and depth */
+    framebuffer->colorbuffer[index] = color;
+    if (!program->enable_blend) {
+        framebuffer->depthbuffer[index] = depth;
+    }
+}
+
 static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
                               vec4_t clip_coords[3], void *varyings[3]) {
     int width = framebuffer->width;
     int height = framebuffer->height;
+    int sizeof_varyings = program->sizeof_varyings;
     vec3_t ndc_coords[3];
     vec2_t screen_coords[3];
     float screen_depths[3];
@@ -427,8 +458,10 @@ static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
     }
 
     /* back-face culling */
-    if (is_back_facing(ndc_coords)) {
-        return 1;
+    if (!program->double_sided) {
+        if (is_back_facing(ndc_coords)) {
+            return 1;
+        }
     }
 
     /* reciprocals of w */
@@ -454,15 +487,9 @@ static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
                 float depth = interpolate_depth(screen_depths, weights);
                 /* early depth testing */
                 if (depth <= framebuffer->depthbuffer[index]) {
-                    int sizeof_varyings = program->sizeof_varyings;
-                    vec4_t color;
                     interpolate_varyings(varyings, program->shader_varyings,
                                          sizeof_varyings, weights, recip_w);
-                    /* execute fragment shader */
-                    color = program->fragment_shader(program->shader_varyings,
-                                                     program->shader_uniforms);
-                    framebuffer->colorbuffer[index] = vec4_saturate(color);
-                    framebuffer->depthbuffer[index] = depth;
+                    draw_fragment(framebuffer, program, index, depth);
                 }
             }
         }
