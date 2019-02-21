@@ -74,11 +74,12 @@ def process_images(zip_file):
     for old_filename, tga_filename in IMG_FILENAMES.items():
         with zip_file.open(old_filename) as f:
             image = Image.open(f)
+            image = image.transpose(Image.FLIP_TOP_BOTTOM)
             if tga_filename == "smith_diffuse.tga":
                 bands = image.split()
                 image = Image.merge("RGB", bands[:3])
-            image = image.transpose(Image.FLIP_TOP_BOTTOM)
-            image = image.resize((512, 512), Image.LANCZOS)
+            if "spark_" not in tga_filename:
+                image = image.resize((512, 512), Image.LANCZOS)
             filepath = os.path.join(DST_DIRECTORY, tga_filename)
             image.save(filepath, rle=True)
 
