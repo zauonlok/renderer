@@ -14,7 +14,7 @@ import os
 import zipfile
 from PIL import Image
 import numpy
-import utils
+from utils.gltf import dump_obj_data
 
 SRC_FILENAME = "vivi_ornitier.zip"
 DST_DIRECTORY = "../assets/ornitier"
@@ -66,13 +66,8 @@ def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
 
-    meshes = []
-    for mesh in gltf["meshes"]:
-        mesh = utils.load_gltf_mesh(gltf, buffer, mesh)
-        meshes.append(mesh)
-
-    for filename, mesh in zip(OBJ_FILENAMES, meshes):
-        obj_data, _ = utils.dump_mesh_data(mesh)
+    for mesh_index, filename in enumerate(OBJ_FILENAMES):
+        obj_data = dump_obj_data(gltf, buffer, mesh_index)
         filepath = os.path.join(DST_DIRECTORY, filename)
         with open(filepath, "w") as f:
             f.write(obj_data)

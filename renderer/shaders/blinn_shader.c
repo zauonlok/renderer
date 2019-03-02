@@ -23,10 +23,6 @@ vec4_t blinn_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     return clip_pos;
 }
 
-static float max_float(float a, float b) {
-    return a > b ? a : b;
-}
-
 vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_) {
     blinn_varyings_t *varyings = (blinn_varyings_t*)varyings_;
     blinn_uniforms_t *uniforms = (blinn_uniforms_t*)uniforms_;
@@ -42,7 +38,7 @@ vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_) {
         vec4_t sample = texture_sample(uniforms->diffuse, texcoord);
         vec3_t albedo = vec3_from_vec4(sample);
 
-        float strength = max_float(vec3_dot(normal, light_dir), 0);
+        float strength = float_max(vec3_dot(normal, light_dir), 0);
         vec3_t diffuse = vec3_mul(albedo, strength + uniforms->ambient);
 
         color = vec3_add(color, diffuse);
@@ -75,6 +71,26 @@ vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_) {
 
 /* high-level api */
 
+static blinn_uniforms_t *get_uniforms(model_t *model) {
+    return (blinn_uniforms_t*)program_get_uniforms(model->program);
+}
+
+static void release_model(model_t *model) {
+    blinn_uniforms_t *uniforms = get_uniforms(model);
+    if (uniforms->emission) {
+        texture_release(uniforms->emission);
+    }
+    if (uniforms->diffuse) {
+        texture_release(uniforms->diffuse);
+    }
+    if (uniforms->specular) {
+        texture_release(uniforms->specular);
+    }
+    program_release(model->program);
+    mesh_release(model->mesh);
+    free(model);
+}
+
 model_t *blinn_create_model(const char *mesh, mat4_t transform,
                             blinn_material_t material) {
     int sizeof_attribs = sizeof(blinn_attribs_t);
@@ -104,29 +120,21 @@ model_t *blinn_create_model(const char *mesh, mat4_t transform,
     model->mesh      = mesh_load(mesh);
     model->transform = transform;
     model->program   = program;
-    model->is_opaque = !material.enable_blend;
+    model->release   = release_model;
+    model->opaque    = !material.enable_blend;
 
     return model;
 }
 
-void blinn_release_model(model_t *model) {
-    blinn_uniforms_t *uniforms = blinn_get_uniforms(model);
-    if (uniforms->emission) {
-        texture_release(uniforms->emission);
-    }
-    if (uniforms->diffuse) {
-        texture_release(uniforms->diffuse);
-    }
-    if (uniforms->specular) {
-        texture_release(uniforms->specular);
-    }
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
-
-blinn_uniforms_t *blinn_get_uniforms(model_t *model) {
-    return (blinn_uniforms_t*)program_get_uniforms(model->program);
+void blinn_update_uniforms(
+        model_t *model, vec3_t light_dir, vec3_t camera_pos,
+        mat4_t model_matrix, mat3_t normal_matrix, mat4_t viewproj_matrix) {
+    blinn_uniforms_t *uniforms = get_uniforms(model);
+    uniforms->light_dir = light_dir;
+    uniforms->camera_pos = camera_pos;
+    uniforms->model_matrix = model_matrix;
+    uniforms->normal_matrix = normal_matrix;
+    uniforms->viewproj_matrix = viewproj_matrix;
 }
 
 void blinn_draw_model(model_t *model, framebuffer_t *framebuffer) {

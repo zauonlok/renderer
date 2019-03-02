@@ -13,28 +13,19 @@ import json
 import os
 import zipfile
 from PIL import Image
-import utils
+from utils.gltf import dump_obj_data
 
 SRC_FILENAME = "glTF-Sample-Models-master.zip"
 DST_DIRECTORY = "../assets/helmet"
-OBJ_FILENAME = "helmet.obj"
-
-INPUT_DIR = "glTF-Sample-Models-master/2.0/DamagedHelmet/glTF/"
-GLTF_FILEPATH = INPUT_DIR + "DamagedHelmet.gltf"
-BUFFER_FILEPATH = INPUT_DIR + "DamagedHelmet.bin"
-BASECOLOR_FILEPATH = INPUT_DIR + "Default_albedo.jpg"
-PACKED_FILEPATH = INPUT_DIR + "Default_metalRoughness.jpg"
-OCCLUSION_FILEPATH = INPUT_DIR + "Default_AO.jpg"
-EMISSIVE_FILEPATH = INPUT_DIR + "Default_emissive.jpg"
+MODEL_DIR = "glTF-Sample-Models-master/2.0/DamagedHelmet/glTF/"
 
 
 def process_mesh(zip_file):
-    gltf = json.loads(zip_file.read(GLTF_FILEPATH))
-    buffer = zip_file.read(BUFFER_FILEPATH)
+    gltf = json.loads(zip_file.read(MODEL_DIR + "DamagedHelmet.gltf"))
+    buffer = zip_file.read(MODEL_DIR + "DamagedHelmet.bin")
 
-    mesh = utils.load_gltf_mesh(gltf, buffer, gltf["meshes"][0])
-    obj_data, _ = utils.dump_mesh_data(mesh)
-    filepath = os.path.join(DST_DIRECTORY, OBJ_FILENAME)
+    obj_data = dump_obj_data(gltf, buffer, 0)
+    filepath = os.path.join(DST_DIRECTORY, "helmet.obj")
     with open(filepath, "w") as f:
         f.write(obj_data)
 
@@ -53,19 +44,21 @@ def save_image(image, filename):
 
 
 def process_images(zip_file):
-    basecolor_image = load_image(zip_file, BASECOLOR_FILEPATH)
+    basecolor_image = load_image(zip_file, MODEL_DIR + "Default_albedo.jpg")
     save_image(basecolor_image, "basecolor.tga")
 
-    packed_image = load_image(zip_file, PACKED_FILEPATH)
+    packed_image = load_image(
+        zip_file, MODEL_DIR + "Default_metalRoughness.jpg"
+    )
     _, roughness_image, metallic_image = packed_image.split()
     save_image(metallic_image, "metallic.tga")
     save_image(roughness_image, "roughness.tga")
 
-    occlusion_image = load_image(zip_file, OCCLUSION_FILEPATH)
+    occlusion_image = load_image(zip_file, MODEL_DIR + "Default_AO.jpg")
     occlusion_image, _, _ = occlusion_image.split()
     save_image(occlusion_image, "occlusion.tga")
 
-    emissive_image = load_image(zip_file, EMISSIVE_FILEPATH)
+    emissive_image = load_image(zip_file, MODEL_DIR + "Default_emissive.jpg")
     save_image(emissive_image, "emissive.tga")
 
 

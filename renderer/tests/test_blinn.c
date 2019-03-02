@@ -2,11 +2,12 @@
 #include "../core/api.h"
 #include "../scenes/blinn_scenes.h"
 #include "../shaders/blinn_shader.h"
-#include "test_base.h"
 #include "test_blinn.h"
+#include "test_helper.h"
 
-static scene_entry_t g_scene_entries[] = {
+static creator_t g_creators[] = {
     {"centaur", blinn_centaur_scene},
+    {NULL, NULL},
 };
 
 static void update_scene(scene_t *scene, camera_t *camera, vec3_t light_dir) {
@@ -16,16 +17,14 @@ static void update_scene(scene_t *scene, camera_t *camera, vec3_t light_dir) {
     mat4_t viewproj_matrix = mat4_mul_mat4(proj_matrix, view_matrix);
     int num_models = darray_size(scene->models);
     int i;
+    light_dir = vec3_normalize(light_dir);
     for (i = 0; i < num_models; i++) {
         model_t *model = scene->models[i];
         mat4_t model_matrix = model->transform;
         mat4_t model_it_matrix = mat4_inverse_transpose(model_matrix);
-        blinn_uniforms_t *uniforms = blinn_get_uniforms(model);
-        uniforms->light_dir = vec3_normalize(light_dir);
-        uniforms->camera_pos = camera_pos;
-        uniforms->model_matrix = model_matrix;
-        uniforms->normal_matrix = mat3_from_mat4(model_it_matrix);
-        uniforms->viewproj_matrix = viewproj_matrix;
+        mat3_t normal_matrix = mat3_from_mat4(model_it_matrix);
+        blinn_update_uniforms(model, light_dir, camera_pos,
+                              model_matrix, normal_matrix, viewproj_matrix);
     }
     scene_sort_models(scene, view_matrix);
 }
@@ -48,11 +47,10 @@ static void tick_function(context_t *context, void *userdata) {
 }
 
 void test_blinn(int argc, char *argv[]) {
-    int num_entries = ARRAY_SIZE(g_scene_entries);
     const char *scene_name = argc > 2 ? argv[2] : NULL;
-    scene_t *scene = scene_create(g_scene_entries, num_entries, scene_name);
+    scene_t *scene = scene_create(g_creators, scene_name);
     if (scene) {
-        test_base(tick_function, scene);
-        scene_release(scene, blinn_release_model);
+        test_helper(tick_function, scene);
+        scene_release(scene);
     }
 }

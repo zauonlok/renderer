@@ -8,10 +8,6 @@
 
 /* shading related functions */
 
-static float max_float(float a, float b) {
-    return a > b ? a : b;
-}
-
 static float get_distribution(float n_dot_h, float alpha2) {
     float n_dot_h_2 = n_dot_h * n_dot_h;
     float factor = n_dot_h_2 * (alpha2 - 1) + 1;
@@ -37,9 +33,9 @@ vec3_t pbr_dir_shade(vec3_t light_dir, float roughness,
     float n_dot_l = vec3_dot(normal_dir, light_dir);
     if (n_dot_l > 0) {
         vec3_t half_dir = vec3_normalize(vec3_add(light_dir, view_dir));
-        float n_dot_v = max_float(vec3_dot(normal_dir, view_dir), 0);
-        float n_dot_h = max_float(vec3_dot(normal_dir, half_dir), 0);
-        float v_dot_h = max_float(vec3_dot(view_dir, half_dir), 0);
+        float n_dot_v = float_max(vec3_dot(normal_dir, view_dir), 0);
+        float n_dot_h = float_max(vec3_dot(normal_dir, half_dir), 0);
+        float v_dot_h = float_max(vec3_dot(view_dir, half_dir), 0);
 
         float alpha = roughness * roughness;
         float alpha2 = alpha * alpha;
@@ -74,7 +70,7 @@ vec3_t pbr_ibl_shade(ibldata_t *ibldata, float roughness,
     vec3_t diffuse_light = vec3_from_vec4(diffuse_sample);
     vec3_t diffuse_shade = vec3_modulate(diffuse_light, diffuse_color);
 
-    float n_dot_v = max_float(vec3_dot(normal_dir, view_dir), 0);
+    float n_dot_v = float_max(vec3_dot(normal_dir, view_dir), 0);
     vec2_t brdf_texcoord = vec2_new(n_dot_v, roughness);
     vec4_t brdf_sample = texture_sample(ibldata->brdf_lut, brdf_texcoord);
     float specular_scale = brdf_sample.x;
@@ -158,7 +154,7 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_level) {
     ibldata = (ibldata_t*)malloc(sizeof(ibldata_t));
     memset(ibldata, 0, sizeof(ibldata_t));
     ibldata->mip_level = mip_level;
-    ibldata->env_name = env_name;
+    ibldata->env_name  = env_name;
     ibldata->ref_count = 1;
 
     /* load a diffuse envmap */

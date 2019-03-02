@@ -1,7 +1,7 @@
-"""Preprocess the Elf Girl model
+"""Preprocess the Assassin Gai model
 
 The model is available for download from
-    https://sketchfab.com/models/52f2e84961b94760b7805c178890d644
+    https://sketchfab.com/models/2e571c1e614a4244a1035c6c25e75c4d
 
 The Python Imaging Library is required
     pip install pillow
@@ -13,26 +13,23 @@ import json
 import os
 import zipfile
 from PIL import Image
-from utils.gltf import dump_obj_data
+from utils.gltf import dump_ani_data, dump_obj_data
 
-SRC_FILENAME = "elf_girl.zip"
-DST_DIRECTORY = "../assets/elfgirl"
+SRC_FILENAME = "assassin_gai.zip"
+DST_DIRECTORY = "../assets/assassin"
 
 OBJ_FILENAMES = [
-    "face0.obj",
-    "face1.obj",
-    "body0.obj",
-    "body1.obj",
-    "body2.obj",
+    "body.obj",
     "hair.obj",
-    "base.obj",
+    "weapon.obj",
+    "face.obj",
 ]
 
 IMG_FILENAMES = {
-    "textures/Rig2lambert23SG_baseColor.png": "face.tga",
-    "textures/lambert22SG_baseColor.png": "body.tga",
-    "textures/lambert25SG_baseColor.png": "hair.tga",
-    "textures/pasted__lambert2SG_baseColor.png": "base.tga",
+    "textures/Material_850_baseColor.png": "face.tga",
+    "textures/Material_852_baseColor.png": "hair.tga",
+    "textures/Material_853_baseColor.png": "weapon.tga",
+    "textures/Material_854_baseColor.png": "body.tga",
 }
 
 
@@ -40,11 +37,16 @@ def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
 
-    for mesh_index, filename in enumerate(OBJ_FILENAMES):
-        obj_data = dump_obj_data(gltf, buffer, mesh_index)
-        filepath = os.path.join(DST_DIRECTORY, filename)
-        with open(filepath, "w") as f:
+    for mesh_index, obj_filename in enumerate(OBJ_FILENAMES):
+        obj_data = dump_obj_data(gltf, buffer, mesh_index, with_skin=True)
+        obj_filepath = os.path.join(DST_DIRECTORY, obj_filename)
+        with open(obj_filepath, "w") as f:
             f.write(obj_data)
+
+    ani_data = dump_ani_data(gltf, buffer)
+    ani_filepath = os.path.join(DST_DIRECTORY, "assassin.ani")
+    with open(ani_filepath, "w") as f:
+            f.write(ani_data)
 
 
 def process_images(zip_file):
@@ -52,7 +54,6 @@ def process_images(zip_file):
         with zip_file.open(old_filename) as f:
             image = Image.open(f)
             image = image.transpose(Image.FLIP_TOP_BOTTOM)
-            image = image.resize((512, 512), Image.LANCZOS)
             filepath = os.path.join(DST_DIRECTORY, tga_filename)
             image.save(filepath, rle=True)
 

@@ -34,8 +34,7 @@ vec4_t unlit_fragment_shader(void *varyings, void *uniforms);
 /* high-level api */
 model_t *unlit_create_model(const char *mesh, mat4_t transform,
                             unlit_material_t material);
-void unlit_release_model(model_t *model);
-unlit_uniforms_t *unlit_get_uniforms(model_t *model);
+void unlit_update_uniforms(model_t *model, mat4_t mvp_matrix);
 void unlit_draw_model(model_t *model, framebuffer_t *framebuffer);
 
 #endif

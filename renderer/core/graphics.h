@@ -2,7 +2,6 @@
 #define GRAPHICS_H
 
 #include "geometry.h"
-#include "mesh.h"
 
 typedef struct {
     int width, height;
@@ -13,20 +12,6 @@ typedef struct {
 typedef vec4_t vertex_shader_t(void *attribs, void *varyings, void *uniforms);
 typedef vec4_t fragment_shader_t(void *varyings, void *uniforms);
 typedef struct program program_t;
-
-typedef struct {
-    mesh_t *mesh;
-    mat4_t transform;
-    program_t *program;
-    /* for model sorting */
-    int is_opaque;
-    float distance;
-} model_t;
-
-typedef struct {
-    vec4_t background;
-    model_t **models;
-} scene_t;
 
 /* framebuffer management */
 framebuffer_t *framebuffer_create(int width, int height);

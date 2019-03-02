@@ -9,10 +9,22 @@ from __future__ import print_function
 import json
 import os
 import zipfile
-import utils
+from utils.gltf import dump_obj_data, load_node_data
 
 SRC_FILENAME = "low_poly_mccree.zip"
 DST_DIRECTORY = "../assets/mccree"
+
+
+def process_meshes(zip_file):
+    gltf = json.loads(zip_file.read("scene.gltf"))
+    buffer = zip_file.read("scene.bin")
+
+    for mesh_index in range(len(gltf["meshes"])):
+        obj_data = dump_obj_data(gltf, buffer, mesh_index)
+        filename = "mccree{}.obj".format(mesh_index)
+        filepath = os.path.join(DST_DIRECTORY, filename)
+        with open(filepath, "w") as f:
+            f.write(obj_data)
 
 
 def linear_to_srgb(color):
@@ -20,11 +32,9 @@ def linear_to_srgb(color):
     return red, green, blue
 
 
-def print_transforms(gltf):
+def print_transforms(transforms):
     row_pattern = "            {{{:+.6f}f, {:+.6f}f, {:+.6f}f, {:+.6f}f}},"
-    transforms = utils.load_gltf_transforms(gltf)
-    num_transforms = len(transforms)
-    print("    mat4_t transforms[{}] = {{".format(num_transforms))
+    print("    mat4_t transforms[{}] = {{".format(len(transforms)))
     for transform in transforms:
         print("        {{")
         for i in range(4):
@@ -33,77 +43,60 @@ def print_transforms(gltf):
     print("    };")
 
 
-def print_materials(gltf):
+def print_materials(materials):
     row_pattern = "        {{{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}, NULL, 1, 0}},"
-    num_materials = len(gltf["materials"])
-    print("    unlit_material_t materials[{}] = {{".format(num_materials))
-    for material in gltf["materials"]:
+    print("    unlit_material_t materials[{}] = {{".format(len(materials)))
+    for material in materials:
         color = material["pbrMetallicRoughness"]["baseColorFactor"]
         print(row_pattern.format(*linear_to_srgb(color)))
     print("    };")
 
 
-def print_mesh2transform(gltf):
-    num_meshes = len(gltf["meshes"])
-    nodes = utils.load_gltf_nodes(gltf)
-    transforms = utils.load_gltf_transforms(gltf)
-    nodes = [node for node in nodes if node.mesh is not None]
-    mesh2transform = [None] * num_meshes
+def print_mesh2transform(nodes, transforms):
+    mesh2transform = []
     for node in nodes:
-        for i, transform in enumerate(transforms):
-            if node.world_transform.data == transform.data:
-                assert mesh2transform[node.mesh] is None
-                mesh2transform[node.mesh] = i
-    print("    int mesh2transform[{}] = {{".format(num_meshes))
+        index = transforms.index(node.world_transform)
+        mesh2transform.append(index)
+
+    num_meshes = len(mesh2transform)
     chunk_size = num_meshes / 3 + 1
+    print("    int mesh2transform[{}] = {{".format(num_meshes))
     for i in range(0, num_meshes, chunk_size):
         indices = [str(j) for j in mesh2transform[i:(i + chunk_size)]]
         print("        {}".format(", ".join(indices) + ","))
     print("    };")
 
 
-def print_mesh2material(gltf):
+def print_mesh2material(meshes):
     mesh2material = []
-    for mesh in gltf["meshes"]:
+    for mesh in meshes:
         assert len(mesh["primitives"]) == 1
         primitive = mesh["primitives"][0]
         mesh2material.append(primitive["material"])
-    num_meshes = len(gltf["meshes"])
-    print("    int mesh2material[{}] = {{".format(num_meshes))
+
+    num_meshes = len(mesh2material)
     chunk_size = num_meshes / 3 + 1
+    print("    int mesh2material[{}] = {{".format(num_meshes))
     for i in range(0, num_meshes, chunk_size):
-        indices = []
-        for j in mesh2material[i:(i + chunk_size)]:
-            indices.append("{:2d}".format(j))
-        indices = ", ".join(indices) + ","
-        print("        {}".format(indices))
+        indices = [format(j, "2d") for j in mesh2material[i:(i + chunk_size)]]
+        print("        {}".format(", ".join(indices) + ","))
     print("    };")
 
 
-def print_generated_code(gltf):
-    print_transforms(gltf)
-    print_materials(gltf)
-    print_mesh2transform(gltf)
-    print_mesh2material(gltf)
-
-
-def process_meshes(zip_file):
+def generated_code(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
-    buffer = zip_file.read("scene.bin")
+    nodes = load_node_data(gltf)
+    nodes = [node for node in nodes if node.mesh is not None]
 
-    meshes = []
-    for mesh in gltf["meshes"]:
-        mesh = utils.load_gltf_mesh(gltf, buffer, mesh)
-        meshes.append(mesh)
+    transforms = []
+    for node in nodes:
+        if node.world_transform not in transforms:
+            transforms.append(node.world_transform)
 
-    for index, mesh in enumerate(meshes):
-        obj_data, _ = utils.dump_mesh_data(mesh)
-        filename = "mccree{}.obj".format(index)
-        filepath = os.path.join(DST_DIRECTORY, filename)
-        with open(filepath, "w") as f:
-            f.write(obj_data)
-
-    # print_generated_code(gltf)
+    print_transforms(transforms)
+    print_materials(gltf["materials"])
+    print_mesh2transform(nodes, transforms)
+    print_mesh2material(gltf["meshes"])
 
 
 def main():
@@ -112,6 +105,7 @@ def main():
 
     with zipfile.ZipFile(SRC_FILENAME) as zip_file:
         process_meshes(zip_file)
+        # generated_code(zip_file)
 
 
 if __name__ == "__main__":

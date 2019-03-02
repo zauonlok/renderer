@@ -53,11 +53,6 @@ static vec3_t calculate_pan(vec3_t from_camera, motion_t motion) {
     return vec3_add(delta_x, delta_y);
 }
 
-static float clamp_float(float value, float min, float max) {
-    assert(min <= max);
-    return value < min ? min : (value > max ? max : value);
-}
-
 static vec3_t calculate_offset(vec3_t from_target, motion_t motion) {
     float radius = vec3_length(from_target);
     float theta = (float)atan2(from_target.x, from_target.z);  /* azimuth */
@@ -68,7 +63,7 @@ static vec3_t calculate_offset(vec3_t from_target, motion_t motion) {
     radius *= (float)pow(0.95, motion.dolly);
     theta -= motion.orbit.x * factor;
     phi -= motion.orbit.y * factor;
-    phi = clamp_float(phi, EPSILON, PI - EPSILON);
+    phi = float_clamp(phi, EPSILON, PI - EPSILON);
 
     offset.x = radius * (float)sin(phi) * (float)sin(theta);
     offset.y = radius * (float)cos(phi);

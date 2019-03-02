@@ -47,8 +47,9 @@ vec4_t blinn_fragment_shader(void *varyings, void *uniforms);
 /* high-level api */
 model_t *blinn_create_model(const char *mesh, mat4_t transform,
                             blinn_material_t material);
-void blinn_release_model(model_t *model);
-blinn_uniforms_t *blinn_get_uniforms(model_t *model);
+void blinn_update_uniforms(
+    model_t *model, vec3_t light_dir, vec3_t camera_pos,
+    mat4_t model_matrix, mat3_t normal_matrix, mat4_t viewproj_matrix);
 void blinn_draw_model(model_t *model, framebuffer_t *framebuffer);
 
 #endif

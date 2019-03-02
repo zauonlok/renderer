@@ -61,8 +61,9 @@ vec4_t specular_fragment_shader(void *varyings, void *uniforms);
 model_t *specular_create_model(
     const char *mesh, mat4_t transform,
     specular_material_t material, const char *env_name);
-void specular_release_model(model_t *model);
-specular_uniforms_t *specular_get_uniforms(model_t *model);
+void specular_update_uniforms(
+    model_t *model, vec3_t light_dir, vec3_t camera_pos,
+    mat4_t model_matrix, mat3_t normal_matrix, mat4_t viewproj_matrix);
 void specular_draw_model(model_t *model, framebuffer_t *framebuffer);
 
 #endif

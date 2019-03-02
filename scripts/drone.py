@@ -13,34 +13,20 @@ import json
 import os
 import zipfile
 from PIL import Image
-import utils
+from utils.gltf import dump_obj_data
 
 SRC_FILENAME = "mech_drone.zip"
 DST_DIRECTORY = "../assets/drone"
-
-OBJ_FILENAME = "drone.obj"
-
-DIFFUSE_FILENAME = "textures/Robot_diffuse.jpeg"
-NORMAL_FILENAME = "textures/Robot_normal.jpeg"
-OCCLUSION_FILENAME = "textures/Robot_occlusion.jpeg"
-EMISSIVE_FILENAME = "textures/Robot_emissive.jpeg"
-PACKED_FILENAME = "textures/Robot_specularGlossiness.png"
 
 
 def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
 
-    mesh = utils.load_gltf_mesh(gltf, buffer, gltf["meshes"][0])
-    obj_data, tan_data = utils.dump_mesh_data(mesh)
-
-    obj_filepath = os.path.join(DST_DIRECTORY, OBJ_FILENAME)
-    with open(obj_filepath, "w") as f:
+    obj_data = dump_obj_data(gltf, buffer, 0)
+    filepath = os.path.join(DST_DIRECTORY, "drone.obj")
+    with open(filepath, "w") as f:
         f.write(obj_data)
-
-    tan_filepath = obj_filepath[:-4] + ".tan"
-    with open(tan_filepath, "w") as f:
-        f.write(tan_data)
 
 
 def load_image(zip_file, filename):
@@ -57,20 +43,17 @@ def save_image(image, filename, size=(512, 512)):
 
 
 def process_images(zip_file):
-    diffuse_image = load_image(zip_file, DIFFUSE_FILENAME)
+    diffuse_image = load_image(zip_file, "textures/Robot_diffuse.jpeg")
     save_image(diffuse_image, "diffuse.tga")
 
-    normal_image = load_image(zip_file, NORMAL_FILENAME)
-    save_image(normal_image, "normal.tga", size=(1024, 1024))
-
-    occlusion_image = load_image(zip_file, OCCLUSION_FILENAME)
+    occlusion_image = load_image(zip_file, "textures/Robot_occlusion.jpeg")
     occlusion_image, _, _ = occlusion_image.split()
     save_image(occlusion_image, "occlusion.tga")
 
-    emissive_image = load_image(zip_file, EMISSIVE_FILENAME)
+    emissive_image = load_image(zip_file, "textures/Robot_emissive.jpeg")
     save_image(emissive_image, "emissive.tga")
 
-    packed_image = load_image(zip_file, PACKED_FILENAME)
+    packed_image = load_image(zip_file, "textures/Robot_specularGlossiness.png")
     packed_bands = packed_image.split()
 
     specular_image = Image.merge("RGB", packed_bands[:3])

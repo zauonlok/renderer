@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "geometry.h"
 #include "image.h"
 
 /* image creating/releasing */
@@ -146,14 +147,14 @@ static void save_tga(image_t *image, const char *filename) {
 
 #undef TGA_HEADER_SIZE
 
-static const char *extract_ext(const char *filename) {
+static const char *extract_extension(const char *filename) {
     const char *dot_pos = strrchr(filename, '.');
     return dot_pos == NULL ? "" : dot_pos + 1;
 }
 
 image_t *image_load(const char *filename) {
-    const char *ext = extract_ext(filename);
-    if (strcmp(ext, "tga") == 0) {
+    const char *extension = extract_extension(filename);
+    if (strcmp(extension, "tga") == 0) {
         return load_tga(filename);
     } else {
         assert(0);
@@ -162,8 +163,8 @@ image_t *image_load(const char *filename) {
 }
 
 void image_save(image_t *image, const char *filename) {
-    const char *ext = extract_ext(filename);
-    if (strcmp(ext, "tga") == 0) {
+    const char *extension = extract_extension(filename);
+    if (strcmp(extension, "tga") == 0) {
         save_tga(image, filename);
     } else {
         assert(0);
@@ -213,12 +214,8 @@ void image_flip_v(image_t *image) {
     }
 }
 
-static float linear_interp(float v0, float v1, float d) {
-    return v0 + (v1 - v0) * d;
-}
-
-static int bound_index(int index, int length) {
-    return index > length - 1 ? length - 1 : index;
+static int min_integer(int a, int b) {
+    return a < b ? a : b;
 }
 
 image_t *image_resize(image_t *source, int width, int height) {
@@ -237,8 +234,8 @@ image_t *image_resize(image_t *source, int width, int height) {
             float mapped_c = (float)dst_c * scale_c;
             int src_r0 = (int)mapped_r;
             int src_c0 = (int)mapped_c;
-            int src_r1 = bound_index(src_r0 + 1, source->height);
-            int src_c1 = bound_index(src_c0 + 1, source->width);
+            int src_r1 = min_integer(src_r0 + 1, source->height - 1);
+            int src_c1 = min_integer(src_c0 + 1, source->width - 1);
             float delta_r = mapped_r - (float)src_r0;
             float delta_c = mapped_c - (float)src_c0;
 
@@ -252,9 +249,9 @@ image_t *image_resize(image_t *source, int width, int height) {
                 float v01 = pixel_01[k];  /* row 0, col 1 */
                 float v10 = pixel_10[k];  /* row 1, col 0 */
                 float v11 = pixel_11[k];  /* row 1, col 1 */
-                float v0 = linear_interp(v00, v01, delta_c);  /* row 0 */
-                float v1 = linear_interp(v10, v11, delta_c);  /* row 1 */
-                float value = linear_interp(v0, v1, delta_r);
+                float v0 = float_lerp(v00, v01, delta_c);  /* row 0 */
+                float v1 = float_lerp(v10, v11, delta_c);  /* row 1 */
+                float value = float_lerp(v0, v1, delta_r);
                 pixel[k] = (unsigned char)(value + 0.5f);
             }
         }

@@ -2,11 +2,12 @@
 #include "../core/api.h"
 #include "../scenes/lambert_scenes.h"
 #include "../shaders/lambert_shader.h"
-#include "test_base.h"
+#include "test_helper.h"
 #include "test_lambert.h"
 
-static scene_entry_t g_scene_entries[] = {
+static creator_t g_creators[] = {
     {"craftsman", lambert_craftsman_scene},
+    {NULL, NULL},
 };
 
 static void update_scene(scene_t *scene, camera_t *camera, vec3_t light_dir) {
@@ -15,15 +16,14 @@ static void update_scene(scene_t *scene, camera_t *camera, vec3_t light_dir) {
     mat4_t viewproj_matrix = mat4_mul_mat4(proj_matrix, view_matrix);
     int num_models = darray_size(scene->models);
     int i;
+    light_dir = vec3_normalize(light_dir);
     for (i = 0; i < num_models; i++) {
         model_t *model = scene->models[i];
         mat4_t model_matrix = model->transform;
-        mat4_t model_it_matrix = mat4_inverse_transpose(model_matrix);
         mat4_t mvp_matrix = mat4_mul_mat4(viewproj_matrix, model_matrix);
-        lambert_uniforms_t *uniforms = lambert_get_uniforms(model);
-        uniforms->light_dir = vec3_normalize(light_dir);
-        uniforms->mvp_matrix = mvp_matrix;
-        uniforms->normal_matrix = mat3_from_mat4(model_it_matrix);
+        mat4_t model_it_matrix = mat4_inverse_transpose(model_matrix);
+        mat3_t normal_matrix = mat3_from_mat4(model_it_matrix);
+        lambert_update_uniforms(model, light_dir, mvp_matrix, normal_matrix);
     }
     scene_sort_models(scene, view_matrix);
 }
@@ -46,11 +46,10 @@ static void tick_function(context_t *context, void *userdata) {
 }
 
 void test_lambert(int argc, char *argv[]) {
-    int num_entries = ARRAY_SIZE(g_scene_entries);
     const char *scene_name = argc > 2 ? argv[2] : NULL;
-    scene_t *scene = scene_create(g_scene_entries, num_entries, scene_name);
+    scene_t *scene = scene_create(g_creators, scene_name);
     if (scene) {
-        test_base(tick_function, scene);
-        scene_release(scene, lambert_release_model);
+        test_helper(tick_function, scene);
+        scene_release(scene);
     }
 }

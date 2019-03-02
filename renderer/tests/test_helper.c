@@ -1,12 +1,8 @@
-#include <assert.h>
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "../core/api.h"
-#include "test_base.h"
-
-/* test delegate functions */
+#include "test_helper.h"
 
 static const char *WINDOW_TITLE = "Viewer";
 static const int WINDOW_WIDTH = 800;
@@ -129,7 +125,7 @@ static vec3_t calculate_light(record_t *record) {
     return vec3_new(-x, -y, -z);
 }
 
-void test_base(tickfunc_t *tickfunc, void *userdata) {
+void test_helper(tickfunc_t *tickfunc, void *userdata) {
     window_t *window;
     framebuffer_t *framebuffer;
     camera_t *camera;
@@ -190,132 +186,4 @@ void test_base(tickfunc_t *tickfunc, void *userdata) {
     window_destroy(window);
     framebuffer_release(framebuffer);
     camera_release(camera);
-}
-
-/* scene helper functions */
-
-static int count_num_faces(scene_t *scene) {
-    int num_models = darray_size(scene->models);
-    int num_faces = 0;
-    int i;
-    for (i = 0; i < num_models; i++) {
-        model_t *model = scene->models[i];
-        num_faces += mesh_get_num_faces(model->mesh);
-    }
-    return num_faces;
-}
-
-static float min_float(float a, float b) {
-    return a < b ? a : b;
-}
-
-static float max_float(float a, float b) {
-    return a > b ? a : b;
-}
-
-static vec3_t transform_position(vec3_t position, mat4_t transform) {
-    vec4_t original = vec4_from_vec3(position, 1);
-    vec4_t transformed = mat4_mul_vec4(transform, original);
-    return vec3_from_vec4(transformed);
-}
-
-static void calculate_bbox(scene_t *scene,
-                           vec3_t *out_bbmin, vec3_t *out_bbmax,
-                           vec3_t *out_center, vec3_t *out_extend) {
-    int num_models = darray_size(scene->models);
-    vec3_t bbmin = vec3_new(+1e6, +1e6, +1e6);
-    vec3_t bbmax = vec3_new(-1e6, -1e6, -1e6);
-    int i, j, k;
-    for (i = 0; i < num_models; i++) {
-        model_t *model = scene->models[i];
-        mesh_t *mesh = model->mesh;
-        mat4_t transform = model->transform;
-        int num_faces = mesh_get_num_faces(mesh);
-        for (j = 0; j < num_faces; j++) {
-            for (k = 0; k < 3; k++) {
-                vec3_t local_pos = mesh_get_position(mesh, j, k);
-                vec3_t world_pos = transform_position(local_pos, transform);
-                bbmin.x = min_float(bbmin.x, world_pos.x);
-                bbmin.y = min_float(bbmin.y, world_pos.y);
-                bbmin.z = min_float(bbmin.z, world_pos.z);
-                bbmax.x = max_float(bbmax.x, world_pos.x);
-                bbmax.y = max_float(bbmax.y, world_pos.y);
-                bbmax.z = max_float(bbmax.z, world_pos.z);
-            }
-        }
-    }
-    *out_bbmin = bbmin;
-    *out_bbmax = bbmax;
-    *out_center = vec3_div(vec3_add(bbmin, bbmax), 2);
-    *out_extend = vec3_sub(bbmax, bbmin);
-}
-
-scene_t *scene_create(scene_entry_t scene_entries[], int num_entries,
-                      const char *scene_name) {
-    scene_t *scene = NULL;
-    assert(num_entries > 0);
-    if (scene_name == NULL) {
-        int index = rand() % num_entries;
-        scene_name = scene_entries[index].scene_name;
-        scene = scene_entries[index].scene_ctor();
-    } else {
-        int i;
-        for (i = 0; i < num_entries; i++) {
-            if (strcmp(scene_name, scene_entries[i].scene_name) == 0) {
-                scene = scene_entries[i].scene_ctor();
-                break;
-            }
-        }
-    }
-    if (scene) {
-        vec3_t bbmin, bbmax, center, extend;
-        calculate_bbox(scene, &bbmin, &bbmax, &center, &extend);
-        printf("scene: %s\n", scene_name);
-        printf("faces: %d\n", count_num_faces(scene));
-        printf("bbmin: [%.3f, %.3f, %.3f]\n", bbmin.x, bbmin.y, bbmin.z);
-        printf("bbmax: [%.3f, %.3f, %.3f]\n", bbmax.x, bbmax.y, bbmax.z);
-        printf("center: [%.3f, %.3f, %.3f]\n", center.x, center.y, center.z);
-        printf("extend: [%.3f, %.3f, %.3f]\n", extend.x, extend.y, extend.z);
-    } else {
-        printf("scene not found: %s\n", scene_name);
-    }
-    return scene;
-}
-
-void scene_release(scene_t *scene, void (*model_dtor)(model_t *model)) {
-    int num_models = darray_size(scene->models);
-    int i;
-    for (i = 0; i < num_models; i++) {
-        model_dtor(scene->models[i]);
-    }
-    darray_free(scene->models);
-    free(scene);
-}
-
-static int compare_models(const void *model1_, const void *model2_) {
-    model_t *model1 = *(model_t**)model1_;
-    model_t *model2 = *(model_t**)model2_;
-
-    if (model1->is_opaque && model2->is_opaque) {
-        return model1->distance < model2->distance ? -1 : 1;
-    } else if (model1->is_opaque && !model2->is_opaque) {
-        return -1;
-    } else if (!model1->is_opaque && model2->is_opaque) {
-        return 1;
-    } else {
-        return model1->distance < model2->distance ? 1 : -1;
-    }
-}
-
-void scene_sort_models(scene_t *scene, mat4_t view_matrix) {
-    int num_models = darray_size(scene->models);
-    int i;
-    for (i = 0; i < num_models; i++) {
-        model_t *model = scene->models[i];
-        vec4_t local_pos = vec4_new(0, 0, 0, 1);
-        vec4_t world_pos = mat4_mul_vec4(model->transform, local_pos);
-        vec4_t view_pos = mat4_mul_vec4(view_matrix, world_pos);
-        model->distance = -view_pos.z;
-    }
-    qsort(scene->models, num_models, sizeof(model_t*), compare_models);
 }

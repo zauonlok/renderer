@@ -13,7 +13,7 @@ import json
 import os
 import zipfile
 from PIL import Image
-import utils
+from utils.gltf import dump_obj_data, load_node_data
 
 SRC_FILENAME = "the_noble_craftsman.zip"
 DST_DIRECTORY = "../assets/craftsman"
@@ -39,35 +39,15 @@ IMG_FILENAMES = {
 }
 
 
-def print_transforms(gltf):
-    row_pattern = "            {{{:10.6f}f, {:10.6f}f, {:10.6f}f, {:10.6f}f}},"
-    transforms = utils.load_gltf_transforms(gltf)
-    num_transforms = len(transforms)
-    print("    mat4_t transforms[{}] = {{".format(num_transforms))
-    for transform in transforms:
-        print("        {{")
-        for i in range(4):
-            print(row_pattern.format(*transform.data[i]))
-        print("        }},")
-    print("    };")
-
-
 def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
 
-    meshes = []
-    for mesh in gltf["meshes"]:
-        mesh = utils.load_gltf_mesh(gltf, buffer, mesh)
-        meshes.append(mesh)
-
-    for filename, mesh in zip(OBJ_FILENAMES, meshes):
-        obj_data, _ = utils.dump_mesh_data(mesh)
+    for mesh_index, filename in enumerate(OBJ_FILENAMES):
+        obj_data = dump_obj_data(gltf, buffer, mesh_index)
         filepath = os.path.join(DST_DIRECTORY, filename)
         with open(filepath, "w") as f:
             f.write(obj_data)
-
-    # print_transforms(gltf)
 
 
 def process_images(zip_file):
@@ -84,6 +64,26 @@ def process_images(zip_file):
             image.save(filepath, rle=True)
 
 
+def print_transforms(zip_file):
+    gltf = json.loads(zip_file.read("scene.gltf"))
+    nodes = load_node_data(gltf)
+    nodes = [node for node in nodes if node.mesh is not None]
+
+    transforms = []
+    for node in nodes:
+        if node.world_transform not in transforms:
+            transforms.append(node.world_transform)
+
+    row_pattern = "            {{{:10.6f}f, {:10.6f}f, {:10.6f}f, {:10.6f}f}},"
+    print("    mat4_t transforms[{}] = {{".format(len(transforms)))
+    for transform in transforms:
+        print("        {{")
+        for i in range(4):
+            print(row_pattern.format(*transform.data[i]))
+        print("        }},")
+    print("    };")
+
+
 def main():
     if not os.path.exists(DST_DIRECTORY):
         os.makedirs(DST_DIRECTORY)
@@ -91,6 +91,7 @@ def main():
     with zipfile.ZipFile(SRC_FILENAME) as zip_file:
         process_meshes(zip_file)
         process_images(zip_file)
+        # print_transforms(zip_file)
 
 
 if __name__ == "__main__":

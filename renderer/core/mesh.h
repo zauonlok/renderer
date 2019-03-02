@@ -4,6 +4,7 @@
 #include "geometry.h"
 
 typedef struct mesh mesh_t;
+typedef struct skin skin_t;
 
 /* mesh loading/releasing */
 mesh_t *mesh_load(const char *filename);
@@ -15,5 +16,9 @@ vec3_t mesh_get_position(mesh_t *mesh, int nth_face, int nth_position);
 vec2_t mesh_get_texcoord(mesh_t *mesh, int nth_face, int nth_texcoord);
 vec3_t mesh_get_normal(mesh_t *mesh, int nth_face, int nth_normal);
 vec4_t mesh_get_tangent(mesh_t *mesh, int nth_face, int nth_tangent);
+
+/* skin loading/releasing */
+skin_t *skin_load(const char *filename);
+void skin_release(skin_t *skin);
 
 #endif

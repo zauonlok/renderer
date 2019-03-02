@@ -4,8 +4,16 @@
 typedef struct {float x, y;} vec2_t;
 typedef struct {float x, y, z;} vec3_t;
 typedef struct {float x, y, z, w;} vec4_t;
+typedef struct {float x, y, z, w;} quat_t;
 typedef struct {float m[3][3];} mat3_t;
 typedef struct {float m[4][4];} mat4_t;
+
+/* float related functions */
+float float_min(float a, float b);
+float float_max(float a, float b);
+float float_clamp(float f, float min, float max);
+float float_lerp(float a, float b, float t);
+void float_print(const char *name, float f);
 
 /* vec2 related functions */
 vec2_t vec2_new(float x, float y);
@@ -18,6 +26,8 @@ void vec2_print(const char *name, vec2_t v);
 /* vec3 related functions */
 vec3_t vec3_new(float x, float y, float z);
 vec3_t vec3_from_vec4(vec4_t v);
+vec3_t vec3_min(vec3_t a, vec3_t b);
+vec3_t vec3_max(vec3_t a, vec3_t b);
 vec3_t vec3_add(vec3_t a, vec3_t b);
 vec3_t vec3_sub(vec3_t a, vec3_t b);
 vec3_t vec3_mul(vec3_t v, float factor);
@@ -44,6 +54,14 @@ vec4_t vec4_saturate(vec4_t v);
 vec4_t vec4_modulate(vec4_t a, vec4_t b);
 void vec4_print(const char *name, vec4_t v);
 
+/* quat related functions */
+quat_t quat_new(float x, float y, float z, float w);
+float quat_dot(quat_t a, quat_t b);
+float quat_length(quat_t q);
+quat_t quat_normalize(quat_t q);
+quat_t quat_slerp(quat_t a, quat_t b, float t);
+void quat_print(const char *name, quat_t q);
+
 /* mat3 related functions */
 mat3_t mat3_identity(void);
 mat3_t mat3_from_cols(vec3_t c0, vec3_t c1, vec3_t c2);
@@ -57,6 +75,7 @@ void mat3_print(const char *name, mat3_t m);
 
 /* mat4 related functions */
 mat4_t mat4_identity(void);
+mat4_t mat4_from_quat(quat_t q);
 vec4_t mat4_mul_vec4(mat4_t m, vec4_t v);
 mat4_t mat4_mul_mat4(mat4_t a, mat4_t b);
 mat4_t mat4_inverse(mat4_t m);

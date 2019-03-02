@@ -29,6 +29,20 @@ vec4_t unlit_fragment_shader(void *varyings_, void *uniforms_) {
 
 /* high-level api */
 
+static unlit_uniforms_t *get_uniforms(model_t *model) {
+    return (unlit_uniforms_t*)program_get_uniforms(model->program);
+}
+
+static void release_model(model_t *model) {
+    unlit_uniforms_t *uniforms = get_uniforms(model);
+    if (uniforms->texture) {
+        texture_release(uniforms->texture);
+    }
+    program_release(model->program);
+    mesh_release(model->mesh);
+    free(model);
+}
+
 model_t *unlit_create_model(const char *mesh, mat4_t transform,
                             unlit_material_t material) {
     int sizeof_attribs = sizeof(unlit_attribs_t);
@@ -51,23 +65,15 @@ model_t *unlit_create_model(const char *mesh, mat4_t transform,
     model->mesh      = mesh_load(mesh);
     model->transform = transform;
     model->program   = program;
-    model->is_opaque = !material.enable_blend;
+    model->release   = release_model;
+    model->opaque    = !material.enable_blend;
 
     return model;
 }
 
-void unlit_release_model(model_t *model) {
-    unlit_uniforms_t *uniforms = unlit_get_uniforms(model);
-    if (uniforms->texture) {
-        texture_release(uniforms->texture);
-    }
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
-
-unlit_uniforms_t *unlit_get_uniforms(model_t *model) {
-    return (unlit_uniforms_t*)program_get_uniforms(model->program);
+void unlit_update_uniforms(model_t *model, mat4_t mvp_matrix) {
+    unlit_uniforms_t *uniforms = get_uniforms(model);
+    uniforms->mvp_matrix = mvp_matrix;
 }
 
 void unlit_draw_model(model_t *model, framebuffer_t *framebuffer) {

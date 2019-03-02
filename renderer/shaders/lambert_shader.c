@@ -20,10 +20,6 @@ vec4_t lambert_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     return clip_pos;
 }
 
-static float max_float(float a, float b) {
-    return a > b ? a : b;
-}
-
 vec4_t lambert_fragment_shader(void *varyings_, void *uniforms_) {
     lambert_varyings_t *varyings = (lambert_varyings_t*)varyings_;
     lambert_uniforms_t *uniforms = (lambert_uniforms_t*)uniforms_;
@@ -37,7 +33,7 @@ vec4_t lambert_fragment_shader(void *varyings_, void *uniforms_) {
 
         vec3_t normal = vec3_normalize(varyings->normal);
         vec3_t light_dir = vec3_negate(uniforms->light_dir);
-        float strength = max_float(vec3_dot(normal, light_dir), 0);
+        float strength = float_max(vec3_dot(normal, light_dir), 0);
         vec3_t diffuse = vec3_mul(albedo, strength + uniforms->ambient);
 
         color = vec3_add(color, diffuse);
@@ -54,6 +50,23 @@ vec4_t lambert_fragment_shader(void *varyings_, void *uniforms_) {
 }
 
 /* high-level api */
+
+static lambert_uniforms_t *get_uniforms(model_t *model) {
+    return (lambert_uniforms_t*)program_get_uniforms(model->program);
+}
+
+static void release_model(model_t *model) {
+    lambert_uniforms_t *uniforms = get_uniforms(model);
+    if (uniforms->emission) {
+        texture_release(uniforms->emission);
+    }
+    if (uniforms->diffuse) {
+        texture_release(uniforms->diffuse);
+    }
+    program_release(model->program);
+    mesh_release(model->mesh);
+    free(model);
+}
 
 model_t *lambert_create_model(const char *mesh, mat4_t transform,
                               lambert_material_t material) {
@@ -80,26 +93,18 @@ model_t *lambert_create_model(const char *mesh, mat4_t transform,
     model->mesh      = mesh_load(mesh);
     model->transform = transform;
     model->program   = program;
-    model->is_opaque = !material.enable_blend;
+    model->release   = release_model;
+    model->opaque    = !material.enable_blend;
 
     return model;
 }
 
-void lambert_release_model(model_t *model) {
-    lambert_uniforms_t *uniforms = lambert_get_uniforms(model);
-    if (uniforms->emission) {
-        texture_release(uniforms->emission);
-    }
-    if (uniforms->diffuse) {
-        texture_release(uniforms->diffuse);
-    }
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
-
-lambert_uniforms_t *lambert_get_uniforms(model_t *model) {
-    return (lambert_uniforms_t*)program_get_uniforms(model->program);
+void lambert_update_uniforms(model_t *model, vec3_t light_dir,
+                             mat4_t mvp_matrix, mat3_t normal_matrix) {
+    lambert_uniforms_t *uniforms = get_uniforms(model);
+    uniforms->light_dir = light_dir;
+    uniforms->mvp_matrix = mvp_matrix;
+    uniforms->normal_matrix = normal_matrix;
 }
 
 void lambert_draw_model(model_t *model, framebuffer_t *framebuffer) {

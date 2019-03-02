@@ -2,6 +2,29 @@
 #include <math.h>
 #include <stdio.h>
 #include "geometry.h"
+#include "macro.h"
+
+/* float related functions */
+
+float float_min(float a, float b) {
+    return a < b ? a : b;
+}
+
+float float_max(float a, float b) {
+    return a > b ? a : b;
+}
+
+float float_clamp(float f, float min, float max) {
+    return f < min ? min : (f > max ? max : f);
+}
+
+float float_lerp(float a, float b, float t) {
+    return a + (b - a) * t;
+}
+
+void float_print(const char *name, float f) {
+    printf("float %s = %f\n", name, f);
+}
 
 /* vec2 related functions */
 
@@ -47,6 +70,20 @@ vec3_t vec3_from_vec4(vec4_t v) {
     return vec3_new(v.x, v.y, v.z);
 }
 
+vec3_t vec3_min(vec3_t a, vec3_t b) {
+    float x = float_min(a.x, b.x);
+    float y = float_min(a.y, b.y);
+    float z = float_min(a.z, b.z);
+    return vec3_new(x, y, z);
+}
+
+vec3_t vec3_max(vec3_t a, vec3_t b) {
+    float x = float_max(a.x, b.x);
+    float y = float_max(a.y, b.y);
+    float z = float_max(a.z, b.z);
+    return vec3_new(x, y, z);
+}
+
 vec3_t vec3_add(vec3_t a, vec3_t b) {
     return vec3_new(a.x + b.x, a.y + b.y, a.z + b.z);
 }
@@ -68,7 +105,7 @@ vec3_t vec3_negate(vec3_t v) {
 }
 
 float vec3_length(vec3_t v) {
-    return (float)sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    return (float)sqrt(vec3_dot(v, v));
 }
 
 vec3_t vec3_normalize(vec3_t v) {
@@ -87,16 +124,16 @@ vec3_t vec3_cross(vec3_t a, vec3_t b) {
 }
 
 vec3_t vec3_lerp(vec3_t a, vec3_t b, float t) {
-    float x = a.x + (b.x - a.x) * t;
-    float y = a.y + (b.y - a.y) * t;
-    float z = a.z + (b.z - a.z) * t;
+    float x = float_lerp(a.x, b.x, t);
+    float y = float_lerp(a.y, b.y, t);
+    float z = float_lerp(a.z, b.z, t);
     return vec3_new(x, y, z);
 }
 
 vec3_t vec3_saturate(vec3_t v) {
-    float x = v.x < 0 ? 0 : (v.x > 1 ? 1 : v.x);
-    float y = v.y < 0 ? 0 : (v.y > 1 ? 1 : v.y);
-    float z = v.z < 0 ? 0 : (v.z > 1 ? 1 : v.z);
+    float x = float_clamp(v.x, 0, 1);
+    float y = float_clamp(v.y, 0, 1);
+    float z = float_clamp(v.z, 0, 1);
     return vec3_new(x, y, z);
 }
 
@@ -141,18 +178,18 @@ vec4_t vec4_div(vec4_t v, float divisor) {
 }
 
 vec4_t vec4_lerp(vec4_t a, vec4_t b, float t) {
-    float x = a.x + (b.x - a.x) * t;
-    float y = a.y + (b.y - a.y) * t;
-    float z = a.z + (b.z - a.z) * t;
-    float w = a.w + (b.w - a.w) * t;
+    float x = float_lerp(a.x, b.x, t);
+    float y = float_lerp(a.y, b.y, t);
+    float z = float_lerp(a.z, b.z, t);
+    float w = float_lerp(a.w, b.w, t);
     return vec4_new(x, y, z, w);
 }
 
 vec4_t vec4_saturate(vec4_t v) {
-    float x = v.x < 0 ? 0 : (v.x > 1 ? 1 : v.x);
-    float y = v.y < 0 ? 0 : (v.y > 1 ? 1 : v.y);
-    float z = v.z < 0 ? 0 : (v.z > 1 ? 1 : v.z);
-    float w = v.w < 0 ? 0 : (v.w > 1 ? 1 : v.w);
+    float x = float_clamp(v.x, 0, 1);
+    float y = float_clamp(v.y, 0, 1);
+    float z = float_clamp(v.z, 0, 1);
+    float w = float_clamp(v.w, 0, 1);
     return vec4_new(x, y, z, w);
 }
 
@@ -163,6 +200,64 @@ vec4_t vec4_modulate(vec4_t a, vec4_t b) {
 void vec4_print(const char *name, vec4_t v) {
     printf("vec4 %s =\n", name);
     printf("    %12f    %12f    %12f    %12f\n", v.x, v.y, v.z, v.w);
+}
+
+/* quat related functions */
+
+quat_t quat_new(float x, float y, float z, float w) {
+    quat_t q;
+    q.x = x;
+    q.y = y;
+    q.z = z;
+    q.w = w;
+    return q;
+}
+
+float quat_dot(quat_t a, quat_t b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+}
+
+float quat_length(quat_t q) {
+    return (float)sqrt(quat_dot(q, q));
+}
+
+quat_t quat_normalize(quat_t q) {
+    float length = quat_length(q);
+    return quat_new(q.x / length, q.y / length, q.z / length, q.w / length);
+}
+
+/*
+ * for spherical linear interpolation, see
+ * 3D Math Primer for Graphics and Game Development, 2nd Edition, Chapter 8
+ */
+quat_t quat_slerp(quat_t a, quat_t b, float t) {
+    float cos_angle = quat_dot(a, b);
+    if (cos_angle < 0) {
+        b = quat_new(-b.x, -b.y, -b.z, -b.w);
+        cos_angle = -cos_angle;
+    }
+    if (cos_angle > 1 - EPSILON) {
+        float x = float_lerp(a.x, b.x, t);
+        float y = float_lerp(a.y, b.y, t);
+        float z = float_lerp(a.z, b.z, t);
+        float w = float_lerp(a.w, b.w, t);
+        return quat_new(x, y, z, w);
+    } else {
+        float angle = (float)acos(cos_angle);
+        float sin_angle = (float)sin(angle);
+        float factor_a = (float)sin((1 - t) * angle) / sin_angle;
+        float factor_b = (float)sin(t * angle) / sin_angle;
+        float x = factor_a * a.x + factor_b * b.x;
+        float y = factor_a * a.y + factor_b * b.y;
+        float z = factor_a * a.z + factor_b * b.z;
+        float w = factor_a * a.w + factor_b * b.w;
+        return quat_new(x, y, z, w);
+    }
+}
+
+void quat_print(const char *name, quat_t q) {
+    printf("quat %s =\n", name);
+    printf("    %12f    %12f    %12f    %12f\n", q.x, q.y, q.z, q.w);
 }
 
 /* mat3 related functions */
@@ -302,6 +397,33 @@ mat4_t mat4_identity(void) {
         {0, 0, 1, 0},
         {0, 0, 0, 1},
     }};
+    return m;
+}
+
+mat4_t mat4_from_quat(quat_t q) {
+    mat4_t m = mat4_identity();
+    float xx = q.x * q.x;
+    float xy = q.x * q.y;
+    float xz = q.x * q.z;
+    float xw = q.x * q.w;
+    float yy = q.y * q.y;
+    float yz = q.y * q.z;
+    float yw = q.y * q.w;
+    float zz = q.z * q.z;
+    float zw = q.z * q.w;
+
+    m.m[0][0] = 1 - 2 * (yy + zz);
+    m.m[0][1] = 2 * (xy - zw);
+    m.m[0][2] = 2 * (xz + yw);
+
+    m.m[1][0] = 2 * (xy + zw);
+    m.m[1][1] = 1 - 2 * (xx + zz);
+    m.m[1][2] = 2 * (yz - xw);
+
+    m.m[2][0] = 2 * (xz - yw);
+    m.m[2][1] = 2 * (yz + xw);
+    m.m[2][2] = 1 - 2 * (xx + yy);
+
     return m;
 }
 

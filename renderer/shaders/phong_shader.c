@@ -23,10 +23,6 @@ vec4_t phong_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     return clip_pos;
 }
 
-static float max_float(float a, float b) {
-    return a > b ? a : b;
-}
-
 static vec3_t reflect_light(vec3_t light, vec3_t normal) {
     return vec3_sub(vec3_mul(normal, 2 * vec3_dot(light, normal)), light);
 }
@@ -46,7 +42,7 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
         vec4_t sample = texture_sample(uniforms->diffuse, texcoord);
         vec3_t albedo = vec3_from_vec4(sample);
 
-        float strength = max_float(vec3_dot(normal, light_dir), 0);
+        float strength = float_max(vec3_dot(normal, light_dir), 0);
         vec3_t diffuse = vec3_mul(albedo, strength + uniforms->ambient);
 
         color = vec3_add(color, diffuse);
@@ -79,6 +75,26 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
 
 /* high-level api */
 
+static phong_uniforms_t *get_uniforms(model_t *model) {
+    return (phong_uniforms_t*)program_get_uniforms(model->program);
+}
+
+static void release_model(model_t *model) {
+    phong_uniforms_t *uniforms = get_uniforms(model);
+    if (uniforms->emission) {
+        texture_release(uniforms->emission);
+    }
+    if (uniforms->diffuse) {
+        texture_release(uniforms->diffuse);
+    }
+    if (uniforms->specular) {
+        texture_release(uniforms->specular);
+    }
+    program_release(model->program);
+    mesh_release(model->mesh);
+    free(model);
+}
+
 model_t *phong_create_model(const char *mesh, mat4_t transform,
                             phong_material_t material) {
     int sizeof_attribs = sizeof(phong_attribs_t);
@@ -108,29 +124,21 @@ model_t *phong_create_model(const char *mesh, mat4_t transform,
     model->mesh      = mesh_load(mesh);
     model->transform = transform;
     model->program   = program;
-    model->is_opaque = !material.enable_blend;
+    model->release   = release_model;
+    model->opaque    = !material.enable_blend;
 
     return model;
 }
 
-void phong_release_model(model_t *model) {
-    phong_uniforms_t *uniforms = phong_get_uniforms(model);
-    if (uniforms->emission) {
-        texture_release(uniforms->emission);
-    }
-    if (uniforms->diffuse) {
-        texture_release(uniforms->diffuse);
-    }
-    if (uniforms->specular) {
-        texture_release(uniforms->specular);
-    }
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
-
-phong_uniforms_t *phong_get_uniforms(model_t *model) {
-    return (phong_uniforms_t*)program_get_uniforms(model->program);
+void phong_update_uniforms(
+        model_t *model, vec3_t light_dir, vec3_t camera_pos,
+        mat4_t model_matrix, mat3_t normal_matrix, mat4_t viewproj_matrix) {
+    phong_uniforms_t *uniforms = get_uniforms(model);
+    uniforms->light_dir = light_dir;
+    uniforms->camera_pos = camera_pos;
+    uniforms->model_matrix = model_matrix;
+    uniforms->normal_matrix = normal_matrix;
+    uniforms->viewproj_matrix = viewproj_matrix;
 }
 
 void phong_draw_model(model_t *model, framebuffer_t *framebuffer) {

@@ -17,7 +17,7 @@ SRC_FILENAME = "glTF-WebGL-PBR-master.zip"
 DST_DIRECTORY = "../assets/common/papermill"
 
 
-def gamma_correct(image):
+def linear_to_srgb(image):
     lookup_table = [pow(x / 255.0, 1 / 2.2) * 255 for x in range(256)] * 3
     return image.point(lookup_table)
 
@@ -27,7 +27,7 @@ def save_image(zip_file, old_filepath):
     new_filepath = os.path.join(DST_DIRECTORY, new_filename)
     with zip_file.open(old_filepath) as f:
         image = Image.open(f)
-        image = gamma_correct(image)
+        image = linear_to_srgb(image)
         image.save(new_filepath, rle=True)
 
 

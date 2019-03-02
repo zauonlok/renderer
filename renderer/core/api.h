@@ -9,6 +9,7 @@
 #include "macro.h"
 #include "mesh.h"
 #include "platform.h"
+#include "scene.h"
 #include "texture.h"
 
 #endif

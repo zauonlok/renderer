@@ -312,7 +312,7 @@ static vec3_t viewport_transform(int width_, int height_, vec3_t ndc_coord) {
     return vec3_new(x, y, z);
 }
 
-static float min_float(float a, float b, float c, float lower_bound) {
+static float bounded_min_float(float a, float b, float c, float lower_bound) {
     float min = a;
     min = b < min ? b : min;
     min = c < min ? c : min;
@@ -320,7 +320,7 @@ static float min_float(float a, float b, float c, float lower_bound) {
     return min;
 }
 
-static float max_float(float a, float b, float c, float upper_bound) {
+static float bounded_max_float(float a, float b, float c, float upper_bound) {
     float max = a;
     max = b > max ? b : max;
     max = c > max ? c : max;
@@ -335,10 +335,10 @@ static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
     vec2_t b = abc[1];
     vec2_t c = abc[2];
     bbox_t bbox;
-    bbox.min.x = min_float(a.x, b.x, c.x, 0);
-    bbox.min.y = min_float(a.y, b.y, c.y, 0);
-    bbox.max.x = max_float(a.x, b.x, c.x, (float)(width - 1));
-    bbox.max.y = max_float(a.y, b.y, c.y, (float)(height - 1));
+    bbox.min.x = bounded_min_float(a.x, b.x, c.x, 0);
+    bbox.min.y = bounded_min_float(a.y, b.y, c.y, 0);
+    bbox.max.x = bounded_max_float(a.x, b.x, c.x, (float)(width - 1));
+    bbox.max.y = bounded_max_float(a.y, b.y, c.y, (float)(height - 1));
     return bbox;
 }
 

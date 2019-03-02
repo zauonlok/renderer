@@ -110,6 +110,36 @@ vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
 
 /* high-level api */
 
+static metalness_uniforms_t *get_uniforms(model_t *model) {
+    return (metalness_uniforms_t*)program_get_uniforms(model->program);
+}
+
+static void release_model(model_t *model) {
+    metalness_uniforms_t *uniforms = get_uniforms(model);
+    if (uniforms->basecolor_texture) {
+        texture_release(uniforms->basecolor_texture);
+    }
+    if (uniforms->metallic_texture) {
+        texture_release(uniforms->metallic_texture);
+    }
+    if (uniforms->roughness_texture) {
+        texture_release(uniforms->roughness_texture);
+    }
+    if (uniforms->normal_texture) {
+        texture_release(uniforms->normal_texture);
+    }
+    if (uniforms->occlusion_texture) {
+        texture_release(uniforms->occlusion_texture);
+    }
+    if (uniforms->emissive_texture) {
+        texture_release(uniforms->emissive_texture);
+    }
+    pbr_release_ibldata(uniforms->shared_ibldata);
+    program_release(model->program);
+    mesh_release(model->mesh);
+    free(model);
+}
+
 model_t *metalness_create_model(
         const char *mesh, mat4_t transform,
         metalness_material_t material, const char *env_name) {
@@ -162,39 +192,21 @@ model_t *metalness_create_model(
     model->mesh      = mesh_load(mesh);
     model->transform = transform;
     model->program   = program;
-    model->is_opaque = !material.enable_blend;
+    model->release   = release_model;
+    model->opaque    = !material.enable_blend;
 
     return model;
 }
 
-void metalness_release_model(model_t *model) {
-    metalness_uniforms_t *uniforms = metalness_get_uniforms(model);
-    if (uniforms->basecolor_texture) {
-        texture_release(uniforms->basecolor_texture);
-    }
-    if (uniforms->metallic_texture) {
-        texture_release(uniforms->metallic_texture);
-    }
-    if (uniforms->roughness_texture) {
-        texture_release(uniforms->roughness_texture);
-    }
-    if (uniforms->normal_texture) {
-        texture_release(uniforms->normal_texture);
-    }
-    if (uniforms->occlusion_texture) {
-        texture_release(uniforms->occlusion_texture);
-    }
-    if (uniforms->emissive_texture) {
-        texture_release(uniforms->emissive_texture);
-    }
-    pbr_release_ibldata(uniforms->shared_ibldata);
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
-
-metalness_uniforms_t *metalness_get_uniforms(model_t *model) {
-    return (metalness_uniforms_t*)program_get_uniforms(model->program);
+void metalness_update_uniforms(
+        model_t *model, vec3_t light_dir, vec3_t camera_pos,
+        mat4_t model_matrix, mat3_t normal_matrix, mat4_t viewproj_matrix) {
+    metalness_uniforms_t *uniforms = get_uniforms(model);
+    uniforms->light_dir = light_dir;
+    uniforms->camera_pos = camera_pos;
+    uniforms->model_matrix = model_matrix;
+    uniforms->normal_matrix = normal_matrix;
+    uniforms->viewproj_matrix = viewproj_matrix;
 }
 
 void metalness_draw_model(model_t *model, framebuffer_t *framebuffer) {

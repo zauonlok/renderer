@@ -13,7 +13,7 @@ import json
 import os
 import zipfile
 from PIL import Image
-import utils
+from utils.gltf import dump_obj_data
 
 SRC_FILENAME = "helmetconcept.zip"
 DST_DIRECTORY = "../assets/helmet2"
@@ -23,32 +23,16 @@ OBJ_FILENAMES = {
     "glass.obj",
 }
 
-HELMET_BASECOLOR_PATH = "textures/LP_zlozone_lambert23SG1_baseColor.jpeg"
-HELMET_NORMAL_PATH = "textures/LP_zlozone_lambert23SG1_normal.png"
-HELMET_EMISSIVE_PATH = "textures/LP_zlozone_lambert23SG1_emissive.jpeg"
-HELMET_PACKED_PATH = "textures/LP_zlozone_lambert23SG1_metallicRoughness.png"
-GLASS_PACKED_PATH = "textures/LP_zlozone_lambert25SG1_metallicRoughness.png"
-
 
 def process_mesh(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
 
-    meshes = []
-    for mesh in gltf["meshes"]:
-        mesh = utils.load_gltf_mesh(gltf, buffer, mesh)
-        meshes.append(mesh)
-
-    for filename, mesh in zip(OBJ_FILENAMES, meshes):
-        obj_data, tan_data = utils.dump_mesh_data(mesh)
-
-        obj_filepath = os.path.join(DST_DIRECTORY, filename)
-        with open(obj_filepath, "w") as f:
-                f.write(obj_data)
-
-        tan_filepath = obj_filepath[:-4] + ".tan"
-        with open(tan_filepath, "w") as f:
-                f.write(tan_data)
+    for mesh_index, filename in enumerate(OBJ_FILENAMES):
+        obj_data = dump_obj_data(gltf, buffer, mesh_index, with_tangent=True)
+        filepath = os.path.join(DST_DIRECTORY, filename)
+        with open(filepath, "w") as f:
+            f.write(obj_data)
 
 
 def load_image(zip_file, filename):
@@ -65,16 +49,24 @@ def save_image(image, filename, size=(512, 512)):
 
 
 def process_helmet_images(zip_file):
-    basecolor_image = load_image(zip_file, HELMET_BASECOLOR_PATH)
+    basecolor_image = load_image(
+        zip_file, "textures/LP_zlozone_lambert23SG1_baseColor.jpeg"
+    )
     save_image(basecolor_image, "helmet_basecolor.tga")
 
-    normal_image = load_image(zip_file, HELMET_NORMAL_PATH)
+    normal_image = load_image(
+        zip_file, "textures/LP_zlozone_lambert23SG1_normal.png"
+    )
     save_image(normal_image, "helmet_normal.tga", size=(1024, 1024))
 
-    emissive_image = load_image(zip_file, HELMET_EMISSIVE_PATH)
+    emissive_image = load_image(
+        zip_file, "textures/LP_zlozone_lambert23SG1_emissive.jpeg"
+    )
     save_image(emissive_image, "helmet_emissive.tga")
 
-    packed_image = load_image(zip_file, HELMET_PACKED_PATH)
+    packed_image = load_image(
+        zip_file, "textures/LP_zlozone_lambert23SG1_metallicRoughness.png"
+    )
     occlusion_image, roughness_image, metallic_image = packed_image.split()
     save_image(metallic_image, "helmet_metallic.tga")
     save_image(roughness_image, "helmet_roughness.tga")
@@ -82,7 +74,9 @@ def process_helmet_images(zip_file):
 
 
 def process_glass_images(zip_file):
-    packed_image = load_image(zip_file, GLASS_PACKED_PATH)
+    packed_image = load_image(
+        zip_file, "textures/LP_zlozone_lambert25SG1_metallicRoughness.png"
+    )
     assert packed_image.mode == "P"
     _, roughness_image, _, _ = packed_image.convert("RGBA").split()
     save_image(roughness_image, "glass_roughness.tga")

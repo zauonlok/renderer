@@ -1,15 +1,14 @@
 import functools
 import math
-import re
 import struct
 
 
 #
-# gltf mesh loading
+# accessor parsing
 #
 
 
-class ElementType(object):
+class ElementType:
 
     SCALAR = "SCALAR"
     VEC2 = "VEC2"
@@ -31,7 +30,7 @@ NUM_COMPONENTS = {
 }
 
 
-class ComponentType(object):
+class ComponentType:
 
     BYTE = 5120
     UNSIGNED_BYTE = 5121
@@ -79,7 +78,7 @@ def _parse_element_data(element_type, component_type, element_buffer):
         return element_data
 
 
-def _parse_accessor_data(gltf, buffer, accessor_index):
+def parse_accessor_data(gltf, buffer, accessor_index):
     accessor = gltf["accessors"][accessor_index]
     view_index = accessor["bufferView"]
     view = gltf["bufferViews"][view_index]
@@ -117,59 +116,84 @@ def _parse_accessor_data(gltf, buffer, accessor_index):
     return accessor_data
 
 
-def load_gltf_mesh(gltf, buffer, mesh):
-    assert len(mesh["primitives"]) == 1
+#
+# mesh loading
+#
+
+
+def _load_mesh_data(gltf, buffer, mesh_index, with_tangent, with_skin):
+    mesh = gltf["meshes"][mesh_index]
     primitive = mesh["primitives"][0]
     attributes = primitive["attributes"]
-    accessor_parser = functools.partial(_parse_accessor_data, gltf, buffer)
+    accessor_parser = functools.partial(parse_accessor_data, gltf, buffer)
 
-    indices = accessor_parser(primitive["indices"])
     positions = accessor_parser(attributes["POSITION"])
-
-    if "NORMAL" in attributes:
-        normals = accessor_parser(attributes["NORMAL"])
-    else:
-        normals = None
-
-    if "TANGENT" in attributes:
-        tangents = accessor_parser(attributes["TANGENT"])
-    else:
-        tangents = None
+    indices = accessor_parser(primitive["indices"])
+    assert len(indices) % 3 == 0
 
     if "TEXCOORD_0" in attributes:
         texcoords = accessor_parser(attributes["TEXCOORD_0"])
+        assert len(texcoords) == len(positions)
     else:
-        texcoords = None
+        texcoords = [[0, 0]] * len(positions)
+
+    if "NORMAL" in attributes:
+        normals = accessor_parser(attributes["NORMAL"])
+        assert len(normals) == len(positions)
+    else:
+        normals = [[0, 0, 1]] * len(positions)
+
+    if with_tangent:
+        tangents = accessor_parser(attributes["TANGENT"])
+        assert len(tangents) == len(positions)
+    else:
+        tangents = []
+
+    if with_skin:
+        joints = accessor_parser(attributes["JOINTS_0"])
+        weights = accessor_parser(attributes["WEIGHTS_0"])
+        assert len(joints) == len(positions)
+        assert len(weights) == len(positions)
+    else:
+        joints = []
+        weights = []
 
     mesh_data = {
         "indices": indices,
         "positions": positions,
+        "texcoords": texcoords,
         "normals": normals,
         "tangents": tangents,
-        "texcoords": texcoords,
+        "joints": joints,
+        "weights": weights,
     }
-
     return mesh_data
 
 
-def _dump_obj_data(positions, texcoords, normals, indices):
+def dump_obj_data(gltf, buffer, mesh_index,
+                  with_tangent=False, with_skin=False):
+    mesh_data = _load_mesh_data(
+        gltf, buffer, mesh_index, with_tangent, with_skin
+    )
+
     lines = []
 
-    for position in positions:
+    for position in mesh_data["positions"]:
         p_x, p_y, p_z = position
         line = "v {:.6f} {:.6f} {:.6f}".format(p_x, p_y, p_z)
         lines.append(line)
 
-    for texcoord in texcoords:
+    for texcoord in mesh_data["texcoords"]:
         t_u, t_v = texcoord
         line = "vt {:.6f} {:.6f}".format(t_u, t_v)
         lines.append(line)
 
-    for normal in normals:
+    for normal in mesh_data["normals"]:
         n_x, n_y, n_z = normal
         line = "vn {:.6f} {:.6f} {:.6f}".format(n_x, n_y, n_z)
         lines.append(line)
 
+    indices = mesh_data["indices"]
     for i in range(0, len(indices), 3):
         i_x, i_y, i_z = indices[i:(i + 3)]
         line = "f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}".format(
@@ -177,58 +201,175 @@ def _dump_obj_data(positions, texcoords, normals, indices):
         )
         lines.append(line)
 
+    for tangent in mesh_data["tangents"]:
+        t_x, t_y, t_z, t_w = tangent
+        line = "# ext.tangent {:.6f} {:.6f} {:.6f} {}".format(
+            t_x, t_y, t_z, t_w
+        )
+        lines.append(line)
+
+    for joint in mesh_data["joints"]:
+        j_a, j_b, j_c, j_d = joint
+        line = "# ext.joint {} {} {} {}".format(j_a, j_b, j_c, j_d)
+        lines.append(line)
+
+    for weight in mesh_data["weights"]:
+        w_a, w_b, w_c, w_d = weight
+        line = "# ext.weight {:.6f} {:.6f} {:.6f} {:.6f}".format(
+            w_a, w_b, w_c, w_d
+        )
+        lines.append(line)
+
     obj_data = "\n".join(lines) + "\n"
     return obj_data
 
 
-def _dump_tan_data(tangents, indices):
+#
+# animation loading
+#
+
+
+def _build_keyframe_data(input_data, output_data):
+    keyframes = []
+    seen_inputs = set()
+    for input_value, output_value in zip(input_data, output_data):
+        input_string = format(input_value, ".6f")
+        if input_string not in seen_inputs:
+            seen_inputs.add(input_string)
+            keyframes.append([input_value, output_value])
+    return sorted(keyframes)
+
+
+def _load_joint_data(gltf, buffer, animation_index, skin_index):
+    accessor_parser = functools.partial(parse_accessor_data, gltf, buffer)
+    animation_data = gltf["animations"][animation_index]
+    skin_data = gltf["skins"][skin_index]
+
+    root_index = skin_data["skeleton"]
+    inverse_bind_matrices = accessor_parser(skin_data["inverseBindMatrices"])
+    assert len(inverse_bind_matrices) == len(skin_data["joints"])
+
+    child_to_parent = {}
+    for node_index, node_data in enumerate(gltf["nodes"]):
+        for child_index in node_data.get("children", []):
+            assert child_index not in child_to_parent
+            child_to_parent[child_index] = node_index
+
+    joints = []
+    for joint_index, node_index in enumerate(skin_data["joints"]):
+        inverse_bind = inverse_bind_matrices[joint_index]
+
+        if node_index == root_index:
+            parent_index = -1
+        else:
+            parent_node = child_to_parent[node_index]
+            parent_index = skin_data["joints"].index(parent_node)
+            assert 0 <= parent_index < joint_index
+
+        translations = []
+        rotations = []
+        scales = []
+        for channel in animation_data["channels"]:
+            channel_target = channel["target"]
+            if channel_target["node"] == node_index:
+                sampler_index = channel["sampler"]
+                channel_sampler = animation_data["samplers"][sampler_index]
+                input_data = accessor_parser(channel_sampler["input"])
+                output_data = accessor_parser(channel_sampler["output"])
+                assert len(input_data) == len(output_data)
+                keyframes = _build_keyframe_data(input_data, output_data)
+                if channel_target["path"] == "translation":
+                    translations = keyframes
+                elif channel_target["path"] == "rotation":
+                    rotations = keyframes
+                elif channel_target["path"] == "scale":
+                    scales = keyframes
+                else:
+                    raise Exception("unknown target path")
+
+        joint = {
+            "joint_index": joint_index,
+            "parent_index": parent_index,
+            "inverse_bind": inverse_bind,
+            "translations": translations,
+            "rotations": rotations,
+            "scales": scales,
+        }
+        joints.append(joint)
+
+    return joints
+
+
+def dump_ani_data(gltf, buffer, animation_index=0, skin_index=0):
+    joint_data = _load_joint_data(gltf, buffer, animation_index, skin_index)
+
+    min_time = float("+inf")
+    max_time = float("-inf")
+    for joint in joint_data:
+        keyframes = joint["translations"] + joint["rotations"] + joint["scales"]
+        for time, _ in keyframes:
+            min_time = min(min_time, time)
+            max_time = max(max_time, time)
+
     lines = []
 
-    for i in indices:
-        t_x, t_y, t_z, t_w = tangents[i]
-        line = "tan {:.6f} {:.6f} {:.6f} {:.6f}".format(t_x, t_y, t_z, t_w)
+    line = "joint-size: {}".format(len(joint_data))
+    lines.append(line)
+
+    line = "time-range: [{:.6f}, {:.6f}]".format(min_time, max_time)
+    lines.append(line)
+
+    for joint in joint_data:
+        line = "\n" + "joint {}:".format(joint["joint_index"])
         lines.append(line)
 
-    tan_data = "\n".join(lines) + "\n"
-    return tan_data
+        line = "    parent-index: {}".format(joint["parent_index"])
+        lines.append(line)
 
+        line = "    inverse-bind:"
+        lines.append(line)
+        inverse_bind = joint["inverse_bind"]
+        for i in range(4):
+            line = "        {:.6f} {:.6f} {:.6f} {:.6f}".format(
+                inverse_bind[0 + i], inverse_bind[4 + i],
+                inverse_bind[8 + i], inverse_bind[12 + i]
+            )
+            lines.append(line)
 
-def dump_mesh_data(mesh_data):
-    positions = mesh_data["positions"]
-    texcoords = mesh_data["texcoords"]
-    normals = mesh_data["normals"]
-    tangents = mesh_data["tangents"]
-    indices = mesh_data["indices"]
+        line = "    translations {}:".format(len(joint["translations"]))
+        lines.append(line)
+        for time, translation in joint["translations"]:
+            time = format(time, ".6f")
+            value = "[{:.6f}, {:.6f}, {:.6f}]".format(*translation)
+            line = "        time: {}, value: {}".format(time, value)
+            lines.append(line)
 
-    assert len(indices) % 3 == 0
+        line = "    rotations {}:".format(len(joint["rotations"]))
+        lines.append(line)
+        for time, rotation in joint["rotations"]:
+            time = format(time, ".6f")
+            value = "[{:.6f}, {:.6f}, {:.6f}, {:.6f}]".format(*rotation)
+            line = "        time: {}, value: {}".format(time, value)
+            lines.append(line)
 
-    if texcoords is None:
-        texcoords = [[0, 0]] * len(positions)
-    else:
-        assert len(texcoords) == len(positions)
+        line = "    scales {}:".format(len(joint["scales"]))
+        lines.append(line)
+        for time, scale in joint["scales"]:
+            time = format(time, ".6f")
+            value = "[{:.6f}, {:.6f}, {:.6f}]".format(*scale)
+            line = "        time: {}, value: {}".format(time, value)
+            lines.append(line)
 
-    if normals is None:
-        normals = [[0, 0, 1]] * len(positions)
-    else:
-        assert len(normals) == len(positions)
-
-    if tangents is None:
-        tangents = [[1, 0, 0, 1]] * len(positions)
-    else:
-        assert len(tangents) == len(positions)
-
-    obj_data = _dump_obj_data(positions, texcoords, normals, indices)
-    tan_data = _dump_tan_data(tangents, indices)
-
-    return obj_data, tan_data
+    ani_data = "\n".join(lines) + "\n"
+    return ani_data
 
 
 #
-# gltf node loading
+# node loading
 #
 
 
-class Node(object):
+class Node:
 
     def __init__(self):
         self.mesh = None
@@ -238,7 +379,7 @@ class Node(object):
         self.world_transform = None
 
 
-class Transform(object):
+class Transform:
 
     def __init__(self, data):
         assert len(data) == 4 and all(len(row) == 4 for row in data)
@@ -258,8 +399,8 @@ class Transform(object):
     @staticmethod
     def from_rotation(rotation):
         x, y, z, w = rotation
-        sqrt_norm = math.sqrt(x*x + y*y + z*z + w*w)
-        x, y, z, w = x/sqrt_norm, y/sqrt_norm, z/sqrt_norm, w/sqrt_norm
+        normalizer = math.sqrt(x*x + y*y + z*z + w*w)
+        x, y, z, w = x/normalizer, y/normalizer, z/normalizer, w/normalizer
         data = [
             [1 - 2*y*y - 2*z*z, 2*x*y - 2*w*z,     2*x*z + 2*y*w,     0],
             [2*x*y + 2*w*z,     1 - 2*x*x - 2*z*z, 2*y*z - 2*w*x,     0],
@@ -302,8 +443,11 @@ class Transform(object):
                     data[i][j] += self.data[i][k] * other.data[k][j]
         return Transform(data)
 
+    def __eq__(self, other):
+        return isinstance(other, Transform) and self.data == other.data
 
-def load_gltf_nodes(gltf):
+
+def load_node_data(gltf):
     num_nodes = len(gltf["nodes"])
     nodes = [Node() for _ in range(num_nodes)]
 
@@ -344,194 +488,3 @@ def load_gltf_nodes(gltf):
         node.world_transform = transform
 
     return nodes
-
-
-def load_gltf_transforms(gltf):
-    nodes = load_gltf_nodes(gltf)
-    nodes = [node for node in nodes if node.mesh is not None]
-
-    transforms = []
-    for node in nodes:
-        found = False
-        for transform in transforms:
-            if transform.data == node.world_transform.data:
-                found = True
-                break
-        if not found:
-            transforms.append(node.world_transform)
-
-    return transforms
-
-
-#
-# hdr image loading
-#
-
-
-def _floats_to_rgbe(floats):
-    rv = floats[0]  # red value
-    gv = floats[1]  # green value
-    bv = floats[2]  # blue value
-    assert all([isinstance(x, float) for x in (rv, gv, bv)])
-
-    max_v = max(rv, gv, bv)
-    if max_v < 1e-32:
-        rm = 0  # red mantissa
-        gm = 0  # green mantissa
-        bm = 0  # blue mantissa
-        ex = 0  # exponent biased
-    else:
-        max_m, ev = math.frexp(max_v)
-        factor =  (1.0 / max_v) * max_m * 256.0
-        rm = int(rv * factor)  # red mantissa
-        gm = int(gv * factor)  # green mantissa
-        bm = int(bv * factor)  # blue mantissa
-        ex = int(ev + 128.0)   # exponent biased
-
-    return rm, gm, bm, ex
-
-
-def _rgbe_to_floats(rgbe):
-    rm = rgbe[0]  # red mantissa
-    gm = rgbe[1]  # green mantissa
-    bm = rgbe[2]  # blue mantissa
-    ex = rgbe[3]  # exponent biased
-    assert all([isinstance(x, int) for x in (rm, gm, bm, ex)])
-
-    if ex == 0:
-        rv = 0.0  # red value
-        gv = 0.0  # green value
-        bv = 0.0  # blue value
-    else:
-        ev = ex - 128.0
-        factor = (1.0 / 256.0) * pow(2.0, ev)
-        rv = rm * factor  # red value
-        gv = gm * factor  # green value
-        bv = bm * factor  # blue value
-
-    return rv, gv, bv
-
-
-def _load_next_line(buffer, begin):
-    current = begin
-
-    while current < len(buffer):
-        if buffer[current] == b"\n"[0]:
-            line = buffer[begin:current]
-            return line, current + 1
-        else:
-            current += 1
-
-    raise Exception("line not found")
-
-
-def _load_hdr_header(buffer, begin):
-    current = begin
-
-    signature_line, current = _load_next_line(buffer, current)
-    assert signature_line.startswith(b"#?")
-
-    header_found = False
-    format_found = False
-    while True:
-        header_line, current = _load_next_line(buffer, current)
-        if header_line == b"":
-            header_found = True
-            break
-        elif header_line.startswith(b"FORMAT="):
-            assert header_line == b"FORMAT=32-bit_rle_rgbe"
-            format_found = True
-        elif header_line.startswith(b"GAMMA="):
-            pass
-        elif header_line.startswith(b"EXPOSURE="):
-            pass
-        elif header_line.startswith(b"#"):
-            pass
-        else:
-            raise Exception("unknown header line: {}".format(header_line))
-    assert header_found and format_found
-
-    resolution_line, current = _load_next_line(buffer, current)
-    match = re.match(b"-Y (\\d+) \\+X (\\d+)", resolution_line)
-    assert match is not None
-    height = int(match.group(1))
-    width = int(match.group(2))
-    assert width > 0 and height > 0
-
-    return width, height, current
-
-
-def _load_flat_scanline(buffer, begin, width):
-    current = begin
-
-    scanline = []
-    for _ in range(width):
-        rgbe = buffer[current:(current + 4)]
-        pixel = _rgbe_to_floats(rgbe)
-        scanline.append(pixel)
-        current += 4
-
-    return scanline, current
-
-
-def _load_rle_scanline(buffer, begin, width):
-    current = begin
-
-    channels = [[], [], [], []]
-    for i in range(4):
-        size = 0
-        while size < width:
-            if buffer[current] > 128:
-                count = buffer[current] - 128
-                assert count > 0 and size + count <= width
-                for _ in range(count):
-                    channels[i].append(buffer[current + 1])
-                current += 2
-                size += count
-            else:
-                count = buffer[current]
-                assert count > 0 and size + count <= width
-                current += 1
-                for _ in range(count):
-                    channels[i].append(buffer[current])
-                    current += 1
-                size += count
-        assert size == width
-
-    scanline = []
-    for i in range(width):
-        rm = channels[0][i]
-        gm = channels[1][i]
-        bm = channels[2][i]
-        ex = channels[3][i]
-        pixel = _rgbe_to_floats([rm, gm, bm, ex])
-        scanline.append(pixel)
-
-    return scanline, current
-
-
-def _load_hdr_scanline(buffer, begin, width):
-    if width < 8 or width > 0x7fff:
-        return _load_flat_scanline(buffer, begin, width)
-    else:
-        byte0, byte1, byte2, byte3 = buffer[begin:(begin + 4)]
-        if byte0 != 2 or byte1 != 2 or byte2 & 0x80:
-            return _load_flat_scanline(buffer, begin, width)
-        else:
-            assert byte2 * 256 + byte3 == width
-            return _load_rle_scanline(buffer, begin + 4, width)
-
-
-def load_hdr_image(buffer):
-    current = 0
-
-    width, height, current = _load_hdr_header(buffer, current)
-    buffer = bytearray(buffer)
-
-    image = []
-    for _ in range(height):
-        scanline, current = _load_hdr_scanline(buffer, current, width)
-        image.append(scanline)
-
-    assert current == len(buffer)
-    return image

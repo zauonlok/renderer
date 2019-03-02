@@ -61,8 +61,9 @@ vec4_t metalness_fragment_shader(void *varyings, void *uniforms);
 model_t *metalness_create_model(
     const char *mesh, mat4_t transform,
     metalness_material_t material, const char *env_name);
-void metalness_release_model(model_t *model);
-metalness_uniforms_t *metalness_get_uniforms(model_t *model);
+void metalness_update_uniforms(
+    model_t *model, vec3_t light_dir, vec3_t camera_pos,
+    mat4_t model_matrix, mat3_t normal_matrix, mat4_t viewproj_matrix);
 void metalness_draw_model(model_t *model, framebuffer_t *framebuffer);
 
 #endif
