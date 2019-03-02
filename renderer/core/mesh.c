@@ -323,7 +323,7 @@ static joint_t load_joint(FILE *file) {
 
     while (1) {
         line = expect_line(file);
-        if (strlen(line) == 0 || line[0] == '\r') {
+        if (strlen(line) == 0 || line[0] == '\r' || line[0] == '\n') {
             darray_free(line);
         } else {
             break;
