@@ -76,6 +76,7 @@ void mat3_print(const char *name, mat3_t m);
 /* mat4 related functions */
 mat4_t mat4_identity(void);
 mat4_t mat4_from_quat(quat_t q);
+mat4_t mat4_from_trs(vec3_t t, quat_t r, vec3_t s);
 vec4_t mat4_mul_vec4(mat4_t m, vec4_t v);
 mat4_t mat4_mul_mat4(mat4_t a, mat4_t b);
 mat4_t mat4_inverse(mat4_t m);

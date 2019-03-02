@@ -427,6 +427,13 @@ mat4_t mat4_from_quat(quat_t q) {
     return m;
 }
 
+mat4_t mat4_from_trs(vec3_t t, quat_t r, vec3_t s) {
+    mat4_t translation = mat4_translate(t.x, t.y, t.z);
+    mat4_t rotation = mat4_from_quat(r);
+    mat4_t scale = mat4_scale(s.x, s.y, s.z);
+    return mat4_mul_mat4(translation, mat4_mul_mat4(rotation, scale));
+}
+
 vec4_t mat4_mul_vec4(mat4_t m, vec4_t v) {
     float product[4];
     int i;
