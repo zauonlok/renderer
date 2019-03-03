@@ -150,8 +150,8 @@ static void read_scales(FILE *file, joint_t *joint) {
 }
 
 static joint_t load_joint(FILE *file) {
-    joint_t joint;
     char line[LINE_LENGTH];
+    joint_t joint;
     int items;
     int dummy;
 
@@ -174,9 +174,9 @@ static joint_t load_joint(FILE *file) {
 }
 
 static skeleton_t *load_ani(const char *filename) {
+    char line[LINE_LENGTH];
     skeleton_t *skeleton;
     FILE *file;
-    char line[LINE_LENGTH];
     int items;
     int i;
 
@@ -235,47 +235,77 @@ void skeleton_release(skeleton_t *skeleton) {
 
 /* joint updating/dumping */
 
+static vec3_t get_translation(joint_t *joint, float timer) {
+    int i;
+    for (i = 0; i < joint->num_translations; i++) {
+        float curr_timer = joint->translation_timers[i];
+        if (timer >= curr_timer) {
+            if (i == joint->num_translations - 1) {
+                return joint->translation_values[i];
+            } else {
+                float next_timer = joint->translation_timers[i + 1];
+                if (timer < next_timer) {
+                    float t = (timer - curr_timer) / (next_timer - curr_timer);
+                    vec3_t curr_translation = joint->translation_values[i];
+                    vec3_t next_translation = joint->translation_values[i + 1];
+                    return vec3_lerp(curr_translation, next_translation, t);
+                }
+            }
+        }
+    }
+    return vec3_new(0, 0, 0);
+}
+
+static quat_t get_rotationn(joint_t *joint, float timer) {
+    int i;
+    for (i = 0; i < joint->num_rotations; i++) {
+        float curr_timer = joint->rotation_timers[i];
+        if (timer >= curr_timer) {
+            if (i == joint->num_rotations - 1) {
+                return joint->rotation_values[i];
+            } else {
+                float next_timer = joint->rotation_timers[i + 1];
+                if (timer < next_timer) {
+                    float t = (timer - curr_timer) / (next_timer - curr_timer);
+                    quat_t curr_rotation = joint->rotation_values[i];
+                    quat_t next_rotation = joint->rotation_values[i + 1];
+                    return quat_slerp(curr_rotation, next_rotation, t);
+                }
+            }
+        }
+    }
+    return quat_new(0, 0, 0, 1);
+}
+
+static vec3_t get_scale(joint_t *joint, float timer) {
+    int i;
+    for (i = 0; i < joint->num_scales; i++) {
+        float curr_timer = joint->scale_timers[i];
+        if (timer >= curr_timer) {
+            if (i == joint->num_scales - 1) {
+                return joint->scale_values[i];
+            } else {
+                float next_timer = joint->scale_timers[i + 1];
+                if (timer < next_timer) {
+                    float t = (timer - curr_timer) / (next_timer - curr_timer);
+                    vec3_t curr_scale = joint->scale_values[i];
+                    vec3_t next_scale = joint->scale_values[i + 1];
+                    return vec3_lerp(curr_scale, next_scale, t);
+                }
+            }
+        }
+    }
+    return vec3_new(1, 1, 1);
+}
+
 void skeleton_update_joints(skeleton_t *skeleton, float timer) {
-    int i, j;
+    int i;
     timer = (float)fmod(timer, skeleton->max_time);
     for (i = 0; i < skeleton->num_joints; i++) {
         joint_t *joint = &skeleton->joints[i];
-        vec3_t translation = vec3_new(0, 0, 0);
-        quat_t rotation = quat_new(0, 0, 0, 1);
-        vec3_t scale = vec3_new(1, 1, 1);
-        for (j = 0; j < joint->num_translations - 1; j++) {
-            float curr_timer = joint->translation_timers[j];
-            float next_timer = joint->translation_timers[j + 1];
-            if (timer >= curr_timer && timer <= next_timer) {
-                float t = (timer - curr_timer) / (next_timer - curr_timer);
-                vec3_t curr_translation = joint->translation_values[j];
-                vec3_t next_translation = joint->translation_values[j + 1];
-                translation = vec3_lerp(curr_translation, next_translation, t);
-                break;
-            }
-        }
-        for (j = 0; j < joint->num_rotations - 1; j++) {
-            float curr_timer = joint->rotation_timers[j];
-            float next_timer = joint->rotation_timers[j + 1];
-            if (timer >= curr_timer && timer <= next_timer) {
-                float t = (timer - curr_timer) / (next_timer - curr_timer);
-                quat_t curr_rotation = joint->rotation_values[j];
-                quat_t next_rotation = joint->rotation_values[j + 1];
-                rotation = quat_slerp(curr_rotation, next_rotation, t);
-                break;
-            }
-        }
-        for (j = 0; j < joint->num_scales - 1; j++) {
-            float curr_timer = joint->scale_timers[j];
-            float next_timer = joint->scale_timers[j + 1];
-            if (timer >= curr_timer && timer <= next_timer) {
-                float t = (timer - curr_timer) / (next_timer - curr_timer);
-                vec3_t curr_scale = joint->scale_values[j];
-                vec3_t next_scale = joint->scale_values[j + 1];
-                scale = vec3_lerp(curr_scale, next_scale, t);
-                break;
-            }
-        }
+        vec3_t translation = get_translation(joint, timer);
+        quat_t rotation = get_rotationn(joint, timer);
+        vec3_t scale = get_scale(joint, timer);
         joint->transform = mat4_from_trs(translation, rotation, scale);
         if (joint->parent_index >= 0) {
             joint_t *parent_joint = &skeleton->joints[joint->parent_index];
