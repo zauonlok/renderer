@@ -25,10 +25,10 @@ static void get_model_bbox(model_t *model, vec3_t *bbmin, vec3_t *bbmax) {
     *bbmax = vec3_new(-1e6, -1e6, -1e6);
     for (i = 0; i < num_faces; i++) {
         for (j = 0; j < 3; j++) {
-            vec3_t local_pos = mesh_get_position(mesh, i, j);
-            vec3_t world_pos = transform_position(local_pos, transform);
-            *bbmin = vec3_min(*bbmin, world_pos);
-            *bbmax = vec3_max(*bbmax, world_pos);
+            vertex_t vertex = mesh_get_vertex(mesh, i, j);
+            vec3_t position = transform_position(vertex.position, transform);
+            *bbmin = vec3_min(*bbmin, position);
+            *bbmax = vec3_max(*bbmax, position);
         }
     }
     model->center = vec3_div(vec3_add(*bbmin, *bbmax), 2);
@@ -60,7 +60,7 @@ static int count_num_faces(scene_t *scene) {
     return num_faces;
 }
 
-scene_t *scene_create(creator_t creators[], const char *scene_name) {
+scene_t *scene_create(scene_creator_t creators[], const char *scene_name) {
     scene_t *scene = NULL;
     if (scene_name == NULL) {
         int num_creators = 0;
@@ -110,7 +110,7 @@ void scene_release(scene_t *scene) {
     free(scene);
 }
 
-/* model sorting */
+/* model sorting/drawing */
 
 static int compare_models(const void *model1p, const void *model2p) {
     model_t *model1 = *(model_t**)model1p;
@@ -138,4 +138,13 @@ void scene_sort_models(scene_t *scene, mat4_t view_matrix) {
         model->distance = -view_pos.z;
     }
     qsort(scene->models, num_models, sizeof(model_t*), compare_models);
+}
+
+void scene_draw_models(scene_t *scene, framebuffer_t *framebuffer) {
+    int num_models = darray_size(scene->models);
+    int i;
+    for (i = 0; i < num_models; i++) {
+        model_t *model = scene->models[i];
+        model->draw(model, framebuffer);
+    }
 }

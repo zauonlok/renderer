@@ -10,6 +10,7 @@
 #include "mesh.h"
 #include "platform.h"
 #include "scene.h"
+#include "skeleton.h"
 #include "texture.h"
 
 #endif

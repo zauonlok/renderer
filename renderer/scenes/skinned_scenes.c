@@ -39,7 +39,7 @@ scene_t *skinned_assassin_scene(void) {
     scene = (scene_t*)malloc(sizeof(scene_t));
     scene->background = background;
     scene->models     = models;
-    scene->userdata   = skin_load("assets/assassin/assassin.ani");
+    scene->userdata   = skeleton_load("assets/assassin/assassin.ani");
 
     return scene;
 }

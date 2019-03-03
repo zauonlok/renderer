@@ -39,7 +39,7 @@ vec4_t skinned_fragment_shader(void *varyings, void *uniforms);
 /* high-level api */
 model_t *skinned_create_model(const char *mesh, mat4_t transform,
                               skinned_material_t material);
-void skinned_update_uniforms(model_t *model, mat4_t mvp_matrix, skin_t *skin);
-void skinned_draw_model(model_t *model, framebuffer_t *framebuffer);
+void skinned_update_uniforms(model_t *model, mat4_t mvp_matrix,
+                             skeleton_t *skeleton);
 
 #endif

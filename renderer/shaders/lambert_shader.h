@@ -42,6 +42,5 @@ model_t *lambert_create_model(const char *mesh, mat4_t transform,
                               lambert_material_t material);
 void lambert_update_uniforms(model_t *model, vec3_t light_dir,
                              mat4_t mvp_matrix, mat3_t normal_matrix);
-void lambert_draw_model(model_t *model, framebuffer_t *framebuffer);
 
 #endif

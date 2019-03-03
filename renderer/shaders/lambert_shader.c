@@ -68,6 +68,25 @@ static void release_model(model_t *model) {
     free(model);
 }
 
+static void draw_model(model_t *model, framebuffer_t *framebuffer) {
+    program_t *program = model->program;
+    mesh_t *mesh = model->mesh;
+    int num_faces = mesh_get_num_faces(mesh);
+    lambert_attribs_t *attribs;
+    int i, j;
+
+    for (i = 0; i < num_faces; i++) {
+        for (j = 0; j < 3; j++) {
+            vertex_t vertex = mesh_get_vertex(mesh, i, j);
+            attribs = (lambert_attribs_t*)program_get_attribs(program, j);
+            attribs->position = vertex.position;
+            attribs->texcoord = vertex.texcoord;
+            attribs->normal = vertex.normal;
+        }
+        graphics_draw_triangle(framebuffer, program);
+    }
+}
+
 model_t *lambert_create_model(const char *mesh, mat4_t transform,
                               lambert_material_t material) {
     int sizeof_attribs = sizeof(lambert_attribs_t);
@@ -93,6 +112,7 @@ model_t *lambert_create_model(const char *mesh, mat4_t transform,
     model->mesh      = mesh_load(mesh);
     model->transform = transform;
     model->program   = program;
+    model->draw      = draw_model;
     model->release   = release_model;
     model->opaque    = !material.enable_blend;
 
@@ -105,22 +125,4 @@ void lambert_update_uniforms(model_t *model, vec3_t light_dir,
     uniforms->light_dir = light_dir;
     uniforms->mvp_matrix = mvp_matrix;
     uniforms->normal_matrix = normal_matrix;
-}
-
-void lambert_draw_model(model_t *model, framebuffer_t *framebuffer) {
-    program_t *program = model->program;
-    mesh_t *mesh = model->mesh;
-    int num_faces = mesh_get_num_faces(mesh);
-    lambert_attribs_t *attribs;
-    int i, j;
-
-    for (i = 0; i < num_faces; i++) {
-        for (j = 0; j < 3; j++) {
-            attribs = (lambert_attribs_t*)program_get_attribs(program, j);
-            attribs->position = mesh_get_position(mesh, i, j);
-            attribs->texcoord = mesh_get_texcoord(mesh, i, j);
-            attribs->normal = mesh_get_normal(mesh, i, j);
-        }
-        graphics_draw_triangle(framebuffer, program);
-    }
 }

@@ -64,6 +64,5 @@ model_t *metalness_create_model(
 void metalness_update_uniforms(
     model_t *model, vec3_t light_dir, vec3_t camera_pos,
     mat4_t model_matrix, mat3_t normal_matrix, mat4_t viewproj_matrix);
-void metalness_draw_model(model_t *model, framebuffer_t *framebuffer);
 
 #endif

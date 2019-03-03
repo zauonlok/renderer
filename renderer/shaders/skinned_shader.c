@@ -86,6 +86,26 @@ static void release_model(model_t *model) {
     free(model);
 }
 
+static void draw_model(model_t *model, framebuffer_t *framebuffer) {
+    program_t *program = model->program;
+    mesh_t *mesh = model->mesh;
+    int num_faces = mesh_get_num_faces(mesh);
+    skinned_attribs_t *attribs;
+    int i, j;
+
+    for (i = 0; i < num_faces; i++) {
+        for (j = 0; j < 3; j++) {
+            vertex_t vertex = mesh_get_vertex(mesh, i, j);
+            attribs = (skinned_attribs_t*)program_get_attribs(program, j);
+            attribs->position = vertex.position;
+            attribs->texcoord = vertex.texcoord;
+            attribs->joint = vertex.joint;
+            attribs->weight = vertex.weight;
+        }
+        graphics_draw_triangle(framebuffer, program);
+    }
+}
+
 model_t *skinned_create_model(const char *mesh, mat4_t transform,
                               skinned_material_t material) {
     int sizeof_attribs = sizeof(skinned_attribs_t);
@@ -108,33 +128,16 @@ model_t *skinned_create_model(const char *mesh, mat4_t transform,
     model->mesh      = mesh_load(mesh);
     model->transform = transform;
     model->program   = program;
+    model->draw      = draw_model;
     model->release   = release_model;
     model->opaque    = !material.enable_blend;
 
     return model;
 }
 
-void skinned_update_uniforms(model_t *model, mat4_t mvp_matrix, skin_t *skin) {
+void skinned_update_uniforms(model_t *model, mat4_t mvp_matrix,
+                             skeleton_t *skeleton) {
     skinned_uniforms_t *uniforms = get_uniforms(model);
     uniforms->mvp_matrix = mvp_matrix;
-    skin_dump_matrices(skin, uniforms->joint_matrices);
-}
-
-void skinned_draw_model(model_t *model, framebuffer_t *framebuffer) {
-    program_t *program = model->program;
-    mesh_t *mesh = model->mesh;
-    int num_faces = mesh_get_num_faces(mesh);
-    skinned_attribs_t *attribs;
-    int i, j;
-
-    for (i = 0; i < num_faces; i++) {
-        for (j = 0; j < 3; j++) {
-            attribs = (skinned_attribs_t*)program_get_attribs(program, j);
-            attribs->position = mesh_get_position(mesh, i, j);
-            attribs->texcoord = mesh_get_texcoord(mesh, i, j);
-            attribs->joint = mesh_get_joint(mesh, i, j);
-            attribs->weight = mesh_get_weight(mesh, i, j);
-        }
-        graphics_draw_triangle(framebuffer, program);
-    }
+    skeleton_dump_matrices(skeleton, uniforms->joint_matrices);
 }

@@ -145,8 +145,6 @@ static void save_tga(image_t *image, const char *filename) {
     fclose(file);
 }
 
-#undef TGA_HEADER_SIZE
-
 static const char *extract_extension(const char *filename) {
     const char *dot_pos = strrchr(filename, '.');
     return dot_pos == NULL ? "" : dot_pos + 1;

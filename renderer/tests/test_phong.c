@@ -5,7 +5,7 @@
 #include "test_helper.h"
 #include "test_phong.h"
 
-static creator_t g_creators[] = {
+static scene_creator_t g_scene_creators[] = {
     {"ornitier", phong_ornitier_scene},
     {NULL, NULL},
 };
@@ -31,14 +31,9 @@ static void update_scene(scene_t *scene, camera_t *camera, vec3_t light_dir) {
 }
 
 static void draw_scene(scene_t *scene, framebuffer_t *framebuffer) {
-    int num_models = darray_size(scene->models);
-    int i;
     framebuffer_clear_color(framebuffer, scene->background);
     framebuffer_clear_depth(framebuffer, 1);
-    for (i = 0; i < num_models; i++) {
-        model_t *model = scene->models[i];
-        phong_draw_model(model, framebuffer);
-    }
+    scene_draw_models(scene, framebuffer);
 }
 
 static void tick_function(context_t *context, void *userdata) {
@@ -49,7 +44,7 @@ static void tick_function(context_t *context, void *userdata) {
 
 void test_phong(int argc, char *argv[]) {
     const char *scene_name = argc > 2 ? argv[2] : NULL;
-    scene_t *scene = scene_create(g_creators, scene_name);
+    scene_t *scene = scene_create(g_scene_creators, scene_name);
     if (scene) {
         test_helper(tick_function, scene);
         scene_release(scene);
