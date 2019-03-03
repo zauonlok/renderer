@@ -21,7 +21,7 @@ struct model {
     mesh_t *mesh;
     mat4_t transform;
     program_t *program;
-    /* generic functions  */
+    /* generic functions */
     model_draw_t *draw;
     model_release_t *release;
     /* for model sorting */
