@@ -16,7 +16,7 @@ struct camera {
     float aspect;
 };
 
-/* camera creating/releasing/updating */
+/* camera creating/releasing */
 
 camera_t *camera_create(vec3_t position, vec3_t target, float aspect) {
     camera_t *camera;
@@ -34,6 +34,8 @@ camera_t *camera_create(vec3_t position, vec3_t target, float aspect) {
 void camera_release(camera_t *camera) {
     free(camera);
 }
+
+/* camera updating */
 
 void camera_set_transform(camera_t *camera, vec3_t position, vec3_t target) {
     assert(vec3_length(vec3_sub(position, target)) > EPSILON);

@@ -215,17 +215,16 @@ static int clip_to_plane(
             vec4_t *dest_coord = &out_coords[out_num_vertices];
             float *dest_varyings = (float*)out_varyings[out_num_vertices];
             float ratio = get_intersect_ratio(prev_coord, curr_coord, plane);
-            vec4_t offset = vec4_mul(vec4_sub(curr_coord, prev_coord), ratio);
 
-            *dest_coord = vec4_add(prev_coord, offset);
+            *dest_coord = vec4_lerp(prev_coord, curr_coord, ratio);
             /*
              * since this computation is performed in clip space before
              * division by w, clipped varying values are perspective-correct
              */
             for (j = 0; j < varying_num_floats; j++) {
-                float prev_val = prev_varyings[j];
-                float curr_val = curr_varyings[j];
-                dest_varyings[j] = prev_val + (curr_val - prev_val) * ratio;
+                float prev_value = prev_varyings[j];
+                float curr_value = curr_varyings[j];
+                dest_varyings[j] = float_lerp(prev_value, curr_value, ratio);
             }
             out_num_vertices += 1;
         }
@@ -313,19 +312,11 @@ static vec3_t viewport_transform(int width_, int height_, vec3_t ndc_coord) {
 }
 
 static float bounded_min_float(float a, float b, float c, float lower_bound) {
-    float min = a;
-    min = b < min ? b : min;
-    min = c < min ? c : min;
-    min = min < lower_bound ? lower_bound : min;
-    return min;
+    return float_max(float_min(float_min(a, b), c), lower_bound);
 }
 
 static float bounded_max_float(float a, float b, float c, float upper_bound) {
-    float max = a;
-    max = b > max ? b : max;
-    max = c > max ? c : max;
-    max = max > upper_bound ? upper_bound : max;
-    return max;
+    return float_min(float_max(float_max(a, b), c), upper_bound);
 }
 
 typedef struct {vec2_t min; vec2_t max;} bbox_t;

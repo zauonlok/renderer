@@ -7,6 +7,8 @@
 #include "mesh.h"
 #include "scene.h"
 
+/* scene creating/releasing */
+
 static vec3_t transform_position(vec3_t position, mat4_t transform) {
     vec4_t original = vec4_from_vec3(position, 1);
     vec4_t transformed = mat4_mul_vec4(transform, original);
@@ -107,6 +109,8 @@ void scene_release(scene_t *scene) {
     darray_free(scene->models);
     free(scene);
 }
+
+/* model sorting */
 
 static int compare_models(const void *model1p, const void *model2p) {
     model_t *model1 = *(model_t**)model1p;

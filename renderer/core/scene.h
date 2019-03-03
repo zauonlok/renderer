@@ -33,8 +33,11 @@ struct scene {
     void *userdata;
 };
 
+/* scene creating/releasing */
 scene_t *scene_create(creator_t creators[], const char *scene_name);
 void scene_release(scene_t *scene);
+
+/* model sorting */
 void scene_sort_models(scene_t *scene, mat4_t view_matrix);
 
 #endif

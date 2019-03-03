@@ -6,9 +6,11 @@
 typedef struct camera camera_t;
 typedef struct {vec2_t orbit; vec2_t pan; float dolly;} motion_t;
 
-/* camera creating/releasing/updating */
+/* camera creating/releasing */
 camera_t *camera_create(vec3_t position, vec3_t target, float aspect);
 void camera_release(camera_t *camera);
+
+/* camera updating */
 void camera_set_transform(camera_t *camera, vec3_t position, vec3_t target);
 void camera_orbit_update(camera_t *camera, motion_t motion);
 
