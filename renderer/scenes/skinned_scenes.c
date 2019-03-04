@@ -84,3 +84,39 @@ scene_t *skinned_junkrat_scene(void) {
 
     return scene;
 }
+
+scene_t *skinned_kgirls_scene(void) {
+    const char *meshes[] = {
+        "assets/kgirls/body.obj",
+        "assets/kgirls/face.obj",
+        "assets/kgirls/hair.obj",
+        "assets/kgirls/pupils.obj",
+    };
+    skinned_material_t material = {
+        {1, 1, 1, 1}, "assets/kgirls/kgirls.tga", 0, 0
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    model_t **models = NULL;
+    model_t *model;
+    scene_t *scene;
+    mat4_t scale, rotation, translation, root;
+    int num_meshes = ARRAY_SIZE(meshes);
+    int i;
+
+    translation = mat4_translate(0, -4.937f, -96.547f);
+    rotation = mat4_rotate_x(TO_RADIANS(-90));
+    rotation = mat4_mul_mat4(mat4_rotate_y(TO_RADIANS(90)), rotation);
+    scale = mat4_scale(0.005f, 0.005f, 0.005f);
+    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    for (i = 0; i < num_meshes; i++) {
+        model = skinned_create_model(meshes[i], root, material);
+        darray_push(models, model);
+    }
+
+    scene = (scene_t*)malloc(sizeof(scene_t));
+    scene->background = background;
+    scene->models     = models;
+    scene->userdata   = skeleton_load("assets/kgirls/kgirls.ani");
+
+    return scene;
+}
