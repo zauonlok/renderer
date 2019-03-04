@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "../core/api.h"
 #include "../shaders/skinned_shader.h"
@@ -39,6 +40,47 @@ scene_t *skinned_assassin_scene(void) {
     scene->background = background;
     scene->models     = models;
     scene->userdata   = skeleton_load("assets/assassin/assassin.ani");
+
+    return scene;
+}
+
+scene_t *skinned_junkrat_scene(void) {
+    skinned_material_t materials[] = {
+        {{1, 1, 1, 1}, "assets/junkrat/upper.tga", 0, 0},
+        {{1, 1, 1, 1}, "assets/junkrat/lower.tga", 0, 0},
+        {{1, 1, 1, 1}, "assets/junkrat/head.tga", 0, 0},
+        {{1, 1, 1, 1}, "assets/junkrat/back.tga", 0, 0},
+    };
+    int mesh2material[63] = {
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 2, 0, 1, 0, 2, 1, 0,
+        0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2,
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    model_t **models = NULL;
+    model_t *model;
+    scene_t *scene;
+    mat4_t scale, translation, root;
+    int num_meshes = ARRAY_SIZE(mesh2material);
+    int i;
+
+    translation = mat4_translate(3.735f, -382.993f, 57.980f);
+    scale = mat4_scale(0.0013f, 0.0013f, 0.0013f);
+    root = mat4_mul_mat4(scale, translation);
+    for (i = 0; i < num_meshes; i++) {
+        int material_index = mesh2material[i];
+        skinned_material_t material = materials[material_index];
+        const char *obj_template = "assets/junkrat/junkrat%d.obj";
+        char obj_filename[64];
+        sprintf(obj_filename, obj_template, i);
+        model = skinned_create_model(obj_filename, root, material);
+        darray_push(models, model);
+    }
+
+    scene = (scene_t*)malloc(sizeof(scene_t));
+    scene->background = background;
+    scene->models     = models;
+    scene->userdata   = skeleton_load("assets/junkrat/junkrat.ani");
 
     return scene;
 }

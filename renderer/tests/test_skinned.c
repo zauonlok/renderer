@@ -7,6 +7,7 @@
 
 static scene_creator_t g_scene_creators[] = {
     {"assassin", skinned_assassin_scene},
+    {"junkrat", skinned_junkrat_scene},
     {NULL, NULL},
 };
 

@@ -4,5 +4,6 @@
 #include "../core/api.h"
 
 scene_t *skinned_assassin_scene(void);
+scene_t *skinned_junkrat_scene(void);
 
 #endif
