@@ -240,7 +240,8 @@ def _build_keyframe_data(input_data, output_data):
     return sorted(keyframes)
 
 
-def _load_joint_data(gltf, buffer, animation_index, skin_index):
+def _load_joint_data(gltf, buffer, animation_index,
+                     skin_index, apply_transform):
     accessor_parser = functools.partial(parse_accessor_data, gltf, buffer)
     animation_data = gltf["animations"][animation_index]
     skin_data = gltf["skins"][skin_index]
@@ -287,6 +288,16 @@ def _load_joint_data(gltf, buffer, animation_index, skin_index):
                 else:
                     raise Exception("unknown target path")
 
+        if apply_transform:
+            if node_index != root_index:
+                node_data = gltf["nodes"][node_index]
+                if not translations and "translation" in node_data:
+                    translations = [(0.0, node_data["translation"])]
+                if not rotations and "rotation" in node_data:
+                    rotations = [(0.0, node_data["rotation"])]
+                if not scales and "scale" in node_data:
+                    scales = [(0.0, node_data["scale"])]
+
         joint = {
             "joint_index": joint_index,
             "parent_index": parent_index,
@@ -300,8 +311,10 @@ def _load_joint_data(gltf, buffer, animation_index, skin_index):
     return joints
 
 
-def dump_ani_data(gltf, buffer, animation_index=0, skin_index=0):
-    joint_data = _load_joint_data(gltf, buffer, animation_index, skin_index)
+def dump_ani_data(gltf, buffer, animation_index=0,
+                  skin_index=0, apply_transform=False):
+    joint_data = _load_joint_data(gltf, buffer, animation_index,
+                                  skin_index, apply_transform)
 
     min_time = float("+inf")
     max_time = float("-inf")

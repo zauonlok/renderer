@@ -6,6 +6,11 @@
 #include "geometry.h"
 #include "skeleton.h"
 
+/*
+ * for skinned animation, see
+ * https://people.rennes.inria.fr/Ludovic.Hoyet/teaching/IMO/05_IMO2016_Skinning.pdf
+ */
+
 typedef struct {
     int parent_index;
     mat4_t inverse_bind;
@@ -236,66 +241,87 @@ void skeleton_release(skeleton_t *skeleton) {
 /* joint updating/dumping */
 
 static vec3_t get_translation(joint_t *joint, float timer) {
-    int i;
-    for (i = 0; i < joint->num_translations; i++) {
-        float curr_timer = joint->translation_timers[i];
-        if (timer >= curr_timer) {
-            if (i == joint->num_translations - 1) {
-                return joint->translation_values[i];
-            } else {
-                float next_timer = joint->translation_timers[i + 1];
-                if (timer < next_timer) {
-                    float t = (timer - curr_timer) / (next_timer - curr_timer);
-                    vec3_t curr_translation = joint->translation_values[i];
-                    vec3_t next_translation = joint->translation_values[i + 1];
-                    return vec3_lerp(curr_translation, next_translation, t);
-                }
+    int num_translations = joint->num_translations;
+    float *translation_timers = joint->translation_timers;
+    vec3_t *translation_values = joint->translation_values;
+
+    if (num_translations == 0) {
+        return vec3_new(0, 0, 0);
+    } else if (timer <= translation_timers[0]) {
+        return translation_values[0];
+    } else if (timer >= translation_timers[num_translations - 1]) {
+        return translation_values[num_translations - 1];
+    } else {
+        int i;
+        for (i = 0; i < num_translations - 1; i++) {
+            float curr_timer = translation_timers[i];
+            float next_timer = translation_timers[i + 1];
+            if (timer >= curr_timer && timer < next_timer) {
+                float t = (timer - curr_timer) / (next_timer - curr_timer);
+                vec3_t curr_translation = translation_values[i];
+                vec3_t next_translation = translation_values[i + 1];
+                return vec3_lerp(curr_translation, next_translation, t);
             }
         }
+        assert(0);
+        return vec3_new(0, 0, 0);
     }
-    return vec3_new(0, 0, 0);
 }
 
 static quat_t get_rotationn(joint_t *joint, float timer) {
-    int i;
-    for (i = 0; i < joint->num_rotations; i++) {
-        float curr_timer = joint->rotation_timers[i];
-        if (timer >= curr_timer) {
-            if (i == joint->num_rotations - 1) {
-                return joint->rotation_values[i];
-            } else {
-                float next_timer = joint->rotation_timers[i + 1];
-                if (timer < next_timer) {
-                    float t = (timer - curr_timer) / (next_timer - curr_timer);
-                    quat_t curr_rotation = joint->rotation_values[i];
-                    quat_t next_rotation = joint->rotation_values[i + 1];
-                    return quat_slerp(curr_rotation, next_rotation, t);
-                }
+    int num_rotations = joint->num_rotations;
+    float *rotation_timers = joint->rotation_timers;
+    quat_t *rotation_values = joint->rotation_values;
+
+    if (num_rotations == 0) {
+        return quat_new(0, 0, 0, 1);
+    } else if (timer <= rotation_timers[0]) {
+        return rotation_values[0];
+    } else if (timer >= rotation_timers[num_rotations - 1]) {
+        return rotation_values[num_rotations - 1];
+    } else {
+        int i;
+        for (i = 0; i < num_rotations - 1; i++) {
+            float curr_timer = rotation_timers[i];
+            float next_timer = rotation_timers[i + 1];
+            if (timer >= curr_timer && timer < next_timer) {
+                float t = (timer - curr_timer) / (next_timer - curr_timer);
+                quat_t curr_rotation = rotation_values[i];
+                quat_t next_rotation = rotation_values[i + 1];
+                return quat_slerp(curr_rotation, next_rotation, t);
             }
         }
+        assert(0);
+        return quat_new(0, 0, 0, 1);
     }
-    return quat_new(0, 0, 0, 1);
 }
 
 static vec3_t get_scale(joint_t *joint, float timer) {
-    int i;
-    for (i = 0; i < joint->num_scales; i++) {
-        float curr_timer = joint->scale_timers[i];
-        if (timer >= curr_timer) {
-            if (i == joint->num_scales - 1) {
-                return joint->scale_values[i];
-            } else {
-                float next_timer = joint->scale_timers[i + 1];
-                if (timer < next_timer) {
-                    float t = (timer - curr_timer) / (next_timer - curr_timer);
-                    vec3_t curr_scale = joint->scale_values[i];
-                    vec3_t next_scale = joint->scale_values[i + 1];
-                    return vec3_lerp(curr_scale, next_scale, t);
-                }
+    int num_scales = joint->num_scales;
+    float *scale_timers = joint->scale_timers;
+    vec3_t *scale_values = joint->scale_values;
+
+    if (num_scales == 0) {
+        return vec3_new(1, 1, 1);
+    } else if (timer <= scale_timers[0]) {
+        return scale_values[0];
+    } else if (timer >= scale_timers[num_scales - 1]) {
+        return scale_values[num_scales - 1];
+    } else {
+        int i;
+        for (i = 0; i < num_scales - 1; i++) {
+            float curr_timer = scale_timers[i];
+            float next_timer = scale_timers[i + 1];
+            if (timer >= curr_timer && timer < next_timer) {
+                float t = (timer - curr_timer) / (next_timer - curr_timer);
+                vec3_t curr_scale = scale_values[i];
+                vec3_t next_scale = scale_values[i + 1];
+                return vec3_lerp(curr_scale, next_scale, t);
             }
         }
+        assert(0);
+        return vec3_new(1, 1, 1);
     }
-    return vec3_new(1, 1, 1);
 }
 
 void skeleton_update_joints(skeleton_t *skeleton, float timer) {

@@ -21,16 +21,15 @@ scene_t *skinned_assassin_scene(void) {
     model_t **models = NULL;
     model_t *model;
     scene_t *scene;
-    mat4_t scale, rotation, translation, root;
+    mat4_t scale, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
     int i;
 
     assert(ARRAY_SIZE(materials) == num_meshes);
 
     translation = mat4_translate(0, -125.815f, 18.898f);
-    rotation = mat4_rotate_z(TO_RADIANS(-90));
     scale = mat4_scale(0.0038f, 0.0038f, 0.0038f);
-    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    root = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
         model = skinned_create_model(meshes[i], root, materials[i]);
         darray_push(models, model);
