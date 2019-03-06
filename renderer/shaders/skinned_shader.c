@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "../core/api.h"
+#include "cache_helper.h"
 #include "skinned_shader.h"
 
 /* low-level api */
@@ -79,7 +80,7 @@ static skinned_uniforms_t *get_uniforms(model_t *model) {
 static void release_model(model_t *model) {
     skinned_uniforms_t *uniforms = get_uniforms(model);
     if (uniforms->texture) {
-        texture_release(uniforms->texture);
+        cache_release_texture(uniforms->texture);
     }
     program_release(model->program);
     mesh_release(model->mesh);
@@ -121,7 +122,7 @@ model_t *skinned_create_model(const char *mesh, mat4_t transform,
     uniforms = (skinned_uniforms_t*)program_get_uniforms(program);
     uniforms->factor = material.factor;
     if (material.texture) {
-        uniforms->texture = texture_from_file(material.texture);
+        uniforms->texture = cache_acquire_texture(material.texture, 0);
     }
 
     model = (model_t*)malloc(sizeof(model_t));

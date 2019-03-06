@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../core/api.h"
+#include "cache_helper.h"
 #include "pbr_helper.h"
 
 /* shading related functions */
@@ -138,11 +139,16 @@ typedef struct {
     int mip_level;
 } envinfo_t;
 
+typedef struct {
+    ibldata_t *ibldata;
+    int references;
+} cached_ibldata_t;
+
 static envinfo_t g_envinfo[] = {
     {"papermill", 10},
 };
 
-static ibldata_t *g_ibldata[ARRAY_SIZE(g_envinfo)];
+static cached_ibldata_t g_ibldata[ARRAY_SIZE(g_envinfo)];
 
 static ibldata_t *load_ibldata(const char *env_name, int mip_level) {
     const char *faces[6] = {"right", "left", "top", "bottom", "front", "back"};
@@ -154,8 +160,6 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_level) {
     ibldata = (ibldata_t*)malloc(sizeof(ibldata_t));
     memset(ibldata, 0, sizeof(ibldata_t));
     ibldata->mip_level = mip_level;
-    ibldata->env_name  = env_name;
-    ibldata->ref_count = 1;
 
     /* load a diffuse envmap */
     for (j = 0; j < 6; j++) {
@@ -176,7 +180,7 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_level) {
     }
 
     /* load brdf lookup table */
-    ibldata->brdf_lut = texture_from_file("assets/common/brdf_lut.tga");
+    ibldata->brdf_lut = cache_acquire_texture("assets/common/brdf_lut.tga", 0);
 
     return ibldata;
 }
@@ -187,7 +191,7 @@ static void free_ibldata(ibldata_t *ibldata) {
     for (i = 0; i < ibldata->mip_level; i++) {
         cubemap_release(ibldata->specular[i]);
     }
-    texture_release(ibldata->brdf_lut);
+    cache_release_texture(ibldata->brdf_lut);
     free(ibldata);
 }
 
@@ -195,16 +199,17 @@ ibldata_t *pbr_acquire_ibldata(const char *env_name) {
     int num_envinfo = ARRAY_SIZE(g_envinfo);
     int i;
     for (i = 0; i < num_envinfo; i++) {
-        if (strcmp(env_name, g_envinfo[i].env_name) == 0) {
-            ibldata_t *ibldata;
-            if (g_ibldata[i] == NULL) {
-                ibldata = load_ibldata(env_name, g_envinfo[i].mip_level);
-                g_ibldata[i] = ibldata;
+        if (strcmp(g_envinfo[i].env_name, env_name) == 0) {
+            if (g_ibldata[i].references > 0) {
+                g_ibldata[i].references += 1;
             } else {
-                ibldata = g_ibldata[i];
-                ibldata->ref_count += 1;
+                int mip_level = g_envinfo[i].mip_level;
+                assert(g_ibldata[i].references == 0);
+                assert(g_ibldata[i].ibldata == NULL);
+                g_ibldata[i].references = 1;
+                g_ibldata[i].ibldata = load_ibldata(env_name, mip_level);
             }
-            return ibldata;
+            return g_ibldata[i].ibldata;
         }
     }
     assert(0);
@@ -212,18 +217,18 @@ ibldata_t *pbr_acquire_ibldata(const char *env_name) {
 }
 
 void pbr_release_ibldata(ibldata_t *ibldata) {
-    ibldata->ref_count -= 1;
-    if (ibldata->ref_count <= 0) {
-        int num_envinfo = ARRAY_SIZE(g_envinfo);
-        int i;
-        for (i = 0; i < num_envinfo; i++) {
-            if (strcmp(ibldata->env_name, g_envinfo[i].env_name) == 0) {
-                assert(g_ibldata[i] == ibldata);
-                free_ibldata(ibldata);
-                g_ibldata[i] = NULL;
-                return;
+    int num_ibldata = ARRAY_SIZE(g_ibldata);
+    int i;
+    for (i = 0; i < num_ibldata; i++) {
+        if (g_ibldata[i].ibldata == ibldata) {
+            assert(g_ibldata[i].references > 0);
+            g_ibldata[i].references -= 1;
+            if (g_ibldata[i].references == 0) {
+                free_ibldata(g_ibldata[i].ibldata);
+                g_ibldata[i].ibldata = NULL;
             }
+            return;
         }
-        assert(0);
     }
+    assert(0);
 }

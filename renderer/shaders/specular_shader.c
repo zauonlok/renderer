@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "../core/api.h"
+#include "cache_helper.h"
 #include "pbr_helper.h"
 #include "specular_shader.h"
 
@@ -122,22 +123,22 @@ static specular_uniforms_t *get_uniforms(model_t *model) {
 static void release_model(model_t *model) {
     specular_uniforms_t *uniforms = get_uniforms(model);
     if (uniforms->diffuse_texture) {
-        texture_release(uniforms->diffuse_texture);
+        cache_release_texture(uniforms->diffuse_texture);
     }
     if (uniforms->specular_texture) {
-        texture_release(uniforms->specular_texture);
+        cache_release_texture(uniforms->specular_texture);
     }
     if (uniforms->glossiness_texture) {
-        texture_release(uniforms->glossiness_texture);
+        cache_release_texture(uniforms->glossiness_texture);
     }
     if (uniforms->normal_texture) {
-        texture_release(uniforms->normal_texture);
+        cache_release_texture(uniforms->normal_texture);
     }
     if (uniforms->occlusion_texture) {
-        texture_release(uniforms->occlusion_texture);
+        cache_release_texture(uniforms->occlusion_texture);
     }
     if (uniforms->emissive_texture) {
-        texture_release(uniforms->emissive_texture);
+        cache_release_texture(uniforms->emissive_texture);
     }
     pbr_release_ibldata(uniforms->shared_ibldata);
     program_release(model->program);
@@ -185,31 +186,28 @@ model_t *specular_create_model(
     uniforms->specular_factor = material.specular_factor;
     uniforms->glossiness_factor = material.glossiness_factor;
     if (material.diffuse_texture) {
-        const char *diffuse_filename = material.diffuse_texture;
-        uniforms->diffuse_texture = texture_from_file(diffuse_filename);
-        texture_srgb2linear(uniforms->diffuse_texture);
+        const char *diffuse_name = material.diffuse_texture;
+        uniforms->diffuse_texture = cache_acquire_texture(diffuse_name, 1);
     }
     if (material.specular_texture) {
-        const char *specular_filename = material.specular_texture;
-        uniforms->specular_texture = texture_from_file(specular_filename);
-        texture_srgb2linear(uniforms->specular_texture);
+        const char *specular_name = material.specular_texture;
+        uniforms->specular_texture = cache_acquire_texture(specular_name, 1);
     }
     if (material.glossiness_texture) {
-        const char *roughness_filename = material.glossiness_texture;
-        uniforms->glossiness_texture = texture_from_file(roughness_filename);
+        const char *roughness_name = material.glossiness_texture;
+        uniforms->glossiness_texture = cache_acquire_texture(roughness_name, 0);
     }
     if (material.normal_texture) {
-        const char *normal_filename = material.normal_texture;
-        uniforms->normal_texture = texture_from_file(normal_filename);
+        const char *normal_name = material.normal_texture;
+        uniforms->normal_texture = cache_acquire_texture(normal_name, 0);
     }
     if (material.occlusion_texture) {
-        const char *occlusion_filename = material.occlusion_texture;
-        uniforms->occlusion_texture = texture_from_file(occlusion_filename);
+        const char *occlusion_name = material.occlusion_texture;
+        uniforms->occlusion_texture = cache_acquire_texture(occlusion_name, 0);
     }
     if (material.emissive_texture) {
-        const char *emissive_filename = material.emissive_texture;
-        uniforms->emissive_texture = texture_from_file(emissive_filename);
-        texture_srgb2linear(uniforms->emissive_texture);
+        const char *emissive_name = material.emissive_texture;
+        uniforms->emissive_texture = cache_acquire_texture(emissive_name, 1);
     }
     uniforms->shared_ibldata = pbr_acquire_ibldata(env_name);
 

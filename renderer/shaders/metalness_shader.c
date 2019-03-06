@@ -1,8 +1,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "../core/api.h"
-#include "pbr_helper.h"
+#include "cache_helper.h"
 #include "metalness_shader.h"
+#include "pbr_helper.h"
 
 /* low-level api */
 
@@ -117,22 +118,22 @@ static metalness_uniforms_t *get_uniforms(model_t *model) {
 static void release_model(model_t *model) {
     metalness_uniforms_t *uniforms = get_uniforms(model);
     if (uniforms->basecolor_texture) {
-        texture_release(uniforms->basecolor_texture);
+        cache_release_texture(uniforms->basecolor_texture);
     }
     if (uniforms->metallic_texture) {
-        texture_release(uniforms->metallic_texture);
+        cache_release_texture(uniforms->metallic_texture);
     }
     if (uniforms->roughness_texture) {
-        texture_release(uniforms->roughness_texture);
+        cache_release_texture(uniforms->roughness_texture);
     }
     if (uniforms->normal_texture) {
-        texture_release(uniforms->normal_texture);
+        cache_release_texture(uniforms->normal_texture);
     }
     if (uniforms->occlusion_texture) {
-        texture_release(uniforms->occlusion_texture);
+        cache_release_texture(uniforms->occlusion_texture);
     }
     if (uniforms->emissive_texture) {
-        texture_release(uniforms->emissive_texture);
+        cache_release_texture(uniforms->emissive_texture);
     }
     pbr_release_ibldata(uniforms->shared_ibldata);
     program_release(model->program);
@@ -181,30 +182,28 @@ model_t *metalness_create_model(
     uniforms->metallic_factor = material.metallic_factor;
     uniforms->roughness_factor = material.roughness_factor;
     if (material.basecolor_texture) {
-        const char *basecolor_filename = material.basecolor_texture;
-        uniforms->basecolor_texture = texture_from_file(basecolor_filename);
-        texture_srgb2linear(uniforms->basecolor_texture);
+        const char *basecolor_name = material.basecolor_texture;
+        uniforms->basecolor_texture = cache_acquire_texture(basecolor_name, 1);
     }
     if (material.metallic_texture) {
-        const char *metallic_filename = material.metallic_texture;
-        uniforms->metallic_texture = texture_from_file(metallic_filename);
+        const char *metallic_name = material.metallic_texture;
+        uniforms->metallic_texture = cache_acquire_texture(metallic_name, 0);
     }
     if (material.roughness_texture) {
-        const char *roughness_filename = material.roughness_texture;
-        uniforms->roughness_texture = texture_from_file(roughness_filename);
+        const char *roughness_name = material.roughness_texture;
+        uniforms->roughness_texture = cache_acquire_texture(roughness_name, 0);
     }
     if (material.normal_texture) {
-        const char *normal_filename = material.normal_texture;
-        uniforms->normal_texture = texture_from_file(normal_filename);
+        const char *normal_name = material.normal_texture;
+        uniforms->normal_texture = cache_acquire_texture(normal_name, 0);
     }
     if (material.occlusion_texture) {
-        const char *occlusion_filename = material.occlusion_texture;
-        uniforms->occlusion_texture = texture_from_file(occlusion_filename);
+        const char *occlusion_name = material.occlusion_texture;
+        uniforms->occlusion_texture = cache_acquire_texture(occlusion_name, 0);
     }
     if (material.emissive_texture) {
-        const char *emissive_filename = material.emissive_texture;
-        uniforms->emissive_texture = texture_from_file(emissive_filename);
-        texture_srgb2linear(uniforms->emissive_texture);
+        const char *emissive_name = material.emissive_texture;
+        uniforms->emissive_texture = cache_acquire_texture(emissive_name, 1);
     }
     uniforms->shared_ibldata = pbr_acquire_ibldata(env_name);
 

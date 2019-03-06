@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "../core/api.h"
 #include "blinn_shader.h"
+#include "cache_helper.h"
 
 /* low-level api */
 
@@ -78,13 +79,13 @@ static blinn_uniforms_t *get_uniforms(model_t *model) {
 static void release_model(model_t *model) {
     blinn_uniforms_t *uniforms = get_uniforms(model);
     if (uniforms->emission) {
-        texture_release(uniforms->emission);
+        cache_release_texture(uniforms->emission);
     }
     if (uniforms->diffuse) {
-        texture_release(uniforms->diffuse);
+        cache_release_texture(uniforms->diffuse);
     }
     if (uniforms->specular) {
-        texture_release(uniforms->specular);
+        cache_release_texture(uniforms->specular);
     }
     program_release(model->program);
     mesh_release(model->mesh);
@@ -126,13 +127,13 @@ model_t *blinn_create_model(const char *mesh, mat4_t transform,
     uniforms->ambient = material.ambient;
     uniforms->shininess = material.shininess;
     if (material.emission) {
-        uniforms->emission = texture_from_file(material.emission);
+        uniforms->emission = cache_acquire_texture(material.emission, 0);
     }
     if (material.diffuse) {
-        uniforms->diffuse = texture_from_file(material.diffuse);
+        uniforms->diffuse = cache_acquire_texture(material.diffuse, 0);
     }
     if (material.specular) {
-        uniforms->specular = texture_from_file(material.specular);
+        uniforms->specular = cache_acquire_texture(material.specular, 0);
     }
 
     model = (model_t*)malloc(sizeof(model_t));

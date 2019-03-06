@@ -8,9 +8,6 @@ typedef struct {
     cubemap_t *diffuse;
     cubemap_t *specular[15];
     texture_t *brdf_lut;
-    /* for reference counting */
-    const char *env_name;
-    int ref_count;
 } ibldata_t;
 
 /* shading related functions */

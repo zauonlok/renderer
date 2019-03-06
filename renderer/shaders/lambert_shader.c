@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "../core/api.h"
+#include "cache_helper.h"
 #include "lambert_shader.h"
 
 /* low-level api */
@@ -58,10 +59,10 @@ static lambert_uniforms_t *get_uniforms(model_t *model) {
 static void release_model(model_t *model) {
     lambert_uniforms_t *uniforms = get_uniforms(model);
     if (uniforms->emission) {
-        texture_release(uniforms->emission);
+        cache_release_texture(uniforms->emission);
     }
     if (uniforms->diffuse) {
-        texture_release(uniforms->diffuse);
+        cache_release_texture(uniforms->diffuse);
     }
     program_release(model->program);
     mesh_release(model->mesh);
@@ -102,10 +103,10 @@ model_t *lambert_create_model(const char *mesh, mat4_t transform,
     uniforms = (lambert_uniforms_t*)program_get_uniforms(program);
     uniforms->ambient = material.ambient;
     if (material.emission) {
-        uniforms->emission = texture_from_file(material.emission);
+        uniforms->emission = cache_acquire_texture(material.emission, 0);
     }
     if (material.diffuse) {
-        uniforms->diffuse = texture_from_file(material.diffuse);
+        uniforms->diffuse = cache_acquire_texture(material.diffuse, 0);
     }
 
     model = (model_t*)malloc(sizeof(model_t));
