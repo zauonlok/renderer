@@ -412,8 +412,8 @@ class Transform:
     @staticmethod
     def from_rotation(rotation):
         x, y, z, w = rotation
-        normalizer = math.sqrt(x*x + y*y + z*z + w*w)
-        x, y, z, w = x/normalizer, y/normalizer, z/normalizer, w/normalizer
+        length = math.sqrt(x*x + y*y + z*z + w*w)
+        x, y, z, w = x/length, y/length, z/length, w/length
         data = [
             [1 - 2*y*y - 2*z*z, 2*x*y - 2*w*z,     2*x*z + 2*y*w,     0],
             [2*x*y + 2*w*z,     1 - 2*x*x - 2*z*z, 2*y*z - 2*w*x,     0],

@@ -29,7 +29,7 @@ typedef struct {
     texture_t *texture;
     /* for animation */
     int num_joints;
-    mat4_t joint_matrices[256];
+    mat4_t joint_matrices[MAX_JOINTS];
 } skinned_uniforms_t;
 
 /* low-level api */

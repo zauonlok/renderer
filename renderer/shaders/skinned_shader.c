@@ -5,7 +5,7 @@
 /* low-level api */
 
 static mat4_t get_skin_matrix(vec4_t joint_indices_, vec4_t joint_weights_,
-                              mat4_t joint_matrices[256]) {
+                              mat4_t joint_matrices[MAX_JOINTS]) {
     mat4_t skin_matrix;
     int joint_indices[4];
     float joint_weights[4];
