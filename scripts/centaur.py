@@ -3,8 +3,8 @@
 The model is available for download from
     https://sketchfab.com/models/0d3f1b4a51144b7fbc4e2ff64d858413
 
-The Python Imaging Library is required
-    pip install pillow
+The Python Imaging Library and NumPy are required
+    pip install pillow numpy
 """
 
 from __future__ import print_function
@@ -13,6 +13,7 @@ import json
 import os
 import zipfile
 from PIL import Image
+import numpy
 from utils.gltf import dump_obj_data
 
 SRC_FILENAME = "centaur.zip"
@@ -60,8 +61,13 @@ def process_meshes(zip_file):
 
 
 def linear_to_srgb(image):
-    lookup_table = [pow(x / 255.0, 1 / 2.2) * 255 for x in range(256)] * 3
+    lookup_table = [pow(x / 255.0, 1 / 2.2) * 255 for x in range(256)]
     return image.point(lookup_table)
+
+
+def fix_spec_image(image):
+    image = Image.fromarray(numpy.amax(numpy.array(image), axis=2))
+    return linear_to_srgb(image)
 
 
 def process_images(zip_file):
@@ -69,7 +75,7 @@ def process_images(zip_file):
         with zip_file.open(old_filename) as f:
             image = Image.open(f)
             if "specularGlossiness" in old_filename:
-                image = linear_to_srgb(image)
+                image = fix_spec_image(image)
             image = image.transpose(Image.FLIP_TOP_BOTTOM)
             image = image.resize((512, 512), Image.LANCZOS)
             filepath = os.path.join(DST_DIRECTORY, tga_filename)
