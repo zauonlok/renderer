@@ -172,3 +172,38 @@ scene_t *unlit_elfgirl_scene(void) {
 
     return scene;
 }
+
+scene_t *unlit_witch_scene(void) {
+    const char *meshes[] = {
+        "assets/witch/object.obj",
+        "assets/witch/witch.obj",
+    };
+    unlit_material_t materials[] = {
+        {{1, 1, 1, 1}, "assets/witch/object.tga", 0, 0},
+        {{1, 1, 1, 1}, "assets/witch/witch.tga", 1, 0},
+    };
+    vec4_t background = vec4_new(0.333f, 0.333f, 0.333f, 1);
+    model_t **models = NULL;
+    model_t *model;
+    scene_t *scene;
+    mat4_t scale, rotation, translation, root;
+    int num_meshes = ARRAY_SIZE(meshes);
+    int i;
+
+    assert(ARRAY_SIZE(materials) == num_meshes);
+
+    translation = mat4_translate(-17.924f, -16.974f, -32.691f);
+    rotation = mat4_rotate_x(TO_RADIANS(-90));
+    scale = mat4_scale(0.02f, 0.02f, 0.02f);
+    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    for (i = 0; i < num_meshes; i++) {
+        model = unlit_create_model(meshes[i], root, materials[i]);
+        darray_push(models, model);
+    }
+
+    scene = (scene_t*)malloc(sizeof(scene_t));
+    scene->background = background;
+    scene->models     = models;
+
+    return scene;
+}

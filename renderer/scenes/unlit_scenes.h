@@ -5,5 +5,6 @@
 
 scene_t *unlit_mccree_scene(void);
 scene_t *unlit_elfgirl_scene(void);
+scene_t *unlit_witch_scene(void);
 
 #endif

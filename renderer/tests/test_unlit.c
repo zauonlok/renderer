@@ -8,6 +8,7 @@
 static scene_creator_t g_scene_creators[] = {
     {"mccree", unlit_mccree_scene},
     {"elfgirl", unlit_elfgirl_scene},
+    {"witch", unlit_witch_scene},
     {NULL, NULL},
 };
 
