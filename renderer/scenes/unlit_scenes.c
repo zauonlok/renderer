@@ -179,8 +179,8 @@ scene_t *unlit_witch_scene(void) {
         "assets/witch/witch.obj",
     };
     unlit_material_t materials[] = {
-        {{1, 1, 1, 1}, "assets/witch/object.tga", 0, 0},
-        {{1, 1, 1, 1}, "assets/witch/witch.tga", 1, 0},
+        {{1, 1, 1, 1}, "assets/witch/object.tga", 1, 0},
+        {{1, 1, 1, 1}, "assets/witch/witch.tga", 1, 1},
     };
     vec4_t background = vec4_new(0.333f, 0.333f, 0.333f, 1);
     model_t **models = NULL;

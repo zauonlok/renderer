@@ -425,9 +425,7 @@ static void draw_fragment(framebuffer_t *framebuffer, program_t *program,
 
     /* write color and depth */
     framebuffer->colorbuffer[index] = color;
-    if (!program->enable_blend) {
-        framebuffer->depthbuffer[index] = depth;
-    }
+    framebuffer->depthbuffer[index] = depth;
 }
 
 static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
