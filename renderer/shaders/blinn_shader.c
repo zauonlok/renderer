@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "../core/api.h"
 #include "blinn_shader.h"
-#include "cache_helper.h"
+#include "shader_helper.h"
 
 /* low-level api */
 
@@ -24,7 +24,7 @@ vec4_t blinn_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     return clip_pos;
 }
 
-vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_) {
+vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
     blinn_varyings_t *varyings = (blinn_varyings_t*)varyings_;
     blinn_uniforms_t *uniforms = (blinn_uniforms_t*)uniforms_;
 
@@ -44,6 +44,11 @@ vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_) {
 
         color = vec3_add(color, diffuse);
         alpha = sample.w;
+    }
+
+    if (uniforms->alpha_cutoff && alpha < 0.5f) {
+        *discard = 1;
+        return vec4_new(0, 0, 0, 0);
     }
 
     if (uniforms->specular) {
@@ -72,26 +77,6 @@ vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_) {
 
 /* high-level api */
 
-static blinn_uniforms_t *get_uniforms(model_t *model) {
-    return (blinn_uniforms_t*)program_get_uniforms(model->program);
-}
-
-static void release_model(model_t *model) {
-    blinn_uniforms_t *uniforms = get_uniforms(model);
-    if (uniforms->emission) {
-        cache_release_texture(uniforms->emission);
-    }
-    if (uniforms->diffuse) {
-        cache_release_texture(uniforms->diffuse);
-    }
-    if (uniforms->specular) {
-        cache_release_texture(uniforms->specular);
-    }
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
-
 static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     program_t *program = model->program;
     mesh_t *mesh = model->mesh;
@@ -111,6 +96,17 @@ static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     }
 }
 
+static void release_model(model_t *model) {
+    blinn_uniforms_t *uniforms;
+    uniforms = (blinn_uniforms_t*)program_get_uniforms(model->program);
+    cache_release_texture(uniforms->emission);
+    cache_release_texture(uniforms->diffuse);
+    cache_release_texture(uniforms->specular);
+    program_release(model->program);
+    cache_release_mesh(model->mesh);
+    free(model);
+}
+
 model_t *blinn_create_model(const char *mesh, mat4_t transform,
                             blinn_material_t material) {
     int sizeof_attribs = sizeof(blinn_attribs_t);
@@ -123,21 +119,17 @@ model_t *blinn_create_model(const char *mesh, mat4_t transform,
     program = program_create(blinn_vertex_shader, blinn_fragment_shader,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms,
                              material.double_sided, material.enable_blend);
+
     uniforms = (blinn_uniforms_t*)program_get_uniforms(program);
     uniforms->ambient = material.ambient;
     uniforms->shininess = material.shininess;
-    if (material.emission) {
-        uniforms->emission = cache_acquire_texture(material.emission, 0);
-    }
-    if (material.diffuse) {
-        uniforms->diffuse = cache_acquire_texture(material.diffuse, 0);
-    }
-    if (material.specular) {
-        uniforms->specular = cache_acquire_texture(material.specular, 0);
-    }
+    uniforms->alpha_cutoff = material.alpha_cutoff;
+    uniforms->emission = cache_acquire_texture(material.emission, 0);
+    uniforms->diffuse = cache_acquire_texture(material.diffuse, 0);
+    uniforms->specular = cache_acquire_texture(material.specular, 0);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh      = mesh_load(mesh);
+    model->mesh      = cache_acquire_mesh(mesh);
     model->transform = transform;
     model->program   = program;
     model->draw      = draw_model;
@@ -150,7 +142,8 @@ model_t *blinn_create_model(const char *mesh, mat4_t transform,
 void blinn_update_uniforms(
         model_t *model, vec3_t light_dir, vec3_t camera_pos,
         mat4_t model_matrix, mat3_t normal_matrix, mat4_t viewproj_matrix) {
-    blinn_uniforms_t *uniforms = get_uniforms(model);
+    blinn_uniforms_t *uniforms;
+    uniforms = (blinn_uniforms_t*)program_get_uniforms(model->program);
     uniforms->light_dir = light_dir;
     uniforms->camera_pos = camera_pos;
     uniforms->model_matrix = model_matrix;

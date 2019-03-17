@@ -9,6 +9,7 @@ typedef struct {
     /* render settings */
     int double_sided;
     int enable_blend;
+    int alpha_cutoff;
 } unlit_material_t;
 
 typedef struct {
@@ -25,11 +26,12 @@ typedef struct {
     /* from material */
     vec4_t factor;
     texture_t *texture;
+    int alpha_cutoff;
 } unlit_uniforms_t;
 
 /* low-level api */
 vec4_t unlit_vertex_shader(void *attribs, void *varyings, void *uniforms);
-vec4_t unlit_fragment_shader(void *varyings, void *uniforms);
+vec4_t unlit_fragment_shader(void *varyings, void *uniforms, int *discard);
 
 /* high-level api */
 model_t *unlit_create_model(const char *mesh, mat4_t transform,

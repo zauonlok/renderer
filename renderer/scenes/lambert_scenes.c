@@ -21,6 +21,7 @@ scene_t *lambert_craftsman_scene(void) {
             "assets/craftsman/anvil_diffuse.tga",
             0,
             0,
+            0,
         },
         {
             0.5f,
@@ -28,6 +29,7 @@ scene_t *lambert_craftsman_scene(void) {
             "assets/craftsman/floor_diffuse.tga",
             1,
             1,
+            0,
         },
         {
             0.5f,
@@ -35,6 +37,7 @@ scene_t *lambert_craftsman_scene(void) {
             "assets/craftsman/smith_diffuse.tga",
             0,
             0,
+            1,
         },
     };
     mat4_t transforms[] = {
@@ -88,6 +91,7 @@ scene_t *lambert_craftsman_scene(void) {
         "assets/craftsman/spark_diffuse.tga",
         1,
         1,
+        0,
     };
     mat4_t spark_transforms[] = {
         {{
@@ -245,6 +249,7 @@ scene_t *lambert_craftsman_scene(void) {
 
     scene = (scene_t*)malloc(sizeof(scene_t));
     scene->background = background;
+    scene->skybox     = NULL;
     scene->models     = models;
 
     return scene;

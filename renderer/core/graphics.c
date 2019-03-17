@@ -407,9 +407,17 @@ static void interpolate_varyings(
 
 static void draw_fragment(framebuffer_t *framebuffer, program_t *program,
                           int index, float depth) {
+    vec4_t color;
+    int discard;
+
     /* execute fragment shader */
-    vec4_t color = program->fragment_shader(program->shader_varyings,
-                                            program->shader_uniforms);
+    discard = 0;
+    color = program->fragment_shader(program->shader_varyings,
+                                     program->shader_uniforms,
+                                     &discard);
+    if (discard) {
+        return;
+    }
     color = vec4_saturate(color);
 
     /* perform blending */

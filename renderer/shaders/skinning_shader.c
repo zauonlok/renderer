@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "../core/api.h"
-#include "cache_helper.h"
-#include "skinned_shader.h"
+#include "shader_helper.h"
+#include "skinning_shader.h"
 
 /* low-level api */
 
@@ -44,10 +44,11 @@ static mat4_t get_skin_matrix(vec4_t joint_indices_, vec4_t joint_weights_,
     return skin_matrix;
 }
 
-vec4_t skinned_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
-    skinned_attribs_t *attribs = (skinned_attribs_t*)attribs_;
-    skinned_varyings_t *varyings = (skinned_varyings_t*)varyings_;
-    skinned_uniforms_t *uniforms = (skinned_uniforms_t*)uniforms_;
+vec4_t skinning_vertex_shader(void *attribs_, void *varyings_,
+                              void *uniforms_) {
+    skinning_attribs_t *attribs = (skinning_attribs_t*)attribs_;
+    skinning_varyings_t *varyings = (skinning_varyings_t*)varyings_;
+    skinning_uniforms_t *uniforms = (skinning_uniforms_t*)uniforms_;
 
     mat4_t skin_matrix = get_skin_matrix(attribs->joint, attribs->weight,
                                          uniforms->joint_matrices);
@@ -59,45 +60,41 @@ vec4_t skinned_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     return clip_pos;
 }
 
-vec4_t skinned_fragment_shader(void *varyings_, void *uniforms_) {
-    skinned_varyings_t *varyings = (skinned_varyings_t*)varyings_;
-    skinned_uniforms_t *uniforms = (skinned_uniforms_t*)uniforms_;
+vec4_t skinning_fragment_shader(void *varyings_, void *uniforms_,
+                                int *discard) {
+    skinning_varyings_t *varyings = (skinning_varyings_t*)varyings_;
+    skinning_uniforms_t *uniforms = (skinning_uniforms_t*)uniforms_;
+
+    vec4_t color;
 
     if (uniforms->texture) {
         vec4_t sample = texture_sample(uniforms->texture, varyings->texcoord);
-        return vec4_modulate(uniforms->factor, sample);
+        color = vec4_modulate(uniforms->factor, sample);
     } else {
-        return uniforms->factor;
+        color = uniforms->factor;
     }
+
+    if (uniforms->alpha_cutoff && color.w < 0.5f) {
+        *discard = 1;
+        return vec4_new(0, 0, 0, 0);
+    }
+
+    return color;
 }
 
 /* high-level api */
-
-static skinned_uniforms_t *get_uniforms(model_t *model) {
-    return (skinned_uniforms_t*)program_get_uniforms(model->program);
-}
-
-static void release_model(model_t *model) {
-    skinned_uniforms_t *uniforms = get_uniforms(model);
-    if (uniforms->texture) {
-        cache_release_texture(uniforms->texture);
-    }
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     program_t *program = model->program;
     mesh_t *mesh = model->mesh;
     int num_faces = mesh_get_num_faces(mesh);
-    skinned_attribs_t *attribs;
+    skinning_attribs_t *attribs;
     int i, j;
 
     for (i = 0; i < num_faces; i++) {
         for (j = 0; j < 3; j++) {
             vertex_t vertex = mesh_get_vertex(mesh, i, j);
-            attribs = (skinned_attribs_t*)program_get_attribs(program, j);
+            attribs = (skinning_attribs_t*)program_get_attribs(program, j);
             attribs->position = vertex.position;
             attribs->texcoord = vertex.texcoord;
             attribs->joint = vertex.joint;
@@ -107,26 +104,35 @@ static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     }
 }
 
-model_t *skinned_create_model(const char *mesh, mat4_t transform,
-                              skinned_material_t material) {
-    int sizeof_attribs = sizeof(skinned_attribs_t);
-    int sizeof_varyings = sizeof(skinned_varyings_t);
-    int sizeof_uniforms = sizeof(skinned_uniforms_t);
-    skinned_uniforms_t *uniforms;
+static void release_model(model_t *model) {
+    skinning_uniforms_t *uniforms;
+    uniforms = (skinning_uniforms_t*)program_get_uniforms(model->program);
+    cache_release_texture(uniforms->texture);
+    program_release(model->program);
+    cache_release_mesh(model->mesh);
+    free(model);
+}
+
+model_t *skinning_create_model(const char *mesh, mat4_t transform,
+                               skinning_material_t material) {
+    int sizeof_attribs = sizeof(skinning_attribs_t);
+    int sizeof_varyings = sizeof(skinning_varyings_t);
+    int sizeof_uniforms = sizeof(skinning_uniforms_t);
+    skinning_uniforms_t *uniforms;
     program_t *program;
     model_t *model;
 
-    program = program_create(skinned_vertex_shader, skinned_fragment_shader,
+    program = program_create(skinning_vertex_shader, skinning_fragment_shader,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms,
                              material.double_sided, material.enable_blend);
-    uniforms = (skinned_uniforms_t*)program_get_uniforms(program);
+
+    uniforms = (skinning_uniforms_t*)program_get_uniforms(program);
     uniforms->factor = material.factor;
-    if (material.texture) {
-        uniforms->texture = cache_acquire_texture(material.texture, 0);
-    }
+    uniforms->alpha_cutoff = material.alpha_cutoff;
+    uniforms->texture = cache_acquire_texture(material.texture, 0);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh      = mesh_load(mesh);
+    model->mesh      = cache_acquire_mesh(mesh);
     model->transform = transform;
     model->program   = program;
     model->draw      = draw_model;
@@ -136,9 +142,10 @@ model_t *skinned_create_model(const char *mesh, mat4_t transform,
     return model;
 }
 
-void skinned_update_uniforms(model_t *model, mat4_t mvp_matrix,
-                             skeleton_t *skeleton) {
-    skinned_uniforms_t *uniforms = get_uniforms(model);
+void skinning_update_uniforms(model_t *model, mat4_t mvp_matrix,
+                              skeleton_t *skeleton) {
+    skinning_uniforms_t *uniforms;
+    uniforms = (skinning_uniforms_t*)program_get_uniforms(model->program);
     uniforms->mvp_matrix = mvp_matrix;
     skeleton_dump_matrices(skeleton, uniforms->joint_matrices);
 }

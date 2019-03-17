@@ -19,6 +19,7 @@ scene_t *blinn_centaur_scene(void) {
             "assets/centaur/body_specular.tga",
             0,
             0,
+            0,
         },
         {
             0.5f,
@@ -28,6 +29,7 @@ scene_t *blinn_centaur_scene(void) {
             NULL,
             0,
             1,
+            0,
         },
         {
             0.5f,
@@ -35,6 +37,7 @@ scene_t *blinn_centaur_scene(void) {
             NULL,
             "assets/centaur/gas_diffuse.tga",
             "assets/centaur/gas_specular.tga",
+            0,
             0,
             0,
         },
@@ -61,6 +64,7 @@ scene_t *blinn_centaur_scene(void) {
 
     scene = (scene_t*)malloc(sizeof(scene_t));
     scene->background = background;
+    scene->skybox     = NULL;
     scene->models     = models;
 
     return scene;

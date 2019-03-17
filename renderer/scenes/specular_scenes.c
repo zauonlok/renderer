@@ -17,6 +17,7 @@ scene_t *specular_drone_scene(void) {
         "assets/drone/emissive.tga",
         0,
         0,
+        0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     const char *env_name = "papermill";
@@ -32,6 +33,7 @@ scene_t *specular_drone_scene(void) {
 
     scene = (scene_t*)malloc(sizeof(scene_t));
     scene->background = background;
+    scene->skybox     = NULL;
     scene->models     = models;
 
     return scene;

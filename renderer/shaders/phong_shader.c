@@ -1,8 +1,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include "../core/api.h"
-#include "cache_helper.h"
 #include "phong_shader.h"
+#include "shader_helper.h"
 
 /* low-level api */
 
@@ -28,7 +28,7 @@ static vec3_t reflect_light(vec3_t light, vec3_t normal) {
     return vec3_sub(vec3_mul(normal, 2 * vec3_dot(light, normal)), light);
 }
 
-vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
+vec4_t phong_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
     phong_varyings_t *varyings = (phong_varyings_t*)varyings_;
     phong_uniforms_t *uniforms = (phong_uniforms_t*)uniforms_;
 
@@ -50,13 +50,18 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
         alpha = sample.w;
     }
 
+    if (uniforms->alpha_cutoff && alpha < 0.5f) {
+        *discard = 1;
+        return vec4_new(0, 0, 0, 0);
+    }
+
     if (uniforms->specular) {
         vec3_t world_pos = varyings->position;
         vec3_t camera_pos = uniforms->camera_pos;
         vec3_t view_dir = vec3_normalize(vec3_sub(camera_pos, world_pos));
-        vec3_t reflected_dir = reflect_light(light_dir, normal);
+        vec3_t reflect_dir = reflect_light(light_dir, normal);
 
-        float closeness = vec3_dot(reflected_dir, view_dir);
+        float closeness = vec3_dot(reflect_dir, view_dir);
         if (closeness > 0) {
             float strength = (float)pow(closeness, uniforms->shininess);
             vec4_t sample = texture_sample(uniforms->specular, texcoord);
@@ -75,26 +80,6 @@ vec4_t phong_fragment_shader(void *varyings_, void *uniforms_) {
 }
 
 /* high-level api */
-
-static phong_uniforms_t *get_uniforms(model_t *model) {
-    return (phong_uniforms_t*)program_get_uniforms(model->program);
-}
-
-static void release_model(model_t *model) {
-    phong_uniforms_t *uniforms = get_uniforms(model);
-    if (uniforms->emission) {
-        cache_release_texture(uniforms->emission);
-    }
-    if (uniforms->diffuse) {
-        cache_release_texture(uniforms->diffuse);
-    }
-    if (uniforms->specular) {
-        cache_release_texture(uniforms->specular);
-    }
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     program_t *program = model->program;
@@ -115,6 +100,17 @@ static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     }
 }
 
+static void release_model(model_t *model) {
+    phong_uniforms_t *uniforms;
+    uniforms = (phong_uniforms_t*)program_get_uniforms(model->program);
+    cache_release_texture(uniforms->emission);
+    cache_release_texture(uniforms->diffuse);
+    cache_release_texture(uniforms->specular);
+    program_release(model->program);
+    cache_release_mesh(model->mesh);
+    free(model);
+}
+
 model_t *phong_create_model(const char *mesh, mat4_t transform,
                             phong_material_t material) {
     int sizeof_attribs = sizeof(phong_attribs_t);
@@ -127,21 +123,17 @@ model_t *phong_create_model(const char *mesh, mat4_t transform,
     program = program_create(phong_vertex_shader, phong_fragment_shader,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms,
                              material.double_sided, material.enable_blend);
+
     uniforms = (phong_uniforms_t*)program_get_uniforms(program);
     uniforms->ambient = material.ambient;
     uniforms->shininess = material.shininess;
-    if (material.emission) {
-        uniforms->emission = cache_acquire_texture(material.emission, 0);
-    }
-    if (material.diffuse) {
-        uniforms->diffuse = cache_acquire_texture(material.diffuse, 0);
-    }
-    if (material.specular) {
-        uniforms->specular = cache_acquire_texture(material.specular, 0);
-    }
+    uniforms->alpha_cutoff = material.alpha_cutoff;
+    uniforms->emission = cache_acquire_texture(material.emission, 0);
+    uniforms->diffuse = cache_acquire_texture(material.diffuse, 0);
+    uniforms->specular = cache_acquire_texture(material.specular, 0);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh      = mesh_load(mesh);
+    model->mesh      = cache_acquire_mesh(mesh);
     model->transform = transform;
     model->program   = program;
     model->draw      = draw_model;
@@ -154,7 +146,8 @@ model_t *phong_create_model(const char *mesh, mat4_t transform,
 void phong_update_uniforms(
         model_t *model, vec3_t light_dir, vec3_t camera_pos,
         mat4_t model_matrix, mat3_t normal_matrix, mat4_t viewproj_matrix) {
-    phong_uniforms_t *uniforms = get_uniforms(model);
+    phong_uniforms_t *uniforms;
+    uniforms = (phong_uniforms_t*)program_get_uniforms(model->program);
     uniforms->light_dir = light_dir;
     uniforms->camera_pos = camera_pos;
     uniforms->model_matrix = model_matrix;

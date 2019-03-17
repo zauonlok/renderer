@@ -12,6 +12,7 @@ typedef struct {
     /* render settings */
     int double_sided;
     int enable_blend;
+    int alpha_cutoff;
 } phong_material_t;
 
 typedef struct {
@@ -38,11 +39,12 @@ typedef struct {
     texture_t *emission;
     texture_t *diffuse;
     texture_t *specular;
+    int alpha_cutoff;
 } phong_uniforms_t;
 
 /* low-level api */
 vec4_t phong_vertex_shader(void *attribs, void *varyings, void *uniforms);
-vec4_t phong_fragment_shader(void *varyings, void *uniforms);
+vec4_t phong_fragment_shader(void *varyings, void *uniforms, int *discard);
 
 /* high-level api */
 model_t *phong_create_model(const char *mesh, mat4_t transform,

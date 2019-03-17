@@ -7,7 +7,7 @@
 #include "skeleton.h"
 
 /*
- * for skinned animation, see
+ * for skeletal animation, see
  * https://people.rennes.inria.fr/Ludovic.Hoyet/teaching/IMO/05_IMO2016_Skinning.pdf
  */
 

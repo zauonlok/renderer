@@ -23,6 +23,7 @@ scene_t *phong_ornitier_scene(void) {
             "assets/ornitier/base_specular.tga",
             0,
             0,
+            0,
         },
         {
             0.5f,
@@ -30,6 +31,7 @@ scene_t *phong_ornitier_scene(void) {
             "assets/ornitier/body_emission.tga",
             "assets/ornitier/body_diffuse.tga",
             "assets/ornitier/body_specular.tga",
+            0,
             0,
             0,
         },
@@ -41,6 +43,7 @@ scene_t *phong_ornitier_scene(void) {
             "assets/ornitier/coat_specular.tga",
             0,
             0,
+            0,
         },
         {
             0.5f,
@@ -50,6 +53,7 @@ scene_t *phong_ornitier_scene(void) {
             NULL,
             1,
             1,
+            0,
         },
         {
             0.5f,
@@ -57,6 +61,7 @@ scene_t *phong_ornitier_scene(void) {
             NULL,
             "assets/ornitier/hands_diffuse.tga",
             "assets/ornitier/hands_specular.tga",
+            0,
             0,
             0,
         },
@@ -68,6 +73,7 @@ scene_t *phong_ornitier_scene(void) {
             "assets/ornitier/hat_specular.tga",
             0,
             0,
+            0,
         },
         {
             0.5f,
@@ -75,6 +81,7 @@ scene_t *phong_ornitier_scene(void) {
             NULL,
             "assets/ornitier/legs_diffuse.tga",
             "assets/ornitier/legs_specular.tga",
+            0,
             0,
             0,
         },
@@ -99,6 +106,7 @@ scene_t *phong_ornitier_scene(void) {
 
     scene = (scene_t*)malloc(sizeof(scene_t));
     scene->background = background;
+    scene->skybox     = NULL;
     scene->models     = models;
 
     return scene;

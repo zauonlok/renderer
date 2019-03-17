@@ -1,14 +1,14 @@
 #include <stddef.h>
 #include "../core/api.h"
-#include "../scenes/skinned_scenes.h"
-#include "../shaders/skinned_shader.h"
+#include "../scenes/skinning_scenes.h"
+#include "../shaders/skinning_shader.h"
 #include "test_helper.h"
-#include "test_skinned.h"
+#include "test_skinning.h"
 
 static scene_creator_t g_scene_creators[] = {
-    {"assassin", skinned_assassin_scene},
-    {"junkrat", skinned_junkrat_scene},
-    {"kgirls", skinned_kgirls_scene},
+    {"assassin", skinning_assassin_scene},
+    {"junkrat", skinning_junkrat_scene},
+    {"kgirls", skinning_kgirls_scene},
     {NULL, NULL},
 };
 
@@ -23,7 +23,7 @@ static void update_scene(scene_t *scene, camera_t *camera) {
     for (i = 0; i < num_models; i++) {
         model_t *model = scene->models[i];
         mat4_t mvp_matrix = mat4_mul_mat4(viewproj_matrix, model->transform);
-        skinned_update_uniforms(model, mvp_matrix, skeleton);
+        skinning_update_uniforms(model, mvp_matrix, skeleton);
     }
     scene_sort_models(scene, view_matrix);
 }
@@ -40,7 +40,7 @@ static void tick_function(context_t *context, void *userdata) {
     draw_scene(scene, context->framebuffer);
 }
 
-void test_skinned(int argc, char *argv[]) {
+void test_skinning(int argc, char *argv[]) {
     const char *scene_name = argc > 2 ? argv[2] : NULL;
     scene_t *scene = scene_create(g_scene_creators, scene_name);
     if (scene) {

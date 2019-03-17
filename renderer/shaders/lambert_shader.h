@@ -10,6 +10,7 @@ typedef struct {
     /* render settings */
     int double_sided;
     int enable_blend;
+    int alpha_cutoff;
 } lambert_material_t;
 
 typedef struct {
@@ -31,11 +32,12 @@ typedef struct {
     float ambient;
     texture_t *emission;
     texture_t *diffuse;
+    int alpha_cutoff;
 } lambert_uniforms_t;
 
 /* low-level api */
 vec4_t lambert_vertex_shader(void *attribs, void *varyings, void *uniforms);
-vec4_t lambert_fragment_shader(void *varyings, void *uniforms);
+vec4_t lambert_fragment_shader(void *varyings, void *uniforms, int *discard);
 
 /* high-level api */
 model_t *lambert_create_model(const char *mesh, mat4_t transform,

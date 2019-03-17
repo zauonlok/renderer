@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "../core/api.h"
-#include "cache_helper.h"
 #include "lambert_shader.h"
+#include "shader_helper.h"
 
 /* low-level api */
 
@@ -21,7 +21,7 @@ vec4_t lambert_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     return clip_pos;
 }
 
-vec4_t lambert_fragment_shader(void *varyings_, void *uniforms_) {
+vec4_t lambert_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
     lambert_varyings_t *varyings = (lambert_varyings_t*)varyings_;
     lambert_uniforms_t *uniforms = (lambert_uniforms_t*)uniforms_;
 
@@ -41,6 +41,11 @@ vec4_t lambert_fragment_shader(void *varyings_, void *uniforms_) {
         alpha = sample.w;
     }
 
+    if (uniforms->alpha_cutoff && alpha < 0.5f) {
+        *discard = 1;
+        return vec4_new(0, 0, 0, 0);
+    }
+
     if (uniforms->emission) {
         vec4_t sample = texture_sample(uniforms->emission, varyings->texcoord);
         vec3_t emission = vec3_from_vec4(sample);
@@ -51,23 +56,6 @@ vec4_t lambert_fragment_shader(void *varyings_, void *uniforms_) {
 }
 
 /* high-level api */
-
-static lambert_uniforms_t *get_uniforms(model_t *model) {
-    return (lambert_uniforms_t*)program_get_uniforms(model->program);
-}
-
-static void release_model(model_t *model) {
-    lambert_uniforms_t *uniforms = get_uniforms(model);
-    if (uniforms->emission) {
-        cache_release_texture(uniforms->emission);
-    }
-    if (uniforms->diffuse) {
-        cache_release_texture(uniforms->diffuse);
-    }
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     program_t *program = model->program;
@@ -88,6 +76,16 @@ static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     }
 }
 
+static void release_model(model_t *model) {
+    lambert_uniforms_t *uniforms;
+    uniforms = (lambert_uniforms_t*)program_get_uniforms(model->program);
+    cache_release_texture(uniforms->emission);
+    cache_release_texture(uniforms->diffuse);
+    program_release(model->program);
+    cache_release_mesh(model->mesh);
+    free(model);
+}
+
 model_t *lambert_create_model(const char *mesh, mat4_t transform,
                               lambert_material_t material) {
     int sizeof_attribs = sizeof(lambert_attribs_t);
@@ -100,17 +98,15 @@ model_t *lambert_create_model(const char *mesh, mat4_t transform,
     program = program_create(lambert_vertex_shader, lambert_fragment_shader,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms,
                              material.double_sided, material.enable_blend);
+
     uniforms = (lambert_uniforms_t*)program_get_uniforms(program);
     uniforms->ambient = material.ambient;
-    if (material.emission) {
-        uniforms->emission = cache_acquire_texture(material.emission, 0);
-    }
-    if (material.diffuse) {
-        uniforms->diffuse = cache_acquire_texture(material.diffuse, 0);
-    }
+    uniforms->alpha_cutoff = material.alpha_cutoff;
+    uniforms->emission = cache_acquire_texture(material.emission, 0);
+    uniforms->diffuse = cache_acquire_texture(material.diffuse, 0);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh      = mesh_load(mesh);
+    model->mesh      = cache_acquire_mesh(mesh);
     model->transform = transform;
     model->program   = program;
     model->draw      = draw_model;
@@ -122,7 +118,8 @@ model_t *lambert_create_model(const char *mesh, mat4_t transform,
 
 void lambert_update_uniforms(model_t *model, vec3_t light_dir,
                              mat4_t mvp_matrix, mat3_t normal_matrix) {
-    lambert_uniforms_t *uniforms = get_uniforms(model);
+    lambert_uniforms_t *uniforms;
+    uniforms = (lambert_uniforms_t*)program_get_uniforms(model->program);
     uniforms->light_dir = light_dir;
     uniforms->mvp_matrix = mvp_matrix;
     uniforms->normal_matrix = normal_matrix;

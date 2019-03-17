@@ -9,7 +9,7 @@
 #include "tests/test_unlit.h"
 #include "tests/test_metalness.h"
 #include "tests/test_specular.h"
-#include "tests/test_skinned.h"
+#include "tests/test_skinning.h"
 
 typedef void testfunc_t(int argc, char *argv[]);
 typedef struct {const char *testname; testfunc_t *testfunc;} testcase_t;
@@ -21,7 +21,7 @@ static testcase_t g_testcases[] = {
     {"unlit", test_unlit},
     {"metalness", test_metalness},
     {"specular", test_specular},
-    {"skinned", test_skinned},
+    {"skinning", test_skinning},
 };
 
 int main(int argc, char *argv[]) {
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     if (argc > 1) {
         testname = argv[1];
         for (i = 0; i < num_testcases; i++) {
-            if (strcmp(testname, g_testcases[i].testname) == 0) {
+            if (strcmp(g_testcases[i].testname, testname) == 0) {
                 testfunc = g_testcases[i].testfunc;
                 break;
             }

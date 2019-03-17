@@ -1,8 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "../core/api.h"
-#include "cache_helper.h"
-#include "pbr_helper.h"
+#include "shader_helper.h"
 #include "specular_shader.h"
 
 /* low-level api */
@@ -13,16 +12,22 @@ vec4_t specular_vertex_shader(void *attribs_, void *varyings_,
     specular_varyings_t *varyings = (specular_varyings_t*)varyings_;
     specular_uniforms_t *uniforms = (specular_uniforms_t*)uniforms_;
 
+    mat4_t model_matrix = uniforms->model_matrix;
+    mat3_t normal_matrix = uniforms->normal_matrix;
+
     vec4_t local_pos = vec4_from_vec3(attribs->position, 1);
-    vec4_t world_pos = mat4_mul_vec4(uniforms->model_matrix, local_pos);
+    vec4_t world_pos = mat4_mul_vec4(model_matrix, local_pos);
     vec4_t clip_pos = mat4_mul_vec4(uniforms->viewproj_matrix, world_pos);
 
-    mat3_t tbn_matrix = pbr_build_tbn(attribs->normal, uniforms->normal_matrix,
-                                      attribs->tangent, uniforms->model_matrix);
-
+    if (uniforms->normal_texture) {
+        varyings->tbn_matrix = normal_build_tbn(attribs->normal, normal_matrix,
+                                                attribs->tangent, model_matrix);
+    } else {
+        vec3_t world_normal = mat3_mul_vec3(normal_matrix, attribs->normal);
+        varyings->normal = vec3_normalize(world_normal);
+    }
     varyings->position = vec3_from_vec4(world_pos);
     varyings->texcoord = attribs->texcoord;
-    varyings->tbn_matrix = tbn_matrix;
     return clip_pos;
 }
 
@@ -72,11 +77,23 @@ static vec3_t get_emission(vec2_t texcoord, specular_uniforms_t *uniforms) {
     }
 }
 
+static vec3_t get_normal(specular_varyings_t *varyings,
+                         specular_uniforms_t *uniforms) {
+    if (uniforms->normal_texture) {
+        return normal_from_texture(varyings->tbn_matrix,
+                                   varyings->texcoord,
+                                   uniforms->normal_texture);
+    } else {
+        return vec3_normalize(varyings->normal);
+    }
+}
+
 static float max_component(vec3_t v) {
     return v.x > v.y && v.x > v.z ? v.x : (v.y > v.z ? v.y : v.z);
 }
 
-vec4_t specular_fragment_shader(void *varyings_, void *uniforms_) {
+vec4_t specular_fragment_shader(void *varyings_, void *uniforms_,
+                                int *discard) {
     specular_varyings_t *varyings = (specular_varyings_t*)varyings_;
     specular_uniforms_t *uniforms = (specular_uniforms_t*)uniforms_;
 
@@ -85,8 +102,7 @@ vec4_t specular_fragment_shader(void *varyings_, void *uniforms_) {
     float glossiness = get_glossiness(varyings->texcoord, uniforms);
     float occlusion = get_occlusion(varyings->texcoord, uniforms);
     vec3_t emission = get_emission(varyings->texcoord, uniforms);
-    vec3_t normal = pbr_get_normal(varyings->tbn_matrix, varyings->texcoord,
-                                   uniforms->normal_texture);
+    vec3_t normal = get_normal(varyings, uniforms);
 
     vec3_t diffuse = vec3_from_vec4(diffuse_);
     float alpha = diffuse_.w;
@@ -111,40 +127,15 @@ vec4_t specular_fragment_shader(void *varyings_, void *uniforms_) {
     color = vec3_mul(color, occlusion);
     color = vec3_add(color, emission);
 
+    if (uniforms->alpha_cutoff && alpha < 0.5f) {
+        *discard = 1;
+        return vec4_new(0, 0, 0, 0);
+    }
+
     return vec4_from_vec3(pbr_tone_map(color), alpha);
 }
 
 /* high-level api */
-
-static specular_uniforms_t *get_uniforms(model_t *model) {
-    return (specular_uniforms_t*)program_get_uniforms(model->program);
-}
-
-static void release_model(model_t *model) {
-    specular_uniforms_t *uniforms = get_uniforms(model);
-    if (uniforms->diffuse_texture) {
-        cache_release_texture(uniforms->diffuse_texture);
-    }
-    if (uniforms->specular_texture) {
-        cache_release_texture(uniforms->specular_texture);
-    }
-    if (uniforms->glossiness_texture) {
-        cache_release_texture(uniforms->glossiness_texture);
-    }
-    if (uniforms->normal_texture) {
-        cache_release_texture(uniforms->normal_texture);
-    }
-    if (uniforms->occlusion_texture) {
-        cache_release_texture(uniforms->occlusion_texture);
-    }
-    if (uniforms->emissive_texture) {
-        cache_release_texture(uniforms->emissive_texture);
-    }
-    pbr_release_ibldata(uniforms->shared_ibldata);
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     program_t *program = model->program;
@@ -166,12 +157,28 @@ static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     }
 }
 
+static void release_model(model_t *model) {
+    specular_uniforms_t *uniforms;
+    uniforms = (specular_uniforms_t*)program_get_uniforms(model->program);
+    cache_release_texture(uniforms->diffuse_texture);
+    cache_release_texture(uniforms->specular_texture);
+    cache_release_texture(uniforms->glossiness_texture);
+    cache_release_texture(uniforms->normal_texture);
+    cache_release_texture(uniforms->occlusion_texture);
+    cache_release_texture(uniforms->emissive_texture);
+    cache_release_ibldata(uniforms->shared_ibldata);
+    program_release(model->program);
+    cache_release_mesh(model->mesh);
+    free(model);
+}
+
 model_t *specular_create_model(
         const char *mesh, mat4_t transform,
         specular_material_t material, const char *env_name) {
     int sizeof_attribs = sizeof(specular_attribs_t);
     int sizeof_varyings = sizeof(specular_varyings_t);
     int sizeof_uniforms = sizeof(specular_uniforms_t);
+    const char *texture_filename;
     specular_uniforms_t *uniforms;
     program_t *program;
     model_t *model;
@@ -181,38 +188,28 @@ model_t *specular_create_model(
     program = program_create(specular_vertex_shader, specular_fragment_shader,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms,
                              material.double_sided, material.enable_blend);
+
     uniforms = (specular_uniforms_t*)program_get_uniforms(program);
     uniforms->diffuse_factor = material.diffuse_factor;
     uniforms->specular_factor = material.specular_factor;
     uniforms->glossiness_factor = material.glossiness_factor;
-    if (material.diffuse_texture) {
-        const char *diffuse_name = material.diffuse_texture;
-        uniforms->diffuse_texture = cache_acquire_texture(diffuse_name, 1);
-    }
-    if (material.specular_texture) {
-        const char *specular_name = material.specular_texture;
-        uniforms->specular_texture = cache_acquire_texture(specular_name, 1);
-    }
-    if (material.glossiness_texture) {
-        const char *roughness_name = material.glossiness_texture;
-        uniforms->glossiness_texture = cache_acquire_texture(roughness_name, 0);
-    }
-    if (material.normal_texture) {
-        const char *normal_name = material.normal_texture;
-        uniforms->normal_texture = cache_acquire_texture(normal_name, 0);
-    }
-    if (material.occlusion_texture) {
-        const char *occlusion_name = material.occlusion_texture;
-        uniforms->occlusion_texture = cache_acquire_texture(occlusion_name, 0);
-    }
-    if (material.emissive_texture) {
-        const char *emissive_name = material.emissive_texture;
-        uniforms->emissive_texture = cache_acquire_texture(emissive_name, 1);
-    }
-    uniforms->shared_ibldata = pbr_acquire_ibldata(env_name);
+    uniforms->alpha_cutoff = material.alpha_cutoff;
+    texture_filename = material.diffuse_texture;
+    uniforms->diffuse_texture = cache_acquire_texture(texture_filename, 1);
+    texture_filename = material.specular_texture;
+    uniforms->specular_texture = cache_acquire_texture(texture_filename, 1);
+    texture_filename = material.glossiness_texture;
+    uniforms->glossiness_texture = cache_acquire_texture(texture_filename, 0);
+    texture_filename = material.normal_texture;
+    uniforms->normal_texture = cache_acquire_texture(texture_filename, 0);
+    texture_filename = material.occlusion_texture;
+    uniforms->occlusion_texture = cache_acquire_texture(texture_filename, 0);
+    texture_filename = material.emissive_texture;
+    uniforms->emissive_texture = cache_acquire_texture(texture_filename, 1);
+    uniforms->shared_ibldata = cache_acquire_ibldata(env_name);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh      = mesh_load(mesh);
+    model->mesh      = cache_acquire_mesh(mesh);
     model->transform = transform;
     model->program   = program;
     model->draw      = draw_model;
@@ -225,7 +222,8 @@ model_t *specular_create_model(
 void specular_update_uniforms(
         model_t *model, vec3_t light_dir, vec3_t camera_pos,
         mat4_t model_matrix, mat3_t normal_matrix, mat4_t viewproj_matrix) {
-    specular_uniforms_t *uniforms = get_uniforms(model);
+    specular_uniforms_t *uniforms;
+    uniforms = (specular_uniforms_t*)program_get_uniforms(model->program);
     uniforms->light_dir = light_dir;
     uniforms->camera_pos = camera_pos;
     uniforms->model_matrix = model_matrix;

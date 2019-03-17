@@ -18,6 +18,7 @@ scene_t *metalness_helmet_scene(void) {
         "assets/helmet/emissive.tga",
         0,
         0,
+        0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     const char *env_name = "papermill";
@@ -32,6 +33,7 @@ scene_t *metalness_helmet_scene(void) {
 
     scene = (scene_t*)malloc(sizeof(scene_t));
     scene->background = background;
+    scene->skybox     = NULL;
     scene->models     = models;
 
     return scene;
@@ -55,6 +57,7 @@ scene_t *metalness_helmet2_scene(void) {
             NULL,
             0,
             1,
+            0,
         },
         {
             {1, 1, 1, 1},
@@ -66,6 +69,7 @@ scene_t *metalness_helmet2_scene(void) {
             "assets/helmet2/helmet_normal.tga",
             "assets/helmet2/helmet_occlusion.tga",
             "assets/helmet2/helmet_emissive.tga",
+            0,
             0,
             0,
         },
@@ -89,6 +93,7 @@ scene_t *metalness_helmet2_scene(void) {
 
     scene = (scene_t*)malloc(sizeof(scene_t));
     scene->background = background;
+    scene->skybox     = NULL;
     scene->models     = models;
 
     return scene;
@@ -113,6 +118,7 @@ scene_t *metalness_ponycar_scene(void) {
             "assets/ponycar/body_emissive.tga",
             0,
             0,
+            0,
         },
         {
             {1, 1, 1, 1},
@@ -124,6 +130,7 @@ scene_t *metalness_ponycar_scene(void) {
             "assets/ponycar/interior_normal.tga",
             NULL,
             NULL,
+            0,
             0,
             0,
         },
@@ -139,6 +146,7 @@ scene_t *metalness_ponycar_scene(void) {
             "assets/ponycar/body_emissive.tga",
             0,
             1,
+            0,
         },
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
@@ -163,6 +171,7 @@ scene_t *metalness_ponycar_scene(void) {
 
     scene = (scene_t*)malloc(sizeof(scene_t));
     scene->background = background;
+    scene->skybox     = NULL;
     scene->models     = models;
 
     return scene;

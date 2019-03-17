@@ -10,7 +10,7 @@ typedef struct {
 } framebuffer_t;
 
 typedef vec4_t vertex_shader_t(void *attribs, void *varyings, void *uniforms);
-typedef vec4_t fragment_shader_t(void *varyings, void *uniforms);
+typedef vec4_t fragment_shader_t(void *varyings, void *uniforms, int *discard);
 typedef struct program program_t;
 
 /* framebuffer management */

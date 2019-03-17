@@ -2,7 +2,7 @@
 #define SPECULAR_SHADER_H
 
 #include "../core/api.h"
-#include "pbr_helper.h"
+#include "shader_helper.h"
 
 typedef struct {
     vec4_t diffuse_factor;
@@ -18,6 +18,7 @@ typedef struct {
     /* render settings */
     int double_sided;
     int enable_blend;
+    int alpha_cutoff;
 } specular_material_t;
 
 typedef struct {
@@ -30,6 +31,7 @@ typedef struct {
 typedef struct {
     vec3_t position;
     vec2_t texcoord;
+    vec3_t normal;
     mat3_t tbn_matrix;
 } specular_varyings_t;
 
@@ -49,13 +51,14 @@ typedef struct {
     texture_t *normal_texture;
     texture_t *occlusion_texture;
     texture_t *emissive_texture;
+    int alpha_cutoff;
     /* for environment */
     ibldata_t *shared_ibldata;
 } specular_uniforms_t;
 
 /* low-level api */
 vec4_t specular_vertex_shader(void *attribs, void *varyings, void *uniforms);
-vec4_t specular_fragment_shader(void *varyings, void *uniforms);
+vec4_t specular_fragment_shader(void *varyings, void *uniforms, int *discard);
 
 /* high-level api */
 model_t *specular_create_model(

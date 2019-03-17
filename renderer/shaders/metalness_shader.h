@@ -2,7 +2,7 @@
 #define METALNESS_SHADER_H
 
 #include "../core/api.h"
-#include "pbr_helper.h"
+#include "shader_helper.h"
 
 typedef struct {
     vec4_t basecolor_factor;
@@ -18,6 +18,7 @@ typedef struct {
     /* render settings */
     int double_sided;
     int enable_blend;
+    int alpha_cutoff;
 } metalness_material_t;
 
 typedef struct {
@@ -30,6 +31,7 @@ typedef struct {
 typedef struct {
     vec3_t position;
     vec2_t texcoord;
+    vec3_t normal;
     mat3_t tbn_matrix;
 } metalness_varyings_t;
 
@@ -49,13 +51,14 @@ typedef struct {
     texture_t *normal_texture;
     texture_t *occlusion_texture;
     texture_t *emissive_texture;
+    int alpha_cutoff;
     /* for environment */
     ibldata_t *shared_ibldata;
 } metalness_uniforms_t;
 
 /* low-level api */
 vec4_t metalness_vertex_shader(void *attribs, void *varyings, void *uniforms);
-vec4_t metalness_fragment_shader(void *varyings, void *uniforms);
+vec4_t metalness_fragment_shader(void *varyings, void *uniforms, int *discard);
 
 /* high-level api */
 model_t *metalness_create_model(

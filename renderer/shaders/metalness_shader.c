@@ -1,9 +1,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "../core/api.h"
-#include "cache_helper.h"
 #include "metalness_shader.h"
-#include "pbr_helper.h"
+#include "shader_helper.h"
 
 /* low-level api */
 
@@ -13,16 +12,22 @@ vec4_t metalness_vertex_shader(void *attribs_, void *varyings_,
     metalness_varyings_t *varyings = (metalness_varyings_t*)varyings_;
     metalness_uniforms_t *uniforms = (metalness_uniforms_t*)uniforms_;
 
+    mat4_t model_matrix = uniforms->model_matrix;
+    mat3_t normal_matrix = uniforms->normal_matrix;
+
     vec4_t local_pos = vec4_from_vec3(attribs->position, 1);
-    vec4_t world_pos = mat4_mul_vec4(uniforms->model_matrix, local_pos);
+    vec4_t world_pos = mat4_mul_vec4(model_matrix, local_pos);
     vec4_t clip_pos = mat4_mul_vec4(uniforms->viewproj_matrix, world_pos);
 
-    mat3_t tbn_matrix = pbr_build_tbn(attribs->normal, uniforms->normal_matrix,
-                                      attribs->tangent, uniforms->model_matrix);
-
+    if (uniforms->normal_texture) {
+        varyings->tbn_matrix = normal_build_tbn(attribs->normal, normal_matrix,
+                                                attribs->tangent, model_matrix);
+    } else {
+        vec3_t world_normal = mat3_mul_vec3(normal_matrix, attribs->normal);
+        varyings->normal = vec3_normalize(world_normal);
+    }
     varyings->position = vec3_from_vec4(world_pos);
     varyings->texcoord = attribs->texcoord;
-    varyings->tbn_matrix = tbn_matrix;
     return clip_pos;
 }
 
@@ -71,7 +76,19 @@ static vec3_t get_emission(vec2_t texcoord, metalness_uniforms_t *uniforms) {
     }
 }
 
-vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
+static vec3_t get_normal(metalness_varyings_t *varyings,
+                         metalness_uniforms_t *uniforms) {
+    if (uniforms->normal_texture) {
+        return normal_from_texture(varyings->tbn_matrix,
+                                   varyings->texcoord,
+                                   uniforms->normal_texture);
+    } else {
+        return vec3_normalize(varyings->normal);
+    }
+}
+
+vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_,
+                                 int *discard) {
     metalness_varyings_t *varyings = (metalness_varyings_t*)varyings_;
     metalness_uniforms_t *uniforms = (metalness_uniforms_t*)uniforms_;
 
@@ -80,8 +97,7 @@ vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
     float roughness = get_roughness(varyings->texcoord, uniforms);
     float occlusion = get_occlusion(varyings->texcoord, uniforms);
     vec3_t emission = get_emission(varyings->texcoord, uniforms);
-    vec3_t normal = pbr_get_normal(varyings->tbn_matrix, varyings->texcoord,
-                                   uniforms->normal_texture);
+    vec3_t normal = get_normal(varyings, uniforms);
 
     vec3_t basecolor = vec3_from_vec4(basecolor_);
     float alpha = basecolor_.w;
@@ -106,40 +122,15 @@ vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_) {
     color = vec3_mul(color, occlusion);
     color = vec3_add(color, emission);
 
+    if (uniforms->alpha_cutoff && alpha < 0.5f) {
+        *discard = 1;
+        return vec4_new(0, 0, 0, 0);
+    }
+
     return vec4_from_vec3(pbr_tone_map(color), alpha);
 }
 
 /* high-level api */
-
-static metalness_uniforms_t *get_uniforms(model_t *model) {
-    return (metalness_uniforms_t*)program_get_uniforms(model->program);
-}
-
-static void release_model(model_t *model) {
-    metalness_uniforms_t *uniforms = get_uniforms(model);
-    if (uniforms->basecolor_texture) {
-        cache_release_texture(uniforms->basecolor_texture);
-    }
-    if (uniforms->metallic_texture) {
-        cache_release_texture(uniforms->metallic_texture);
-    }
-    if (uniforms->roughness_texture) {
-        cache_release_texture(uniforms->roughness_texture);
-    }
-    if (uniforms->normal_texture) {
-        cache_release_texture(uniforms->normal_texture);
-    }
-    if (uniforms->occlusion_texture) {
-        cache_release_texture(uniforms->occlusion_texture);
-    }
-    if (uniforms->emissive_texture) {
-        cache_release_texture(uniforms->emissive_texture);
-    }
-    pbr_release_ibldata(uniforms->shared_ibldata);
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     program_t *program = model->program;
@@ -161,12 +152,28 @@ static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     }
 }
 
+static void release_model(model_t *model) {
+    metalness_uniforms_t *uniforms;
+    uniforms = (metalness_uniforms_t*)program_get_uniforms(model->program);
+    cache_release_texture(uniforms->basecolor_texture);
+    cache_release_texture(uniforms->metallic_texture);
+    cache_release_texture(uniforms->roughness_texture);
+    cache_release_texture(uniforms->normal_texture);
+    cache_release_texture(uniforms->occlusion_texture);
+    cache_release_texture(uniforms->emissive_texture);
+    cache_release_ibldata(uniforms->shared_ibldata);
+    program_release(model->program);
+    cache_release_mesh(model->mesh);
+    free(model);
+}
+
 model_t *metalness_create_model(
         const char *mesh, mat4_t transform,
         metalness_material_t material, const char *env_name) {
     int sizeof_attribs = sizeof(metalness_attribs_t);
     int sizeof_varyings = sizeof(metalness_varyings_t);
     int sizeof_uniforms = sizeof(metalness_uniforms_t);
+    const char *texture_filename;
     metalness_uniforms_t *uniforms;
     program_t *program;
     model_t *model;
@@ -177,38 +184,28 @@ model_t *metalness_create_model(
     program = program_create(metalness_vertex_shader, metalness_fragment_shader,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms,
                              material.double_sided, material.enable_blend);
+
     uniforms = (metalness_uniforms_t*)program_get_uniforms(program);
     uniforms->basecolor_factor = material.basecolor_factor;
     uniforms->metallic_factor = material.metallic_factor;
     uniforms->roughness_factor = material.roughness_factor;
-    if (material.basecolor_texture) {
-        const char *basecolor_name = material.basecolor_texture;
-        uniforms->basecolor_texture = cache_acquire_texture(basecolor_name, 1);
-    }
-    if (material.metallic_texture) {
-        const char *metallic_name = material.metallic_texture;
-        uniforms->metallic_texture = cache_acquire_texture(metallic_name, 0);
-    }
-    if (material.roughness_texture) {
-        const char *roughness_name = material.roughness_texture;
-        uniforms->roughness_texture = cache_acquire_texture(roughness_name, 0);
-    }
-    if (material.normal_texture) {
-        const char *normal_name = material.normal_texture;
-        uniforms->normal_texture = cache_acquire_texture(normal_name, 0);
-    }
-    if (material.occlusion_texture) {
-        const char *occlusion_name = material.occlusion_texture;
-        uniforms->occlusion_texture = cache_acquire_texture(occlusion_name, 0);
-    }
-    if (material.emissive_texture) {
-        const char *emissive_name = material.emissive_texture;
-        uniforms->emissive_texture = cache_acquire_texture(emissive_name, 1);
-    }
-    uniforms->shared_ibldata = pbr_acquire_ibldata(env_name);
+    uniforms->alpha_cutoff = material.alpha_cutoff;
+    texture_filename = material.basecolor_texture;
+    uniforms->basecolor_texture = cache_acquire_texture(texture_filename, 1);
+    texture_filename = material.metallic_texture;
+    uniforms->metallic_texture = cache_acquire_texture(texture_filename, 0);
+    texture_filename = material.roughness_texture;
+    uniforms->roughness_texture = cache_acquire_texture(texture_filename, 0);
+    texture_filename = material.normal_texture;
+    uniforms->normal_texture = cache_acquire_texture(texture_filename, 0);
+    texture_filename = material.occlusion_texture;
+    uniforms->occlusion_texture = cache_acquire_texture(texture_filename, 0);
+    texture_filename = material.emissive_texture;
+    uniforms->emissive_texture = cache_acquire_texture(texture_filename, 1);
+    uniforms->shared_ibldata = cache_acquire_ibldata(env_name);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh      = mesh_load(mesh);
+    model->mesh      = cache_acquire_mesh(mesh);
     model->transform = transform;
     model->program   = program;
     model->draw      = draw_model;
@@ -221,7 +218,8 @@ model_t *metalness_create_model(
 void metalness_update_uniforms(
         model_t *model, vec3_t light_dir, vec3_t camera_pos,
         mat4_t model_matrix, mat3_t normal_matrix, mat4_t viewproj_matrix) {
-    metalness_uniforms_t *uniforms = get_uniforms(model);
+    metalness_uniforms_t *uniforms;
+    uniforms = (metalness_uniforms_t*)program_get_uniforms(model->program);
     uniforms->light_dir = light_dir;
     uniforms->camera_pos = camera_pos;
     uniforms->model_matrix = model_matrix;

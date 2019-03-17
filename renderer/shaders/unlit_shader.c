@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "../core/api.h"
-#include "cache_helper.h"
+#include "shader_helper.h"
 #include "unlit_shader.h"
 
 /* low-level api */
@@ -16,33 +16,28 @@ vec4_t unlit_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     return clip_pos;
 }
 
-vec4_t unlit_fragment_shader(void *varyings_, void *uniforms_) {
+vec4_t unlit_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
     unlit_varyings_t *varyings = (unlit_varyings_t*)varyings_;
     unlit_uniforms_t *uniforms = (unlit_uniforms_t*)uniforms_;
 
+    vec4_t color;
+
     if (uniforms->texture) {
         vec4_t sample = texture_sample(uniforms->texture, varyings->texcoord);
-        return vec4_modulate(uniforms->factor, sample);
+        color = vec4_modulate(uniforms->factor, sample);
     } else {
-        return uniforms->factor;
+        color = uniforms->factor;
     }
+
+    if (uniforms->alpha_cutoff && color.w < 0.5f) {
+        *discard = 1;
+        return vec4_new(0, 0, 0, 0);
+    }
+
+    return color;
 }
 
 /* high-level api */
-
-static unlit_uniforms_t *get_uniforms(model_t *model) {
-    return (unlit_uniforms_t*)program_get_uniforms(model->program);
-}
-
-static void release_model(model_t *model) {
-    unlit_uniforms_t *uniforms = get_uniforms(model);
-    if (uniforms->texture) {
-        cache_release_texture(uniforms->texture);
-    }
-    program_release(model->program);
-    mesh_release(model->mesh);
-    free(model);
-}
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     program_t *program = model->program;
@@ -62,6 +57,15 @@ static void draw_model(model_t *model, framebuffer_t *framebuffer) {
     }
 }
 
+static void release_model(model_t *model) {
+    unlit_uniforms_t *uniforms;
+    uniforms = (unlit_uniforms_t*)program_get_uniforms(model->program);
+    cache_release_texture(uniforms->texture);
+    program_release(model->program);
+    cache_release_mesh(model->mesh);
+    free(model);
+}
+
 model_t *unlit_create_model(const char *mesh, mat4_t transform,
                             unlit_material_t material) {
     int sizeof_attribs = sizeof(unlit_attribs_t);
@@ -74,14 +78,14 @@ model_t *unlit_create_model(const char *mesh, mat4_t transform,
     program = program_create(unlit_vertex_shader, unlit_fragment_shader,
                              sizeof_attribs, sizeof_varyings, sizeof_uniforms,
                              material.double_sided, material.enable_blend);
+
     uniforms = (unlit_uniforms_t*)program_get_uniforms(program);
     uniforms->factor = material.factor;
-    if (material.texture) {
-        uniforms->texture = cache_acquire_texture(material.texture, 0);
-    }
+    uniforms->alpha_cutoff = material.alpha_cutoff;
+    uniforms->texture = cache_acquire_texture(material.texture, 0);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh      = mesh_load(mesh);
+    model->mesh      = cache_acquire_mesh(mesh);
     model->transform = transform;
     model->program   = program;
     model->draw      = draw_model;
@@ -92,6 +96,7 @@ model_t *unlit_create_model(const char *mesh, mat4_t transform,
 }
 
 void unlit_update_uniforms(model_t *model, mat4_t mvp_matrix) {
-    unlit_uniforms_t *uniforms = get_uniforms(model);
+    unlit_uniforms_t *uniforms;
+    uniforms = (unlit_uniforms_t*)program_get_uniforms(model->program);
     uniforms->mvp_matrix = mvp_matrix;
 }

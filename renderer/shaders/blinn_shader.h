@@ -12,6 +12,7 @@ typedef struct {
     /* render settings */
     int double_sided;
     int enable_blend;
+    int alpha_cutoff;
 } blinn_material_t;
 
 typedef struct {
@@ -38,11 +39,12 @@ typedef struct {
     texture_t *emission;
     texture_t *diffuse;
     texture_t *specular;
+    int alpha_cutoff;
 } blinn_uniforms_t;
 
 /* low-level api */
 vec4_t blinn_vertex_shader(void *attribs, void *varyings, void *uniforms);
-vec4_t blinn_fragment_shader(void *varyings, void *uniforms);
+vec4_t blinn_fragment_shader(void *varyings, void *uniforms, int *discard);
 
 /* high-level api */
 model_t *blinn_create_model(const char *mesh, mat4_t transform,
