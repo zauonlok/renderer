@@ -25,11 +25,11 @@ scene_t *lambert_craftsman_scene(void) {
         },
         {
             0.5f,
-            0,
+            1,
             NULL,
             "assets/craftsman/floor_diffuse.tga",
             1,
-            1,
+            0,
         },
         {
             0.5f,
