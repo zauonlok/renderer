@@ -74,7 +74,7 @@ vec4_t skinning_fragment_shader(void *varyings_, void *uniforms_,
         color = uniforms->factor;
     }
 
-    if (uniforms->alpha_cutoff && color.w < 0.5f) {
+    if (uniforms->alpha_cutoff > 0 && color.w < uniforms->alpha_cutoff) {
         *discard = 1;
         return vec4_new(0, 0, 0, 0);
     }

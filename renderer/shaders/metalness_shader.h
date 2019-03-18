@@ -6,10 +6,11 @@
 
 typedef struct {
     vec4_t basecolor_factor;
-    const char *basecolor_texture;              /* in srgb space */
     float metallic_factor;
-    const char *metallic_texture;
     float roughness_factor;
+    float alpha_cutoff;
+    const char *basecolor_texture;              /* in srgb space */
+    const char *metallic_texture;
     const char *roughness_texture;
     /* additional maps */
     const char *normal_texture;
@@ -18,7 +19,6 @@ typedef struct {
     /* render settings */
     int double_sided;
     int enable_blend;
-    int alpha_cutoff;
 } metalness_material_t;
 
 typedef struct {
@@ -43,15 +43,15 @@ typedef struct {
     mat4_t viewproj_matrix;
     /* from material */
     vec4_t basecolor_factor;
-    texture_t *basecolor_texture;
     float metallic_factor;
-    texture_t *metallic_texture;
     float roughness_factor;
+    float alpha_cutoff;
+    texture_t *basecolor_texture;
+    texture_t *metallic_texture;
     texture_t *roughness_texture;
     texture_t *normal_texture;
     texture_t *occlusion_texture;
     texture_t *emissive_texture;
-    int alpha_cutoff;
     /* for environment */
     ibldata_t *shared_ibldata;
 } metalness_uniforms_t;

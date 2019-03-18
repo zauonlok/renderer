@@ -5,12 +5,12 @@
 
 typedef struct {
     float ambient;
+    float alpha_cutoff;
     const char *emission;
     const char *diffuse;
     /* render settings */
     int double_sided;
     int enable_blend;
-    int alpha_cutoff;
 } lambert_material_t;
 
 typedef struct {
@@ -30,9 +30,9 @@ typedef struct {
     mat3_t normal_matrix;
     /* from material */
     float ambient;
+    float alpha_cutoff;
     texture_t *emission;
     texture_t *diffuse;
-    int alpha_cutoff;
 } lambert_uniforms_t;
 
 /* low-level api */

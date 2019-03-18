@@ -6,10 +6,11 @@
 
 typedef struct {
     vec4_t diffuse_factor;
-    const char *diffuse_texture;                /* in srgb space */
     vec3_t specular_factor;
-    const char *specular_texture;               /* in srgb space */
     float glossiness_factor;
+    float alpha_cutoff;
+    const char *diffuse_texture;                /* in srgb space */
+    const char *specular_texture;               /* in srgb space */
     const char *glossiness_texture;
     /* additional maps */
     const char *normal_texture;
@@ -18,7 +19,7 @@ typedef struct {
     /* render settings */
     int double_sided;
     int enable_blend;
-    int alpha_cutoff;
+
 } specular_material_t;
 
 typedef struct {
@@ -43,15 +44,15 @@ typedef struct {
     mat4_t viewproj_matrix;
     /* from material */
     vec4_t diffuse_factor;
-    texture_t *diffuse_texture;
     vec3_t specular_factor;
-    texture_t *specular_texture;
     float glossiness_factor;
+    float alpha_cutoff;
+    texture_t *diffuse_texture;
+    texture_t *specular_texture;
     texture_t *glossiness_texture;
     texture_t *normal_texture;
     texture_t *occlusion_texture;
     texture_t *emissive_texture;
-    int alpha_cutoff;
     /* for environment */
     ibldata_t *shared_ibldata;
 } specular_uniforms_t;

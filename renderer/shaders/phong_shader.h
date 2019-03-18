@@ -6,13 +6,13 @@
 typedef struct {
     float ambient;
     float shininess;
+    float alpha_cutoff;
     const char *emission;
     const char *diffuse;
     const char *specular;
     /* render settings */
     int double_sided;
     int enable_blend;
-    int alpha_cutoff;
 } phong_material_t;
 
 typedef struct {
@@ -36,10 +36,10 @@ typedef struct {
     /* from material */
     float ambient;
     float shininess;
+    float alpha_cutoff;
     texture_t *emission;
     texture_t *diffuse;
     texture_t *specular;
-    int alpha_cutoff;
 } phong_uniforms_t;
 
 /* low-level api */

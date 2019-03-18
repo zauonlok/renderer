@@ -17,27 +17,27 @@ scene_t *lambert_craftsman_scene(void) {
     lambert_material_t materials[] = {
         {
             0.5f,
+            0,
             NULL,
             "assets/craftsman/anvil_diffuse.tga",
             0,
             0,
-            0,
         },
         {
             0.5f,
+            0,
             NULL,
             "assets/craftsman/floor_diffuse.tga",
             1,
             1,
-            0,
         },
         {
             0.5f,
+            1,
             "assets/craftsman/smith_emission.tga",
             "assets/craftsman/smith_diffuse.tga",
             0,
             0,
-            1,
         },
     };
     mat4_t transforms[] = {
@@ -87,11 +87,11 @@ scene_t *lambert_craftsman_scene(void) {
     const char *spark_mesh = "assets/craftsman/spark.obj";
     lambert_material_t spark_material = {
         0.5f,
+        0,
         "assets/craftsman/spark_emission.tga",
         "assets/craftsman/spark_diffuse.tga",
         1,
         1,
-        0,
     };
     mat4_t spark_transforms[] = {
         {{

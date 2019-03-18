@@ -44,7 +44,7 @@ def print_transforms(transforms):
 
 
 def print_materials(materials):
-    row_pattern = "        {{{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}, NULL, 1, 0, 0}},"
+    row_pattern = "        {{{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}, 0, NULL, 1, 0}},"
     print("    unlit_material_t materials[{}] = {{".format(len(materials)))
     for material in materials:
         color = material["pbrMetallicRoughness"]["baseColorFactor"]

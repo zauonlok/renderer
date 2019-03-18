@@ -46,7 +46,7 @@ vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
         alpha = sample.w;
     }
 
-    if (uniforms->alpha_cutoff && alpha < 0.5f) {
+    if (uniforms->alpha_cutoff > 0 && alpha < uniforms->alpha_cutoff) {
         *discard = 1;
         return vec4_new(0, 0, 0, 0);
     }

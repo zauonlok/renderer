@@ -5,11 +5,11 @@
 
 typedef struct {
     vec4_t factor;
+    float alpha_cutoff;
     const char *texture;
     /* render settings */
     int double_sided;
     int enable_blend;
-    int alpha_cutoff;
 } unlit_material_t;
 
 typedef struct {
@@ -25,8 +25,8 @@ typedef struct {
     mat4_t mvp_matrix;
     /* from material */
     vec4_t factor;
+    float alpha_cutoff;
     texture_t *texture;
-    int alpha_cutoff;
 } unlit_uniforms_t;
 
 /* low-level api */

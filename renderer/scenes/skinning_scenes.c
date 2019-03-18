@@ -13,10 +13,10 @@ scene_t *skinning_assassin_scene(void) {
         "assets/assassin/weapon.obj",
     };
     skinning_material_t materials[] = {
-        {{1, 1, 1, 1}, "assets/assassin/body.tga", 0, 0, 0},
-        {{1, 1, 1, 1}, "assets/assassin/face.tga", 0, 0, 0},
-        {{1, 1, 1, 1}, "assets/assassin/hair.tga", 0, 0, 0},
-        {{1, 1, 1, 1}, "assets/assassin/weapon.tga", 0, 0, 0},
+        {{1, 1, 1, 1}, 0, "assets/assassin/body.tga", 0, 0},
+        {{1, 1, 1, 1}, 0, "assets/assassin/face.tga", 0, 0},
+        {{1, 1, 1, 1}, 0, "assets/assassin/hair.tga", 0, 0},
+        {{1, 1, 1, 1}, 0, "assets/assassin/weapon.tga", 0, 0},
     };
     vec4_t background = vec4_new(0.690f, 0.576f, 0.576f, 1);
     model_t **models = NULL;
@@ -47,10 +47,10 @@ scene_t *skinning_assassin_scene(void) {
 
 scene_t *skinning_junkrat_scene(void) {
     skinning_material_t materials[] = {
-        {{1, 1, 1, 1}, "assets/junkrat/upper.tga", 0, 0, 0},
-        {{1, 1, 1, 1}, "assets/junkrat/lower.tga", 0, 0, 0},
-        {{1, 1, 1, 1}, "assets/junkrat/head.tga", 0, 0, 0},
-        {{1, 1, 1, 1}, "assets/junkrat/back.tga", 0, 0, 0},
+        {{1, 1, 1, 1}, 0, "assets/junkrat/upper.tga", 0, 0},
+        {{1, 1, 1, 1}, 0, "assets/junkrat/lower.tga", 0, 0},
+        {{1, 1, 1, 1}, 0, "assets/junkrat/head.tga", 0, 0},
+        {{1, 1, 1, 1}, 0, "assets/junkrat/back.tga", 0, 0},
     };
     int mesh2material[63] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 2, 0, 1, 0, 2, 1, 0,
@@ -95,7 +95,7 @@ scene_t *skinning_kgirls_scene(void) {
         "assets/kgirls/pupils.obj",
     };
     skinning_material_t material = {
-        {1, 1, 1, 1}, "assets/kgirls/kgirls.tga", 0, 0, 0
+        {1, 1, 1, 1}, 0, "assets/kgirls/kgirls.tga", 0, 0
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     model_t **models = NULL;

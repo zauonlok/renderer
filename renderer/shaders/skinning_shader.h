@@ -5,11 +5,11 @@
 
 typedef struct {
     vec4_t factor;
+    float alpha_cutoff;
     const char *texture;
     /* render settings */
     int double_sided;
     int enable_blend;
-    int alpha_cutoff;
 } skinning_material_t;
 
 typedef struct {
@@ -27,8 +27,8 @@ typedef struct {
     mat4_t mvp_matrix;
     /* from material */
     vec4_t factor;
+    float alpha_cutoff;
     texture_t *texture;
-    int alpha_cutoff;
     /* for animation */
     int num_joints;
     mat4_t joint_matrices[MAX_JOINTS];
@@ -40,8 +40,8 @@ vec4_t skinning_fragment_shader(void *varyings, void *uniforms, int *discard);
 
 /* high-level api */
 model_t *skinning_create_model(const char *mesh, mat4_t transform,
-                              skinning_material_t material);
+                               skinning_material_t material);
 void skinning_update_uniforms(model_t *model, mat4_t mvp_matrix,
-                             skeleton_t *skeleton);
+                              skeleton_t *skeleton);
 
 #endif

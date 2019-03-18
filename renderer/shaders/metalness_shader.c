@@ -20,8 +20,9 @@ vec4_t metalness_vertex_shader(void *attribs_, void *varyings_,
     vec4_t clip_pos = mat4_mul_vec4(uniforms->viewproj_matrix, world_pos);
 
     if (uniforms->normal_texture) {
-        varyings->tbn_matrix = normal_build_tbn(attribs->normal, normal_matrix,
-                                                attribs->tangent, model_matrix);
+        mat3_t tbn_matrix = normal_build_tbn(attribs->normal, normal_matrix,
+                                             attribs->tangent, model_matrix);
+        varyings->tbn_matrix = tbn_matrix;
     } else {
         vec3_t world_normal = mat3_mul_vec3(normal_matrix, attribs->normal);
         varyings->normal = vec3_normalize(world_normal);
@@ -122,7 +123,7 @@ vec4_t metalness_fragment_shader(void *varyings_, void *uniforms_,
     color = vec3_mul(color, occlusion);
     color = vec3_add(color, emission);
 
-    if (uniforms->alpha_cutoff && alpha < 0.5f) {
+    if (uniforms->alpha_cutoff > 0 && alpha < uniforms->alpha_cutoff) {
         *discard = 1;
         return vec4_new(0, 0, 0, 0);
     }
@@ -173,7 +174,6 @@ model_t *metalness_create_model(
     int sizeof_attribs = sizeof(metalness_attribs_t);
     int sizeof_varyings = sizeof(metalness_varyings_t);
     int sizeof_uniforms = sizeof(metalness_uniforms_t);
-    const char *texture_filename;
     metalness_uniforms_t *uniforms;
     program_t *program;
     model_t *model;
@@ -190,18 +190,18 @@ model_t *metalness_create_model(
     uniforms->metallic_factor = material.metallic_factor;
     uniforms->roughness_factor = material.roughness_factor;
     uniforms->alpha_cutoff = material.alpha_cutoff;
-    texture_filename = material.basecolor_texture;
-    uniforms->basecolor_texture = cache_acquire_texture(texture_filename, 1);
-    texture_filename = material.metallic_texture;
-    uniforms->metallic_texture = cache_acquire_texture(texture_filename, 0);
-    texture_filename = material.roughness_texture;
-    uniforms->roughness_texture = cache_acquire_texture(texture_filename, 0);
-    texture_filename = material.normal_texture;
-    uniforms->normal_texture = cache_acquire_texture(texture_filename, 0);
-    texture_filename = material.occlusion_texture;
-    uniforms->occlusion_texture = cache_acquire_texture(texture_filename, 0);
-    texture_filename = material.emissive_texture;
-    uniforms->emissive_texture = cache_acquire_texture(texture_filename, 1);
+    uniforms->basecolor_texture = cache_acquire_texture(
+            material.basecolor_texture, 1);
+    uniforms->metallic_texture = cache_acquire_texture(
+            material.metallic_texture, 0);
+    uniforms->roughness_texture = cache_acquire_texture(
+            material.roughness_texture, 0);
+    uniforms->normal_texture = cache_acquire_texture(
+            material.normal_texture, 0);
+    uniforms->occlusion_texture = cache_acquire_texture(
+            material.occlusion_texture, 0);
+    uniforms->emissive_texture = cache_acquire_texture(
+            material.emissive_texture, 1);
     uniforms->shared_ibldata = cache_acquire_ibldata(env_name);
 
     model = (model_t*)malloc(sizeof(model_t));

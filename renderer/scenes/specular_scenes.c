@@ -7,15 +7,15 @@ scene_t *specular_drone_scene(void) {
     const char *mesh = "assets/drone/drone.obj";
     specular_material_t material = {
         {1, 1, 1, 1},
-        "assets/drone/diffuse.tga",
         {1, 1, 1},
-        "assets/drone/specular.tga",
         1,
+        0,
+        "assets/drone/diffuse.tga",
+        "assets/drone/specular.tga",
         "assets/drone/glossiness.tga",
         NULL,
         "assets/drone/occlusion.tga",
         "assets/drone/emissive.tga",
-        0,
         0,
         0,
     };
