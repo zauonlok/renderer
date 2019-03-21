@@ -299,6 +299,31 @@ mat3_t mat3_from_mat4(mat4_t m) {
     return n;
 }
 
+mat3_t mat3_combine(mat3_t m[4], vec4_t weights_) {
+    mat3_t combined = {0};
+    float weights[4];
+    int i, r, c;
+
+    weights[0] = weights_.x;
+    weights[1] = weights_.y;
+    weights[2] = weights_.z;
+    weights[3] = weights_.w;
+
+    for (i = 0; i < 4; i++) {
+        float weight = weights[i];
+        mat3_t source = m[i];
+        if (weight > 0) {
+            for (r = 0; r < 3; r++) {
+                for (c = 0; c < 3; c++) {
+                    combined.m[r][c] += weight * source.m[r][c];
+                }
+            }
+        }
+    }
+
+    return combined;
+}
+
 vec3_t mat3_mul_vec3(mat3_t m, vec3_t v) {
     float product[3];
     int i;
@@ -432,6 +457,31 @@ mat4_t mat4_from_trs(vec3_t t, quat_t r, vec3_t s) {
     mat4_t rotation = mat4_from_quat(r);
     mat4_t scale = mat4_scale(s.x, s.y, s.z);
     return mat4_mul_mat4(translation, mat4_mul_mat4(rotation, scale));
+}
+
+mat4_t mat4_combine(mat4_t m[4], vec4_t weights_) {
+    mat4_t combined = {0};
+    float weights[4];
+    int i, r, c;
+
+    weights[0] = weights_.x;
+    weights[1] = weights_.y;
+    weights[2] = weights_.z;
+    weights[3] = weights_.w;
+
+    for (i = 0; i < 4; i++) {
+        float weight = weights[i];
+        mat4_t source = m[i];
+        if (weight > 0) {
+            for (r = 0; r < 4; r++) {
+                for (c = 0; c < 4; c++) {
+                    combined.m[r][c] += weight * source.m[r][c];
+                }
+            }
+        }
+    }
+
+    return combined;
 }
 
 vec4_t mat4_mul_vec4(mat4_t m, vec4_t v) {
@@ -737,7 +787,6 @@ mat4_t mat4_ortho(float left, float right, float bottom, float top,
     float y_range = top - bottom;
     float z_range = far - near;
     mat4_t m = mat4_identity();
-    assert(near > 0 && far > 0);
     assert(x_range > 0 && y_range > 0 && z_range > 0);
     m.m[0][0] = 2 / x_range;
     m.m[1][1] = 2 / y_range;
@@ -766,8 +815,8 @@ mat4_t mat4_frustum(float left, float right, float bottom, float top,
     float y_range = top - bottom;
     float z_range = far - near;
     mat4_t m = mat4_identity();
-    assert(near > 0 && far > 0);
-    assert(x_range > 0 && y_range > 0 && z_range > 0);
+    assert(x_range > 0 && y_range);
+    assert(near > 0 && far > 0 && z_range > 0);
     m.m[0][0] = 2 * near / x_range;
     m.m[1][1] = 2 * near / y_range;
     m.m[0][2] = (left + right) / x_range;
@@ -799,8 +848,7 @@ mat4_t mat4_frustum(float left, float right, float bottom, float top,
 mat4_t mat4_orthographic(float right, float top, float near, float far) {
     float z_range = far - near;
     mat4_t m = mat4_identity();
-    assert(right > 0 && top > 0);
-    assert(near > 0 && far > 0 && z_range > 0);
+    assert(right > 0 && top > 0 && z_range > 0);
     m.m[0][0] = 1 / right;
     m.m[1][1] = 1 / top;
     m.m[2][2] = -2 / z_range;

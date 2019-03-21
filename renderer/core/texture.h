@@ -9,10 +9,12 @@ typedef struct texture texture_t;
 typedef struct cubemap cubemap_t;
 
 /* texture related functions */
+texture_t *texture_create(int width, int height);
+void texture_release(texture_t *texture);
 texture_t *texture_from_file(const char *filename);
 texture_t *texture_from_image(image_t *image);
-texture_t *texture_from_depth(framebuffer_t *framebuffer, texture_t *existing);
-void texture_release(texture_t *texture);
+void texture_from_color(texture_t *texture, framebuffer_t *framebuffer);
+void texture_from_depth(texture_t *texture, framebuffer_t *framebuffer);
 void texture_srgb2linear(texture_t *texture);
 vec4_t texture_sample(texture_t *texture, vec2_t texcoord);
 

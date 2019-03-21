@@ -9,6 +9,7 @@
 struct mesh {
     int num_faces;
     vertex_t *vertices;
+    vec3_t center;
 };
 
 /* mesh loading/releasing */
@@ -17,8 +18,11 @@ static mesh_t *build_mesh(
         vec3_t *positions, vec2_t *texcoords, vec3_t *normals,
         vec4_t *tangents, vec4_t *joints, vec4_t *weights,
         int *position_indices, int *texcoord_indices, int *normal_indices) {
+    vec3_t bbmin = vec3_new(+1e6, +1e6, +1e6);
+    vec3_t bbmax = vec3_new(-1e6, -1e6, -1e6);
     int num_indices = darray_size(position_indices);
     int num_faces = num_indices / 3;
+    vertex_t *vertices;
     mesh_t *mesh;
     int i;
 
@@ -27,10 +31,7 @@ static mesh_t *build_mesh(
     assert(darray_size(texcoord_indices) == num_indices);
     assert(darray_size(normal_indices) == num_indices);
 
-    mesh = (mesh_t*)malloc(sizeof(mesh_t));
-    mesh->num_faces = num_faces;
-    mesh->vertices  = (vertex_t*)malloc(sizeof(vertex_t) * num_indices);
-
+    vertices = (vertex_t*)malloc(sizeof(vertex_t) * num_indices);
     for (i = 0; i < num_indices; i++) {
         int position_index = position_indices[i];
         int texcoord_index = texcoord_indices[i];
@@ -38,34 +39,42 @@ static mesh_t *build_mesh(
         assert(position_index >= 0 && position_index < darray_size(positions));
         assert(texcoord_index >= 0 && texcoord_index < darray_size(texcoords));
         assert(normal_index >= 0 && normal_index < darray_size(normals));
-        mesh->vertices[i].position = positions[position_index];
-        mesh->vertices[i].texcoord = texcoords[texcoord_index];
-        mesh->vertices[i].normal = normals[normal_index];
+        vertices[i].position = positions[position_index];
+        vertices[i].texcoord = texcoords[texcoord_index];
+        vertices[i].normal = normals[normal_index];
 
         if (tangents) {
             int tangent_index = position_index;
             assert(tangent_index >= 0 && tangent_index < darray_size(tangents));
-            mesh->vertices[i].tangent = tangents[tangent_index];
+            vertices[i].tangent = tangents[tangent_index];
         } else {
-            mesh->vertices[i].tangent = vec4_new(1, 0, 0, 1);
+            vertices[i].tangent = vec4_new(1, 0, 0, 1);
         }
 
         if (joints) {
             int joint_index = position_index;
             assert(joint_index >= 0 && joint_index < darray_size(joints));
-            mesh->vertices[i].joint = joints[joint_index];
+            vertices[i].joint = joints[joint_index];
         } else {
-            mesh->vertices[i].joint = vec4_new(0, 0, 0, 0);
+            vertices[i].joint = vec4_new(0, 0, 0, 0);
         }
 
         if (weights) {
             int weight_index = position_index;
             assert(weight_index >= 0 && weight_index < darray_size(weights));
-            mesh->vertices[i].weight = weights[weight_index];
+            vertices[i].weight = weights[weight_index];
         } else {
-            mesh->vertices[i].weight = vec4_new(0, 0, 0, 0);
+            vertices[i].weight = vec4_new(0, 0, 0, 0);
         }
+
+        bbmin = vec3_min(bbmin, vertices[i].position);
+        bbmax = vec3_max(bbmax, vertices[i].position);
     }
+
+    mesh = (mesh_t*)malloc(sizeof(mesh_t));
+    mesh->num_faces = num_faces;
+    mesh->vertices  = vertices;
+    mesh->center    = vec3_div(vec3_add(bbmin, bbmax), 2);
 
     return mesh;
 }
@@ -186,9 +195,10 @@ int mesh_get_num_faces(mesh_t *mesh) {
     return mesh->num_faces;
 }
 
-vertex_t mesh_get_vertex(mesh_t *mesh, int nth_face, int nth_vertex) {
-    int index = nth_face * 3 + nth_vertex;
-    assert(nth_face >= 0 && nth_face < mesh->num_faces);
-    assert(nth_vertex >= 0 && nth_vertex < 3);
-    return mesh->vertices[index];
+vertex_t *mesh_get_vertices(mesh_t *mesh) {
+    return mesh->vertices;
+}
+
+vec3_t mesh_get_center(mesh_t *mesh) {
+    return mesh->center;
 }

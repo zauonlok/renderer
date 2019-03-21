@@ -5,7 +5,7 @@
 #include "../core/api.h"
 #include "test_helper.h"
 
-/* delegate related functions */
+/* mainloop related functions */
 
 static const char *WINDOW_TITLE = "Viewer";
 static const int WINDOW_WIDTH = 800;
@@ -122,7 +122,7 @@ static vec3_t calculate_light(record_t *record) {
     return vec3_new(-x, -y, -z);
 }
 
-void test_helper(tickfunc_t *tickfunc, void *userdata) {
+void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
     window_t *window;
     framebuffer_t *framebuffer;
     camera_t *camera;
@@ -166,6 +166,7 @@ void test_helper(tickfunc_t *tickfunc, void *userdata) {
         update_light(window, delta_time, &record);
 
         context.light_dir = calculate_light(&record);
+        context.frame_time = curr_time;
         context.delta_time = delta_time;
         tickfunc(&context, userdata);
 
@@ -185,46 +186,49 @@ void test_helper(tickfunc_t *tickfunc, void *userdata) {
     camera_release(camera);
 }
 
-/* scene related functions */
+/* scene creating/releasing */
 
-static vec3_t transform_position(vec3_t position, mat4_t transform) {
-    vec4_t original = vec4_from_vec3(position, 1);
-    vec4_t transformed = mat4_mul_vec4(transform, original);
-    return vec3_from_vec4(transformed);
-}
+static const int SHADOWMAP_WIDTH = 1024;
+static const int SHADOWMAP_HEIGHT = 1024;
 
-static void get_model_bbox(model_t *model, vec3_t *bbmin, vec3_t *bbmax) {
+typedef struct {vec3_t min; vec3_t max;} bbox_t;
+
+static bbox_t get_model_bbox(model_t *model) {
     mesh_t *mesh = model->mesh;
-    mat4_t transform = model->transform;
     int num_faces = mesh_get_num_faces(mesh);
+    vertex_t *vertices = mesh_get_vertices(mesh);
+    mat4_t model_matrix = model->transform;
+    bbox_t bbox;
     int i, j;
 
-    *bbmin = vec3_new(+1e6, +1e6, +1e6);
-    *bbmax = vec3_new(-1e6, -1e6, -1e6);
+    bbox.min = vec3_new(+1e6, +1e6, +1e6);
+    bbox.max = vec3_new(-1e6, -1e6, -1e6);
     for (i = 0; i < num_faces; i++) {
         for (j = 0; j < 3; j++) {
-            vertex_t vertex = mesh_get_vertex(mesh, i, j);
-            vec3_t position = transform_position(vertex.position, transform);
-            *bbmin = vec3_min(*bbmin, position);
-            *bbmax = vec3_max(*bbmax, position);
+            vertex_t vertex = vertices[i * 3 + j];
+            vec4_t local_pos = vec4_from_vec3(vertex.position, 1);
+            vec4_t world_pos = mat4_mul_vec4(model_matrix, local_pos);
+            bbox.min = vec3_min(bbox.min, vec3_from_vec4(world_pos));
+            bbox.max = vec3_max(bbox.max, vec3_from_vec4(world_pos));
         }
     }
-    model->center = vec3_div(vec3_add(*bbmin, *bbmax), 2);
+    return bbox;
 }
 
-static void get_scene_bbox(scene_t *scene, vec3_t *bbmin, vec3_t *bbmax) {
+static bbox_t get_scene_bbox(scene_t *scene) {
     int num_models = darray_size(scene->models);
+    bbox_t bbox;
     int i;
 
-    *bbmin = vec3_new(+1e6, +1e6, +1e6);
-    *bbmax = vec3_new(-1e6, -1e6, -1e6);
+    bbox.min = vec3_new(+1e6, +1e6, +1e6);
+    bbox.max = vec3_new(-1e6, -1e6, -1e6);
     for (i = 0; i < num_models; i++) {
         model_t *model = scene->models[i];
-        vec3_t model_bbmin, model_bbmax;
-        get_model_bbox(model, &model_bbmin, &model_bbmax);
-        *bbmin = vec3_min(*bbmin, model_bbmin);
-        *bbmax = vec3_max(*bbmax, model_bbmax);
+        bbox_t model_bbox = get_model_bbox(model);
+        bbox.min = vec3_min(bbox.min, model_bbox.min);
+        bbox.max = vec3_max(bbox.max, model_bbox.max);
     }
+    return bbox;
 }
 
 static int count_num_faces(scene_t *scene) {
@@ -238,7 +242,8 @@ static int count_num_faces(scene_t *scene) {
     return num_faces;
 }
 
-scene_t *scene_create(scene_creator_t creators[], const char *scene_name) {
+scene_t *test_create_scene(scene_creator_t creators[],
+                           const char *scene_name) {
     scene_t *scene = NULL;
     if (scene_name == NULL) {
         int num_creators = 0;
@@ -260,24 +265,36 @@ scene_t *scene_create(scene_creator_t creators[], const char *scene_name) {
         }
     }
     if (scene) {
-        vec3_t bbmin, bbmax, center, extend;
-        get_scene_bbox(scene, &bbmin, &bbmax);
-        center = vec3_div(vec3_add(bbmin, bbmax), 2);
-        extend = vec3_sub(bbmax, bbmin);
+        int num_faces = count_num_faces(scene);
+        bbox_t bbox = get_scene_bbox(scene);
+        vec3_t bbmin = bbox.min;
+        vec3_t bbmax = bbox.max;
+        vec3_t center = vec3_div(vec3_add(bbmin, bbmax), 2);
+        vec3_t extend = vec3_sub(bbmax, bbmin);
 
         printf("scene: %s\n", scene_name);
-        printf("faces: %d\n", count_num_faces(scene));
+        printf("faces: %d\n", num_faces);
         printf("bbmin: [%.3f, %.3f, %.3f]\n", bbmin.x, bbmin.y, bbmin.z);
         printf("bbmax: [%.3f, %.3f, %.3f]\n", bbmax.x, bbmax.y, bbmax.z);
         printf("center: [%.3f, %.3f, %.3f]\n", center.x, center.y, center.z);
         printf("extend: [%.3f, %.3f, %.3f]\n", extend.x, extend.y, extend.z);
+
+        if (scene->with_shadow) {
+            scene->shadow_fb = framebuffer_create(SHADOWMAP_WIDTH,
+                                                  SHADOWMAP_HEIGHT);
+            scene->shadow_map = texture_create(SHADOWMAP_WIDTH,
+                                               SHADOWMAP_HEIGHT);
+        } else {
+            scene->shadow_fb = NULL;
+            scene->shadow_map = NULL;
+        }
     } else {
         printf("scene not found: %s\n", scene_name);
     }
     return scene;
 }
 
-void scene_release(scene_t *scene) {
+void test_release_scene(scene_t *scene) {
     int num_models = darray_size(scene->models);
     int i;
     if (scene->skybox) {
@@ -289,7 +306,51 @@ void scene_release(scene_t *scene) {
         model->release(model);
     }
     darray_free(scene->models);
+    if (scene->shadow_fb) {
+        framebuffer_release(scene->shadow_fb);
+    }
+    if (scene->shadow_map) {
+        texture_release(scene->shadow_map);
+    }
     free(scene);
+}
+
+/* scene updating/drawing */
+
+static const float SHADOWMAP_RIGHT = 1;
+static const float SHADOWMAP_TOP = 1;
+static const float SHADOWMAP_NEAR = 0;
+static const float SHADOWMAP_FAR = 2;
+
+static const vec3_t LIGHT_TARGET = {0, 0, 0};
+static const vec3_t LIGHT_UP = {0, 1, 0};
+
+static mat4_t get_light_view_matrix(vec3_t light_dir) {
+    vec3_t light_pos = vec3_negate(light_dir);
+    return mat4_lookat(light_pos, LIGHT_TARGET, LIGHT_UP);
+}
+
+static mat4_t get_light_proj_matrix(void) {
+    return mat4_orthographic(SHADOWMAP_RIGHT, SHADOWMAP_TOP,
+                             SHADOWMAP_NEAR, SHADOWMAP_FAR);
+}
+
+static perframe_t perframe_from_context(context_t *context) {
+    vec3_t light_dir = vec3_normalize(context->light_dir);
+    camera_t *camera = context->camera;
+    perframe_t perframe;
+
+    perframe.frame_time         = context->frame_time;
+    perframe.delta_time         = context->delta_time;
+    perframe.light_dir          = light_dir;
+    perframe.camera_pos         = camera_get_position(camera);
+    perframe.light_view_matrix  = get_light_view_matrix(light_dir);
+    perframe.light_proj_matrix  = get_light_proj_matrix();
+    perframe.camera_view_matrix = camera_get_view_matrix(camera);
+    perframe.camera_proj_matrix = camera_get_proj_matrix(camera);
+    perframe.shadow_map         = NULL;
+
+    return perframe;
 }
 
 static int compare_models(const void *model1p, const void *model2p) {
@@ -307,30 +368,54 @@ static int compare_models(const void *model1p, const void *model2p) {
     }
 }
 
-void scene_sort_models(scene_t *scene, mat4_t view_matrix) {
-    int num_models = darray_size(scene->models);
+static void sort_models(model_t **models, camera_t *camera) {
+    mat4_t view_matrix = camera_get_view_matrix(camera);
+    int num_models = darray_size(models);
     int i;
     if (num_models > 1) {
         for (i = 0; i < num_models; i++) {
-            model_t *model = scene->models[i];
-            vec4_t local_pos = vec4_from_vec3(model->center, 1);
+            model_t *model = models[i];
+            vec4_t local_pos = vec4_from_vec3(mesh_get_center(model->mesh), 1);
             vec4_t world_pos = mat4_mul_vec4(model->transform, local_pos);
             vec4_t view_pos = mat4_mul_vec4(view_matrix, world_pos);
             model->distance = -view_pos.z;
         }
-        qsort(scene->models, num_models, sizeof(model_t*), compare_models);
+        qsort(models, num_models, sizeof(model_t*), compare_models);
     }
 }
 
-void scene_draw_models(scene_t *scene, framebuffer_t *framebuffer) {
+void test_draw_scene(scene_t *scene, context_t *context) {
+    framebuffer_t *framebuffer = context->framebuffer;
     int num_models = darray_size(scene->models);
     model_t *skybox = scene->skybox;
+    perframe_t perframe;
     int i;
 
-    if (skybox == NULL) {
+    sort_models(scene->models, context->camera);
+    perframe = perframe_from_context(context);
+    perframe.shadow_map = scene->shadow_map;
+    for (i = 0; i < num_models; i++) {
+        model_t *model = scene->models[i];
+        model->update(model, &perframe);
+    }
+
+    if (scene->with_shadow) {
+        framebuffer_clear_depth(scene->shadow_fb, 1);
         for (i = 0; i < num_models; i++) {
             model_t *model = scene->models[i];
-            model->draw(model, framebuffer);
+            if (model->opaque) {
+                model->draw(model, scene->shadow_fb, 1);
+            }
+        }
+        texture_from_depth(scene->shadow_map, scene->shadow_fb);
+    }
+
+    framebuffer_clear_color(framebuffer, scene->background);
+    framebuffer_clear_depth(framebuffer, 1);
+    if (scene->skybox == NULL) {
+        for (i = 0; i < num_models; i++) {
+            model_t *model = scene->models[i];
+            model->draw(model, framebuffer, 0);
         }
     } else {
         int num_opaques = 0;
@@ -345,12 +430,12 @@ void scene_draw_models(scene_t *scene, framebuffer_t *framebuffer) {
 
         for (i = 0; i < num_opaques; i++) {
             model_t *model = scene->models[i];
-            model->draw(model, framebuffer);
+            model->draw(model, framebuffer, 0);
         }
-        skybox->draw(skybox, framebuffer);
+        skybox->draw(skybox, framebuffer, 0);
         for (i = num_opaques; i < num_models; i++) {
             model_t *model = scene->models[i];
-            model->draw(model, framebuffer);
+            model->draw(model, framebuffer, 0);
         }
     }
 }

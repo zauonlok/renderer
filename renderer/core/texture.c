@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include "geometry.h"
 #include "graphics.h"
 #include "image.h"
@@ -11,6 +12,25 @@ struct cubemap {texture_t *faces[6];};
 
 /* texture related functions */
 
+texture_t *texture_create(int width, int height) {
+    int buffer_size = sizeof(vec4_t) * width * height;
+    texture_t *texture;
+
+    assert(width > 0 && height > 0);
+
+    texture = (texture_t*)malloc(sizeof(texture_t));
+    texture->width  = width;
+    texture->height = height;
+    texture->buffer = (vec4_t*)malloc(buffer_size);
+    memset(texture->buffer, 0, buffer_size);
+    return texture;
+}
+
+void texture_release(texture_t *texture) {
+    free(texture->buffer);
+    free(texture);
+}
+
 texture_t *texture_from_file(const char *filename) {
     image_t *image = image_load(filename);
     texture_t *texture = texture_from_image(image);
@@ -20,14 +40,6 @@ texture_t *texture_from_file(const char *filename) {
 
 static float uchar_to_float(unsigned char value) {
     return value / 255.0f;
-}
-
-static texture_t *create_texture(int width, int height) {
-    texture_t *texture = (texture_t*)malloc(sizeof(texture_t));
-    texture->width  = width;
-    texture->height = height;
-    texture->buffer = (vec4_t*)malloc(sizeof(vec4_t) * width * height);
-    return texture;
 }
 
 /*
@@ -41,7 +53,7 @@ texture_t *texture_from_image(image_t *image) {
     texture_t *texture;
     int r, c;
 
-    texture = create_texture(width, height);
+    texture = texture_create(width, height);
     for (r = 0; r < height; r++) {
         for (c = 0; c < width; c++) {
             int img_index = r * width * channels + c * channels;
@@ -75,18 +87,28 @@ texture_t *texture_from_image(image_t *image) {
     return texture;
 }
 
-texture_t *texture_from_depth(framebuffer_t *framebuffer, texture_t *existing) {
-    int width = framebuffer->width;
-    int height = framebuffer->height;
-    texture_t *texture;
+void texture_from_color(texture_t *texture, framebuffer_t *framebuffer) {
+    int width = texture->width;
+    int height = texture->height;
     int r, c;
 
-    if (existing == NULL) {
-        texture = create_texture(width, height);
-    } else {
-        assert(existing->width == width && existing->height == height);
-        texture = existing;
+    assert(width == framebuffer->width && height == framebuffer->height);
+
+    for (r = 0; r < height; r++) {
+        for (c = 0; c < width; c++) {
+            int index = r * width + c;
+            vec4_t color = framebuffer->colorbuffer[index];
+            texture->buffer[index] = color;
+        }
     }
+}
+
+void texture_from_depth(texture_t *texture, framebuffer_t *framebuffer) {
+    int width = texture->width;
+    int height = texture->height;
+    int r, c;
+
+    assert(width == framebuffer->width && height == framebuffer->height);
 
     for (r = 0; r < height; r++) {
         for (c = 0; c < width; c++) {
@@ -96,13 +118,6 @@ texture_t *texture_from_depth(framebuffer_t *framebuffer, texture_t *existing) {
             texture->buffer[index] = texel;
         }
     }
-
-    return texture;
-}
-
-void texture_release(texture_t *texture) {
-    free(texture->buffer);
-    free(texture);
 }
 
 void texture_srgb2linear(texture_t *texture) {

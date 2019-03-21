@@ -20,6 +20,7 @@ void mesh_release(mesh_t *mesh);
 
 /* vertex retrieving */
 int mesh_get_num_faces(mesh_t *mesh);
-vertex_t mesh_get_vertex(mesh_t *mesh, int nth_face, int nth_vertex);
+vertex_t *mesh_get_vertices(mesh_t *mesh);
+vec3_t mesh_get_center(mesh_t *mesh);
 
 #endif
