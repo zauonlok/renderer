@@ -11,7 +11,7 @@ static const char *WINDOW_TITLE = "Viewer";
 static const int WINDOW_WIDTH = 800;
 static const int WINDOW_HEIGHT = 600;
 
-static const vec3_t CAMERA_POSITION = {0, 0, 2};
+static const vec3_t CAMERA_POSITION = {0, 0, 1.5f};
 static const vec3_t CAMERA_TARGET = {0, 0, 0};
 
 static const float LIGHT_THETA = TO_RADIANS(45);
@@ -341,15 +341,17 @@ static perframe_t perframe_from_context(context_t *context) {
     camera_t *camera = context->camera;
     perframe_t perframe;
 
-    perframe.frame_time         = context->frame_time;
-    perframe.delta_time         = context->delta_time;
-    perframe.light_dir          = light_dir;
-    perframe.camera_pos         = camera_get_position(camera);
-    perframe.light_view_matrix  = get_light_view_matrix(light_dir);
-    perframe.light_proj_matrix  = get_light_proj_matrix();
-    perframe.camera_view_matrix = camera_get_view_matrix(camera);
-    perframe.camera_proj_matrix = camera_get_proj_matrix(camera);
-    perframe.shadow_map         = NULL;
+    perframe.frame_time          = context->frame_time;
+    perframe.delta_time          = context->delta_time;
+    perframe.light_dir           = light_dir;
+    perframe.camera_pos          = camera_get_position(camera);
+    perframe.light_view_matrix   = get_light_view_matrix(light_dir);
+    perframe.light_proj_matrix   = get_light_proj_matrix();
+    perframe.camera_view_matrix  = camera_get_view_matrix(camera);
+    perframe.camera_proj_matrix  = camera_get_proj_matrix(camera);
+    perframe.shadow_map          = NULL;
+    perframe.light_info.ambient  = 0;
+    perframe.light_info.punctual = 0;
 
     return perframe;
 }
@@ -375,7 +377,8 @@ static void sort_models(model_t **models, mat4_t view_matrix) {
     if (num_models > 1) {
         for (i = 0; i < num_models; i++) {
             model_t *model = models[i];
-            vec4_t local_pos = vec4_from_vec3(mesh_get_center(model->mesh), 1);
+            vec3_t center = mesh_get_center(model->mesh);
+            vec4_t local_pos = vec4_from_vec3(center, 1);
             vec4_t world_pos = mat4_mul_vec4(model->transform, local_pos);
             vec4_t view_pos = mat4_mul_vec4(view_matrix, world_pos);
             model->distance = -view_pos.z;
@@ -393,6 +396,7 @@ void test_draw_scene(scene_t *scene, context_t *context) {
 
     perframe = perframe_from_context(context);
     perframe.shadow_map = scene->shadow_map;
+    perframe.light_info = scene->light;
     for (i = 0; i < num_models; i++) {
         model_t *model = scene->models[i];
         model->update(model, &perframe);

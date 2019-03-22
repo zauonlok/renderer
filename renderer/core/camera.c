@@ -7,7 +7,7 @@
 
 static const float NEAR = 0.1f;
 static const float FAR = 1000;
-static const float FOVY = TO_RADIANS(45);
+static const float FOVY = TO_RADIANS(60);
 static const vec3_t UP = {0, 1, 0};
 
 struct camera {

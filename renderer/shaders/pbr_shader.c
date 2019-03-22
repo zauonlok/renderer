@@ -266,10 +266,6 @@ static vec3_t get_dir_shade(vec3_t light_dir, float roughness,
         float combined_b = (1 - f_term.z) * diffuse_brdf.z + specular_brdf.z;
         vec3_t combined_brdf = vec3_new(combined_r, combined_g, combined_b);
 
-        /*
-         * assume light.color = {1, 1, 1} and light.intensity = 1,
-         * then light.color * light.intensity * n_dot_l = n_dot_l
-         */
         return vec3_mul(combined_brdf, n_dot_l);
     } else {
         return vec3_new(0, 0, 0);
@@ -337,11 +333,14 @@ static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
 
         vec3_t color = vec3_new(0, 0, 0);
 
-        if (!is_in_shadow(varyings, uniforms, normal_dir, light_dir)) {
-            vec3_t shade = get_dir_shade(light_dir, roughness,
-                                         normal_dir, view_dir,
-                                         diffuse_color, specular_color);
-            color = vec3_add(color, shade);
+        if (uniforms->punctual_light > 0) {
+            float punctual_light = uniforms->punctual_light;
+            if (!is_in_shadow(varyings, uniforms, normal_dir, light_dir)) {
+                vec3_t shade = get_dir_shade(light_dir, roughness,
+                                             normal_dir, view_dir,
+                                             diffuse_color, specular_color);
+                color = vec3_add(color, vec3_mul(shade, punctual_light));
+            }
         }
 
         if (uniforms->shared_ibldata) {
@@ -385,6 +384,7 @@ vec4_t pbr_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
 static void update_model(model_t *model, perframe_t *perframe) {
     mat4_t model_matrix = model->transform;
     mat4_t normal_matrix = mat4_inverse_transpose(model_matrix);
+    light_t light_info = perframe->light_info;
     pbr_uniforms_t *uniforms;
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
@@ -403,6 +403,7 @@ static void update_model(model_t *model, perframe_t *perframe) {
         uniforms->joint_n_matrices = skeleton_get_normal_matrices(skeleton);
     }
     uniforms->shadow_map = perframe->shadow_map;
+    uniforms->punctual_light = float_clamp(light_info.punctual, 0, 3);
 }
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer,

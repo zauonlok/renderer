@@ -6,8 +6,6 @@
 
 /* low-level api */
 
-static const float AMBIENT_INTENSITY = 0.5f;
-
 static mat4_t get_model_matrix(blinn_attribs_t *attribs,
                                blinn_uniforms_t *uniforms) {
     if (uniforms->joint_matrices) {
@@ -142,14 +140,14 @@ static vec3_t get_normal_dir(blinn_varyings_t *varyings, vec3_t view_dir) {
     }
 }
 
-static int is_in_shadow(blinn_varyings_t *varyings, blinn_uniforms_t *uniforms,
-                        vec3_t normal_dir, vec3_t light_dir) {
+static int is_in_shadow(blinn_varyings_t *varyings,
+                        blinn_uniforms_t *uniforms,
+                        float n_dot_l) {
     if (uniforms->shadow_map) {
         float u = (varyings->depth_position.x + 1) * 0.5f;
         float v = (varyings->depth_position.y + 1) * 0.5f;
         float d = (varyings->depth_position.z + 1) * 0.5f;
 
-        float n_dot_l = vec3_dot(normal_dir, light_dir);
         float depth_bias = float_max(0.05f * (1 - n_dot_l), 0.005f);
         float current_depth = d - depth_bias;
 
@@ -162,6 +160,42 @@ static int is_in_shadow(blinn_varyings_t *varyings, blinn_uniforms_t *uniforms,
     }
 }
 
+static vec3_t get_dir_shade(blinn_varyings_t *varyings,
+                            blinn_uniforms_t *uniforms,
+                            vec3_t basecolor) {
+    vec3_t light_dir = vec3_negate(uniforms->light_dir);
+    vec3_t view_dir = get_view_dir(varyings, uniforms);
+    vec3_t normal_dir = get_normal_dir(varyings, view_dir);
+    float n_dot_l = vec3_dot(normal_dir, light_dir);
+
+    if (!is_in_shadow(varyings, uniforms, n_dot_l)) {
+        vec3_t shade = vec3_new(0, 0, 0);
+
+        if (n_dot_l > 0) {
+            float strength = n_dot_l;
+            vec3_t diffuse = vec3_mul(basecolor, strength);
+            shade = vec3_add(shade, diffuse);
+        }
+
+        if (uniforms->specular_map) {
+            vec3_t half_dir = vec3_normalize(vec3_add(light_dir, view_dir));
+            float closeness = vec3_dot(normal_dir, half_dir);
+            if (closeness > 0) {
+                float strength = (float)pow(closeness, uniforms->shininess);
+                texture_t *specular_map = uniforms->specular_map;
+                vec2_t texcoord = varyings->texcoord;
+                vec4_t sample = texture_sample(specular_map, texcoord);
+                vec3_t specular = vec3_mul(vec3_from_vec4(sample), strength);
+                shade = vec3_add(shade, specular);
+            }
+        }
+
+        return shade;
+    } else {
+        return vec3_new(0, 0, 0);
+    }
+}
+
 static vec4_t common_fragment_shader(blinn_varyings_t *varyings,
                                      blinn_uniforms_t *uniforms,
                                      int *discard) {
@@ -171,32 +205,11 @@ static vec4_t common_fragment_shader(blinn_varyings_t *varyings,
         *discard = 1;
         return vec4_new(0, 0, 0, 0);
     } else {
-        vec3_t light_dir = vec3_negate(uniforms->light_dir);
-        vec3_t view_dir = get_view_dir(varyings, uniforms);
-        vec3_t normal_dir = get_normal_dir(varyings, view_dir);
-        int shadowed = is_in_shadow(varyings, uniforms, normal_dir, light_dir);
+        vec3_t color = vec3_mul(basecolor, uniforms->ambient_light);
 
-        vec3_t color = vec3_mul(basecolor, AMBIENT_INTENSITY);
-
-        if (!shadowed) {
-            float strength = vec3_dot(normal_dir, light_dir);
-            if (strength > 0) {
-                vec3_t diffuse = vec3_mul(basecolor, strength);
-                color = vec3_add(color, diffuse);
-            }
-        }
-
-        if (!shadowed && uniforms->specular_map) {
-            vec3_t half_dir = vec3_normalize(vec3_add(light_dir, view_dir));
-            float closeness = vec3_dot(normal_dir, half_dir);
-            if (closeness > 0) {
-                float strength = (float)pow(closeness, uniforms->shininess);
-                texture_t *specular_map = uniforms->specular_map;
-                vec2_t texcoord = varyings->texcoord;
-                vec4_t sample = texture_sample(specular_map, texcoord);
-                vec3_t specular = vec3_mul(vec3_from_vec4(sample), strength);
-                color = vec3_add(color, specular);
-            }
+        if (uniforms->punctual_light > 0){
+            vec3_t shade = get_dir_shade(varyings, uniforms, basecolor);
+            color = vec3_add(color, vec3_mul(shade, uniforms->punctual_light));
         }
 
         if (uniforms->emission_map) {
@@ -227,6 +240,7 @@ vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
 static void update_model(model_t *model, perframe_t *perframe) {
     mat4_t model_matrix = model->transform;
     mat4_t normal_matrix = mat4_inverse_transpose(model_matrix);
+    light_t light_info = perframe->light_info;
     blinn_uniforms_t *uniforms;
 
     uniforms = (blinn_uniforms_t*)program_get_uniforms(model->program);
@@ -245,6 +259,8 @@ static void update_model(model_t *model, perframe_t *perframe) {
         uniforms->joint_n_matrices = skeleton_get_normal_matrices(skeleton);
     }
     uniforms->shadow_map = perframe->shadow_map;
+    uniforms->ambient_light = float_clamp(light_info.ambient, 0, 3);
+    uniforms->punctual_light = float_clamp(light_info.punctual, 0, 3);
 }
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer,

@@ -8,6 +8,11 @@
 #include "texture.h"
 
 typedef struct {
+    float ambient;
+    float punctual;
+} light_t;
+
+typedef struct {
     float frame_time;
     float delta_time;
     vec3_t light_dir;
@@ -17,6 +22,7 @@ typedef struct {
     mat4_t camera_view_matrix;
     mat4_t camera_proj_matrix;
     texture_t *shadow_map;
+    light_t light_info;
 } perframe_t;
 
 typedef struct model {
@@ -37,6 +43,7 @@ typedef struct {
     vec4_t background;
     model_t *skybox;
     model_t **models;
+    light_t light;
     /* for shadow mapping */
     int with_shadow;
     framebuffer_t *shadow_fb;

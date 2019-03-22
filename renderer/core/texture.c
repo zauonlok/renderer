@@ -88,35 +88,27 @@ texture_t *texture_from_image(image_t *image) {
 }
 
 void texture_from_color(texture_t *texture, framebuffer_t *framebuffer) {
-    int width = texture->width;
-    int height = texture->height;
-    int r, c;
+    int num_elems = texture->width * texture->height;
+    int i;
 
-    assert(width == framebuffer->width && height == framebuffer->height);
+    assert(texture->width == framebuffer->width);
+    assert(texture->height == framebuffer->height);
 
-    for (r = 0; r < height; r++) {
-        for (c = 0; c < width; c++) {
-            int index = r * width + c;
-            vec4_t color = framebuffer->colorbuffer[index];
-            texture->buffer[index] = color;
-        }
+    for (i = 0; i < num_elems; i++) {
+        texture->buffer[i] = framebuffer->colorbuffer[i];
     }
 }
 
 void texture_from_depth(texture_t *texture, framebuffer_t *framebuffer) {
-    int width = texture->width;
-    int height = texture->height;
-    int r, c;
+    int num_elems = texture->width * texture->height;
+    int i;
 
-    assert(width == framebuffer->width && height == framebuffer->height);
+    assert(texture->width == framebuffer->width);
+    assert(texture->height == framebuffer->height);
 
-    for (r = 0; r < height; r++) {
-        for (c = 0; c < width; c++) {
-            int index = r * width + c;
-            float depth = framebuffer->depthbuffer[index];
-            vec4_t texel = vec4_new(depth, depth, depth, 1);
-            texture->buffer[index] = texel;
-        }
+    for (i = 0; i < num_elems; i++) {
+        float depth = framebuffer->depthbuffer[i];
+        texture->buffer[i] = vec4_new(depth, depth, depth, 1);
     }
 }
 

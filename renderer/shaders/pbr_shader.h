@@ -54,6 +54,7 @@ typedef struct {
     mat4_t *joint_matrices;
     mat3_t *joint_n_matrices;
     texture_t *shadow_map;
+    float punctual_light;
     /* from material */
     vec4_t basecolor_factor;
     float metalness_factor;
