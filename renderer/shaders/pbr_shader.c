@@ -170,8 +170,17 @@ static vec3_t get_specular_color(vec3_t basecolor, float metalness) {
     return vec3_lerp(dielectric_specular, basecolor, metalness);
 }
 
+static vec3_t get_view_dir(pbr_varyings_t *varyings,
+                           pbr_uniforms_t *uniforms) {
+    vec3_t camera_pos = uniforms->camera_pos;
+    vec3_t world_pos = varyings->world_position;
+    return vec3_normalize(vec3_sub(camera_pos, world_pos));
+}
+
 static vec3_t get_normal_dir(pbr_varyings_t *varyings,
-                             pbr_uniforms_t *uniforms) {
+                             pbr_uniforms_t *uniforms,
+                             vec3_t view_dir) {
+    vec3_t world_normal;
     if (uniforms->normal_map) {
         vec2_t texcoord = varyings->texcoord;
         vec4_t sample = texture_sample(uniforms->normal_map, texcoord);
@@ -181,19 +190,16 @@ static vec3_t get_normal_dir(pbr_varyings_t *varyings,
         mat3_t tbn_matrix = mat3_from_cols(varyings->tangent,
                                            varyings->bitangent,
                                            varyings->normal);
-        vec3_t world_normal = mat3_mul_vec3(tbn_matrix, tangent_normal);
-        return vec3_normalize(world_normal);
+        world_normal = mat3_mul_vec3(tbn_matrix, tangent_normal);
     } else {
-        vec3_t world_normal = varyings->normal;
-        return vec3_normalize(world_normal);
+        world_normal = varyings->normal;
     }
-}
-
-static vec3_t get_view_dir(pbr_varyings_t *varyings,
-                           pbr_uniforms_t *uniforms) {
-    vec3_t camera_pos = uniforms->camera_pos;
-    vec3_t world_pos = varyings->world_position;
-    return vec3_normalize(vec3_sub(camera_pos, world_pos));
+    world_normal = vec3_normalize(world_normal);
+    if (vec3_dot(world_normal, view_dir) < 0) {
+        return vec3_negate(world_normal);
+    } else {
+        return world_normal;
+    }
 }
 
 static int is_in_shadow(pbr_varyings_t *varyings, pbr_uniforms_t *uniforms,
@@ -326,8 +332,8 @@ static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
         vec3_t specular_color = get_specular_color(basecolor, metalness);
 
         vec3_t light_dir = vec3_negate(uniforms->light_dir);
-        vec3_t normal_dir = get_normal_dir(varyings, uniforms);
         vec3_t view_dir = get_view_dir(varyings, uniforms);
+        vec3_t normal_dir = get_normal_dir(varyings, uniforms, view_dir);
 
         vec3_t color = vec3_new(0, 0, 0);
 

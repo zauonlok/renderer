@@ -6,7 +6,7 @@
 
 /* low-level api */
 
-static const float AMBIENT_INTENSITY = 0.4f;
+static const float AMBIENT_INTENSITY = 0.5f;
 
 static mat4_t get_model_matrix(blinn_attribs_t *attribs,
                                blinn_uniforms_t *uniforms) {
@@ -126,6 +126,22 @@ static vec3_t get_basecolor(blinn_varyings_t *varyings,
     }
 }
 
+static vec3_t get_view_dir(blinn_varyings_t *varyings,
+                           blinn_uniforms_t *uniforms) {
+    vec3_t camera_pos = uniforms->camera_pos;
+    vec3_t world_pos = varyings->world_position;
+    return vec3_normalize(vec3_sub(camera_pos, world_pos));
+}
+
+static vec3_t get_normal_dir(blinn_varyings_t *varyings, vec3_t view_dir) {
+    vec3_t normal_dir = vec3_normalize(varyings->normal);
+    if (vec3_dot(normal_dir, view_dir) < 0) {
+        return vec3_negate(normal_dir);
+    } else {
+        return normal_dir;
+    }
+}
+
 static int is_in_shadow(blinn_varyings_t *varyings, blinn_uniforms_t *uniforms,
                         vec3_t normal_dir, vec3_t light_dir) {
     if (uniforms->shadow_map) {
@@ -156,7 +172,8 @@ static vec4_t common_fragment_shader(blinn_varyings_t *varyings,
         return vec4_new(0, 0, 0, 0);
     } else {
         vec3_t light_dir = vec3_negate(uniforms->light_dir);
-        vec3_t normal_dir = vec3_normalize(varyings->normal);
+        vec3_t view_dir = get_view_dir(varyings, uniforms);
+        vec3_t normal_dir = get_normal_dir(varyings, view_dir);
         int shadowed = is_in_shadow(varyings, uniforms, normal_dir, light_dir);
 
         vec3_t color = vec3_mul(basecolor, AMBIENT_INTENSITY);
@@ -170,11 +187,7 @@ static vec4_t common_fragment_shader(blinn_varyings_t *varyings,
         }
 
         if (!shadowed && uniforms->specular_map) {
-            vec3_t camera_pos = uniforms->camera_pos;
-            vec3_t world_pos = varyings->world_position;
-            vec3_t view_dir = vec3_normalize(vec3_sub(camera_pos, world_pos));
             vec3_t half_dir = vec3_normalize(vec3_add(light_dir, view_dir));
-
             float closeness = vec3_dot(half_dir, normal_dir);
             if (closeness > 0) {
                 float strength = (float)pow(closeness, uniforms->shininess);
