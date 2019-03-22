@@ -36,9 +36,9 @@ struct skeleton {
     int num_joints;
     joint_t *joints;
     /* cached result */
-    float last_time;
     mat4_t *joint_matrices;
     mat3_t *normal_matrices;
+    float last_time;
 };
 
 /* skeleton loading/releasing */

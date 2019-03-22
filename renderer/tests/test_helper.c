@@ -188,8 +188,8 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
 
 /* scene creating/releasing */
 
-static const int SHADOWMAP_WIDTH = 1024;
-static const int SHADOWMAP_HEIGHT = 1024;
+static const int SHADOWMAP_WIDTH = 2048;
+static const int SHADOWMAP_HEIGHT = 2048;
 
 typedef struct {vec3_t min; vec3_t max;} bbox_t;
 
@@ -235,6 +235,7 @@ static int count_num_faces(scene_t *scene) {
     int num_models = darray_size(scene->models);
     int num_faces = 0;
     int i;
+
     for (i = 0; i < num_models; i++) {
         model_t *model = scene->models[i];
         num_faces += mesh_get_num_faces(model->mesh);
@@ -369,10 +370,10 @@ static int compare_models(const void *model1p, const void *model2p) {
 }
 
 static void sort_models(model_t **models, camera_t *camera) {
-    mat4_t view_matrix = camera_get_view_matrix(camera);
     int num_models = darray_size(models);
-    int i;
     if (num_models > 1) {
+        mat4_t view_matrix = camera_get_view_matrix(camera);
+        int i;
         for (i = 0; i < num_models; i++) {
             model_t *model = models[i];
             vec4_t local_pos = vec4_from_vec3(mesh_get_center(model->mesh), 1);

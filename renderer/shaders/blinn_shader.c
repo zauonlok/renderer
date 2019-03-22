@@ -188,7 +188,7 @@ static vec4_t common_fragment_shader(blinn_varyings_t *varyings,
 
         if (!shadowed && uniforms->specular_map) {
             vec3_t half_dir = vec3_normalize(vec3_add(light_dir, view_dir));
-            float closeness = vec3_dot(half_dir, normal_dir);
+            float closeness = vec3_dot(normal_dir, half_dir);
             if (closeness > 0) {
                 float strength = (float)pow(closeness, uniforms->shininess);
                 texture_t *specular_map = uniforms->specular_map;

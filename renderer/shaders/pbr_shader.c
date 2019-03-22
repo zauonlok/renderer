@@ -180,7 +180,7 @@ static vec3_t get_view_dir(pbr_varyings_t *varyings,
 static vec3_t get_normal_dir(pbr_varyings_t *varyings,
                              pbr_uniforms_t *uniforms,
                              vec3_t view_dir) {
-    vec3_t world_normal;
+    vec3_t normal_dir;
     if (uniforms->normal_map) {
         vec2_t texcoord = varyings->texcoord;
         vec4_t sample = texture_sample(uniforms->normal_map, texcoord);
@@ -190,15 +190,15 @@ static vec3_t get_normal_dir(pbr_varyings_t *varyings,
         mat3_t tbn_matrix = mat3_from_cols(varyings->tangent,
                                            varyings->bitangent,
                                            varyings->normal);
-        world_normal = mat3_mul_vec3(tbn_matrix, tangent_normal);
+        vec3_t world_normal = mat3_mul_vec3(tbn_matrix, tangent_normal);
+        normal_dir = vec3_normalize(world_normal);
     } else {
-        world_normal = varyings->normal;
+        normal_dir = vec3_normalize(varyings->normal);
     }
-    world_normal = vec3_normalize(world_normal);
-    if (vec3_dot(world_normal, view_dir) < 0) {
-        return vec3_negate(world_normal);
+    if (vec3_dot(normal_dir, view_dir) < 0) {
+        return vec3_negate(normal_dir);
     } else {
-        return world_normal;
+        return normal_dir;
     }
 }
 

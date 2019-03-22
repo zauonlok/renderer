@@ -24,7 +24,7 @@ typedef struct {
     int double_sided;
     int enable_blend;
     float alpha_cutoff;
-} pbr_material_t;;
+} pbr_material_t;
 
 typedef struct {
     vec3_t position;

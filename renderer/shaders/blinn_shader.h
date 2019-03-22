@@ -13,7 +13,7 @@ typedef struct {
     int double_sided;
     int enable_blend;
     float alpha_cutoff;
-} blinn_material_t;;
+} blinn_material_t;
 
 typedef struct {
     vec3_t position;
