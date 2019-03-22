@@ -188,8 +188,8 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
 
 /* scene creating/releasing */
 
-static const int SHADOWMAP_WIDTH = 2048;
-static const int SHADOWMAP_HEIGHT = 2048;
+static const int SHADOWMAP_WIDTH = 512;
+static const int SHADOWMAP_HEIGHT = 512;
 
 typedef struct {vec3_t min; vec3_t max;} bbox_t;
 
@@ -369,11 +369,10 @@ static int compare_models(const void *model1p, const void *model2p) {
     }
 }
 
-static void sort_models(model_t **models, camera_t *camera) {
+static void sort_models(model_t **models, mat4_t view_matrix) {
     int num_models = darray_size(models);
+    int i;
     if (num_models > 1) {
-        mat4_t view_matrix = camera_get_view_matrix(camera);
-        int i;
         for (i = 0; i < num_models; i++) {
             model_t *model = models[i];
             vec4_t local_pos = vec4_from_vec3(mesh_get_center(model->mesh), 1);
@@ -392,7 +391,6 @@ void test_draw_scene(scene_t *scene, context_t *context) {
     perframe_t perframe;
     int i;
 
-    sort_models(scene->models, context->camera);
     perframe = perframe_from_context(context);
     perframe.shadow_map = scene->shadow_map;
     for (i = 0; i < num_models; i++) {
@@ -401,6 +399,7 @@ void test_draw_scene(scene_t *scene, context_t *context) {
     }
 
     if (scene->with_shadow) {
+        sort_models(scene->models, perframe.light_view_matrix);
         framebuffer_clear_depth(scene->shadow_fb, 1);
         for (i = 0; i < num_models; i++) {
             model_t *model = scene->models[i];
@@ -411,6 +410,7 @@ void test_draw_scene(scene_t *scene, context_t *context) {
         texture_from_depth(scene->shadow_map, scene->shadow_fb);
     }
 
+    sort_models(scene->models, perframe.camera_view_matrix);
     framebuffer_clear_color(framebuffer, scene->background);
     framebuffer_clear_depth(framebuffer, 1);
     if (scene->skybox == NULL) {
