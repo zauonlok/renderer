@@ -11,8 +11,6 @@
  * https://people.rennes.inria.fr/Ludovic.Hoyet/teaching/IMO/05_IMO2016_Skinning.pdf
  */
 
-#define MAX_JOINTS 256
-
 typedef struct {
     int parent_index;
     mat4_t inverse_bind;
@@ -39,8 +37,8 @@ struct skeleton {
     joint_t *joints;
     /* cached result */
     float last_time;
-    mat4_t joint_matrices[MAX_JOINTS];
-    mat3_t normal_matrices[MAX_JOINTS];
+    mat4_t *joint_matrices;
+    mat3_t *normal_matrices;
 };
 
 /* skeleton loading/releasing */
@@ -184,6 +182,16 @@ static joint_t load_joint(FILE *file) {
     return joint;
 }
 
+static void initialize_cache(skeleton_t *skeleton) {
+    int joint_matrix_size = sizeof(mat4_t) * skeleton->num_joints;
+    int normal_matrix_size = sizeof(mat3_t) * skeleton->num_joints;
+    skeleton->joint_matrices = (mat4_t*)malloc(joint_matrix_size);
+    skeleton->normal_matrices = (mat3_t*)malloc(normal_matrix_size);
+    memset(skeleton->joint_matrices, 0, joint_matrix_size);
+    memset(skeleton->normal_matrices, 0, normal_matrix_size);
+    skeleton->last_time = -1;
+}
+
 static skeleton_t *load_ani(const char *filename) {
     char line[LINE_LENGTH];
     skeleton_t *skeleton;
@@ -192,8 +200,6 @@ static skeleton_t *load_ani(const char *filename) {
     int i;
 
     skeleton = (skeleton_t*)malloc(sizeof(skeleton_t));
-    memset(skeleton->joint_matrices, 0, sizeof(skeleton->joint_matrices));
-    memset(skeleton->normal_matrices, 0, sizeof(skeleton->normal_matrices));
 
     file = fopen(filename, "rb");
     assert(file != NULL);
@@ -201,7 +207,7 @@ static skeleton_t *load_ani(const char *filename) {
     read_line(file, line);
     items = sscanf(line, "joint-size: %d", &skeleton->num_joints);
     assert(items == 1);
-    assert(skeleton->num_joints > 0 && skeleton->num_joints <= MAX_JOINTS);
+    assert(skeleton->num_joints > 0);
 
     read_line(file, line);
     items = sscanf(line, "time-range: [%f, %f]",
@@ -214,6 +220,8 @@ static skeleton_t *load_ani(const char *filename) {
     }
 
     fclose(file);
+
+    initialize_cache(skeleton);
 
     return skeleton;
 }
@@ -245,6 +253,9 @@ void skeleton_release(skeleton_t *skeleton) {
         free(joint->scale_values);
     }
     free(skeleton->joints);
+    free(skeleton->joint_matrices);
+    free(skeleton->normal_matrices);
+    free(skeleton);
 }
 
 /* joint updating/retrieving */

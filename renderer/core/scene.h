@@ -33,7 +33,7 @@ typedef struct model {
     float distance;
 } model_t;
 
-typedef struct scene {
+typedef struct {
     vec4_t background;
     model_t *skybox;
     model_t **models;

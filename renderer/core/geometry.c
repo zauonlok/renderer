@@ -815,8 +815,8 @@ mat4_t mat4_frustum(float left, float right, float bottom, float top,
     float y_range = top - bottom;
     float z_range = far - near;
     mat4_t m = mat4_identity();
-    assert(x_range > 0 && y_range);
-    assert(near > 0 && far > 0 && z_range > 0);
+    assert(near > 0 && far > 0);
+    assert(x_range > 0 && y_range > 0 && z_range > 0);
     m.m[0][0] = 2 * near / x_range;
     m.m[1][1] = 2 * near / y_range;
     m.m[0][2] = (left + right) / x_range;
