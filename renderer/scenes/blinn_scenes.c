@@ -286,7 +286,7 @@ scene_t *blinn_craftsman_scene(void) {
     model_t *model;
     int i;
 
-    assert(ARRAY_SIZE(materials) <= num_meshes);
+    assert((int)ARRAY_SIZE(materials) <= num_meshes);
     assert(ARRAY_SIZE(transforms) == num_meshes);
 
     translation = mat4_translate(-1.668f, -27.061f, -10.834f);
@@ -295,7 +295,7 @@ scene_t *blinn_craftsman_scene(void) {
     for (i = 0; i < num_meshes; i++) {
         mat4_t transform = mat4_mul_mat4(root, transforms[i]);
         blinn_material_t material;
-        if (i < ARRAY_SIZE(materials)) {
+        if (i < (int)ARRAY_SIZE(materials)) {
             material = materials[i];
         } else {
             material = materials[ARRAY_SIZE(materials) - 1];
