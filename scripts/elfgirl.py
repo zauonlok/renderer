@@ -29,10 +29,10 @@ OBJ_FILENAMES = [
 ]
 
 IMG_FILENAMES = {
-    "textures/Rig2lambert23SG_baseColor.png": "face.tga",
-    "textures/lambert22SG_baseColor.png": "body.tga",
-    "textures/lambert25SG_baseColor.png": "hair.tga",
-    "textures/pasted__lambert2SG_baseColor.png": "base.tga",
+    "textures/Rig2lambert23SG_baseColor.png": "face_diffuse.tga",
+    "textures/lambert22SG_baseColor.png": "body_diffuse.tga",
+    "textures/lambert25SG_baseColor.png": "hair_diffuse.tga",
+    "textures/pasted__lambert2SG_baseColor.png": "base_diffuse.tga",
 }
 
 
@@ -47,14 +47,23 @@ def process_meshes(zip_file):
             f.write(obj_data)
 
 
+def load_image(zip_file, filename):
+    with zip_file.open(filename) as f:
+        image = Image.open(f)
+        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        return image
+
+
+def save_image(image, filename):
+    image = image.resize((512, 512), Image.LANCZOS)
+    filepath = os.path.join(DST_DIRECTORY, filename)
+    image.save(filepath, rle=True)
+
+
 def process_images(zip_file):
     for old_filename, tga_filename in IMG_FILENAMES.items():
-        with zip_file.open(old_filename) as f:
-            image = Image.open(f)
-            image = image.transpose(Image.FLIP_TOP_BOTTOM)
-            image = image.resize((512, 512), Image.LANCZOS)
-            filepath = os.path.join(DST_DIRECTORY, tga_filename)
-            image.save(filepath, rle=True)
+        image = load_image(zip_file, old_filename)
+        save_image(image, tga_filename)
 
 
 def main():
