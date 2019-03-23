@@ -331,6 +331,7 @@ model_t *blinn_create_model(const char *mesh, const char *skeleton,
     model->update    = update_model;
     model->release   = release_model;
     model->opaque    = !material.enable_blend;
+    model->distance  = -1;
 
     return model;
 }

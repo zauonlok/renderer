@@ -123,13 +123,26 @@ void texture_srgb2linear(texture_t *texture) {
     }
 }
 
-vec4_t texture_sample(texture_t *texture, vec2_t texcoord) {
+vec4_t texture_repeat_sample(texture_t *texture, vec2_t texcoord) {
     float u = texcoord.x - (float)floor(texcoord.x);
     float v = texcoord.y - (float)floor(texcoord.y);
     int c = (int)((texture->width - 1) * u);
     int r = (int)((texture->height - 1) * v);
     int index = r * texture->width + c;
     return texture->buffer[index];
+}
+
+vec4_t texture_clamp_sample(texture_t *texture, vec2_t texcoord) {
+    float u = float_clamp(texcoord.x, 0, 1);
+    float v = float_clamp(texcoord.y, 0, 1);
+    int c = (int)((texture->width - 1) * u);
+    int r = (int)((texture->height - 1) * v);
+    int index = r * texture->width + c;
+    return texture->buffer[index];
+}
+
+vec4_t texture_sample(texture_t *texture, vec2_t texcoord) {
+    return texture_repeat_sample(texture, texcoord);
 }
 
 /* cubemap related functions */
@@ -227,5 +240,5 @@ vec4_t cubemap_sample(cubemap_t *cubemap, vec3_t direction) {
     texcoord.x = (sc / ma + 1) / 2;
     texcoord.y = (tc / ma + 1) / 2;
 
-    return texture_sample(cubemap->faces[face_index], texcoord);
+    return texture_clamp_sample(cubemap->faces[face_index], texcoord);
 }

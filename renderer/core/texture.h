@@ -16,6 +16,8 @@ texture_t *texture_from_image(image_t *image);
 void texture_from_color(texture_t *texture, framebuffer_t *framebuffer);
 void texture_from_depth(texture_t *texture, framebuffer_t *framebuffer);
 void texture_srgb2linear(texture_t *texture);
+vec4_t texture_repeat_sample(texture_t *texture, vec2_t texcoord);
+vec4_t texture_clamp_sample(texture_t *texture, vec2_t texcoord);
 vec4_t texture_sample(texture_t *texture, vec2_t texcoord);
 
 /* cubemap related functions */

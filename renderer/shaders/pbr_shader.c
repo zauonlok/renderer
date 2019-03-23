@@ -202,6 +202,40 @@ static vec3_t get_normal_dir(pbr_varyings_t *varyings,
     }
 }
 
+static vec3_t get_incident_dir(vec3_t normal_dir, vec3_t view_dir) {
+    float n_dot_v = vec3_dot(normal_dir, view_dir);
+    return vec3_sub(vec3_mul(normal_dir, 2 * n_dot_v), view_dir);
+}
+
+static vec3_t get_ibl_shade(ibldata_t *ibldata, float roughness,
+                            vec3_t normal_dir, vec3_t view_dir,
+                            vec3_t diffuse_color, vec3_t specular_color_) {
+    cubemap_t *diffuse_map = ibldata->diffuse_map;
+    vec4_t diffuse_sample = cubemap_sample(diffuse_map, normal_dir);
+    vec3_t diffuse_light = vec3_from_vec4(diffuse_sample);
+    vec3_t diffuse_shade = vec3_modulate(diffuse_light, diffuse_color);
+
+    float n_dot_v = float_max(vec3_dot(normal_dir, view_dir), 0);
+    vec2_t brdf_texcoord = vec2_new(n_dot_v, roughness);
+    vec4_t brdf_sample = texture_sample(ibldata->brdf_lut, brdf_texcoord);
+    float specular_scale = brdf_sample.x;
+    float specular_bias = brdf_sample.y;
+
+    float specular_r = specular_color_.x * specular_scale + specular_bias;
+    float specular_g = specular_color_.y * specular_scale + specular_bias;
+    float specular_b = specular_color_.z * specular_scale + specular_bias;
+    vec3_t specular_color = vec3_new(specular_r, specular_g, specular_b);
+
+    vec3_t incident_dir = get_incident_dir(normal_dir, view_dir);
+    int specular_lod = (int)(roughness * (ibldata->mip_level - 1));
+    cubemap_t *specular_map = ibldata->specular_maps[specular_lod];
+    vec4_t specular_sample = cubemap_sample(specular_map, incident_dir);
+    vec3_t specular_light = vec3_from_vec4(specular_sample);
+    vec3_t specular_shade = vec3_modulate(specular_light, specular_color);
+
+    return vec3_add(diffuse_shade, specular_shade);
+}
+
 static int is_in_shadow(pbr_varyings_t *varyings, pbr_uniforms_t *uniforms,
                         vec3_t normal_dir, vec3_t light_dir) {
     if (uniforms->shadow_map) {
@@ -272,40 +306,6 @@ static vec3_t get_dir_shade(vec3_t light_dir, float roughness,
     }
 }
 
-static vec3_t get_incident_dir(vec3_t normal_dir, vec3_t view_dir) {
-    float n_dot_v = vec3_dot(normal_dir, view_dir);
-    return vec3_sub(vec3_mul(normal_dir, 2 * n_dot_v), view_dir);
-}
-
-static vec3_t get_ibl_shade(ibldata_t *ibldata, float roughness,
-                            vec3_t normal_dir, vec3_t view_dir,
-                            vec3_t diffuse_color, vec3_t specular_color_) {
-    cubemap_t *diffuse_map = ibldata->diffuse_map;
-    vec4_t diffuse_sample = cubemap_sample(diffuse_map, normal_dir);
-    vec3_t diffuse_light = vec3_from_vec4(diffuse_sample);
-    vec3_t diffuse_shade = vec3_modulate(diffuse_light, diffuse_color);
-
-    float n_dot_v = float_max(vec3_dot(normal_dir, view_dir), 0);
-    vec2_t brdf_texcoord = vec2_new(n_dot_v, roughness);
-    vec4_t brdf_sample = texture_sample(ibldata->brdf_lut, brdf_texcoord);
-    float specular_scale = brdf_sample.x;
-    float specular_bias = brdf_sample.y;
-
-    float specular_r = specular_color_.x * specular_scale + specular_bias;
-    float specular_g = specular_color_.y * specular_scale + specular_bias;
-    float specular_b = specular_color_.z * specular_scale + specular_bias;
-    vec3_t specular_color = vec3_new(specular_r, specular_g, specular_b);
-
-    vec3_t incident_dir = get_incident_dir(normal_dir, view_dir);
-    int specular_lod = (int)(roughness * (ibldata->mip_level - 1));
-    cubemap_t *specular_map = ibldata->specular_maps[specular_lod];
-    vec4_t specular_sample = cubemap_sample(specular_map, incident_dir);
-    vec3_t specular_light = vec3_from_vec4(specular_sample);
-    vec3_t specular_shade = vec3_modulate(specular_light, specular_color);
-
-    return vec3_add(diffuse_shade, specular_shade);
-}
-
 static vec3_t linear_to_srgb(vec3_t color) {
     float r = (float)pow(color.x, 1 / 2.2);
     float g = (float)pow(color.y, 1 / 2.2);
@@ -333,6 +333,14 @@ static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
 
         vec3_t color = vec3_new(0, 0, 0);
 
+        if (uniforms->ambient_light > 0 && uniforms->shared_ibldata) {
+            float ambient_light = uniforms->ambient_light;
+            vec3_t shade = get_ibl_shade(uniforms->shared_ibldata, roughness,
+                                         normal_dir, view_dir,
+                                         diffuse_color, specular_color);
+            color = vec3_add(color, vec3_mul(shade, ambient_light));
+        }
+
         if (uniforms->punctual_light > 0) {
             float punctual_light = uniforms->punctual_light;
             if (!is_in_shadow(varyings, uniforms, normal_dir, light_dir)) {
@@ -341,13 +349,6 @@ static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
                                              diffuse_color, specular_color);
                 color = vec3_add(color, vec3_mul(shade, punctual_light));
             }
-        }
-
-        if (uniforms->shared_ibldata) {
-            vec3_t shade = get_ibl_shade(uniforms->shared_ibldata, roughness,
-                                         normal_dir, view_dir,
-                                         diffuse_color, specular_color);
-            color = vec3_add(color, shade);
         }
 
         if (uniforms->occlusion_map) {
@@ -403,6 +404,7 @@ static void update_model(model_t *model, perframe_t *perframe) {
         uniforms->joint_n_matrices = skeleton_get_normal_matrices(skeleton);
     }
     uniforms->shadow_map = perframe->shadow_map;
+    uniforms->ambient_light = float_clamp(light_info.ambient, 0, 3);
     uniforms->punctual_light = float_clamp(light_info.punctual, 0, 3);
 }
 
@@ -488,6 +490,7 @@ model_t *pbr_create_model(const char *mesh, const char *skeleton,
     model->update    = update_model;
     model->release   = release_model;
     model->opaque    = !material.enable_blend;
+    model->distance  = -1;
 
     return model;
 }

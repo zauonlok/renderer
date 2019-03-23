@@ -5,6 +5,21 @@
 #include "../shaders/blinn_shader.h"
 #include "blinn_scenes.h"
 
+static scene_t *build_scene(
+        vec4_t background, model_t *skybox, model_t **models,
+        float ambient_light, float punctual_light, int with_shadow) {
+    scene_t *scene = (scene_t*)malloc(sizeof(scene_t));
+    scene->background     = background;
+    scene->skybox         = skybox;
+    scene->models         = models;
+    scene->light.ambient  = ambient_light;
+    scene->light.punctual = punctual_light;
+    scene->with_shadow    = with_shadow;
+    scene->shadow_fb      = NULL;
+    scene->shadow_map     = NULL;
+    return scene;
+}
+
 scene_t *blinn_centaur_scene(void) {
     const char *meshes[] = {
         "assets/centaur/body.obj",
@@ -34,12 +49,11 @@ scene_t *blinn_centaur_scene(void) {
             0, 0, 0,
         },
     };
-    vec4_t background = vec4_new(0.368f, 0.392f, 0.337f, 1);
-    model_t **models = NULL;
-    model_t *model;
-    scene_t *scene;
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
+    model_t **models = NULL;
+    model_t *model;
     int i;
 
     assert(ARRAY_SIZE(materials) == num_meshes);
@@ -54,13 +68,7 @@ scene_t *blinn_centaur_scene(void) {
         darray_push(models, model);
     }
 
-    scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background  = background;
-    scene->skybox      = NULL;
-    scene->models      = models;
-    scene->with_shadow = 0;
-
-    return scene;
+    return build_scene(background, NULL, models, 0.5f, 1, 0);
 }
 
 scene_t *blinn_craftsman_scene(void) {
@@ -270,13 +278,12 @@ scene_t *blinn_craftsman_scene(void) {
             {  0.000000f,   0.000000f,   0.000000f,   1.000000f},
         }},
     };
-    vec4_t background = vec4_new(0.078f, 0.082f, 0.102f, 1);
-    model_t **models = NULL;
-    model_t *model;
-    scene_t *scene;
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     mat4_t scale, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
     int num_sparks = ARRAY_SIZE(spark_transforms);
+    model_t **models = NULL;
+    model_t *model;
     int i;
 
     assert(ARRAY_SIZE(materials) <= num_meshes);
@@ -302,264 +309,7 @@ scene_t *blinn_craftsman_scene(void) {
         darray_push(models, model);
     }
 
-    scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background  = background;
-    scene->skybox      = NULL;
-    scene->models      = models;
-    scene->with_shadow = 0;
-
-    return scene;
-}
-
-scene_t *blinn_ornitier_scene(void) {
-    const char *meshes[] = {
-        "assets/ornitier/base.obj",
-        "assets/ornitier/body.obj",
-        "assets/ornitier/coat.obj",
-        "assets/ornitier/feuga.obj",
-        "assets/ornitier/hands.obj",
-        "assets/ornitier/hat.obj",
-        "assets/ornitier/legs.obj",
-    };
-    blinn_material_t materials[] = {
-        {
-            {1, 1, 1, 1}, 32,
-            "assets/ornitier/base_diffuse.tga",
-            "assets/ornitier/base_specular.tga",
-            "assets/ornitier/base_emission.tga",
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 32,
-            "assets/ornitier/body_diffuse.tga",
-            "assets/ornitier/body_specular.tga",
-            "assets/ornitier/body_emission.tga",
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 32,
-            "assets/ornitier/coat_diffuse.tga",
-            "assets/ornitier/coat_specular.tga",
-            NULL,
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 32,
-            "assets/ornitier/feuga_diffuse.tga",
-            NULL,
-            "assets/ornitier/feuga_emission.tga",
-            0, 1, 0,
-        },
-        {
-            {1, 1, 1, 1}, 32,
-            "assets/ornitier/hands_diffuse.tga",
-            "assets/ornitier/hands_specular.tga",
-            NULL,
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 32,
-            "assets/ornitier/hat_diffuse.tga",
-            "assets/ornitier/hat_specular.tga",
-            NULL,
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 32,
-            "assets/ornitier/legs_diffuse.tga",
-            "assets/ornitier/legs_specular.tga",
-            NULL,
-            0, 0, 0,
-        },
-    };
-    vec4_t background = vec4_new(0.314f, 0.235f, 0.278f, 1);
-    model_t **models = NULL;
-    model_t *model;
-    scene_t *scene;
-    mat4_t scale, translation, root;
-    int num_meshes = ARRAY_SIZE(meshes);
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    translation = mat4_translate(-111.550f, -67.795f, 178.647f);
-    scale = mat4_scale(0.00095f, 0.00095f, 0.00095f);
-    root = mat4_mul_mat4(scale, translation);
-    for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], NULL, root, materials[i]);
-        darray_push(models, model);
-    }
-
-    scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background  = background;
-    scene->skybox      = NULL;
-    scene->models      = models;
-    scene->with_shadow = 0;
-
-    return scene;
-}
-
-scene_t *blinn_kgirls_scene(void) {
-    const char *meshes[] = {
-        "assets/kgirls/body.obj",
-        "assets/kgirls/face.obj",
-        "assets/kgirls/hair.obj",
-        "assets/kgirls/pupils.obj",
-    };
-    const char *skeleton = "assets/kgirls/kgirls.ani";
-    blinn_material_t material = {
-        {1, 1, 1, 1}, 32,
-        "assets/kgirls/kgirls.tga",
-        NULL,
-        NULL,
-        0, 0, 0,
-    };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
-    model_t **models = NULL;
-    model_t *model;
-    scene_t *scene;
-    mat4_t scale, rotation, translation, root;
-    int num_meshes = ARRAY_SIZE(meshes);
-    int i;
-
-    translation = mat4_translate(0, -4.937f, -96.547f);
-    rotation = mat4_rotate_x(TO_RADIANS(-90));
-    rotation = mat4_mul_mat4(mat4_rotate_y(TO_RADIANS(90)), rotation);
-    scale = mat4_scale(0.005f, 0.005f, 0.005f);
-    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], skeleton, root, material);
-        darray_push(models, model);
-    }
-
-    scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background  = background;
-    scene->skybox      = NULL;
-    scene->models      = models;
-    scene->with_shadow = 0;
-
-    return scene;
-}
-
-scene_t *blinn_junkrat_scene(void) {
-    const char *skeleton = "assets/junkrat/junkrat.ani";
-    blinn_material_t materials[] = {
-        {{1, 1, 1, 1}, 32, "assets/junkrat/upper.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/junkrat/lower.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/junkrat/head.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/junkrat/back.tga", NULL, NULL, 0, 0, 0},
-    };
-    int mesh2material[63] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 2, 0, 1, 0, 2, 1, 0,
-        0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2,
-    };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
-    model_t **models = NULL;
-    model_t *model;
-    scene_t *scene;
-    mat4_t scale, translation, root;
-    int num_meshes = ARRAY_SIZE(mesh2material);
-    int i;
-
-    translation = mat4_translate(3.735f, -382.993f, 57.980f);
-    scale = mat4_scale(0.0013f, 0.0013f, 0.0013f);
-    root = mat4_mul_mat4(scale, translation);
-    for (i = 0; i < num_meshes; i++) {
-        int material_index = mesh2material[i];
-        blinn_material_t material = materials[material_index];
-        const char *obj_template = "assets/junkrat/junkrat%d.obj";
-        char obj_filename[64];
-        sprintf(obj_filename, obj_template, i);
-        model = blinn_create_model(obj_filename, skeleton, root, material);
-        darray_push(models, model);
-    }
-
-    scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background  = background;
-    scene->skybox      = NULL;
-    scene->models      = models;
-    scene->with_shadow = 0;
-
-    return scene;
-}
-
-scene_t *blinn_assassin_scene(void) {
-    const char *meshes[] = {
-        "assets/assassin/body.obj",
-        "assets/assassin/face.obj",
-        "assets/assassin/hair.obj",
-        "assets/assassin/weapon.obj",
-    };
-    const char *skeleton = "assets/assassin/assassin.ani";
-    blinn_material_t materials[] = {
-        {{1, 1, 1, 1}, 32, "assets/assassin/body.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/assassin/face.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/assassin/hair.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/assassin/weapon.tga", NULL, NULL, 0, 0, 0},
-    };
-    vec4_t background = vec4_new(0.690f, 0.576f, 0.576f, 1);
-    model_t **models = NULL;
-    model_t *model;
-    scene_t *scene;
-    mat4_t scale, translation, root;
-    int num_meshes = ARRAY_SIZE(meshes);
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    translation = mat4_translate(0, -125.815f, 18.898f);
-    scale = mat4_scale(0.0038f, 0.0038f, 0.0038f);
-    root = mat4_mul_mat4(scale, translation);
-    for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], skeleton, root, materials[i]);
-        darray_push(models, model);
-    }
-
-    scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background  = background;
-    scene->skybox      = NULL;
-    scene->models      = models;
-    scene->with_shadow = 0;
-
-    return scene;
-}
-
-scene_t *blinn_witch_scene(void) {
-    const char *meshes[] = {
-        "assets/witch/object.obj",
-        "assets/witch/witch.obj",
-    };
-    blinn_material_t materials[] = {
-        {{1, 1, 1, 1}, 32, "assets/witch/object.tga", NULL, NULL, 1, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/witch/witch.tga", NULL, NULL, 1, 1, 0},
-    };
-    vec4_t background = vec4_new(0.333f, 0.333f, 0.333f, 1);
-    model_t **models = NULL;
-    model_t *model;
-    scene_t *scene;
-    mat4_t scale, rotation, translation, root;
-    int num_meshes = ARRAY_SIZE(meshes);
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    translation = mat4_translate(-17.924f, -16.974f, -32.691f);
-    rotation = mat4_rotate_x(TO_RADIANS(-90));
-    scale = mat4_scale(0.02f, 0.02f, 0.02f);
-    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], NULL, root, materials[i]);
-        darray_push(models, model);
-    }
-
-    scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background  = background;
-    scene->skybox      = NULL;
-    scene->models      = models;
-    scene->with_shadow = 0;
-
-    return scene;
+    return build_scene(background, NULL, models, 0.5f, 1, 0);
 }
 
 scene_t *blinn_elfgirl_scene(void) {
@@ -572,41 +322,71 @@ scene_t *blinn_elfgirl_scene(void) {
         "assets/elfgirl/face1.obj",
         "assets/elfgirl/hair.obj",
     };
-    blinn_material_t materials[] = {
-        {{1, 1, 1, 1}, 32, "assets/elfgirl/base.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/elfgirl/body.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/elfgirl/body.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/elfgirl/body.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/elfgirl/face.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/elfgirl/face.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "assets/elfgirl/hair.tga", NULL, NULL, 0, 0, 0},
+    const char *textures[] = {
+        "assets/elfgirl/base_diffuse.tga",
+        "assets/elfgirl/body_diffuse.tga",
+        "assets/elfgirl/body_diffuse.tga",
+        "assets/elfgirl/body_diffuse.tga",
+        "assets/elfgirl/face_diffuse.tga",
+        "assets/elfgirl/face_diffuse.tga",
+        "assets/elfgirl/hair_diffuse.tga",
     };
-    vec4_t background = vec4_new(0.333f, 0.333f, 0.333f, 1);
-    model_t **models = NULL;
-    model_t *model;
-    scene_t *scene;
+    blinn_material_t material = {{1, 1, 1, 1}, 32, NULL, NULL, NULL, 0, 0, 0};
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
+    model_t **models = NULL;
+    model_t *model;
     int i;
 
-    assert(ARRAY_SIZE(materials) == num_meshes);
+    assert(ARRAY_SIZE(textures) == num_meshes);
 
     translation = mat4_translate(2.449f, -2.472f, -20.907f);
     rotation = mat4_rotate_x(TO_RADIANS(-90));
     scale = mat4_scale(0.023f, 0.023f, 0.023f);
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], NULL, root, materials[i]);
+        material.diffuse_map = textures[i];
+        model = blinn_create_model(meshes[i], NULL, root, material);
         darray_push(models, model);
     }
 
-    scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background  = background;
-    scene->skybox      = NULL;
-    scene->models      = models;
-    scene->with_shadow = 0;
+    return build_scene(background, NULL, models, 0.5f, 0.75f, 0);
+}
 
-    return scene;
+scene_t *blinn_kgirls_scene(void) {
+    const char *meshes[] = {
+        "assets/kgirls/body.obj",
+        "assets/kgirls/face.obj",
+        "assets/kgirls/hair.obj",
+        "assets/kgirls/pupils.obj",
+    };
+    const char *skeleton = "assets/kgirls/kgirls.ani";
+    blinn_material_t material = {
+        {1, 1, 1, 1}, 32,
+        "assets/kgirls/kgirls_diffuse.tga",
+        NULL,
+        "assets/kgirls/kgirls_emission.tga",
+        0, 0, 0,
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    mat4_t scale, rotation, translation, root;
+    int num_meshes = ARRAY_SIZE(meshes);
+    model_t **models = NULL;
+    model_t *model;
+    int i;
+
+    translation = mat4_translate(0, -4.937f, -96.547f);
+    rotation = mat4_rotate_x(TO_RADIANS(-90));
+    rotation = mat4_mul_mat4(mat4_rotate_y(TO_RADIANS(90)), rotation);
+    scale = mat4_scale(0.005f, 0.005f, 0.005f);
+    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    for (i = 0; i < num_meshes; i++) {
+        model = blinn_create_model(meshes[i], skeleton, root, material);
+        darray_push(models, model);
+    }
+
+    return build_scene(background, NULL, models, 0, 0, 0);
 }
 
 scene_t *blinn_mccree_scene(void) {
@@ -700,12 +480,11 @@ scene_t *blinn_mccree_scene(void) {
          1,  6,  9, 27, 12, 13, 14, 15, 16,  3, 11, 10,  4,  1, 10,  4,
          1, 10,  4,  1,  5,  6,  7,  8,  9,  0,  1,  2,  3,  4,
     };
-    vec4_t background = vec4_new(0.847f, 0.949f, 0.898f, 1);
-    model_t **models = NULL;
-    model_t *model;
-    scene_t *scene;
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     mat4_t scale, translation, root;
     int num_meshes = ARRAY_SIZE(mesh2transform);
+    model_t **models = NULL;
+    model_t *model;
     int i;
 
     assert(ARRAY_SIZE(mesh2material) == num_meshes);
@@ -725,11 +504,86 @@ scene_t *blinn_mccree_scene(void) {
         darray_push(models, model);
     }
 
-    scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background  = background;
-    scene->skybox      = NULL;
-    scene->models      = models;
-    scene->with_shadow = 0;
+    return build_scene(background, NULL, models, 0.75f, 0.25f, 0);
+}
 
-    return scene;
+scene_t *blinn_phoenix_scene(void) {
+    const char *meshes[] = {
+        "assets/phoenix/body.obj",
+        "assets/phoenix/wings.obj",
+    };
+    const char *skeleton = "assets/phoenix/phoenix.ani";
+    blinn_material_t materials[] = {
+        {
+            {1, 1, 1, 1}, 32,
+            "assets/phoenix/body_diffuse.tga",
+            NULL,
+            "assets/phoenix/body_emission.tga",
+            0, 0, 0.5f,
+        },
+        {
+            {1, 1, 1, 1}, 32,
+            "assets/phoenix/wings_diffuse.tga",
+            NULL,
+            "assets/phoenix/wings_emission.tga",
+            0, 0, 0.5f,
+        },
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    mat4_t scale, rotation, translation, root;
+    int num_meshes = ARRAY_SIZE(meshes);
+    model_t **models = NULL;
+    model_t *model;
+    int i;
+
+    assert(ARRAY_SIZE(materials) == num_meshes);
+
+    translation = mat4_translate(376.905f, -169.495f, 0);
+    rotation = mat4_rotate_y(TO_RADIANS(180));
+    scale = mat4_scale(0.001f, 0.001f, 0.001f);
+    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    for (i = 0; i < num_meshes; i++) {
+        model = blinn_create_model(meshes[i], skeleton, root, materials[i]);
+        darray_push(models, model);
+    }
+
+    return build_scene(background, NULL, models, 0.75f, 0, 0);
+}
+
+scene_t *blinn_witch_scene(void) {
+    const char *meshes[] = {
+        "assets/witch/object.obj",
+        "assets/witch/witch.obj",
+    };
+    blinn_material_t materials[] = {
+        {
+            {1, 1, 1, 1}, 32,
+            "assets/witch/object_diffuse.tga", NULL, NULL,
+            1, 0, 0,
+        },
+        {
+            {1, 1, 1, 1}, 32,
+            "assets/witch/witch_diffuse.tga", NULL, NULL,
+            1, 1, 0,
+        },
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    mat4_t scale, rotation, translation, root;
+    int num_meshes = ARRAY_SIZE(meshes);
+    model_t **models = NULL;
+    model_t *model;
+    int i;
+
+    assert(ARRAY_SIZE(materials) == num_meshes);
+
+    translation = mat4_translate(-17.924f, -16.974f, -32.691f);
+    rotation = mat4_rotate_x(TO_RADIANS(-90));
+    scale = mat4_scale(0.02f, 0.02f, 0.02f);
+    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    for (i = 0; i < num_meshes; i++) {
+        model = blinn_create_model(meshes[i], NULL, root, materials[i]);
+        darray_push(models, model);
+    }
+
+    return build_scene(background, NULL, models, 0.5f, 1, 0);
 }

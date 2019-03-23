@@ -5,9 +5,14 @@
 #include "test_pbr.h"
 
 static scene_creator_t g_scene_creators[] = {
+    {"assassin", pbr_assassin_scene},
+    {"dieselpunk", pbr_dieselpunk_scene},
     {"helmet", pbr_helmet_scene},
     {"helmet2", pbr_helmet2_scene},
+    {"junkrat", pbr_junkrat_scene},
+    {"ornitier", pbr_ornitier_scene},
     {"ponycar", pbr_ponycar_scene},
+    {"spitfire", pbr_spitfire_scene},
     {NULL, NULL},
 };
 

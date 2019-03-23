@@ -5,12 +5,12 @@
 #include "test_helper.h"
 
 static scene_creator_t g_scene_creators[] = {
-    {"assassin", blinn_assassin_scene},
     {"centaur", blinn_centaur_scene},
     {"craftsman", blinn_craftsman_scene},
     {"elfgirl", blinn_elfgirl_scene},
     {"kgirls", blinn_kgirls_scene},
     {"mccree", blinn_mccree_scene},
+    {"phoenix", blinn_phoenix_scene},
     {"witch", blinn_witch_scene},
     {NULL, NULL},
 };
