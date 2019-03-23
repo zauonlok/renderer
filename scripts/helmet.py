@@ -44,22 +44,25 @@ def save_image(image, filename):
 
 
 def process_images(zip_file):
-    basecolor_image = load_image(zip_file, MODEL_DIR + "Default_albedo.jpg")
-    save_image(basecolor_image, "basecolor.tga")
+    basecolor_path = MODEL_DIR + "Default_albedo.jpg"
+    emission_path = MODEL_DIR + "Default_emissive.jpg"
+    packed_path = MODEL_DIR + "Default_metalRoughness.jpg"
+    occlusion_path = MODEL_DIR + "Default_AO.jpg"
 
-    packed_image = load_image(
-        zip_file, MODEL_DIR + "Default_metalRoughness.jpg"
-    )
-    _, roughness_image, metallic_image = packed_image.split()
-    save_image(metallic_image, "metallic.tga")
-    save_image(roughness_image, "roughness.tga")
+    basecolor_image = load_image(zip_file, basecolor_path)
+    save_image(basecolor_image, "helmet_basecolor.tga")
 
-    occlusion_image = load_image(zip_file, MODEL_DIR + "Default_AO.jpg")
+    emission_image = load_image(zip_file, emission_path)
+    save_image(emission_image, "helmet_emission.tga")
+
+    packed_image = load_image(zip_file, packed_path)
+    _, roughness_image, metalness_image = packed_image.split()
+    save_image(roughness_image, "helmet_roughness.tga")
+    save_image(metalness_image, "helmet_metalness.tga")
+
+    occlusion_image = load_image(zip_file, occlusion_path)
     occlusion_image, _, _ = occlusion_image.split()
-    save_image(occlusion_image, "occlusion.tga")
-
-    emissive_image = load_image(zip_file, MODEL_DIR + "Default_emissive.jpg")
-    save_image(emissive_image, "emissive.tga")
+    save_image(occlusion_image, "helmet_occlusion.tga")
 
 
 def main():
