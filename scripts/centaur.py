@@ -53,7 +53,7 @@ def process_meshes(zip_file):
     for mesh_index, filename in enumerate(OBJ_FILENAMES):
         if filename:
             obj_data = dump_obj_data(gltf, buffer, mesh_index)
-            if mesh_index == 2:
+            if filename == "flame.obj":
                 obj_data = fix_flame_data(obj_data)
             filepath = os.path.join(DST_DIRECTORY, filename)
             with open(filepath, "w") as f:
@@ -70,16 +70,25 @@ def fix_spec_image(image):
     return linear_to_srgb(image)
 
 
+def load_image(zip_file, filename):
+    with zip_file.open(filename) as f:
+        image = Image.open(f)
+        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        return image
+
+
+def save_image(image, filename):
+    image = image.resize((512, 512), Image.LANCZOS)
+    filepath = os.path.join(DST_DIRECTORY, filename)
+    image.save(filepath, rle=True)
+
+
 def process_images(zip_file):
     for old_filename, tga_filename in IMG_FILENAMES.items():
-        with zip_file.open(old_filename) as f:
-            image = Image.open(f)
-            if "specularGlossiness" in old_filename:
-                image = fix_spec_image(image)
-            image = image.transpose(Image.FLIP_TOP_BOTTOM)
-            image = image.resize((512, 512), Image.LANCZOS)
-            filepath = os.path.join(DST_DIRECTORY, tga_filename)
-            image.save(filepath, rle=True)
+        image = load_image(zip_file, old_filename)
+        if "specularGlossiness" in old_filename:
+            image = fix_spec_image(image)
+        save_image(image, tga_filename)
 
 
 def main():
