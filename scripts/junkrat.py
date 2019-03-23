@@ -19,11 +19,30 @@ SRC_FILENAME = "junkrat.zip"
 DST_DIRECTORY = "../assets/junkrat"
 
 IMG_FILENAMES = {
-    "textures/Material_22_baseColor.png": "upper.tga",
-    "textures/Material_19_baseColor.png": "lower.tga",
-    "textures/Material_34_baseColor.png": "head.tga",
-    "textures/Material_20_baseColor.png": "back.tga",
+    "back": [
+        "textures/Material_20_baseColor.png",
+        "textures/Material_20_metallicRoughness.png",
+    ],
+    "head": [
+        "textures/Material_34_baseColor.png",
+        "textures/Material_34_metallicRoughness.png",
+    ],
+    "lower": [
+        "textures/Material_19_baseColor.png",
+        "textures/Material_19_metallicRoughness.png",
+    ],
+    "upper": [
+        "textures/Material_22_baseColor.png",
+        "textures/Material_22_metallicRoughness.png",
+    ],
 }
+
+DEL_FILENAMES = [
+    "back_roughness.tga",
+    "head_metalness.tga",
+    "lower_roughness.tga",
+    "upper_roughness.tga",
+]
 
 
 def process_meshes(zip_file):
@@ -40,17 +59,35 @@ def process_meshes(zip_file):
     ani_data = dump_ani_data(gltf, buffer)
     ani_filepath = os.path.join(DST_DIRECTORY, "junkrat.ani")
     with open(ani_filepath, "w") as f:
-            f.write(ani_data)
+        f.write(ani_data)
+
+
+def load_image(zip_file, filename):
+    with zip_file.open(filename) as f:
+        image = Image.open(f)
+        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        return image
+
+
+def save_image(image, filename):
+    image = image.resize((512, 512), Image.LANCZOS)
+    filepath = os.path.join(DST_DIRECTORY, filename)
+    image.save(filepath, rle=True)
 
 
 def process_images(zip_file):
-    for old_filename, tga_filename in IMG_FILENAMES.items():
-        with zip_file.open(old_filename) as f:
-            image = Image.open(f)
-            image = image.transpose(Image.FLIP_TOP_BOTTOM)
-            image = image.resize((512, 512), Image.LANCZOS)
-            filepath = os.path.join(DST_DIRECTORY, tga_filename)
-            image.save(filepath, rle=True)
+    for name, (basecolor_path, packed_path) in IMG_FILENAMES.items():
+        basecolor_image = load_image(zip_file, basecolor_path)
+        save_image(basecolor_image, "{}_basecolor.tga".format(name))
+
+        packed_image = load_image(zip_file, packed_path)
+        _, roughness_image, metalness_image = packed_image.split()
+        save_image(roughness_image, "{}_roughness.tga".format(name))
+        save_image(metalness_image, "{}_metalness.tga".format(name))
+
+    for del_filename in DEL_FILENAMES:
+        del_filepath = os.path.join(DST_DIRECTORY, del_filename)
+        os.remove(del_filepath)
 
 
 def print_mesh2material(zip_file):
@@ -63,8 +100,8 @@ def print_mesh2material(zip_file):
         primitive = mesh["primitives"][0]
         mesh2material.append(primitive["material"])
 
-    num_meshes = len(mesh2material)
-    chunk_size = num_meshes / 3 + 1
+    num_meshes = len(meshes)
+    chunk_size = (num_meshes + 2) / 3
     print("    int mesh2material[{}] = {{".format(num_meshes))
     for i in range(0, num_meshes, chunk_size):
         indices = [str(j) for j in mesh2material[i:(i + chunk_size)]]
