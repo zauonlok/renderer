@@ -20,10 +20,28 @@ DST_DIRECTORY = "../assets/ponycar"
 
 OBJ_FILENAMES = [
     "body.obj",
-    None,
+    "ground.obj",
     "interior.obj",
     "windows.obj",
 ]
+
+IMG_FILENAMES = {
+    "body": [
+        "textures/Body_SG1_baseColor.jpeg",
+        "textures/Body_SG1_emissive.jpeg",
+        "textures/Body_SG1_metallicRoughness.png",
+    ],
+    "ground": [
+        "textures/Ground_SG_baseColor.png",
+        None,
+        None,
+    ],
+    "interior": [
+        "textures/Interior_SG_baseColor.jpg",
+        None,
+        "textures/Interior_SG_metallicRoughness.png",
+    ],
+}
 
 
 def process_meshes(zip_file):
@@ -31,13 +49,10 @@ def process_meshes(zip_file):
     buffer = zip_file.read("scene.bin")
 
     for mesh_index, filename in enumerate(OBJ_FILENAMES):
-        if filename:
-            obj_data = dump_obj_data(
-                gltf, buffer, mesh_index, with_tangent=True
-            )
-            filepath = os.path.join(DST_DIRECTORY, filename)
-            with open(filepath, "w") as f:
-                f.write(obj_data)
+        obj_data = dump_obj_data(gltf, buffer, mesh_index)
+        filepath = os.path.join(DST_DIRECTORY, filename)
+        with open(filepath, "w") as f:
+            f.write(obj_data)
 
 
 def load_image(zip_file, filename):
@@ -47,48 +62,29 @@ def load_image(zip_file, filename):
         return image
 
 
-def save_image(image, filename, size=(512, 512)):
-    image = image.resize(size, Image.LANCZOS)
+def save_image(image, filename):
+    image = image.resize((512, 512), Image.LANCZOS)
     filepath = os.path.join(DST_DIRECTORY, filename)
     image.save(filepath, rle=True)
 
 
-def process_body_images(zip_file):
-    basecolor_image = load_image(zip_file, "textures/Body_SG1_baseColor.jpeg")
-    save_image(basecolor_image, "body_basecolor.tga")
-
-    emissive_image = load_image(zip_file, "textures/Body_SG1_emissive.jpeg")
-    save_image(emissive_image, "body_emissive.tga")
-
-    normal_image = load_image(zip_file, "textures/Body_SG1_normal.jpg")
-    save_image(normal_image, "body_normal.tga", size=(1024, 1024))
-
-    packed_image = load_image(
-        zip_file, "textures/Body_SG1_metallicRoughness.png"
-    )
-    _, roughness_image, metallic_image = packed_image.split()
-    save_image(metallic_image, "body_metallic.tga")
-    save_image(roughness_image, "body_roughness.tga")
-
-
-def process_interior_images(zip_file):
-    basecolor_image = load_image(zip_file, "textures/Interior_SG_baseColor.jpg")
-    save_image(basecolor_image, "interior_basecolor.tga")
-
-    normal_image = load_image(zip_file, "textures/Interior_SG_normal.jpg")
-    save_image(normal_image, "interior_normal.tga", size=(1024, 1024))
-
-    packed_image = load_image(
-        zip_file, "textures/Interior_SG_metallicRoughness.png"
-    )
-    _, roughness_image, metallic_image = packed_image.split()
-    save_image(metallic_image, "interior_metallic.tga")
-    save_image(roughness_image, "interior_roughness.tga")
-
-
 def process_images(zip_file):
-    process_body_images(zip_file)
-    process_interior_images(zip_file)
+    for name, paths in IMG_FILENAMES.items():
+        basecolor_path, emission_path, packed_path = paths
+
+        if basecolor_path:
+            basecolor_image = load_image(zip_file, basecolor_path)
+            save_image(basecolor_image, "{}_basecolor.tga".format(name))
+
+        if emission_path:
+            emission_image = load_image(zip_file, emission_path)
+            save_image(emission_image, "{}_emission.tga".format(name))
+
+        if packed_path:
+            packed_image = load_image(zip_file, packed_path)
+            _, roughness_image, metalness_image = packed_image.split()
+            save_image(roughness_image, "{}_roughness.tga".format(name))
+            save_image(metalness_image, "{}_metalness.tga".format(name))
 
 
 def main():
