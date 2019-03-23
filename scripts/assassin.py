@@ -26,10 +26,22 @@ OBJ_FILENAMES = [
 ]
 
 IMG_FILENAMES = {
-    "textures/Material_850_baseColor.png": "face.tga",
-    "textures/Material_852_baseColor.png": "hair.tga",
-    "textures/Material_853_baseColor.png": "weapon.tga",
-    "textures/Material_854_baseColor.png": "body.tga",
+    "body": [
+        "textures/Material_854_baseColor.png",
+        "textures/Material_854_metallicRoughness.png",
+    ],
+    "face": [
+        "textures/Material_850_baseColor.png",
+        None,
+    ],
+    "hair": [
+        "textures/Material_852_baseColor.png",
+        "textures/Material_852_metallicRoughness.png",
+    ],
+    "weapon": [
+        "textures/Material_853_baseColor.png",
+        "textures/Material_853_metallicRoughness.png",
+    ],
 }
 
 
@@ -46,16 +58,32 @@ def process_meshes(zip_file):
     ani_data = dump_ani_data(gltf, buffer, apply_transform=True)
     ani_filepath = os.path.join(DST_DIRECTORY, "assassin.ani")
     with open(ani_filepath, "w") as f:
-            f.write(ani_data)
+        f.write(ani_data)
+
+
+def load_image(zip_file, filename):
+    with zip_file.open(filename) as f:
+        image = Image.open(f)
+        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+        return image
+
+
+def save_image(image, filename):
+    filepath = os.path.join(DST_DIRECTORY, filename)
+    image.save(filepath, rle=True)
 
 
 def process_images(zip_file):
-    for old_filename, tga_filename in IMG_FILENAMES.items():
-        with zip_file.open(old_filename) as f:
-            image = Image.open(f)
-            image = image.transpose(Image.FLIP_TOP_BOTTOM)
-            filepath = os.path.join(DST_DIRECTORY, tga_filename)
-            image.save(filepath, rle=True)
+    for name, (basecolor_path, packed_path) in IMG_FILENAMES.items():
+        if basecolor_path:
+            basecolor_image = load_image(zip_file, basecolor_path)
+            save_image(basecolor_image, "{}_basecolor.tga".format(name))
+
+        if packed_path:
+            packed_image = load_image(zip_file, packed_path)
+            _, roughness_image, metalness_image = packed_image.split()
+            save_image(roughness_image, "{}_roughness.tga".format(name))
+            save_image(metalness_image, "{}_metalness.tga".format(name))
 
 
 def main():
