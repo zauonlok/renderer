@@ -300,7 +300,7 @@ mat3_t mat3_from_mat4(mat4_t m) {
 }
 
 mat3_t mat3_combine(mat3_t m[4], vec4_t weights_) {
-    mat3_t combined = {{0}};
+    mat3_t combined = {{{0}}};
     float weights[4];
     int i, r, c;
 
@@ -460,7 +460,7 @@ mat4_t mat4_from_trs(vec3_t t, quat_t r, vec3_t s) {
 }
 
 mat4_t mat4_combine(mat4_t m[4], vec4_t weights_) {
-    mat4_t combined = {{0}};
+    mat4_t combined = {{{0}}};
     float weights[4];
     int i, r, c;
 
