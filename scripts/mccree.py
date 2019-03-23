@@ -44,11 +44,13 @@ def print_transforms(transforms):
 
 
 def print_materials(materials):
-    row_pattern = "        {{{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}, 0, NULL, 1, 0}},"
-    print("    unlit_material_t materials[{}] = {{".format(len(materials)))
+    row_pattern = "        {{{}, 32, NULL, NULL, NULL, 1, 0, 0}},"
+    print("    blinn_material_t materials[{}] = {{".format(len(materials)))
     for material in materials:
         color = material["pbrMetallicRoughness"]["baseColorFactor"]
-        print(row_pattern.format(*linear_to_srgb(color)))
+        color = linear_to_srgb(color)
+        color = "{{{:.3f}f, {:.3f}f, {:.3f}f, 1}}".format(*color)
+        print(row_pattern.format(color))
     print("    };")
 
 
@@ -59,7 +61,7 @@ def print_mesh2transform(nodes, transforms):
         mesh2transform.append(index)
 
     num_meshes = len(mesh2transform)
-    chunk_size = num_meshes / 3 + 1
+    chunk_size = (num_meshes + 2) / 3
     print("    int mesh2transform[{}] = {{".format(num_meshes))
     for i in range(0, num_meshes, chunk_size):
         indices = [str(j) for j in mesh2transform[i:(i + chunk_size)]]
@@ -75,7 +77,7 @@ def print_mesh2material(meshes):
         mesh2material.append(primitive["material"])
 
     num_meshes = len(mesh2material)
-    chunk_size = num_meshes / 3 + 1
+    chunk_size = (num_meshes + 2) / 3
     print("    int mesh2material[{}] = {{".format(num_meshes))
     for i in range(0, num_meshes, chunk_size):
         indices = [format(j, "2d") for j in mesh2material[i:(i + chunk_size)]]
