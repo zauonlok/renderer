@@ -27,16 +27,21 @@ OBJ_FILENAMES = [
 ]
 
 IMG_FILENAMES = {
-    # body textures
-    "textures/body_diffuse.jpeg": "body_diffuse.tga",
-    "textures/body_emissive.jpeg": "body_emission.tga",
-    "textures/body_specularGlossiness.png": "body_specular.tga",
-    # flame textures
-    "textures/flame_diffuse.png": "flame_diffuse.tga",
-    "textures/flame_emissive.jpeg": "flame_emission.tga",
-    # gas textures
-    "textures/material_diffuse.jpeg": "gas_diffuse.tga",
-    "textures/material_specularGlossiness.png": "gas_specular.tga",
+    "body": [
+        "textures/body_diffuse.jpeg",
+        "textures/body_emissive.jpeg",
+        "textures/body_specularGlossiness.png",
+    ],
+    "flame": [
+        "textures/flame_diffuse.png",
+        "textures/flame_emissive.jpeg",
+        None,
+    ],
+    "gas": [
+        "textures/material_diffuse.jpeg",
+        None,
+        "textures/material_specularGlossiness.png",
+    ],
 }
 
 
@@ -60,16 +65,6 @@ def process_meshes(zip_file):
                 f.write(obj_data)
 
 
-def linear_to_srgb(image):
-    lookup_table = [pow(x / 255.0, 1 / 2.2) * 255 for x in range(256)]
-    return image.point(lookup_table)
-
-
-def fix_spec_image(image):
-    image = Image.fromarray(numpy.amax(numpy.array(image), axis=2))
-    return linear_to_srgb(image)
-
-
 def load_image(zip_file, filename):
     with zip_file.open(filename) as f:
         image = Image.open(f)
@@ -83,12 +78,28 @@ def save_image(image, filename):
     image.save(filepath, rle=True)
 
 
+def fix_spec_image(image):
+    array = numpy.amax(numpy.array(image), axis=2) / 255.0
+    array = numpy.uint8(numpy.power(array, 1 / 2.2) * 255)
+    return Image.fromarray(array)
+
+
 def process_images(zip_file):
-    for old_filename, tga_filename in IMG_FILENAMES.items():
-        image = load_image(zip_file, old_filename)
-        if "specularGlossiness" in old_filename:
-            image = fix_spec_image(image)
-        save_image(image, tga_filename)
+    for name, paths in IMG_FILENAMES.items():
+        diffuse_path, emission_path, specular_path = paths
+
+        if diffuse_path:
+            diffuse_image = load_image(zip_file, diffuse_path)
+            save_image(diffuse_image, "{}_diffuse.tga".format(name))
+
+        if emission_path:
+            emission_image = load_image(zip_file, emission_path)
+            save_image(emission_image, "{}_emission.tga".format(name))
+
+        if specular_path:
+            specular_image = load_image(zip_file, specular_path)
+            specular_image = fix_spec_image(specular_image)
+            save_image(specular_image, "{}_specular.tga".format(name))
 
 
 def main():
