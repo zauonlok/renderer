@@ -25,11 +25,6 @@ OBJ_FILENAMES = [
     "pupils.obj",
 ]
 
-IMG_FILENAMES = {
-    "textures/01_-_Default_baseColor.png": "kgirls_diffuse.tga",
-    "textures/01_-_Default_emissive.png": "kgirls_emission.tga",
-}
-
 
 def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
@@ -61,9 +56,11 @@ def save_image(image, filename):
 
 
 def process_images(zip_file):
-    for old_filename, tga_filename in IMG_FILENAMES.items():
-        image = load_image(zip_file, old_filename)
-        save_image(image, tga_filename)
+    old_filename = "textures/01_-_Default_baseColor.png"
+    tga_filename = "kgirls_diffuse.tga"
+
+    image = load_image(zip_file, old_filename)
+    save_image(image, tga_filename)
 
 
 def main():

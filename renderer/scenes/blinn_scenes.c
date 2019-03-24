@@ -1,24 +1,8 @@
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include "../core/api.h"
 #include "../shaders/blinn_shader.h"
 #include "blinn_scenes.h"
-
-static scene_t *build_scene(
-        vec4_t background, model_t *skybox, model_t **models,
-        float ambient_light, float punctual_light, int with_shadow) {
-    scene_t *scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background     = background;
-    scene->skybox         = skybox;
-    scene->models         = models;
-    scene->light.ambient  = ambient_light;
-    scene->light.punctual = punctual_light;
-    scene->with_shadow    = with_shadow;
-    scene->shadow_fb      = NULL;
-    scene->shadow_map     = NULL;
-    return scene;
-}
 
 scene_t *blinn_centaur_scene(void) {
     const char *meshes[] = {
@@ -68,7 +52,7 @@ scene_t *blinn_centaur_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 0.5f, 1, 0);
+    return scene_create(background, NULL, models, 0.5f, 1, 0);
 }
 
 scene_t *blinn_craftsman_scene(void) {
@@ -309,7 +293,7 @@ scene_t *blinn_craftsman_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 0.5f, 1, 0);
+    return scene_create(background, NULL, models, 0.5f, 1, 0);
 }
 
 scene_t *blinn_drone_scene(void) {
@@ -332,7 +316,7 @@ scene_t *blinn_drone_scene(void) {
     model_t *model = blinn_create_model(mesh, skeleton, root, material);
     darray_push(models, model);
 
-    return build_scene(background, NULL, models, 1, 1, 0);
+    return scene_create(background, NULL, models, 0.5f, 1, 0);
 }
 
 scene_t *blinn_elfgirl_scene(void) {
@@ -374,7 +358,7 @@ scene_t *blinn_elfgirl_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 0.5f, 0.75f, 0);
+    return scene_create(background, NULL, models, 0.5f, 0.75f, 0);
 }
 
 scene_t *blinn_kgirls_scene(void) {
@@ -387,9 +371,7 @@ scene_t *blinn_kgirls_scene(void) {
     const char *skeleton = "assets/kgirls/kgirls.ani";
     blinn_material_t material = {
         {1, 1, 1, 1}, 32,
-        "assets/kgirls/kgirls_diffuse.tga",
-        NULL,
-        "assets/kgirls/kgirls_emission.tga",
+        "assets/kgirls/kgirls_diffuse.tga", NULL, NULL,
         0, 0, 0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
@@ -409,7 +391,7 @@ scene_t *blinn_kgirls_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 0, 0, 0);
+    return scene_create(background, NULL, models, 0.5f, 1, 0);
 }
 
 scene_t *blinn_mccree_scene(void) {
@@ -527,7 +509,7 @@ scene_t *blinn_mccree_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 0.75f, 0.25f, 0);
+    return scene_create(background, NULL, models, 0.75f, 0.25f, 0);
 }
 
 scene_t *blinn_phoenix_scene(void) {
@@ -570,7 +552,7 @@ scene_t *blinn_phoenix_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 0.75f, 0, 0);
+    return scene_create(background, NULL, models, 0.75f, 0.25f, 0);
 }
 
 scene_t *blinn_witch_scene(void) {
@@ -608,5 +590,5 @@ scene_t *blinn_witch_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 0.5f, 1, 0);
+    return scene_create(background, NULL, models, 0.5f, 1, 0);
 }

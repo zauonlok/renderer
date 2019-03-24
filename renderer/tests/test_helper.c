@@ -186,7 +186,7 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
     camera_release(camera);
 }
 
-/* scene creating/releasing */
+/* scene related functions */
 
 static const int SHADOWMAP_WIDTH = 512;
 static const int SHADOWMAP_HEIGHT = 512;
@@ -295,45 +295,19 @@ scene_t *test_create_scene(scene_creator_t creators[],
     return scene;
 }
 
-void test_release_scene(scene_t *scene) {
-    int num_models = darray_size(scene->models);
-    int i;
-    if (scene->skybox) {
-        model_t *skybox = scene->skybox;
-        skybox->release(skybox);
-    }
-    for (i = 0; i < num_models; i++) {
-        model_t *model = scene->models[i];
-        model->release(model);
-    }
-    darray_free(scene->models);
-    if (scene->shadow_fb) {
-        framebuffer_release(scene->shadow_fb);
-    }
-    if (scene->shadow_map) {
-        texture_release(scene->shadow_map);
-    }
-    free(scene);
-}
-
-/* scene updating/drawing */
-
-static const float SHADOWMAP_RIGHT = 1;
-static const float SHADOWMAP_TOP = 1;
-static const float SHADOWMAP_NEAR = 0;
-static const float SHADOWMAP_FAR = 2;
-
-static const vec3_t LIGHT_TARGET = {0, 0, 0};
-static const vec3_t LIGHT_UP = {0, 1, 0};
-
 static mat4_t get_light_view_matrix(vec3_t light_dir) {
     vec3_t light_pos = vec3_negate(light_dir);
-    return mat4_lookat(light_pos, LIGHT_TARGET, LIGHT_UP);
+    vec3_t light_target = vec3_new(0, 0, 0);
+    vec3_t light_up = vec3_new(0, 1, 0);
+    return mat4_lookat(light_pos, light_target, light_up);
 }
 
 static mat4_t get_light_proj_matrix(void) {
-    return mat4_orthographic(SHADOWMAP_RIGHT, SHADOWMAP_TOP,
-                             SHADOWMAP_NEAR, SHADOWMAP_FAR);
+    float half_w = 1;
+    float half_h = 1;
+    float z_near = 0;
+    float z_far = 2;
+    return mat4_orthographic(half_w, half_h, z_near, z_far);
 }
 
 static perframe_t perframe_from_context(context_t *context) {
@@ -396,7 +370,7 @@ void test_draw_scene(scene_t *scene, context_t *context) {
 
     perframe = perframe_from_context(context);
     perframe.shadow_map = scene->shadow_map;
-    perframe.light_info = scene->light;
+    perframe.light_info = scene->light_info;
     for (i = 0; i < num_models; i++) {
         model_t *model = scene->models[i];
         model->update(model, &perframe);

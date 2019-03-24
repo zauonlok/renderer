@@ -21,11 +21,8 @@ typedef struct {
 /* mainloop related functions */
 void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata);
 
-/* scene creating/releasing */
+/* scene related functions */
 scene_t *test_create_scene(scene_creator_t creators[], const char *scene_name);
-void test_release_scene(scene_t *scene);
-
-/* scene updating/drawing */
 void test_draw_scene(scene_t *scene, context_t *context);
 
 #endif

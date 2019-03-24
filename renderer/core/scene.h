@@ -43,11 +43,16 @@ typedef struct {
     vec4_t background;
     model_t *skybox;
     model_t **models;
-    light_t light;
+    light_t light_info;
     /* for shadow mapping */
     int with_shadow;
     framebuffer_t *shadow_fb;
     texture_t *shadow_map;
 } scene_t;
+
+scene_t *scene_create(vec4_t background, model_t *skybox, model_t **models,
+                      float ambient_light, float punctual_light,
+                      int with_shadow);
+void scene_release(scene_t *scene);
 
 #endif

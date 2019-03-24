@@ -26,6 +26,6 @@ void test_pbr(int argc, char *argv[]) {
     scene_t *scene = test_create_scene(g_scene_creators, scene_name);
     if (scene) {
         test_enter_mainloop(tick_function, scene);
-        test_release_scene(scene);
+        scene_release(scene);
     }
 }

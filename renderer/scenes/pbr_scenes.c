@@ -1,24 +1,8 @@
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include "../core/api.h"
 #include "../shaders/pbr_shader.h"
 #include "pbr_scenes.h"
-
-static scene_t *build_scene(
-        vec4_t background, model_t *skybox, model_t **models,
-        float ambient_light, float punctual_light, int with_shadow) {
-    scene_t *scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background     = background;
-    scene->skybox         = skybox;
-    scene->models         = models;
-    scene->light.ambient  = ambient_light;
-    scene->light.punctual = punctual_light;
-    scene->with_shadow    = with_shadow;
-    scene->shadow_fb      = NULL;
-    scene->shadow_map     = NULL;
-    return scene;
-}
 
 scene_t *pbr_assassin_scene(void) {
     const char *meshes[] = {
@@ -89,7 +73,7 @@ scene_t *pbr_assassin_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 1, 1, 0);
+    return scene_create(background, NULL, models, 1, 1, 0);
 }
 
 scene_t *pbr_dieselpunk_scene(void) {
@@ -117,7 +101,7 @@ scene_t *pbr_dieselpunk_scene(void) {
             NULL,
             NULL,
             NULL,
-            1, 1, 0,
+            0, 0, 0,
         },
         {
             {1, 1, 1, 1}, 0, 1,
@@ -142,14 +126,14 @@ scene_t *pbr_dieselpunk_scene(void) {
 
     translation = mat4_translate(1.036f, -114.817f, 27.682f);
     rotation = mat4_rotate_y(TO_RADIANS(-90));
-    scale = mat4_scale(0.001f, 0.001f, 0.001f);
+    scale = mat4_scale(0.0012f, 0.0012f, 0.0012f);
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
         model = pbr_create_model(meshes[i], NULL, root, materials[i], env_name);
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 1, 1, 0);
+    return scene_create(background, NULL, models, 1, 1, 0);
 }
 
 scene_t *pbr_helmet_scene(void) {
@@ -175,7 +159,7 @@ scene_t *pbr_helmet_scene(void) {
     model_t *model = pbr_create_model(mesh, NULL, root, material, env_name);
     darray_push(models, model);
 
-    return build_scene(background, NULL, models, 1, 1, 0);
+    return scene_create(background, NULL, models, 1, 1, 0);
 }
 
 scene_t *pbr_helmet2_scene(void) {
@@ -221,7 +205,7 @@ scene_t *pbr_helmet2_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 1, 1, 0);
+    return scene_create(background, NULL, models, 1, 1, 0);
 }
 
 scene_t *pbr_junkrat_scene(void) {
@@ -295,7 +279,7 @@ scene_t *pbr_junkrat_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 1, 1, 0);
+    return scene_create(background, NULL, models, 1, 1, 0);
 }
 
 scene_t *pbr_ornitier_scene(void) {
@@ -398,7 +382,7 @@ scene_t *pbr_ornitier_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 1, 1, 0);
+    return scene_create(background, NULL, models, 1, 1, 0);
 }
 
 scene_t *pbr_ponycar_scene(void) {
@@ -469,7 +453,7 @@ scene_t *pbr_ponycar_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 1, 1, 0);
+    return scene_create(background, NULL, models, 1, 1, 0);
 }
 
 scene_t *pbr_spitfire_scene(void) {
@@ -484,7 +468,7 @@ scene_t *pbr_spitfire_scene(void) {
             "assets/spitfire/spitfire_metalness.tga",
             "assets/spitfire/spitfire_roughness.tga",
             NULL,
-            "assets/spitfire/spitfire_roughness.tga",
+            "assets/spitfire/spitfire_occlusion.tga",
             NULL,
             0, 0, 0,
         },
@@ -494,7 +478,7 @@ scene_t *pbr_spitfire_scene(void) {
             "assets/spitfire/spitfire_metalness.tga",
             "assets/spitfire/spitfire_roughness.tga",
             NULL,
-            "assets/spitfire/spitfire_roughness.tga",
+            "assets/spitfire/spitfire_occlusion.tga",
             NULL,
             0, 1, 0,
         },
@@ -519,5 +503,5 @@ scene_t *pbr_spitfire_scene(void) {
         darray_push(models, model);
     }
 
-    return build_scene(background, NULL, models, 1, 1, 0);
+    return scene_create(background, NULL, models, 1, 1, 0);
 }
