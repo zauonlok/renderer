@@ -211,13 +211,13 @@ static vec3_t get_ibl_shade(ibldata_t *ibldata, float roughness,
                             vec3_t normal_dir, vec3_t view_dir,
                             vec3_t diffuse_color, vec3_t specular_color_) {
     cubemap_t *diffuse_map = ibldata->diffuse_map;
-    vec4_t diffuse_sample = cubemap_sample(diffuse_map, normal_dir);
+    vec4_t diffuse_sample = cubemap_clamp_sample(diffuse_map, normal_dir);
     vec3_t diffuse_light = vec3_from_vec4(diffuse_sample);
     vec3_t diffuse_shade = vec3_modulate(diffuse_light, diffuse_color);
 
     float n_dot_v = float_max(vec3_dot(normal_dir, view_dir), 0);
     vec2_t brdf_texcoord = vec2_new(n_dot_v, roughness);
-    vec4_t brdf_sample = texture_sample(ibldata->brdf_lut, brdf_texcoord);
+    vec4_t brdf_sample = texture_clamp_sample(ibldata->brdf_lut, brdf_texcoord);
     float specular_scale = brdf_sample.x;
     float specular_bias = brdf_sample.y;
 
@@ -229,7 +229,7 @@ static vec3_t get_ibl_shade(ibldata_t *ibldata, float roughness,
     vec3_t incident_dir = get_incident_dir(normal_dir, view_dir);
     int specular_lod = (int)(roughness * (ibldata->mip_level - 1));
     cubemap_t *specular_map = ibldata->specular_maps[specular_lod];
-    vec4_t specular_sample = cubemap_sample(specular_map, incident_dir);
+    vec4_t specular_sample = cubemap_clamp_sample(specular_map, incident_dir);
     vec3_t specular_light = vec3_from_vec4(specular_sample);
     vec3_t specular_shade = vec3_modulate(specular_light, specular_color);
 

@@ -194,13 +194,12 @@ void cubemap_srgb2linear(cubemap_t *cubemap) {
  * for sampling cubemap, see subsection 3.7.5 of
  * https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
  */
-vec4_t cubemap_sample(cubemap_t *cubemap, vec3_t direction) {
+static int select_cubemap_face(vec3_t direction, vec2_t *texcoord) {
     float abs_x = (float)fabs(direction.x);
     float abs_y = (float)fabs(direction.y);
     float abs_z = (float)fabs(direction.z);
-    int face_index;
     float ma, sc, tc;
-    vec2_t texcoord;
+    int face_index;
 
     if (abs_x > abs_y && abs_x > abs_z) {  /* major axis -> x */
         ma = abs_x;
@@ -237,8 +236,23 @@ vec4_t cubemap_sample(cubemap_t *cubemap, vec3_t direction) {
         }
     }
 
-    texcoord.x = (sc / ma + 1) / 2;
-    texcoord.y = (tc / ma + 1) / 2;
+    texcoord->x = (sc / ma + 1) / 2;
+    texcoord->y = (tc / ma + 1) / 2;
+    return face_index;
+}
 
+vec4_t cubemap_repeat_sample(cubemap_t *cubemap, vec3_t direction) {
+    vec2_t texcoord;
+    int face_index = select_cubemap_face(direction, &texcoord);
+    return texture_repeat_sample(cubemap->faces[face_index], texcoord);
+}
+
+vec4_t cubemap_clamp_sample(cubemap_t *cubemap, vec3_t direction) {
+    vec2_t texcoord;
+    int face_index = select_cubemap_face(direction, &texcoord);
     return texture_clamp_sample(cubemap->faces[face_index], texcoord);
+}
+
+vec4_t cubemap_sample(cubemap_t *cubemap, vec3_t direction) {
+    return cubemap_repeat_sample(cubemap, direction);
 }

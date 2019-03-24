@@ -26,6 +26,8 @@ cubemap_t *cubemap_from_files(const char *positive_x, const char *negative_x,
                               const char *positive_z, const char *negative_z);
 void cubemap_release(cubemap_t *cubemap);
 void cubemap_srgb2linear(cubemap_t *cubemap);
+vec4_t cubemap_repeat_sample(cubemap_t *cubemap, vec3_t direction);
+vec4_t cubemap_clamp_sample(cubemap_t *cubemap, vec3_t direction);
 vec4_t cubemap_sample(cubemap_t *cubemap, vec3_t direction);
 
 #endif
