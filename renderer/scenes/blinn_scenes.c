@@ -296,29 +296,6 @@ scene_t *blinn_craftsman_scene(void) {
     return scene_create(background, NULL, models, 0.5f, 1, 0);
 }
 
-scene_t *blinn_drone_scene(void) {
-    const char *mesh = "assets/drone/drone.obj";
-    const char *skeleton = "assets/drone/drone.ani";
-    blinn_material_t material = {
-        {1, 1, 1, 1}, 32,
-        "assets/drone/drone_diffuse.tga",
-        "assets/drone/drone_specular.tga",
-        "assets/drone/drone_emission.tga",
-        0, 0, 0,
-    };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
-    model_t **models = NULL;
-
-    mat4_t translation = mat4_translate(0, -79.181f, -4.447f);
-    mat4_t rotation = mat4_rotate_y(TO_RADIANS(180));
-    mat4_t scale = mat4_scale(0.0028f, 0.0028f, 0.0028f);
-    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    model_t *model = blinn_create_model(mesh, skeleton, root, material);
-    darray_push(models, model);
-
-    return scene_create(background, NULL, models, 0.5f, 1, 0);
-}
-
 scene_t *blinn_elfgirl_scene(void) {
     const char *meshes[] = {
         "assets/elfgirl/base.obj",

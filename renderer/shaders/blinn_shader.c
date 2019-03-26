@@ -96,12 +96,10 @@ static vec4_t shadow_fragment_shader(blinn_varyings_t *varyings,
                                      blinn_uniforms_t *uniforms,
                                      int *discard) {
     if (uniforms->alpha_cutoff > 0) {
-        float alpha;
+        float alpha = uniforms->basecolor.w;
         if (uniforms->diffuse_map) {
             vec2_t texcoord = varyings->texcoord;
-            alpha = texture_sample(uniforms->diffuse_map, texcoord).w;
-        } else {
-            alpha = uniforms->basecolor.w;
+            alpha *= texture_sample(uniforms->diffuse_map, texcoord).w;
         }
         if (alpha < uniforms->alpha_cutoff) {
             *discard = 1;
@@ -113,15 +111,15 @@ static vec4_t shadow_fragment_shader(blinn_varyings_t *varyings,
 static vec3_t get_basecolor(blinn_varyings_t *varyings,
                             blinn_uniforms_t *uniforms,
                             float *alpha) {
+    vec3_t basecolor = vec3_from_vec4(uniforms->basecolor);
+    *alpha = uniforms->basecolor.w;
     if (uniforms->diffuse_map) {
         vec2_t texcoord = varyings->texcoord;
         vec4_t sample = texture_sample(uniforms->diffuse_map, texcoord);
-        *alpha = sample.w;
-        return vec3_from_vec4(sample);
-    } else {
-        *alpha = uniforms->basecolor.w;
-        return vec3_from_vec4(uniforms->basecolor);
+        basecolor = vec3_modulate(basecolor, vec3_from_vec4(sample));
+        *alpha *= sample.w;
     }
+    return basecolor;
 }
 
 static vec3_t get_view_dir(blinn_varyings_t *varyings,
@@ -150,7 +148,6 @@ static int is_in_shadow(blinn_varyings_t *varyings,
 
         float depth_bias = float_max(0.05f * (1 - n_dot_l), 0.005f);
         float current_depth = d - depth_bias;
-
         vec2_t texcoord = vec2_new(u, v);
         float closest_depth = texture_sample(uniforms->shadow_map, texcoord).x;
 
@@ -168,14 +165,9 @@ static vec3_t get_dir_shade(blinn_varyings_t *varyings,
     vec3_t normal_dir = get_normal_dir(varyings, view_dir);
     float n_dot_l = vec3_dot(normal_dir, light_dir);
 
-    if (!is_in_shadow(varyings, uniforms, n_dot_l)) {
-        vec3_t shade = vec3_new(0, 0, 0);
-
-        if (n_dot_l > 0) {
-            float strength = n_dot_l;
-            vec3_t diffuse = vec3_mul(basecolor, strength);
-            shade = vec3_add(shade, diffuse);
-        }
+    if (n_dot_l > 0 && !is_in_shadow(varyings, uniforms, n_dot_l)) {
+        vec3_t diffuse = vec3_mul(basecolor, n_dot_l);
+        vec3_t specular = vec3_new(0, 0, 0);
 
         if (uniforms->specular_map) {
             vec3_t half_dir = vec3_normalize(vec3_add(light_dir, view_dir));
@@ -185,12 +177,11 @@ static vec3_t get_dir_shade(blinn_varyings_t *varyings,
                 texture_t *specular_map = uniforms->specular_map;
                 vec2_t texcoord = varyings->texcoord;
                 vec4_t sample = texture_sample(specular_map, texcoord);
-                vec3_t specular = vec3_mul(vec3_from_vec4(sample), strength);
-                shade = vec3_add(shade, specular);
+                specular = vec3_mul(vec3_from_vec4(sample), strength);
             }
         }
 
-        return shade;
+        return vec3_add(diffuse, specular);
     } else {
         return vec3_new(0, 0, 0);
     }
@@ -205,17 +196,17 @@ static vec4_t common_fragment_shader(blinn_varyings_t *varyings,
         *discard = 1;
         return vec4_new(0, 0, 0, 0);
     } else {
-        vec3_t color = vec3_mul(basecolor, uniforms->ambient_light);
+        vec3_t color = vec3_mul(basecolor, uniforms->ambient_strength);
 
-        if (uniforms->punctual_light > 0){
+        if (uniforms->punctual_strength > 0){
+            float punctual_strength = uniforms->punctual_strength;
             vec3_t shade = get_dir_shade(varyings, uniforms, basecolor);
-            color = vec3_add(color, vec3_mul(shade, uniforms->punctual_light));
+            color = vec3_add(color, vec3_mul(shade, punctual_strength));
         }
 
         if (uniforms->emission_map) {
-            texture_t *emission_map = uniforms->emission_map;
             vec2_t texcoord = varyings->texcoord;
-            vec4_t sample = texture_sample(emission_map, texcoord);
+            vec4_t sample = texture_sample(uniforms->emission_map, texcoord);
             vec3_t emission = vec3_from_vec4(sample);
             color = vec3_add(color, emission);
         }
@@ -240,6 +231,7 @@ vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
 static void update_model(model_t *model, perframe_t *perframe) {
     mat4_t model_matrix = model->transform;
     mat4_t normal_matrix = mat4_inverse_transpose(model_matrix);
+    skeleton_t *skeleton = model->skeleton;
     light_t light_info = perframe->light_info;
     blinn_uniforms_t *uniforms;
 
@@ -252,15 +244,14 @@ static void update_model(model_t *model, perframe_t *perframe) {
                                               perframe->light_view_matrix);
     uniforms->camera_vp_matrix = mat4_mul_mat4(perframe->camera_proj_matrix,
                                                perframe->camera_view_matrix);
-    if (model->skeleton) {
-        skeleton_t *skeleton = model->skeleton;
+    if (skeleton) {
         skeleton_update_joints(skeleton, perframe->frame_time);
         uniforms->joint_matrices = skeleton_get_joint_matrices(skeleton);
         uniforms->joint_n_matrices = skeleton_get_normal_matrices(skeleton);
     }
     uniforms->shadow_map = perframe->shadow_map;
-    uniforms->ambient_light = float_clamp(light_info.ambient, 0, 3);
-    uniforms->punctual_light = float_clamp(light_info.punctual, 0, 3);
+    uniforms->ambient_strength = float_clamp(light_info.ambient, 0, 5);
+    uniforms->punctual_strength = float_clamp(light_info.punctual, 0, 5);
 }
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer,
@@ -324,14 +315,14 @@ model_t *blinn_create_model(const char *mesh, const char *skeleton,
 
     model = (model_t*)malloc(sizeof(model_t));
     model->mesh      = cache_acquire_mesh(mesh);
-    model->transform = transform;
-    model->program   = program;
     model->skeleton  = cache_acquire_skeleton(skeleton);
+    model->program   = program;
+    model->transform = transform;
+    model->opaque    = !material.enable_blend;
+    model->distance  = 0;
     model->draw      = draw_model;
     model->update    = update_model;
     model->release   = release_model;
-    model->opaque    = !material.enable_blend;
-    model->distance  = -1;
 
     return model;
 }

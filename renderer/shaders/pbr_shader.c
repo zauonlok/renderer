@@ -5,6 +5,8 @@
 #include "cache_helper.h"
 #include "pbr_shader.h"
 
+static const vec3_t DIELECTRIC_SPECULAR = {0.04f, 0.04f, 0.04f};
+
 /* low-level api */
 
 static mat4_t get_model_matrix(pbr_attribs_t *attribs,
@@ -84,11 +86,11 @@ static vec4_t common_vertex_shader(pbr_attribs_t *attribs,
         world_bitangent = vec3_cross(world_normal, world_tangent);
         world_bitangent = vec3_mul(world_bitangent, attribs->tangent.w);
 
-        varyings->normal = world_normal;
-        varyings->tangent = world_tangent;
-        varyings->bitangent = world_bitangent;
+        varyings->world_normal = world_normal;
+        varyings->world_tangent = world_tangent;
+        varyings->world_bitangent = world_bitangent;
     } else {
-        varyings->normal = vec3_normalize(world_normal);
+        varyings->world_normal = vec3_normalize(world_normal);
     }
 
     varyings->world_position = vec3_from_vec4(world_position);
@@ -113,61 +115,25 @@ static vec4_t shadow_fragment_shader(pbr_varyings_t *varyings,
                                      pbr_uniforms_t *uniforms,
                                      int *discard) {
     if (uniforms->alpha_cutoff > 0) {
-        float alpha = uniforms->basecolor_factor.w;
-        if (uniforms->basecolor_map) {
-            vec2_t texcoord = varyings->texcoord;
-            alpha *= texture_sample(uniforms->basecolor_map, texcoord).w;
+        float alpha;
+        if (uniforms->workflow == METALNESS_WORKFLOW) {
+            alpha = uniforms->basecolor_factor.w;
+            if (uniforms->basecolor_map) {
+                vec2_t texcoord = varyings->texcoord;
+                alpha *= texture_sample(uniforms->basecolor_map, texcoord).w;
+            }
+        } else {
+            alpha = uniforms->diffuse_factor.w;
+            if (uniforms->diffuse_map) {
+                vec2_t texcoord = varyings->texcoord;
+                alpha *= texture_sample(uniforms->diffuse_map, texcoord).w;
+            }
         }
         if (alpha < uniforms->alpha_cutoff) {
             *discard = 1;
         }
     }
     return vec4_new(0, 0, 0, 0);
-}
-
-static vec3_t get_basecolor(pbr_varyings_t *varyings,
-                            pbr_uniforms_t *uniforms,
-                            float *alpha) {
-    vec3_t basecolor = vec3_from_vec4(uniforms->basecolor_factor);
-    *alpha = uniforms->basecolor_factor.w;
-    if (uniforms->basecolor_map) {
-        vec2_t texcoord = varyings->texcoord;
-        vec4_t sample = texture_sample(uniforms->basecolor_map, texcoord);
-        basecolor = vec3_modulate(basecolor, vec3_from_vec4(sample));
-        *alpha *= sample.w;
-    }
-    return basecolor;
-}
-
-static float get_metalness(pbr_varyings_t *varyings,
-                           pbr_uniforms_t *uniforms) {
-    if (uniforms->metalness_map) {
-        vec2_t texcoord = varyings->texcoord;
-        vec4_t sample = texture_sample(uniforms->metalness_map, texcoord);
-        return uniforms->metalness_factor * sample.x;
-    } else {
-        return uniforms->metalness_factor;
-    }
-}
-
-static float get_roughness(pbr_varyings_t *varyings,
-                           pbr_uniforms_t *uniforms) {
-    if (uniforms->roughness_map) {
-        vec2_t texcoord = varyings->texcoord;
-        vec4_t sample = texture_sample(uniforms->roughness_map, texcoord);
-        return uniforms->roughness_factor * sample.x;
-    } else {
-        return uniforms->roughness_factor;
-    }
-}
-
-static vec3_t get_diffuse_color(vec3_t basecolor, float metalness) {
-    return vec3_mul(basecolor, (1 - 0.04f) * (1 - metalness));
-}
-
-static vec3_t get_specular_color(vec3_t basecolor, float metalness) {
-    vec3_t dielectric_specular = vec3_new(0.04f, 0.04f, 0.04f);
-    return vec3_lerp(dielectric_specular, basecolor, metalness);
 }
 
 static vec3_t get_view_dir(pbr_varyings_t *varyings,
@@ -187,13 +153,13 @@ static vec3_t get_normal_dir(pbr_varyings_t *varyings,
         vec3_t tangent_normal = vec3_new(sample.x * 2 - 1,
                                          sample.y * 2 - 1,
                                          sample.z * 2 - 1);
-        mat3_t tbn_matrix = mat3_from_cols(varyings->tangent,
-                                           varyings->bitangent,
-                                           varyings->normal);
+        mat3_t tbn_matrix = mat3_from_cols(varyings->world_tangent,
+                                           varyings->world_bitangent,
+                                           varyings->world_normal);
         vec3_t world_normal = mat3_mul_vec3(tbn_matrix, tangent_normal);
         normal_dir = vec3_normalize(world_normal);
     } else {
-        normal_dir = vec3_normalize(varyings->normal);
+        normal_dir = vec3_normalize(varyings->world_normal);
     }
     if (vec3_dot(normal_dir, view_dir) < 0) {
         return vec3_negate(normal_dir);
@@ -215,7 +181,7 @@ static vec3_t get_ibl_shade(ibldata_t *ibldata, float roughness,
     vec3_t diffuse_light = vec3_from_vec4(diffuse_sample);
     vec3_t diffuse_shade = vec3_modulate(diffuse_light, diffuse_color);
 
-    float n_dot_v = float_max(vec3_dot(normal_dir, view_dir), 0);
+    float n_dot_v = vec3_dot(normal_dir, view_dir);
     vec2_t brdf_texcoord = vec2_new(n_dot_v, roughness);
     vec4_t brdf_sample = texture_clamp_sample(ibldata->brdf_lut, brdf_texcoord);
     float specular_scale = brdf_sample.x;
@@ -236,17 +202,16 @@ static vec3_t get_ibl_shade(ibldata_t *ibldata, float roughness,
     return vec3_add(diffuse_shade, specular_shade);
 }
 
-static int is_in_shadow(pbr_varyings_t *varyings, pbr_uniforms_t *uniforms,
-                        vec3_t normal_dir, vec3_t light_dir) {
+static int is_in_shadow(pbr_varyings_t *varyings,
+                        pbr_uniforms_t *uniforms,
+                        float n_dot_l) {
     if (uniforms->shadow_map) {
         float u = (varyings->depth_position.x + 1) * 0.5f;
         float v = (varyings->depth_position.y + 1) * 0.5f;
         float d = (varyings->depth_position.z + 1) * 0.5f;
 
-        float n_dot_l = vec3_dot(normal_dir, light_dir);
         float depth_bias = float_max(0.05f * (1 - n_dot_l), 0.005f);
         float current_depth = d - depth_bias;
-
         vec2_t texcoord = vec2_new(u, v);
         float closest_depth = texture_sample(uniforms->shadow_map, texcoord).x;
 
@@ -313,53 +278,105 @@ static vec3_t linear_to_srgb(vec3_t color) {
     return vec3_new(r, g, b);
 }
 
+static float max_component(vec3_t v) {
+    return v.x > v.y && v.x > v.z ? v.x : (v.y > v.z ? v.y : v.z);
+}
+
 static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
                                      pbr_uniforms_t *uniforms,
                                      int *discard) {
-    float alpha;
-    vec3_t basecolor = get_basecolor(varyings, uniforms, &alpha);
+    vec2_t texcoord = varyings->texcoord;
+    vec3_t diffuse, specular;
+    float alpha, roughness;
+    if (uniforms->workflow == METALNESS_WORKFLOW) {
+        vec3_t basecolor;
+        float metalness;
+
+        basecolor = vec3_from_vec4(uniforms->basecolor_factor);
+        alpha = uniforms->basecolor_factor.w;
+        if (uniforms->basecolor_map) {
+            vec4_t sample = texture_sample(uniforms->basecolor_map, texcoord);
+            basecolor = vec3_modulate(basecolor, vec3_from_vec4(sample));
+            alpha *= sample.w;
+        }
+
+        metalness = uniforms->metalness_factor;
+        if (uniforms->metalness_map) {
+            vec4_t sample = texture_sample(uniforms->metalness_map, texcoord);
+            metalness *= sample.x;
+        }
+
+        roughness = uniforms->roughness_factor;
+        if (uniforms->roughness_map) {
+            vec4_t sample = texture_sample(uniforms->roughness_map, texcoord);
+            roughness *= sample.x;
+        }
+
+        diffuse = vec3_mul(basecolor, (1 - 0.04f) * (1 - metalness));
+        specular = vec3_lerp(DIELECTRIC_SPECULAR, basecolor, metalness);
+    } else {
+        float glossiness;
+
+        diffuse = vec3_from_vec4(uniforms->diffuse_factor);
+        alpha = uniforms->diffuse_factor.w;
+        if (uniforms->diffuse_map) {
+            vec4_t sample = texture_sample(uniforms->diffuse_map, texcoord);
+            diffuse = vec3_modulate(diffuse, vec3_from_vec4(sample));
+            alpha *= sample.w;
+        }
+
+        specular = uniforms->specular_factor;
+        if (uniforms->specular_map) {
+            vec4_t sample = texture_sample(uniforms->specular_map, texcoord);
+            specular = vec3_modulate(specular, vec3_from_vec4(sample));
+        }
+
+        glossiness = uniforms->glossiness_factor;
+        if (uniforms->glossiness_map) {
+            vec4_t sample = texture_sample(uniforms->glossiness_map, texcoord);
+            glossiness *= sample.x;
+        }
+
+        diffuse = vec3_mul(diffuse, 1 - max_component(specular));
+        roughness = 1 - glossiness;
+    }
+
     if (uniforms->alpha_cutoff > 0 && alpha < uniforms->alpha_cutoff) {
         *discard = 1;
         return vec4_new(0, 0, 0, 0);
     } else {
-        float metalness = get_metalness(varyings, uniforms);
-        float roughness = get_roughness(varyings, uniforms);
-        vec3_t diffuse_color = get_diffuse_color(basecolor, metalness);
-        vec3_t specular_color = get_specular_color(basecolor, metalness);
-
         vec3_t light_dir = vec3_negate(uniforms->light_dir);
         vec3_t view_dir = get_view_dir(varyings, uniforms);
         vec3_t normal_dir = get_normal_dir(varyings, uniforms, view_dir);
+        float n_dot_l = vec3_dot(normal_dir, light_dir);
 
         vec3_t color = vec3_new(0, 0, 0);
 
-        if (uniforms->ambient_light > 0 && uniforms->shared_ibldata) {
-            float ambient_light = uniforms->ambient_light;
+        if (uniforms->ambient_strength > 0 && uniforms->shared_ibldata) {
+            float ambient_strength = uniforms->ambient_strength;
             vec3_t shade = get_ibl_shade(uniforms->shared_ibldata, roughness,
                                          normal_dir, view_dir,
-                                         diffuse_color, specular_color);
-            color = vec3_add(color, vec3_mul(shade, ambient_light));
+                                         diffuse, specular);
+            color = vec3_add(color, vec3_mul(shade, ambient_strength));
         }
 
-        if (uniforms->punctual_light > 0) {
-            float punctual_light = uniforms->punctual_light;
-            if (!is_in_shadow(varyings, uniforms, normal_dir, light_dir)) {
+        if (uniforms->punctual_strength > 0 && n_dot_l > 0) {
+            float punctual_strength = uniforms->punctual_strength;
+            if (!is_in_shadow(varyings, uniforms, n_dot_l)) {
                 vec3_t shade = get_dir_shade(light_dir, roughness,
                                              normal_dir, view_dir,
-                                             diffuse_color, specular_color);
-                color = vec3_add(color, vec3_mul(shade, punctual_light));
+                                             diffuse, specular);
+                color = vec3_add(color, vec3_mul(shade, punctual_strength));
             }
         }
 
         if (uniforms->occlusion_map) {
-            vec2_t texcoord = varyings->texcoord;
             vec4_t sample = texture_sample(uniforms->occlusion_map, texcoord);
             float occlusion = sample.x;
             color = vec3_mul(color, occlusion);
         }
 
         if (uniforms->emission_map) {
-            vec2_t texcoord = varyings->texcoord;
             vec4_t sample = texture_sample(uniforms->emission_map, texcoord);
             vec3_t emission = vec3_from_vec4(sample);
             color = vec3_add(color, emission);
@@ -385,6 +402,7 @@ vec4_t pbr_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
 static void update_model(model_t *model, perframe_t *perframe) {
     mat4_t model_matrix = model->transform;
     mat4_t normal_matrix = mat4_inverse_transpose(model_matrix);
+    skeleton_t *skeleton = model->skeleton;
     light_t light_info = perframe->light_info;
     pbr_uniforms_t *uniforms;
 
@@ -397,15 +415,14 @@ static void update_model(model_t *model, perframe_t *perframe) {
                                               perframe->light_view_matrix);
     uniforms->camera_vp_matrix = mat4_mul_mat4(perframe->camera_proj_matrix,
                                                perframe->camera_view_matrix);
-    if (model->skeleton) {
-        skeleton_t *skeleton = model->skeleton;
+    if (skeleton) {
         skeleton_update_joints(skeleton, perframe->frame_time);
         uniforms->joint_matrices = skeleton_get_joint_matrices(skeleton);
         uniforms->joint_n_matrices = skeleton_get_normal_matrices(skeleton);
     }
     uniforms->shadow_map = perframe->shadow_map;
-    uniforms->ambient_light = float_clamp(light_info.ambient, 0, 3);
-    uniforms->punctual_light = float_clamp(light_info.punctual, 0, 3);
+    uniforms->ambient_strength = float_clamp(light_info.ambient, 0, 5);
+    uniforms->punctual_strength = float_clamp(light_info.punctual, 0, 5);
 }
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer,
@@ -441,6 +458,9 @@ static void release_model(model_t *model) {
     cache_release_texture(uniforms->basecolor_map);
     cache_release_texture(uniforms->metalness_map);
     cache_release_texture(uniforms->roughness_map);
+    cache_release_texture(uniforms->diffuse_map);
+    cache_release_texture(uniforms->specular_map);
+    cache_release_texture(uniforms->glossiness_map);
     cache_release_texture(uniforms->normal_map);
     cache_release_texture(uniforms->occlusion_map);
     cache_release_texture(uniforms->emission_map);
@@ -451,24 +471,46 @@ static void release_model(model_t *model) {
     free(model);
 }
 
-model_t *pbr_create_model(const char *mesh, const char *skeleton,
-                          mat4_t transform, pbr_material_t material,
-                          const char *env_name) {
+static model_t *create_model(const char *mesh, const char *skeleton,
+                             int double_sided, int enable_blend,
+                             mat4_t transform) {
     int sizeof_attribs = sizeof(pbr_attribs_t);
     int sizeof_varyings = sizeof(pbr_varyings_t);
     int sizeof_uniforms = sizeof(pbr_uniforms_t);
-    pbr_uniforms_t *uniforms;
     program_t *program;
+    model_t *model;
+
+    program = program_create(pbr_vertex_shader, pbr_fragment_shader,
+                             sizeof_attribs, sizeof_varyings, sizeof_uniforms,
+                             double_sided, enable_blend);
+
+    model = (model_t*)malloc(sizeof(model_t));
+    model->mesh      = cache_acquire_mesh(mesh);
+    model->skeleton  = cache_acquire_skeleton(skeleton);
+    model->program   = program;
+    model->transform = transform;
+    model->opaque    = !enable_blend;
+    model->distance  = 0;
+    model->draw      = draw_model;
+    model->update    = update_model;
+    model->release   = release_model;
+
+    return model;
+}
+
+model_t *pbrm_create_model(const char *mesh, const char *skeleton,
+                           mat4_t transform, pbrm_material_t material,
+                           const char *env_name) {
+    pbr_uniforms_t *uniforms;
     model_t *model;
 
     assert(material.metalness_factor >= 0 && material.metalness_factor <= 1);
     assert(material.roughness_factor >= 0 && material.roughness_factor <= 1);
 
-    program = program_create(pbr_vertex_shader, pbr_fragment_shader,
-                             sizeof_attribs, sizeof_varyings, sizeof_uniforms,
-                             material.double_sided, material.enable_blend);
+    model = create_model(mesh, skeleton, material.double_sided,
+                         material.enable_blend, transform);
 
-    uniforms = (pbr_uniforms_t*)program_get_uniforms(program);
+    uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
     uniforms->basecolor_factor = material.basecolor_factor;
     uniforms->metalness_factor = material.metalness_factor;
     uniforms->roughness_factor = material.roughness_factor;
@@ -480,17 +522,35 @@ model_t *pbr_create_model(const char *mesh, const char *skeleton,
     uniforms->emission_map = cache_acquire_texture(material.emission_map, 1);
     uniforms->shared_ibldata = cache_acquire_ibldata(env_name);
     uniforms->alpha_cutoff = material.alpha_cutoff;
+    uniforms->workflow = METALNESS_WORKFLOW;
 
-    model = (model_t*)malloc(sizeof(model_t));
-    model->mesh      = cache_acquire_mesh(mesh);
-    model->transform = transform;
-    model->program   = program;
-    model->skeleton  = cache_acquire_skeleton(skeleton);
-    model->draw      = draw_model;
-    model->update    = update_model;
-    model->release   = release_model;
-    model->opaque    = !material.enable_blend;
-    model->distance  = -1;
+    return model;
+}
+
+model_t *pbrs_create_model(const char *mesh, const char *skeleton,
+                           mat4_t transform, pbrs_material_t material,
+                           const char *env_name) {
+    pbr_uniforms_t *uniforms;
+    model_t *model;
+
+    assert(material.glossiness_factor >= 0 && material.glossiness_factor <= 1);
+
+    model = create_model(mesh, skeleton, material.double_sided,
+                         material.enable_blend, transform);
+
+    uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
+    uniforms->diffuse_factor = material.diffuse_factor;
+    uniforms->specular_factor = material.specular_factor;
+    uniforms->glossiness_factor = material.glossiness_factor;
+    uniforms->diffuse_map = cache_acquire_texture(material.diffuse_map, 1);
+    uniforms->specular_map = cache_acquire_texture(material.specular_map, 1);
+    uniforms->glossiness_map = cache_acquire_texture(material.glossiness_map, 0);
+    uniforms->normal_map = cache_acquire_texture(material.normal_map, 0);
+    uniforms->occlusion_map = cache_acquire_texture(material.occlusion_map, 0);
+    uniforms->emission_map = cache_acquire_texture(material.emission_map, 1);
+    uniforms->shared_ibldata = cache_acquire_ibldata(env_name);
+    uniforms->alpha_cutoff = material.alpha_cutoff;
+    uniforms->workflow = SPECULAR_WORKFLOW;
 
     return model;
 }

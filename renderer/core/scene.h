@@ -27,16 +27,14 @@ typedef struct {
 
 typedef struct model {
     mesh_t *mesh;
-    mat4_t transform;
-    program_t *program;
     skeleton_t *skeleton;
-    /* generic functions */
+    program_t *program;
+    mat4_t transform;
+    int opaque;
+    float distance;
     void (*draw)(struct model *model, framebuffer_t *fbuffer, int shadow_pass);
     void (*update)(struct model *model, perframe_t *perframe);
     void (*release)(struct model *model);
-    /* for model sorting */
-    int opaque;
-    float distance;
 } model_t;
 
 typedef struct {
@@ -44,7 +42,6 @@ typedef struct {
     model_t *skybox;
     model_t **models;
     light_t light_info;
-    /* for shadow mapping */
     int with_shadow;
     framebuffer_t *shadow_fb;
     texture_t *shadow_map;

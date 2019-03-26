@@ -31,16 +31,19 @@ IMG_FILENAMES = {
         "textures/body_diffuse.jpeg",
         "textures/body_emissive.jpeg",
         "textures/body_specularGlossiness.png",
+        "textures/body_occlusion.png",
     ],
     "flame": [
         "textures/flame_diffuse.png",
         "textures/flame_emissive.jpeg",
+        None,
         None,
     ],
     "gas": [
         "textures/material_diffuse.jpeg",
         None,
         "textures/material_specularGlossiness.png",
+        "textures/material_occlusion.png",
     ],
 }
 
@@ -86,7 +89,7 @@ def fix_spec_image(image):
 
 def process_images(zip_file):
     for name, paths in IMG_FILENAMES.items():
-        diffuse_path, emission_path, specular_path = paths
+        diffuse_path, emission_path, specular_path, occlusion_path = paths
 
         if diffuse_path:
             diffuse_image = load_image(zip_file, diffuse_path)
@@ -100,6 +103,11 @@ def process_images(zip_file):
             specular_image = load_image(zip_file, specular_path)
             specular_image = fix_spec_image(specular_image)
             save_image(specular_image, "{}_specular.tga".format(name))
+
+        if occlusion_path:
+            occlusion_image = load_image(zip_file, occlusion_path)
+            occlusion_image = occlusion_image.convert("RGBA").split()[0]
+            save_image(occlusion_image, "{}_occlusion.tga".format(name))
 
 
 def main():

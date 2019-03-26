@@ -50,6 +50,7 @@ def save_image(image, filename):
 def process_images(zip_file):
     diffuse_path = "textures/Robot_diffuse.jpeg"
     emission_path = "textures/Robot_emissive.jpeg"
+    occlusion_path = "textures/Robot_occlusion.jpeg"
     packed_path = "textures/Robot_specularGlossiness.png"
 
     diffuse_image = load_image(zip_file, diffuse_path)
@@ -58,9 +59,18 @@ def process_images(zip_file):
     emission_image = load_image(zip_file, emission_path)
     save_image(emission_image, "drone_emission.tga")
 
+    occlusion_image = load_image(zip_file, occlusion_path)
+    occlusion_image = occlusion_image.split()[0]
+    save_image(occlusion_image, "drone_occlusion.tga")
+
     packed_image = load_image(zip_file, packed_path)
-    specular_image = Image.merge("RGB", packed_image.split()[:3])
+    packed_bands = packed_image.split()
+
+    specular_image = Image.merge("RGB", packed_bands[:3])
     save_image(specular_image, "drone_specular.tga")
+
+    glossiness_image = packed_bands[3]
+    save_image(glossiness_image, "drone_glossiness.tga")
 
 
 def main():

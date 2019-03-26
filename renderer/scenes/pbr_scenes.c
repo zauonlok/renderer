@@ -12,7 +12,7 @@ scene_t *pbr_assassin_scene(void) {
         "assets/assassin/weapon.obj",
     };
     const char *skeleton = "assets/assassin/assassin.ani";
-    pbr_material_t materials[] = {
+    pbrm_material_t materials[] = {
         {
             {1, 1, 1, 1}, 1, 1,
             "assets/assassin/body_basecolor.tga",
@@ -68,8 +68,70 @@ scene_t *pbr_assassin_scene(void) {
     scale = mat4_scale(0.0038f, 0.0038f, 0.0038f);
     root = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
-        model = pbr_create_model(meshes[i], skeleton, root,
-                                 materials[i], env_name);
+        model = pbrm_create_model(meshes[i], skeleton, root,
+                                  materials[i], env_name);
+        darray_push(models, model);
+    }
+
+    return scene_create(background, NULL, models, 1, 1, 0);
+}
+
+scene_t *pbr_centaur_scene(void) {
+    const char *meshes[] = {
+        "assets/centaur/body.obj",
+        "assets/centaur/flame.obj",
+        "assets/centaur/gas.obj",
+    };
+    pbrs_material_t materials[] = {
+        {
+            {1, 1, 1, 1}, {1, 1, 1}, 0.6f,
+            "assets/centaur/body_diffuse.tga",
+            "assets/centaur/body_specular.tga",
+            NULL,
+            NULL,
+            "assets/centaur/body_occlusion.tga",
+            "assets/centaur/body_emission.tga",
+            0, 0, 0,
+        },
+        {
+            {1, 1, 1, 1}, {0, 0, 0}, 0,
+            "assets/centaur/flame_diffuse.tga",
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            "assets/centaur/flame_emission.tga",
+            0, 1, 0,
+        },
+        {
+            {1, 1, 1, 1}, {1, 1, 1}, 0.6f,
+            "assets/centaur/gas_diffuse.tga",
+            "assets/centaur/gas_specular.tga",
+            NULL,
+            NULL,
+            "assets/centaur/gas_occlusion.tga",
+            NULL,
+            0, 0, 0,
+        },
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    const char *env_name = "papermill";
+    mat4_t scale, rotation, translation, root;
+    int num_meshes = ARRAY_SIZE(meshes);
+    model_t **models = NULL;
+    model_t *model;
+    int i;
+
+    assert(ARRAY_SIZE(materials) == num_meshes);
+
+    translation = mat4_translate(0.154f, -7.579f, -30.749f);
+    rotation = mat4_rotate_x(TO_RADIANS(-90));
+    rotation = mat4_mul_mat4(mat4_rotate_y(TO_RADIANS(-90)), rotation);
+    scale = mat4_scale(0.016f, 0.016f, 0.016f);
+    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    for (i = 0; i < num_meshes; i++) {
+        model = pbrs_create_model(meshes[i], NULL, root,
+                                  materials[i], env_name);
         darray_push(models, model);
     }
 
@@ -82,7 +144,7 @@ scene_t *pbr_dieselpunk_scene(void) {
         "assets/dieselpunk/mech.obj",
         "assets/dieselpunk/yingham.obj",
     };
-    pbr_material_t materials[] = {
+    pbrm_material_t materials[] = {
         {
             {1, 1, 1, 1}, 0, 1,
             "assets/dieselpunk/ground_basecolor.tga",
@@ -129,16 +191,45 @@ scene_t *pbr_dieselpunk_scene(void) {
     scale = mat4_scale(0.0012f, 0.0012f, 0.0012f);
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
-        model = pbr_create_model(meshes[i], NULL, root, materials[i], env_name);
+        model = pbrm_create_model(meshes[i], NULL, root,
+                                  materials[i], env_name);
         darray_push(models, model);
     }
 
     return scene_create(background, NULL, models, 1, 1, 0);
 }
 
+scene_t *pbr_drone_scene(void) {
+    const char *mesh = "assets/drone/drone.obj";
+    const char *skeleton = "assets/drone/drone.ani";
+    pbrs_material_t material = {
+        {1, 1, 1, 1}, {1, 1, 1}, 1,
+        "assets/drone/drone_diffuse.tga",
+        "assets/drone/drone_specular.tga",
+        "assets/drone/drone_glossiness.tga",
+        NULL,
+        "assets/drone/drone_occlusion.tga",
+        "assets/drone/drone_emission.tga",
+        0, 0, 0,
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    const char *env_name = "papermill";
+    model_t **models = NULL;
+
+    mat4_t translation = mat4_translate(0, -79.181f, -4.447f);
+    mat4_t rotation = mat4_rotate_y(TO_RADIANS(180));
+    mat4_t scale = mat4_scale(0.0028f, 0.0028f, 0.0028f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    model_t *model = pbrs_create_model(mesh, skeleton, root,
+                                       material, env_name);
+    darray_push(models, model);
+
+    return scene_create(background, NULL, models, 1, 1, 0);
+}
+
 scene_t *pbr_helmet_scene(void) {
     const char *mesh = "assets/helmet/helmet.obj";
-    pbr_material_t material = {
+    pbrm_material_t material = {
         {1, 1, 1, 1}, 1, 1,
         "assets/helmet/helmet_basecolor.tga",
         "assets/helmet/helmet_metalness.tga",
@@ -156,7 +247,7 @@ scene_t *pbr_helmet_scene(void) {
     mat4_t rotation = mat4_rotate_x(TO_RADIANS(90));
     mat4_t scale = mat4_scale(0.5f, 0.5f, 0.5f);
     mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    model_t *model = pbr_create_model(mesh, NULL, root, material, env_name);
+    model_t *model = pbrm_create_model(mesh, NULL, root, material, env_name);
     darray_push(models, model);
 
     return scene_create(background, NULL, models, 1, 1, 0);
@@ -167,7 +258,7 @@ scene_t *pbr_helmet2_scene(void) {
         "assets/helmet2/glass.obj",
         "assets/helmet2/helmet.obj",
     };
-    pbr_material_t materials[] = {
+    pbrm_material_t materials[] = {
         {
             {0.336f, 0.336f, 0.336f, 0.306f}, 0.725f, 0.240f,
             NULL,
@@ -201,7 +292,8 @@ scene_t *pbr_helmet2_scene(void) {
 
     root = mat4_scale(0.5f, 0.5f, 0.5f);
     for (i = 0; i < num_meshes; i++) {
-        model = pbr_create_model(meshes[i], NULL, root, materials[i], env_name);
+        model = pbrm_create_model(meshes[i], NULL, root,
+                                  materials[i], env_name);
         darray_push(models, model);
     }
 
@@ -210,7 +302,7 @@ scene_t *pbr_helmet2_scene(void) {
 
 scene_t *pbr_junkrat_scene(void) {
     const char *skeleton = "assets/junkrat/junkrat.ani";
-    pbr_material_t materials[] = {
+    pbrm_material_t materials[] = {
         {
             {1, 1, 1, 1}, 1, 0.6f,
             "assets/junkrat/upper_basecolor.tga",
@@ -270,12 +362,12 @@ scene_t *pbr_junkrat_scene(void) {
     root = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
         int material_index = mesh2material[i];
-        pbr_material_t material = materials[material_index];
+        pbrm_material_t material = materials[material_index];
         const char *obj_template = "assets/junkrat/junkrat%d.obj";
         char obj_filename[64];
         sprintf(obj_filename, obj_template, i);
-        model = pbr_create_model(obj_filename, skeleton, root,
-                                 material, env_name);
+        model = pbrm_create_model(obj_filename, skeleton, root,
+                                  material, env_name);
         darray_push(models, model);
     }
 
@@ -292,7 +384,7 @@ scene_t *pbr_ornitier_scene(void) {
         "assets/ornitier/hat.obj",
         "assets/ornitier/legs.obj",
     };
-    pbr_material_t materials[] = {
+    pbrm_material_t materials[] = {
         {
             {1, 1, 1, 1}, 1, 1,
             "assets/ornitier/base_basecolor.tga",
@@ -378,7 +470,8 @@ scene_t *pbr_ornitier_scene(void) {
     scale = mat4_scale(0.00095f, 0.00095f, 0.00095f);
     root = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
-        model = pbr_create_model(meshes[i], NULL, root, materials[i], env_name);
+        model = pbrm_create_model(meshes[i], NULL, root,
+                                  materials[i], env_name);
         darray_push(models, model);
     }
 
@@ -392,7 +485,7 @@ scene_t *pbr_ponycar_scene(void) {
         "assets/ponycar/interior.obj",
         "assets/ponycar/windows.obj",
     };
-    pbr_material_t materials[] = {
+    pbrm_material_t materials[] = {
         {
             {1, 1, 1, 1}, 1, 1,
             "assets/ponycar/body_basecolor.tga",
@@ -449,7 +542,8 @@ scene_t *pbr_ponycar_scene(void) {
     scale = mat4_scale(0.0015f, 0.0015f, 0.0015f);
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
-        model = pbr_create_model(meshes[i], NULL, root, materials[i], env_name);
+        model = pbrm_create_model(meshes[i], NULL, root,
+                                  materials[i], env_name);
         darray_push(models, model);
     }
 
@@ -461,7 +555,7 @@ scene_t *pbr_spitfire_scene(void) {
         "assets/spitfire/body.obj",
         "assets/spitfire/windows.obj",
     };
-    pbr_material_t materials[] = {
+    pbrm_material_t materials[] = {
         {
             {1, 1, 1, 1}, 1, 1,
             "assets/spitfire/spitfire_basecolor.tga",
@@ -499,7 +593,8 @@ scene_t *pbr_spitfire_scene(void) {
     scale = mat4_scale(0.0024f, 0.0024f, 0.0024f);
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
-        model = pbr_create_model(meshes[i], NULL, root, materials[i], env_name);
+        model = pbrm_create_model(meshes[i], NULL, root,
+                                  materials[i], env_name);
         darray_push(models, model);
     }
 
