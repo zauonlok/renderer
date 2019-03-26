@@ -1,7 +1,7 @@
-"""Preprocess the Helmet Concept model
+"""Preprocess the Squid Ink Bottle model
 
 The model is available for download from
-    https://sketchfab.com/models/83bdd9464ea4497bb687259afc4d8ae8
+    https://sketchfab.com/models/df4068d6e911479ca02e313483cb273d
 
 The Python Imaging Library is required
     pip install pillow
@@ -13,35 +13,29 @@ import json
 import os
 import zipfile
 from PIL import Image
-from utils.gltf import dump_obj_data
+from utils.gltf import dump_obj_data, load_node_data
 
-SRC_FILENAME = "helmetconcept.zip"
-DST_DIRECTORY = "../assets/helmet2"
+SRC_FILENAME = "squid_ink_bottle.zip"
+DST_DIRECTORY = "../assets/squid"
 
 OBJ_FILENAMES = [
-    "helmet.obj",
-    "glass.obj",
+    "calamar0.obj",
+    "calamar1.obj",
+    "bottle.obj",
+    "floor.obj",
+    "drop.obj",
 ]
 
 IMG_FILENAMES = {
-    "helmet": [
-        "textures/LP_zlozone_lambert23SG1_baseColor.jpeg",
-        "textures/LP_zlozone_lambert23SG1_emissive.jpeg",
-        "textures/LP_zlozone_lambert23SG1_metallicRoughness.png",
+    "calamar": [
+        "textures/Calamar_baseColor.jpeg",
+        "textures/Calamar_metallicRoughness.png",
     ],
-    "glass": [
-        "textures/LP_zlozone_lambert25SG1_baseColor.png",
-        "textures/LP_zlozone_lambert25SG1_emissive.jpeg",
-        "textures/LP_zlozone_lambert25SG1_metallicRoughness.png",
+    "bottle": [
+        "textures/Bottle_Floor_baseColor.png",
+        "textures/Bottle_Floor_metallicRoughness.png",
     ],
 }
-
-DEL_FILENAMES = [
-    "glass_basecolor.tga",
-    "glass_emission.tga",
-    "glass_metalness.tga",
-    "glass_occlusion.tga",
-]
 
 
 def process_mesh(zip_file):
@@ -69,30 +63,30 @@ def save_image(image, filename):
 
 
 def process_images(zip_file):
-    for name, paths in IMG_FILENAMES.items():
-        basecolor_path, emission_path, packed_path = paths
-
+    for name, (basecolor_path, packed_path) in IMG_FILENAMES.items():
         basecolor_image = load_image(zip_file, basecolor_path)
-        if basecolor_image.mode == "P":
-            basecolor_image = basecolor_image.convert("RGBA")
         save_image(basecolor_image, "{}_basecolor.tga".format(name))
 
-        emission_image = load_image(zip_file, emission_path)
-        save_image(emission_image, "{}_emission.tga".format(name))
-
         packed_image = load_image(zip_file, packed_path)
-        if packed_image.mode == "P":
-            packed_bands = packed_image.convert("RGBA").split()[:3]
-        else:
-            packed_bands = packed_image.split()
-        occlusion_image, roughness_image, metalness_image = packed_bands
+        occlusion_image, roughness_image, _ = packed_image.split()
         save_image(occlusion_image, "{}_occlusion.tga".format(name))
         save_image(roughness_image, "{}_roughness.tga".format(name))
-        save_image(metalness_image, "{}_metalness.tga".format(name))
 
-    for del_filename in DEL_FILENAMES:
-        del_filepath = os.path.join(DST_DIRECTORY, del_filename)
-        os.remove(del_filepath)
+
+def print_transforms(zip_file):
+    gltf = json.loads(zip_file.read("scene.gltf"))
+    nodes = load_node_data(gltf)
+    nodes = [node for node in nodes if node.mesh is not None]
+    transforms = [node.world_transform for node in nodes]
+
+    row_pattern = "            {{{:9.6f}f, {:9.6f}f, {:9.6f}f, {:9.6f}f}},"
+    print("    mat4_t transforms[{}] = {{".format(len(transforms)))
+    for transform in transforms:
+        print("        {{")
+        for i in range(4):
+            print(row_pattern.format(*transform.data[i]))
+        print("        }},")
+    print("    };")
 
 
 def main():
@@ -102,6 +96,7 @@ def main():
     with zipfile.ZipFile(SRC_FILENAME) as zip_file:
         process_mesh(zip_file)
         process_images(zip_file)
+        # print_transforms(zip_file)
 
 
 if __name__ == "__main__":
