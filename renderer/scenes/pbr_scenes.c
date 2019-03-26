@@ -227,6 +227,56 @@ scene_t *pbr_drone_scene(void) {
     return scene_create(background, NULL, models, 1, 1, 0);
 }
 
+scene_t *pbr_gunslinger_scene(void) {
+    const char *meshes[] = {
+        "assets/gunslinger/gunslinger.obj",
+        "assets/gunslinger/revolver.obj",
+    };
+    pbrs_material_t materials[] = {
+        {
+            {1, 1, 1, 1}, {0.56f, 0.56f, 0.56f}, 1,
+            "assets/gunslinger/gunslinger_diffuse.tga",
+            "assets/gunslinger/gunslinger_specular.tga",
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            0, 0, 0,
+        },
+        {
+            {1, 1, 1, 1}, {0.64f, 0.64f, 0.64f}, 0.78f,
+            "assets/gunslinger/revolver_diffuse.tga",
+            "assets/gunslinger/revolver_specular.tga",
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            0, 0, 0,
+        },
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    const char *env_name = "papermill";
+    mat4_t scale, rotation, translation, root;
+    int num_meshes = ARRAY_SIZE(meshes);
+    model_t **models = NULL;
+    model_t *model;
+    int i;
+
+    assert(ARRAY_SIZE(materials) == num_meshes);
+
+    translation = mat4_translate(-0.520f, 1.196f, 2.670f);
+    rotation = mat4_rotate_x(TO_RADIANS(-90));
+    scale = mat4_scale(0.023f, 0.023f, 0.023f);
+    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    for (i = 0; i < num_meshes; i++) {
+        model = pbrs_create_model(meshes[i], NULL, root,
+                                  materials[i], env_name);
+        darray_push(models, model);
+    }
+
+    return scene_create(background, NULL, models, 1, 1, 0);
+}
+
 scene_t *pbr_helmet_scene(void) {
     const char *mesh = "assets/helmet/helmet.obj";
     pbrm_material_t material = {

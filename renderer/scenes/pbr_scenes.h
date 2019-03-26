@@ -7,6 +7,7 @@ scene_t *pbr_assassin_scene(void);
 scene_t *pbr_centaur_scene(void);
 scene_t *pbr_dieselpunk_scene(void);
 scene_t *pbr_drone_scene(void);
+scene_t *pbr_gunslinger_scene(void);
 scene_t *pbr_helmet_scene(void);
 scene_t *pbr_helmet2_scene(void);
 scene_t *pbr_junkrat_scene(void);
