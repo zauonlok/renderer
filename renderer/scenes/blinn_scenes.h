@@ -3,6 +3,7 @@
 
 #include "../core/api.h"
 
+scene_t *blinn_azura_scene(void);
 scene_t *blinn_centaur_scene(void);
 scene_t *blinn_craftsman_scene(void);
 scene_t *blinn_elfgirl_scene(void);

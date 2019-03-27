@@ -4,6 +4,74 @@
 #include "../shaders/blinn_shader.h"
 #include "blinn_scenes.h"
 
+scene_t *blinn_azura_scene(void) {
+    const char *meshes[] = {
+        "assets/azura/bijou0.obj",
+        "assets/azura/bijou1.obj",
+        "assets/azura/bijou3.obj",
+        "assets/azura/body.obj",
+        "assets/azura/cuissarde0.obj",
+        "assets/azura/cuissarde1.obj",
+        "assets/azura/ground.obj",
+        "assets/azura/hair.obj",
+        "assets/azura/head.obj",
+        "assets/azura/laniere.obj",
+        "assets/azura/motif0.obj",
+        "assets/azura/motif1.obj",
+        "assets/azura/motif2.obj",
+        "assets/azura/robe0.obj",
+        "assets/azura/robe1.obj",
+        "assets/azura/yeux0.obj",
+        "assets/azura/yeux1.obj",
+        "assets/azura/yeux2.obj",
+        "assets/azura/yeux3.obj",
+    };
+    blinn_material_t materials[] = {
+        {{1, 1, 1, 1}, 32, "bijoux_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "bijoux_diffuse.tga", NULL, NULL, 0, 1, 0},
+        {{1, 1, 1, 1}, 32, "bijoux_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "body_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "cuissarde_diffuse.tga", NULL, NULL, 0, 0, 1},
+        {{1, 1, 1, 1}, 32, "cuissarde_diffuse.tga", NULL, NULL, 0, 0, 1},
+        {{0, 0, 0, 1}, 32, "ground_diffuse.tga", NULL, NULL, 1, 1, 0},
+        {{1, 1, 1, 1}, 32, "hair_diffuse.tga", NULL, NULL, 1, 0, 0},
+        {{1, 1, 1, 1}, 32, "head_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "laniere_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "motif_diffuse.tga", NULL, NULL, 0, 0, 1},
+        {{1, 1, 1, 1}, 32, "motif_diffuse.tga", NULL, NULL, 0, 0, 1},
+        {{1, 1, 1, 1}, 32, "motif_diffuse.tga", NULL, NULL, 0, 0, 1},
+        {{1, 1, 1, 1}, 32, "robe_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "robe_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    mat4_t scale, translation, root;
+    int num_meshes = ARRAY_SIZE(meshes);
+    model_t **models = NULL;
+    model_t *model;
+    int i;
+
+    assert(ARRAY_SIZE(materials) == num_meshes);
+
+    translation = mat4_translate(-6.073f, -1.278f, 0.280f);
+    scale = mat4_scale(0.378f, 0.378f, 0.378f);
+    root = mat4_mul_mat4(scale, translation);
+    for (i = 0; i < num_meshes; i++) {
+        blinn_material_t material = materials[i];
+        const char *tga_template = "assets/azura/%s";
+        char tga_filename[64];
+        sprintf(tga_filename, tga_template, material.diffuse_map);
+        material.diffuse_map = tga_filename;
+        model = blinn_create_model(meshes[i], NULL, root, material);
+        darray_push(models, model);
+    }
+
+    return scene_create(background, NULL, models, 0.5f, 1, 0);
+}
+
 scene_t *blinn_centaur_scene(void) {
     const char *meshes[] = {
         "assets/centaur/body.obj",

@@ -5,6 +5,7 @@
 #include "test_helper.h"
 
 static scene_creator_t g_scene_creators[] = {
+    {"azura", blinn_azura_scene},
     {"centaur", blinn_centaur_scene},
     {"craftsman", blinn_craftsman_scene},
     {"elfgirl", blinn_elfgirl_scene},
