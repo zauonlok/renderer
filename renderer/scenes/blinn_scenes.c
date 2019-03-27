@@ -8,7 +8,7 @@ scene_t *blinn_azura_scene(void) {
     const char *meshes[] = {
         "assets/azura/bijou0.obj",
         "assets/azura/bijou1.obj",
-        "assets/azura/bijou3.obj",
+        "assets/azura/bijou2.obj",
         "assets/azura/body.obj",
         "assets/azura/cuissarde0.obj",
         "assets/azura/cuissarde1.obj",
@@ -30,7 +30,7 @@ scene_t *blinn_azura_scene(void) {
         {{1, 1, 1, 1}, 32, "bijoux_diffuse.tga", NULL, NULL, 0, 0, 0},
         {{1, 1, 1, 1}, 32, "bijoux_diffuse.tga", NULL, NULL, 0, 1, 0},
         {{1, 1, 1, 1}, 32, "bijoux_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "body_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "body_diffuse.tga", NULL, NULL, 1, 0, 0},
         {{1, 1, 1, 1}, 32, "cuissarde_diffuse.tga", NULL, NULL, 0, 0, 1},
         {{1, 1, 1, 1}, 32, "cuissarde_diffuse.tga", NULL, NULL, 0, 0, 1},
         {{0, 0, 0, 1}, 32, "ground_diffuse.tga", NULL, NULL, 1, 1, 0},

@@ -37,7 +37,7 @@ OBJ_FILENAMES = [
     "cuissarde0.obj",
     "motif2.obj",
     "cuissarde1.obj",
-    "bijou3.obj",
+    "bijou2.obj",
 ]
 
 IMG_FILENAMES = {
