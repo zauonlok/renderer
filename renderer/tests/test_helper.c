@@ -375,6 +375,9 @@ void test_draw_scene(scene_t *scene, context_t *context) {
         model_t *model = scene->models[i];
         model->update(model, &perframe);
     }
+    if (skybox != NULL) {
+        skybox->update(skybox, &perframe);
+    }
 
     if (scene->with_shadow) {
         sort_models(scene->models, perframe.light_view_matrix);
@@ -391,7 +394,7 @@ void test_draw_scene(scene_t *scene, context_t *context) {
     sort_models(scene->models, perframe.camera_view_matrix);
     framebuffer_clear_color(framebuffer, scene->background);
     framebuffer_clear_depth(framebuffer, 1);
-    if (scene->skybox == NULL) {
+    if (skybox == NULL) {
         for (i = 0; i < num_models; i++) {
             model_t *model = scene->models[i];
             model->draw(model, framebuffer, 0);

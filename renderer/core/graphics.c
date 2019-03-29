@@ -271,12 +271,10 @@ static int clip_triangle(
     int num_vertices;
 
     CLIP_IN2OUT(POSITIVE_W, 3);
-#if 0
     CLIP_OUT2IN(POSITIVE_X, num_vertices);
     CLIP_IN2OUT(NEGATIVE_X, num_vertices);
     CLIP_OUT2IN(POSITIVE_Y, num_vertices);
     CLIP_IN2OUT(NEGATIVE_Y, num_vertices);
-#endif
     CLIP_OUT2IN(POSITIVE_Z, num_vertices);
     CLIP_IN2OUT(NEGATIVE_Z, num_vertices);
 

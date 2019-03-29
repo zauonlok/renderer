@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "../core/api.h"
 #include "../shaders/pbr_shader.h"
+#include "../shaders/skybox_shader.h"
 #include "pbr_scenes.h"
 
 scene_t *pbr_assassin_scene(void) {
@@ -290,6 +291,7 @@ scene_t *pbr_helmet_scene(void) {
         0, 0, 0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    model_t *skybox = skybox_create_model("papermill");
     const char *env_name = "papermill";
     model_t **models = NULL;
 
@@ -300,7 +302,7 @@ scene_t *pbr_helmet_scene(void) {
     model_t *model = pbrm_create_model(mesh, NULL, root, material, env_name);
     darray_push(models, model);
 
-    return scene_create(background, NULL, models, 1, 1, 0);
+    return scene_create(background, skybox, models, 1, 1, 0);
 }
 
 scene_t *pbr_helmet2_scene(void) {

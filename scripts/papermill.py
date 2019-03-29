@@ -1,6 +1,6 @@
-"""Preprocess the Papermill Ruins envmaps
+"""Preprocess the Papermill Ruins cubemaps
 
-The envmaps are available for download from
+The cubemaps are available for download from
     https://github.com/KhronosGroup/glTF-WebGL-PBR/archive/master.zip
 
 The Python Imaging Library is required
@@ -22,8 +22,7 @@ def linear_to_srgb(image):
     return image.point(lookup_table)
 
 
-def save_image(zip_file, old_filepath):
-    new_filename = os.path.basename(os.path.splitext(old_filepath)[0]) + ".tga"
+def save_image(zip_file, old_filepath, new_filename):
     new_filepath = os.path.join(DST_DIRECTORY, new_filename)
     with zip_file.open(old_filepath) as f:
         image = Image.open(f)
@@ -36,11 +35,19 @@ def main():
         os.makedirs(DST_DIRECTORY)
 
     with zipfile.ZipFile(SRC_FILENAME) as zip_file:
-        for filepath in zip_file.namelist():
-            if "papermill/diffuse/diffuse_" in filepath:
-                save_image(zip_file, filepath)
-            elif "papermill/specular/specular_" in filepath:
-                save_image(zip_file, filepath)
+        for old_filepath in zip_file.namelist():
+            if "papermill/diffuse/diffuse_" in old_filepath:
+                old_filename = os.path.basename(old_filepath)
+                new_filename = old_filename[:-4] + ".tga"
+                save_image(zip_file, old_filepath, new_filename)
+            elif "papermill/specular/specular_" in old_filepath:
+                old_filename = os.path.basename(old_filepath)
+                new_filename = old_filename[:-4] + ".tga"
+                save_image(zip_file, old_filepath, new_filename)
+            elif "papermill/environment/environment_" in old_filepath:
+                old_filename = os.path.basename(old_filepath)
+                new_filename = "skybox_" + old_filename[12:-6] + ".tga"
+                save_image(zip_file, old_filepath, new_filename)
 
 
 if __name__ == "__main__":
