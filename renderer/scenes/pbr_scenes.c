@@ -602,6 +602,53 @@ scene_t *pbr_ponycar_scene(void) {
     return scene_create(background, NULL, models, 1, 1, 0);
 }
 
+scene_t *pbr_sphere_scene(void) {
+    const char *mesh = "assets/common/sphere.obj";
+    pbrm_material_t material = {
+        {1, 1, 1, 1}, 1, 1, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0,
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    const char *env_name = "papermill";
+    model_t **models = NULL;
+    model_t *model;
+    int i;
+
+    for (i = 0; i <= 10; i++) {
+        mat4_t translation = mat4_translate(1.5f * (i - 5), 1.5f, 0);
+        mat4_t scale = mat4_scale(0.125f, 0.125f, 0.125f);
+        mat4_t transform = mat4_mul_mat4(scale, translation);
+        material.basecolor_factor = vec4_new(1, 1, 1, 1);
+        material.metalness_factor = 1;
+        material.roughness_factor = (float)i / 10;
+        model = pbrm_create_model(mesh, NULL, transform, material, env_name);
+        darray_push(models, model);
+    }
+
+    for (i = 0; i <= 10; i++) {
+        mat4_t translation = mat4_translate(1.5f * (i - 5), 0, 0);
+        mat4_t scale = mat4_scale(0.125f, 0.125f, 0.125f);
+        mat4_t transform = mat4_mul_mat4(scale, translation);
+        material.basecolor_factor = vec4_new(1, 1, 1, 1);
+        material.metalness_factor = 0;
+        material.roughness_factor = (float)i / 10;
+        model = pbrm_create_model(mesh, NULL, transform, material, env_name);
+        darray_push(models, model);
+    }
+
+    for (i = 0; i <= 10; i++) {
+        mat4_t translation = mat4_translate(1.5f * (i - 5), -1.5f, 0);
+        mat4_t scale = mat4_scale(0.125f, 0.125f, 0.125f);
+        mat4_t transform = mat4_mul_mat4(scale, translation);
+        material.basecolor_factor = vec4_new(0, 0, 0, 1);
+        material.metalness_factor = 0;
+        material.roughness_factor = (float)i / 10;
+        model = pbrm_create_model(mesh, NULL, transform, material, env_name);
+        darray_push(models, model);
+    }
+
+    return scene_create(background, NULL, models, 1, 1, 0);
+}
+
 scene_t *pbr_spitfire_scene(void) {
     const char *meshes[] = {
         "assets/spitfire/body.obj",
