@@ -77,68 +77,6 @@ scene_t *pbr_assassin_scene(void) {
     return scene_create(background, NULL, models, 1, 1, 0);
 }
 
-scene_t *pbr_centaur_scene(void) {
-    const char *meshes[] = {
-        "assets/centaur/body.obj",
-        "assets/centaur/flame.obj",
-        "assets/centaur/gas.obj",
-    };
-    pbrs_material_t materials[] = {
-        {
-            {1, 1, 1, 1}, {1, 1, 1}, 0.6f,
-            "assets/centaur/body_diffuse.tga",
-            "assets/centaur/body_specular.tga",
-            NULL,
-            NULL,
-            "assets/centaur/body_occlusion.tga",
-            "assets/centaur/body_emission.tga",
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, {0, 0, 0}, 0,
-            "assets/centaur/flame_diffuse.tga",
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            "assets/centaur/flame_emission.tga",
-            0, 1, 0,
-        },
-        {
-            {1, 1, 1, 1}, {1, 1, 1}, 0.6f,
-            "assets/centaur/gas_diffuse.tga",
-            "assets/centaur/gas_specular.tga",
-            NULL,
-            NULL,
-            "assets/centaur/gas_occlusion.tga",
-            NULL,
-            0, 0, 0,
-        },
-    };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
-    const char *env_name = "papermill";
-    mat4_t scale, rotation, translation, root;
-    int num_meshes = ARRAY_SIZE(meshes);
-    model_t **models = NULL;
-    model_t *model;
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    translation = mat4_translate(0.154f, -7.579f, -30.749f);
-    rotation = mat4_rotate_x(TO_RADIANS(-90));
-    rotation = mat4_mul_mat4(mat4_rotate_y(TO_RADIANS(-90)), rotation);
-    scale = mat4_scale(0.016f, 0.016f, 0.016f);
-    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    for (i = 0; i < num_meshes; i++) {
-        model = pbrs_create_model(meshes[i], NULL, root,
-                                  materials[i], env_name);
-        darray_push(models, model);
-    }
-
-    return scene_create(background, NULL, models, 1, 1, 0);
-}
-
 scene_t *pbr_dieselpunk_scene(void) {
     const char *meshes[] = {
         "assets/dieselpunk/ground.obj",
