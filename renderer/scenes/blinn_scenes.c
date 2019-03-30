@@ -359,7 +359,7 @@ scene_t *blinn_craftsman_scene(void) {
         darray_push(models, model);
     }
 
-    return scene_create(background, NULL, models, 0.5f, 1, 0);
+    return scene_create(background, NULL, models, 0.5f, 1, 1);
 }
 
 scene_t *blinn_elfgirl_scene(void) {
