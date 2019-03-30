@@ -401,7 +401,7 @@ scene_t *blinn_elfgirl_scene(void) {
         darray_push(models, model);
     }
 
-    return scene_create(background, NULL, models, 0.5f, 0.75f, 0);
+    return scene_create(background, NULL, models, 0.75f, 0.25f, 0);
 }
 
 scene_t *blinn_kgirls_scene(void) {
