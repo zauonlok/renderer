@@ -176,7 +176,7 @@ scene_t *pbr_gunslinger_scene(void) {
             {1, 1, 1, 1}, {0.56f, 0.56f, 0.56f}, 1,
             "assets/gunslinger/gunslinger_diffuse.tga",
             "assets/gunslinger/gunslinger_specular.tga",
-            NULL,
+            "assets/gunslinger/gunslinger_glossiness.tga",
             NULL,
             NULL,
             NULL,

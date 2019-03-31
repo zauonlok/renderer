@@ -60,13 +60,20 @@ def save_image(image, filename):
 
 
 def process_images(zip_file):
-    for name, (diffuse_path, specular_path) in IMG_FILENAMES.items():
+    for name, (diffuse_path, packed_path) in IMG_FILENAMES.items():
         diffuse_image = load_image(zip_file, diffuse_path)
         save_image(diffuse_image, "{}_diffuse.tga".format(name))
 
-        specular_image = load_image(zip_file, specular_path)
-        specular_image = specular_image.split()[0]
-        save_image(specular_image, "{}_specular.tga".format(name))
+        packed_image = load_image(zip_file, packed_path)
+        if name == "gunslinger":
+            packed_bands = packed_image.split()
+            specular_image = packed_bands[0]
+            save_image(specular_image, "{}_specular.tga".format(name))
+            glossiness_image = packed_bands[3]
+            save_image(glossiness_image, "{}_glossiness.tga".format(name))
+        else:
+            specular_image = packed_image
+            save_image(specular_image, "{}_specular.tga".format(name))
 
 
 def main():
