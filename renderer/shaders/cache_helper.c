@@ -281,18 +281,22 @@ void cache_release_skybox(cubemap_t *skybox) {
 
 typedef struct {
     const char *env_name;
+    const char *img_type;
     int mip_level;
+    int is_linear;
     ibldata_t *ibldata;
     int references;
 } envinfo_t;
 
 static envinfo_t g_envinfo[] = {
-    {"papermill", 10, NULL, 0},
+    {"papermill", "tga", 10, 0, NULL, 0},
+    {"footprint", "hdr", 10, 1, NULL, 0},
 };
 
-static ibldata_t *load_ibldata(const char *env_name, int mip_level) {
+static ibldata_t *load_ibldata(const char *env_name, int mip_level,
+                               const char *img_type, int is_linear) {
     const char *faces[6] = {"right", "left", "top", "bottom", "front", "back"};
-    const char *format = "assets/common/%s/%s_%s_%d.tga";
+    const char *format = "assets/common/%s/%s_%s_%d.%s";
     char paths[6][128];
     ibldata_t *ibldata;
     int i, j;
@@ -302,22 +306,27 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_level) {
 
     /* diffuse environment map */
     for (j = 0; j < 6; j++) {
-        sprintf(paths[j], format, env_name, "diffuse", faces[j], 0);
+        sprintf(paths[j], format, env_name, "diffuse",
+                faces[j], 0, img_type);
     }
     ibldata->diffuse_map = cubemap_from_files(paths[0], paths[1], paths[2],
                                               paths[3], paths[4], paths[5]);
-    cubemap_srgb2linear(ibldata->diffuse_map);
+    if (!is_linear) {
+        cubemap_srgb2linear(ibldata->diffuse_map);
+    }
 
     /* specular environment maps */
     for (i = 0; i < mip_level; i++) {
-        cubemap_t *specular_map;
         for (j = 0; j < 6; j++) {
-            sprintf(paths[j], format, env_name, "specular", faces[j], i);
+            sprintf(paths[j], format, env_name, "specular",
+                    faces[j], i, img_type);
         }
-        specular_map = cubemap_from_files(paths[0], paths[1], paths[2],
-                                          paths[3], paths[4], paths[5]);
-        cubemap_srgb2linear(specular_map);
-        ibldata->specular_maps[i] = specular_map;
+        ibldata->specular_maps[i] = cubemap_from_files(paths[0], paths[1],
+                                                       paths[2], paths[3],
+                                                       paths[4], paths[5]);
+        if (!is_linear) {
+            cubemap_srgb2linear(ibldata->specular_maps[i]);
+        }
     }
 
     /* brdf lookup table */
@@ -345,10 +354,13 @@ ibldata_t *cache_acquire_ibldata(const char *env_name) {
                 if (g_envinfo[i].references > 0) {
                     g_envinfo[i].references += 1;
                 } else {
+                    const char *img_type = g_envinfo[i].img_type;
                     int mip_level = g_envinfo[i].mip_level;
+                    int is_linear = g_envinfo[i].is_linear;
                     assert(g_envinfo[i].ibldata == NULL);
                     assert(g_envinfo[i].references == 0);
-                    g_envinfo[i].ibldata = load_ibldata(env_name, mip_level);
+                    g_envinfo[i].ibldata = load_ibldata(env_name, mip_level,
+                                                        img_type, is_linear);
                     g_envinfo[i].references = 1;
                 }
                 return g_envinfo[i].ibldata;

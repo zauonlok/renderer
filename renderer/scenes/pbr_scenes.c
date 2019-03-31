@@ -535,7 +535,7 @@ scene_t *pbr_sphere_scene(void) {
         {1, 1, 1, 1}, 1, 1, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
-    const char *env_name = "papermill";
+    const char *env_name = "footprint";
     model_t **models = NULL;
     model_t *model;
     int i;

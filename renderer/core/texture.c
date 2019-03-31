@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "geometry.h"
@@ -9,6 +10,169 @@
 
 struct texture {int width, height; vec4_t *buffer;};
 struct cubemap {texture_t *faces[6];};
+
+/* radiance hdr related functions */
+
+#define LINE_LENGTH 1024
+#define STARTS_WITH(line, prefix) (strncmp(line, prefix, strlen(prefix)) == 0)
+
+static void read_line(FILE *file, char line[LINE_LENGTH]) {
+    if (fgets(line, LINE_LENGTH, file) == NULL) {
+        assert(0);
+    }
+}
+
+static void read_hdr_header(FILE *file, int *width, int *height) {
+    char line[LINE_LENGTH];
+    int header_found = 0;
+    int format_found = 0;
+    int items;
+
+    read_line(file, line);
+    assert(STARTS_WITH(line, "#?RADIANCE"));
+
+    while (1) {
+        read_line(file, line);
+        if (strlen(line) == 1 && line[0] == '\n') {
+            header_found = 1;
+            break;
+        } else if (STARTS_WITH(line, "FORMAT=")) {
+            assert(STARTS_WITH(line, "FORMAT=32-bit_rle_rgbe"));
+            format_found = 1;
+        } else if (STARTS_WITH(line, "GAMMA=")) {
+            /* ignore, for now */
+        } else if (STARTS_WITH(line, "EXPOSURE=")) {
+            /* ignore, for now */
+        } else if (STARTS_WITH(line, "#")) {
+            /* ignore comments */
+        } else {
+            assert(0);
+        }
+    }
+    assert(header_found != 0 && format_found != 0);
+
+    read_line(file, line);
+    items = sscanf(line, "-Y %d +X %d", height, width);
+    assert(items == 2 && *width > 0 && *height > 0);
+}
+
+static vec4_t texel_from_rgbe(unsigned char rgbe[4]) {
+    float rm = rgbe[0];  /* red mantissa */
+    float gm = rgbe[1];  /* green mantissa */
+    float bm = rgbe[2];  /* blue mantissa */
+    float ex = rgbe[3];  /* exponent biased */
+    if (ex == 0) {
+        return vec4_new(0, 0, 0, 1);
+    } else {
+        float ev = ex - 128;     /* exponent value */
+        float factor = (float)((1.0 / 256) * pow(2, ev));
+        float rv = rm * factor;  /* red value */
+        float gv = gm * factor;  /* green value */
+        float bv = bm * factor;  /* blue value */
+        return vec4_new(rv, gv, bv, 1);
+    }
+}
+
+static unsigned char read_byte(FILE *file) {
+    int byte = fgetc(file);
+    assert(byte != EOF);
+    return (unsigned char)byte;
+}
+
+static void read_flat_scanline(FILE *file, texture_t *texture, int row) {
+    int width = texture->width;
+    int i, j;
+    for (i = 0; i < width; i++) {
+        int index = row * width + i;
+        unsigned char rgbe[4];
+        for (j = 0; j < 4; j++) {
+            rgbe[j] = read_byte(file);
+        }
+        texture->buffer[index] = texel_from_rgbe(rgbe);
+    }
+}
+
+static void read_rle_scanline(FILE *file, texture_t *texture, int row) {
+    int width = texture->width;
+    unsigned char *channels[4];
+    int i, j;
+
+    for (i = 0; i < 4; i++) {
+        channels[i] = (unsigned char*)malloc(width);
+    }
+    for (i = 0; i < 4; i++) {
+        int size = 0;
+        while (size < width) {
+            unsigned char byte = read_byte(file);
+            if (byte > 128) {
+                int count = byte - 128;
+                assert(count > 0 && size + count <= width);
+                for (j = 0; j < count; j++) {
+                    channels[i][size++] = read_byte(file);
+                }
+            } else {
+                int count = byte;
+                unsigned char value = read_byte(file);
+                assert(count > 0 && size + count <= width);
+                for (j = 0; j < count; j++) {
+                    channels[i][size++] = value;
+                }
+            }
+        }
+        assert(size == width);
+    }
+
+    for (i = 0; i < width; i++) {
+        int index = row * width + i;
+        unsigned char rgbe[4];
+        for (j = 0; j < 4; j++) {
+            rgbe[j] = channels[i][j];
+        }
+        texture->buffer[index] = texel_from_rgbe(rgbe);
+    }
+    for (i = 0; i < 4; i++) {
+        free(channels[i]);
+    }
+}
+
+static void read_hdr_scanline(FILE *file, texture_t *texture, int row) {
+    int width = texture->width;
+    if (width < 8 || width > 0x7fff) {
+        read_flat_scanline(file, texture, row);
+    } else {
+        unsigned char bytes[4];
+        int i;
+        for (i = 0; i < 4; i++) {
+            bytes[i] = read_byte(file);
+        }
+        if (bytes[0] != 2 || bytes[1] != 2 || bytes[2] & 0x80) {
+            fseek(file, -4, SEEK_CUR);
+            read_flat_scanline(file, texture, row);
+        } else {
+            assert(bytes[2] * 256 + bytes[3] == width);
+            read_rle_scanline(file, texture, row);
+        }
+    }
+}
+
+static texture_t *load_hdr(const char *filename) {
+    texture_t *texture;
+    int width, height;
+    FILE *file;
+    int i;
+
+    file = fopen(filename, "rb");
+    assert(file != NULL);
+    read_hdr_header(file, &width, &height);
+    texture = texture_create(width, height);
+    for (i = 0; i < height; i++) {
+        int row = height - 1 - i;
+        read_hdr_scanline(file, texture, row);
+    }
+    fclose(file);
+
+    return texture;
+}
 
 /* texture related functions */
 
@@ -31,11 +195,21 @@ void texture_release(texture_t *texture) {
     free(texture);
 }
 
+static const char *extract_extension(const char *filename) {
+    const char *dot_pos = strrchr(filename, '.');
+    return dot_pos == NULL ? "" : dot_pos + 1;
+}
+
 texture_t *texture_from_file(const char *filename) {
-    image_t *image = image_load(filename);
-    texture_t *texture = texture_from_image(image);
-    image_release(image);
-    return texture;
+    const char *extension = extract_extension(filename);
+    if (strcmp(extension, "hdr") == 0) {
+        return load_hdr(filename);
+    } else {
+        image_t *image = image_load(filename);
+        texture_t *texture = texture_from_image(image);
+        image_release(image);
+        return texture;
+    }
 }
 
 static float uchar_to_float(unsigned char value) {
@@ -123,6 +297,36 @@ void texture_srgb2linear(texture_t *texture) {
     }
 }
 
+void texture_flip_h(texture_t *texture) {
+    int half_width = texture->width / 2;
+    int r, c;
+    for (r = 0; r < texture->height; r++) {
+        for (c = 0; c < half_width; c++) {
+            int flipped_c = texture->width - 1 - c;
+            int index1 = r * texture->width + c;
+            int index2 = r * texture->width + flipped_c;
+            vec4_t temp = texture->buffer[index1];
+            texture->buffer[index1] = texture->buffer[index2];
+            texture->buffer[index2] = temp;
+        }
+    }
+}
+
+void texture_flip_v(texture_t *texture) {
+    int half_height = texture->height / 2;
+    int r, c;
+    for (r = 0; r < half_height; r++) {
+        for (c = 0; c < texture->width; c++) {
+            int flipped_r = texture->height - 1 - r;
+            int index1 = r * texture->width + c;
+            int index2 = flipped_r * texture->width + c;
+            vec4_t temp = texture->buffer[index1];
+            texture->buffer[index1] = texture->buffer[index2];
+            texture->buffer[index2] = temp;
+        }
+    }
+}
+
 vec4_t texture_repeat_sample(texture_t *texture, vec2_t texcoord) {
     float u = texcoord.x - (float)floor(texcoord.x);
     float v = texcoord.y - (float)floor(texcoord.y);
@@ -155,21 +359,18 @@ cubemap_t *cubemap_from_files(const char *positive_x, const char *negative_x,
                               const char *positive_y, const char *negative_y,
                               const char *positive_z, const char *negative_z) {
     cubemap_t *cubemap;
-    image_t *faces[6];
     int i;
 
-    faces[0] = image_load(positive_x);  /* right */
-    faces[1] = image_load(negative_x);  /* left */
-    faces[2] = image_load(positive_y);  /* top */
-    faces[3] = image_load(negative_y);  /* bottom */
-    faces[4] = image_load(positive_z);  /* front */
-    faces[5] = image_load(negative_z);  /* back */
-
     cubemap = (cubemap_t*)malloc(sizeof(cubemap_t));
+    cubemap->faces[0] = texture_from_file(positive_x);  /* right */
+    cubemap->faces[1] = texture_from_file(negative_x);  /* left */
+    cubemap->faces[2] = texture_from_file(positive_y);  /* top */
+    cubemap->faces[3] = texture_from_file(negative_y);  /* bottom */
+    cubemap->faces[4] = texture_from_file(positive_z);  /* front */
+    cubemap->faces[5] = texture_from_file(negative_z);  /* back */
+
     for (i = 0; i < 6; i++) {
-        image_flip_v(faces[i]);
-        cubemap->faces[i] = texture_from_image(faces[i]);
-        image_release(faces[i]);
+        texture_flip_v(cubemap->faces[i]);
     }
 
     return cubemap;
