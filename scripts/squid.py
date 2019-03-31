@@ -19,20 +19,22 @@ SRC_FILENAME = "squid_ink_bottle.zip"
 DST_DIRECTORY = "../assets/squid"
 
 OBJ_FILENAMES = [
-    "calamar0.obj",
-    "calamar1.obj",
+    "squid0.obj",
+    "squid1.obj",
     "bottle.obj",
     "floor.obj",
     "drop.obj",
 ]
 
 IMG_FILENAMES = {
-    "calamar": [
+    "squid": [
         "textures/Calamar_baseColor.jpeg",
+        "textures/Calamar_normal.jpeg",
         "textures/Calamar_metallicRoughness.png",
     ],
-    "bottle": [
+    "ink": [
         "textures/Bottle_Floor_baseColor.png",
+        "textures/Bottle_Floor_normal.jpeg",
         "textures/Bottle_Floor_metallicRoughness.png",
     ],
 }
@@ -56,16 +58,23 @@ def load_image(zip_file, filename):
         return image
 
 
-def save_image(image, filename):
-    image = image.resize((512, 512), Image.LANCZOS)
+def save_image(image, filename, size=(512, 512)):
+    image = image.resize(size, Image.LANCZOS)
     filepath = os.path.join(DST_DIRECTORY, filename)
     image.save(filepath, rle=True)
 
 
 def process_images(zip_file):
-    for name, (basecolor_path, packed_path) in IMG_FILENAMES.items():
+    for name, paths in IMG_FILENAMES.items():
+        basecolor_path, normal_path, packed_path = paths
+
         basecolor_image = load_image(zip_file, basecolor_path)
         save_image(basecolor_image, "{}_basecolor.tga".format(name))
+
+        normal_image = load_image(zip_file, normal_path)
+        save_image(
+            normal_image, "{}_normal.tga".format(name), size=(1024, 1024)
+        )
 
         packed_image = load_image(zip_file, packed_path)
         occlusion_image, roughness_image, _ = packed_image.split()
