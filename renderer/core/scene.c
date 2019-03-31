@@ -7,6 +7,9 @@
 #include "skeleton.h"
 #include "texture.h"
 
+static const int SHADOWMAP_WIDTH = 512;
+static const int SHADOWMAP_HEIGHT = 512;
+
 scene_t *scene_create(vec4_t background, model_t *skybox, model_t **models,
                       float ambient_light, float punctual_light,
                       int with_shadow) {
@@ -17,8 +20,15 @@ scene_t *scene_create(vec4_t background, model_t *skybox, model_t **models,
     scene->light_info.ambient  = ambient_light;
     scene->light_info.punctual = punctual_light;
     scene->with_shadow         = with_shadow;
-    scene->shadow_fb           = NULL;
-    scene->shadow_map          = NULL;
+    if (scene->with_shadow) {
+        scene->shadow_fb = framebuffer_create(SHADOWMAP_WIDTH,
+                                              SHADOWMAP_HEIGHT);
+        scene->shadow_map = texture_create(SHADOWMAP_WIDTH,
+                                           SHADOWMAP_HEIGHT);
+    } else {
+        scene->shadow_fb = NULL;
+        scene->shadow_map = NULL;
+    }
     return scene;
 }
 

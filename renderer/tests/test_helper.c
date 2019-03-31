@@ -188,9 +188,6 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
 
 /* scene related functions */
 
-static const int SHADOWMAP_WIDTH = 512;
-static const int SHADOWMAP_HEIGHT = 512;
-
 typedef struct {vec3_t min; vec3_t max;} bbox_t;
 
 static bbox_t get_model_bbox(model_t *model) {
@@ -268,27 +265,13 @@ scene_t *test_create_scene(scene_creator_t creators[],
     if (scene) {
         int num_faces = count_num_faces(scene);
         bbox_t bbox = get_scene_bbox(scene);
-        vec3_t bbmin = bbox.min;
-        vec3_t bbmax = bbox.max;
-        vec3_t center = vec3_div(vec3_add(bbmin, bbmax), 2);
-        vec3_t extend = vec3_sub(bbmax, bbmin);
+        vec3_t center = vec3_div(vec3_add(bbox.min, bbox.max), 2);
+        vec3_t extend = vec3_sub(bbox.max, bbox.min);
 
         printf("scene: %s\n", scene_name);
         printf("faces: %d\n", num_faces);
-        printf("bbmin: [%.3f, %.3f, %.3f]\n", bbmin.x, bbmin.y, bbmin.z);
-        printf("bbmax: [%.3f, %.3f, %.3f]\n", bbmax.x, bbmax.y, bbmax.z);
         printf("center: [%.3f, %.3f, %.3f]\n", center.x, center.y, center.z);
         printf("extend: [%.3f, %.3f, %.3f]\n", extend.x, extend.y, extend.z);
-
-        if (scene->with_shadow) {
-            scene->shadow_fb = framebuffer_create(SHADOWMAP_WIDTH,
-                                                  SHADOWMAP_HEIGHT);
-            scene->shadow_map = texture_create(SHADOWMAP_WIDTH,
-                                               SHADOWMAP_HEIGHT);
-        } else {
-            scene->shadow_fb = NULL;
-            scene->shadow_map = NULL;
-        }
     } else {
         printf("scene not found: %s\n", scene_name);
     }

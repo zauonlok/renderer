@@ -14,12 +14,15 @@ struct cubemap {texture_t *faces[6];};
 /* radiance hdr related functions */
 
 #define LINE_LENGTH 1024
-#define STARTS_WITH(line, prefix) (strncmp(line, prefix, strlen(prefix)) == 0)
 
 static void read_line(FILE *file, char line[LINE_LENGTH]) {
     if (fgets(line, LINE_LENGTH, file) == NULL) {
         assert(0);
     }
+}
+
+static int starts_with(const char *string, const char *prefix) {
+    return strncmp(string, prefix, strlen(prefix)) == 0;
 }
 
 static void read_hdr_header(FILE *file, int *width, int *height) {
@@ -29,21 +32,21 @@ static void read_hdr_header(FILE *file, int *width, int *height) {
     int items;
 
     read_line(file, line);
-    assert(STARTS_WITH(line, "#?RADIANCE"));
+    assert(starts_with(line, "#?RADIANCE"));
 
     while (1) {
         read_line(file, line);
         if (strlen(line) == 1 && line[0] == '\n') {
             header_found = 1;
             break;
-        } else if (STARTS_WITH(line, "FORMAT=")) {
-            assert(STARTS_WITH(line, "FORMAT=32-bit_rle_rgbe"));
+        } else if (starts_with(line, "FORMAT=")) {
+            assert(starts_with(line, "FORMAT=32-bit_rle_rgbe"));
             format_found = 1;
-        } else if (STARTS_WITH(line, "GAMMA=")) {
+        } else if (starts_with(line, "GAMMA=")) {
             /* ignore, for now */
-        } else if (STARTS_WITH(line, "EXPOSURE=")) {
+        } else if (starts_with(line, "EXPOSURE=")) {
             /* ignore, for now */
-        } else if (STARTS_WITH(line, "#")) {
+        } else if (starts_with(line, "#")) {
             /* ignore comments */
         } else {
             assert(0);
