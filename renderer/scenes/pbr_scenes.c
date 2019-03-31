@@ -194,7 +194,7 @@ scene_t *pbr_gunslinger_scene(void) {
         },
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
-    const char *env_name = "papermill";
+    const char *env_name = "footprint";
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
     model_t **models = NULL;
@@ -447,7 +447,7 @@ scene_t *pbr_ornitier_scene(void) {
         },
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
-    const char *env_name = "papermill";
+    const char *env_name = "footprint";
     mat4_t scale, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
     model_t **models = NULL;
