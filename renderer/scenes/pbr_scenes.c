@@ -471,7 +471,6 @@ scene_t *pbr_ornitier_scene(void) {
 scene_t *pbr_ponycar_scene(void) {
     const char *meshes[] = {
         "assets/ponycar/body.obj",
-        "assets/ponycar/ground.obj",
         "assets/ponycar/interior.obj",
         "assets/ponycar/windows.obj",
     };
@@ -485,16 +484,6 @@ scene_t *pbr_ponycar_scene(void) {
             NULL,
             "assets/ponycar/body_emission.tga",
             0, 0, 0,
-        },
-        {
-            {0, 0, 0, 1}, 0, 1,
-            "assets/ponycar/ground_basecolor.tga",
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            1, 1, 0,
         },
         {
             {1, 1, 1, 1}, 1, 1,
