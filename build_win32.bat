@@ -3,9 +3,12 @@
 for /f "delims=" %%i in ('vswhere -latest -property installationPath') do (
     set VS150COMNTOOLS=%%i\Common7\Tools\
 )
+for /f "delims=" %%i in ('vswhere -latest -property displayName') do (
+    set VS150COMNTITLE=%%i
+)
 
 if defined VS150COMNTOOLS (
-    title Visual Studio 2017
+    title %VS150COMNTITLE%
     call "%VS150COMNTOOLS%VsDevCmd.bat" /no_logo
 ) else if defined VS140COMNTOOLS (
     title Visual Studio 2015
