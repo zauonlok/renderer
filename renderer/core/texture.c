@@ -32,7 +32,7 @@ static void read_hdr_header(FILE *file, int *width, int *height) {
     int items;
 
     read_line(file, line);
-    assert(starts_with(line, "#?RADIANCE"));
+    assert(starts_with(line, "#?"));
 
     while (1) {
         read_line(file, line);
