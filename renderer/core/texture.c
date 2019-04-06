@@ -109,16 +109,16 @@ static void read_rle_scanline(FILE *file, texture_t *texture, int row) {
             unsigned char byte = read_byte(file);
             if (byte > 128) {
                 int count = byte - 128;
-                assert(count > 0 && size + count <= width);
-                for (j = 0; j < count; j++) {
-                    channels[i][size++] = read_byte(file);
-                }
-            } else {
-                int count = byte;
                 unsigned char value = read_byte(file);
                 assert(count > 0 && size + count <= width);
                 for (j = 0; j < count; j++) {
                     channels[i][size++] = value;
+                }
+            } else {
+                int count = byte;
+                assert(count > 0 && size + count <= width);
+                for (j = 0; j < count; j++) {
+                    channels[i][size++] = read_byte(file);
                 }
             }
         }
@@ -129,7 +129,7 @@ static void read_rle_scanline(FILE *file, texture_t *texture, int row) {
         int index = row * width + i;
         unsigned char rgbe[4];
         for (j = 0; j < 4; j++) {
-            rgbe[j] = channels[i][j];
+            rgbe[j] = channels[j][i];
         }
         texture->buffer[index] = texel_from_rgbe(rgbe);
     }

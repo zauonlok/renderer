@@ -1,5 +1,4 @@
 #?RADIANCE
-#Saved with UX3D
 FORMAT=32-bit_rle_rgbe
 
 -Y 4 +X 4
