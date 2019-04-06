@@ -3,7 +3,7 @@ import re
 
 
 #
-# standard conversion
+# standard conversions
 #
 
 
@@ -20,7 +20,7 @@ def _float_to_rgbe(rv, gv, bv):
         eb = 0  # exponent biased
     else:
         max_m, ev = math.frexp(max_v)
-        factor =  (1.0 / max_v) * max_m * 256.0
+        factor = (1.0 / max_v) * max_m * 256.0
         rm = int(rv * factor)  # red mantissa
         gm = int(gv * factor)  # green mantissa
         bm = int(bv * factor)  # blue mantissa
@@ -126,19 +126,15 @@ def _load_rle_scanline(buffer, begin, width):
             if buffer[current] > 128:
                 count = buffer[current] - 128
                 assert count > 0 and size + count <= width
-                current += 1
-                for _ in range(count):
-                    channels[i].append(buffer[current])
-                current += 1
-                size += count
+                values = [buffer[current + 1]] * count
+                current += 2
             else:
                 count = buffer[current]
                 assert count > 0 and size + count <= width
-                current += 1
-                for _ in range(count):
-                    channels[i].append(buffer[current])
-                    current += 1
-                size += count
+                values = buffer[(current + 1):(current + 1 + count)]
+                current += 1 + count
+            channels[i].extend(values)
+            size += count
         assert size == width
 
     scanline = []
@@ -199,31 +195,31 @@ def _dump_flat_scanline(buffer, scanline):
 
 
 def _dump_rle_channel(buffer, channel, width):
+    min_length = 4
     size = 0
 
     while size < width:
         run_begin = size
-        run_count = 0
-
+        run_count = 1
         while run_begin < width:
-            run_begin += run_count
-            run_count = 1
             while run_begin + run_count < width and run_count < 127:
                 if channel[run_begin + run_count] == channel[run_begin]:
                     run_count += 1
                 else:
                     break
-            if run_count >= 4:
+            if run_count < min_length:
+                run_begin += run_count
+                run_count = 1
+            else:
                 break
 
         while size < run_begin:
             raw_count = min(run_begin - size, 128)
             buffer.append(raw_count)
-            for j in range(raw_count):
-                buffer.append(channel[size + j])
+            buffer.extend(channel[size:(size + raw_count)])
             size += raw_count
 
-        if run_count >= 4:
+        if run_count >= min_length:
             buffer.append(run_count + 128)
             buffer.append(channel[run_begin])
             size += run_count
