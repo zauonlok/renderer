@@ -288,7 +288,7 @@ static vec3_t get_translation(joint_t *joint, float frame_time) {
     }
 }
 
-static quat_t get_rotationn(joint_t *joint, float frame_time) {
+static quat_t get_rotation(joint_t *joint, float frame_time) {
     int num_rotations = joint->num_rotations;
     float *rotation_times = joint->rotation_times;
     quat_t *rotation_values = joint->rotation_values;
@@ -351,7 +351,7 @@ void skeleton_update_joints(skeleton_t *skeleton, float frame_time) {
         for (i = 0; i < skeleton->num_joints; i++) {
             joint_t *joint = &skeleton->joints[i];
             vec3_t translation = get_translation(joint, frame_time);
-            quat_t rotation = get_rotationn(joint, frame_time);
+            quat_t rotation = get_rotation(joint, frame_time);
             vec3_t scale = get_scale(joint, frame_time);
             mat4_t joint_matrix, normal_matrix;
 
