@@ -12,8 +12,10 @@ from __future__ import print_function
 import json
 import os
 import zipfile
-from PIL import Image
+
 import numpy
+from PIL import Image
+
 from utils.gltf import dump_obj_data
 
 SRC_FILENAME = "centaur.zip"

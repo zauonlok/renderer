@@ -11,6 +11,7 @@ from __future__ import print_function
 
 import os
 import zipfile
+
 from PIL import Image
 
 SRC_FILENAME = "glTF-WebGL-PBR-master.zip"

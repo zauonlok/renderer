@@ -8,7 +8,8 @@ from __future__ import print_function
 
 import os
 import zipfile
-from utils.hdr import load_hdr_image, dump_hdr_image
+
+from utils.hdr import dump_hdr_image, load_hdr_image
 
 SRC_FILENAME = "Sample-Environments-master.zip"
 DST_DIRECTORY = "../assets/common/doge"

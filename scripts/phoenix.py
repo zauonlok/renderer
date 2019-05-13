@@ -12,7 +12,9 @@ from __future__ import print_function
 import json
 import os
 import zipfile
+
 from PIL import Image
+
 from utils.gltf import dump_ani_data, dump_obj_data
 
 SRC_FILENAME = "phoenix_bird.zip"
