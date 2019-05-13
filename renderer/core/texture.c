@@ -63,11 +63,11 @@ static vec4_t texel_from_rgbe(unsigned char rgbe[4]) {
     float rm = rgbe[0];  /* red mantissa */
     float gm = rgbe[1];  /* green mantissa */
     float bm = rgbe[2];  /* blue mantissa */
-    float ex = rgbe[3];  /* exponent biased */
-    if (ex == 0) {
+    float eb = rgbe[3];  /* exponent biased */
+    if (eb == 0) {
         return vec4_new(0, 0, 0, 1);
     } else {
-        float ev = ex - 128;     /* exponent value */
+        float ev = eb - 128;     /* exponent value */
         float factor = (float)((1.0 / 256) * pow(2, ev));
         float rv = rm * factor;  /* red value */
         float gv = gm * factor;  /* green value */
@@ -233,7 +233,7 @@ texture_t *texture_from_image(image_t *image) {
     texture = texture_create(width, height);
     for (r = 0; r < height; r++) {
         for (c = 0; c < width; c++) {
-            int img_index = r * width * channels + c * channels;
+            int img_index = (r * width + c) * channels;
             int tex_index = r * width + c;
             unsigned char *pixel = &image->buffer[img_index];
             vec4_t *texel = &texture->buffer[tex_index];
@@ -354,10 +354,6 @@ vec4_t texture_sample(texture_t *texture, vec2_t texcoord) {
 
 /* cubemap related functions */
 
-/*
- * for face uv origin, see
- * https://stackoverflow.com/questions/11685608/
- */
 cubemap_t *cubemap_from_files(const char *positive_x, const char *negative_x,
                               const char *positive_y, const char *negative_y,
                               const char *positive_z, const char *negative_z) {
@@ -372,6 +368,10 @@ cubemap_t *cubemap_from_files(const char *positive_x, const char *negative_x,
     cubemap->faces[4] = texture_from_file(positive_z);  /* front */
     cubemap->faces[5] = texture_from_file(negative_z);  /* back */
 
+    /*
+     * for face uv origin, see
+     * https://stackoverflow.com/questions/11685608/
+     */
     for (i = 0; i < 6; i++) {
         texture_flip_v(cubemap->faces[i]);
     }

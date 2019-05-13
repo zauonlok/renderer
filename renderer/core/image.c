@@ -55,31 +55,32 @@ static void load_tga_rle(FILE *file, image_t *image) {
     unsigned char *buffer = image->buffer;
     int channels = image->channels;
     int buffer_size = get_buffer_size(image);
-    int buffer_count = 0;
-    while (buffer_count < buffer_size) {
+    int elem_count = 0;
+    while (elem_count < buffer_size) {
         unsigned char header = read_byte(file);
-        int is_rle_packet = header & 0x80;
+        int rle_packet = header & 0x80;
         int pixel_count = (header & 0x7F) + 1;
         unsigned char pixel[4];
         int i, j;
-        assert(buffer_count + pixel_count * channels <= buffer_size);
-        if (is_rle_packet) {  /* rle packet */
+        assert(elem_count + pixel_count * channels <= buffer_size);
+        if (rle_packet) {  /* rle packet */
             for (j = 0; j < channels; j++) {
                 pixel[j] = read_byte(file);
             }
             for (i = 0; i < pixel_count; i++) {
                 for (j = 0; j < channels; j++) {
-                    buffer[buffer_count++] = pixel[j];
+                    buffer[elem_count++] = pixel[j];
                 }
             }
-        } else {              /* raw packet */
+        } else {           /* raw packet */
             for (i = 0; i < pixel_count; i++) {
                 for (j = 0; j < channels; j++) {
-                    buffer[buffer_count++] = read_byte(file);
+                    buffer[elem_count++] = read_byte(file);
                 }
             }
         }
     }
+    assert(elem_count == buffer_size);
 }
 
 #define TGA_HEADER_SIZE 18
@@ -95,8 +96,8 @@ static image_t *load_tga(const char *filename) {
     assert(file != NULL);
     read_bytes(file, header, TGA_HEADER_SIZE);
 
-    width = header[12] + (header[13] << 8);
-    height = header[14] + (header[15] << 8);
+    width = header[12] | (header[13] << 8);
+    height = header[14] | (header[15] << 8);
     assert(width > 0 && height > 0);
     depth = header[16];
     assert(depth == 8 || depth == 24 || depth == 32);

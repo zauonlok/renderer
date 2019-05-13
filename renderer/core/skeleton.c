@@ -206,8 +206,7 @@ static skeleton_t *load_ani(const char *filename) {
 
     read_line(file, line);
     items = sscanf(line, "joint-size: %d", &skeleton->num_joints);
-    assert(items == 1);
-    assert(skeleton->num_joints > 0);
+    assert(items == 1 && skeleton->num_joints > 0);
 
     read_line(file, line);
     items = sscanf(line, "time-range: [%f, %f]",

@@ -222,8 +222,8 @@ float quat_length(quat_t q) {
 }
 
 quat_t quat_normalize(quat_t q) {
-    float length = quat_length(q);
-    return quat_new(q.x / length, q.y / length, q.z / length, q.w / length);
+    float factor = 1 / quat_length(q);
+    return quat_new(q.x * factor, q.y * factor, q.z * factor, q.w * factor);
 }
 
 /*

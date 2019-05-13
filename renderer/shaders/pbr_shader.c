@@ -399,30 +399,31 @@ vec4_t pbr_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
 
 /* high-level api */
 
-static void update_model(model_t *model, perframe_t *perframe) {
+static void update_model(model_t *model, framedata_t *framedata) {
     mat4_t model_matrix = model->transform;
     mat4_t normal_matrix = mat4_inverse_transpose(model_matrix);
     skeleton_t *skeleton = model->skeleton;
-    light_t light_info = perframe->light_info;
+    float ambient_strength = framedata->ambient_strength;
+    float punctual_strength = framedata->punctual_strength;
     pbr_uniforms_t *uniforms;
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
-    uniforms->light_dir = perframe->light_dir;
-    uniforms->camera_pos = perframe->camera_pos;
+    uniforms->light_dir = framedata->light_dir;
+    uniforms->camera_pos = framedata->camera_pos;
     uniforms->model_matrix = model_matrix;
     uniforms->normal_matrix = mat3_from_mat4(normal_matrix);
-    uniforms->light_vp_matrix = mat4_mul_mat4(perframe->light_proj_matrix,
-                                              perframe->light_view_matrix);
-    uniforms->camera_vp_matrix = mat4_mul_mat4(perframe->camera_proj_matrix,
-                                               perframe->camera_view_matrix);
+    uniforms->light_vp_matrix = mat4_mul_mat4(framedata->light_proj_matrix,
+                                              framedata->light_view_matrix);
+    uniforms->camera_vp_matrix = mat4_mul_mat4(framedata->camera_proj_matrix,
+                                               framedata->camera_view_matrix);
     if (skeleton) {
-        skeleton_update_joints(skeleton, perframe->frame_time);
+        skeleton_update_joints(skeleton, framedata->frame_time);
         uniforms->joint_matrices = skeleton_get_joint_matrices(skeleton);
         uniforms->joint_n_matrices = skeleton_get_normal_matrices(skeleton);
     }
-    uniforms->shadow_map = perframe->shadow_map;
-    uniforms->ambient_strength = float_clamp(light_info.ambient, 0, 5);
-    uniforms->punctual_strength = float_clamp(light_info.punctual, 0, 5);
+    uniforms->ambient_strength = float_clamp(ambient_strength, 0, 5);
+    uniforms->punctual_strength = float_clamp(punctual_strength, 0, 5);
+    uniforms->shadow_map = framedata->shadow_map;
 }
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer,
@@ -485,15 +486,15 @@ static model_t *create_model(const char *mesh, const char *skeleton,
                              double_sided, enable_blend);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh      = cache_acquire_mesh(mesh);
-    model->skeleton  = cache_acquire_skeleton(skeleton);
-    model->program   = program;
-    model->transform = transform;
-    model->opaque    = !enable_blend;
-    model->distance  = 0;
-    model->draw      = draw_model;
-    model->update    = update_model;
-    model->release   = release_model;
+    model->mesh              = cache_acquire_mesh(mesh);
+    model->skeleton          = cache_acquire_skeleton(skeleton);
+    model->program           = program;
+    model->transform         = transform;
+    model->sortdata.opaque   = !enable_blend;
+    model->sortdata.distance = 0;
+    model->draw              = draw_model;
+    model->update            = update_model;
+    model->release           = release_model;
 
     return model;
 }

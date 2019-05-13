@@ -8,9 +8,14 @@
 #include "texture.h"
 
 typedef struct {
-    float ambient;
-    float punctual;
-} light_t;
+    float ambient_strength;
+    float punctual_strength;
+} lightdata_t;
+
+typedef struct {
+    framebuffer_t *framebuffer;
+    texture_t *shadow_map;
+} shadowdata_t;
 
 typedef struct {
     float frame_time;
@@ -21,19 +26,25 @@ typedef struct {
     mat4_t light_proj_matrix;
     mat4_t camera_view_matrix;
     mat4_t camera_proj_matrix;
+    float ambient_strength;
+    float punctual_strength;
     texture_t *shadow_map;
-    light_t light_info;
-} perframe_t;
+} framedata_t;
+
+typedef struct {
+    int opaque;
+    float distance;
+} sortdata_t;
 
 typedef struct model {
     mesh_t *mesh;
     skeleton_t *skeleton;
     program_t *program;
     mat4_t transform;
-    int opaque;
-    float distance;
-    void (*draw)(struct model *model, framebuffer_t *fbuffer, int shadow_pass);
-    void (*update)(struct model *model, perframe_t *perframe);
+    sortdata_t sortdata;
+    void (*draw)(struct model *model, framebuffer_t *framebuffer,
+                 int shadow_pass);
+    void (*update)(struct model *model, framedata_t *framedata);
     void (*release)(struct model *model);
 } model_t;
 
@@ -41,15 +52,15 @@ typedef struct {
     vec4_t background;
     model_t *skybox;
     model_t **models;
-    light_t light_info;
-    int with_shadow;
-    framebuffer_t *shadow_fb;
-    texture_t *shadow_map;
+    lightdata_t lightdata;
+    shadowdata_t shadowdata;
 } scene_t;
 
-scene_t *scene_create(vec4_t background, model_t *skybox, model_t **models,
-                      float ambient_light, float punctual_light,
-                      int with_shadow);
+scene_t *scene_create(
+    vec4_t background, model_t *skybox, model_t **models,
+    float ambient_strength, float punctual_strength, int with_shadow);
 void scene_release(scene_t *scene);
+void scene_draw(scene_t *scene, framebuffer_t *framebuffer,
+                framedata_t *framedata);
 
 #endif

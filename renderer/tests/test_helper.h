@@ -11,17 +11,14 @@ typedef struct {
     float delta_time;
 } context_t;
 
-typedef void tickfunc_t(context_t *context, void *userdata);
-
 typedef struct {
     const char *scene_name;
     scene_t *(*create)(void);
 } scene_creator_t;
 
-/* mainloop related functions */
-void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata);
+typedef void tickfunc_t(context_t *context, void *userdata);
 
-/* scene related functions */
+void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata);
 scene_t *test_create_scene(scene_creator_t creators[], const char *scene_name);
 void test_draw_scene(scene_t *scene, context_t *context);
 

@@ -25,7 +25,7 @@ typedef struct {
     float light_theta, light_phi;
 } record_t;
 
-static vec2_t calculate_delta(vec2_t old_pos, vec2_t new_pos) {
+static vec2_t get_pos_delta(vec2_t old_pos, vec2_t new_pos) {
     vec2_t delta = vec2_sub(new_pos, old_pos);
     return vec2_div(delta, (float)WINDOW_HEIGHT);
 }
@@ -45,7 +45,7 @@ static void button_callback(window_t *window, button_t button, int pressed) {
             record->orbiting = 1;
             record->orbit_pos = cursor_pos;
         } else {
-            vec2_t delta = calculate_delta(record->orbit_pos, cursor_pos);
+            vec2_t delta = get_pos_delta(record->orbit_pos, cursor_pos);
             record->orbiting = 0;
             motion->orbit = vec2_add(motion->orbit, delta);
         }
@@ -54,7 +54,7 @@ static void button_callback(window_t *window, button_t button, int pressed) {
             record->panning = 1;
             record->pan_pos = cursor_pos;
         } else {
-            vec2_t delta = calculate_delta(record->pan_pos, cursor_pos);
+            vec2_t delta = get_pos_delta(record->pan_pos, cursor_pos);
             record->panning = 0;
             motion->pan = vec2_add(motion->pan, delta);
         }
@@ -72,12 +72,12 @@ static void update_camera(window_t *window, camera_t *camera,
     motion_t *motion = &record->motion;
     vec2_t cursor_pos = get_cursor_pos(window);
     if (record->orbiting) {
-        vec2_t delta = calculate_delta(record->orbit_pos, cursor_pos);
+        vec2_t delta = get_pos_delta(record->orbit_pos, cursor_pos);
         motion->orbit = vec2_add(motion->orbit, delta);
         record->orbit_pos = cursor_pos;
     }
     if (record->panning) {
-        vec2_t delta = calculate_delta(record->pan_pos, cursor_pos);
+        vec2_t delta = get_pos_delta(record->pan_pos, cursor_pos);
         motion->pan = vec2_add(motion->pan, delta);
         record->pan_pos = cursor_pos;
     }
@@ -113,7 +113,7 @@ static void update_light(window_t *window, float delta_time,
     }
 }
 
-static vec3_t calculate_light(record_t *record) {
+static vec3_t get_light_dir(record_t *record) {
     float theta = record->light_theta;
     float phi = record->light_phi;
     float x = (float)sin(phi) * (float)sin(theta);
@@ -131,7 +131,7 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
     context_t context;
     float aspect;
     float prev_time;
-    float report_time;
+    float print_time;
     int num_frames;
 
     window = window_create(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -156,7 +156,7 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
 
     num_frames = 0;
     prev_time = input_get_time();
-    report_time = prev_time;
+    print_time = prev_time;
     while (!window_should_close(window)) {
         float curr_time = input_get_time();
         float delta_time = curr_time - prev_time;
@@ -165,17 +165,17 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
         update_camera(window, camera, &record);
         update_light(window, delta_time, &record);
 
-        context.light_dir = calculate_light(&record);
+        context.light_dir = get_light_dir(&record);
         context.frame_time = curr_time;
         context.delta_time = delta_time;
         tickfunc(&context, userdata);
 
         window_draw_buffer(window, framebuffer);
         num_frames += 1;
-        if (curr_time - report_time >= 1) {
+        if (curr_time - print_time >= 1) {
             printf("fps: %d\n", num_frames);
             num_frames = 0;
-            report_time = curr_time;
+            print_time = curr_time;
         }
 
         input_poll_events();
@@ -266,12 +266,12 @@ scene_t *test_create_scene(scene_creator_t creators[],
         int num_faces = count_num_faces(scene);
         bbox_t bbox = get_scene_bbox(scene);
         vec3_t center = vec3_div(vec3_add(bbox.min, bbox.max), 2);
-        vec3_t extend = vec3_sub(bbox.max, bbox.min);
+        vec3_t extent = vec3_sub(bbox.max, bbox.min);
 
         printf("scene: %s\n", scene_name);
         printf("faces: %d\n", num_faces);
         printf("center: [%.3f, %.3f, %.3f]\n", center.x, center.y, center.z);
-        printf("extend: [%.3f, %.3f, %.3f]\n", extend.x, extend.y, extend.z);
+        printf("extent: [%.3f, %.3f, %.3f]\n", extent.x, extent.y, extent.z);
     } else {
         printf("scene not found: %s\n", scene_name);
     }
@@ -285,122 +285,27 @@ static mat4_t get_light_view_matrix(vec3_t light_dir) {
     return mat4_lookat(light_pos, light_target, light_up);
 }
 
-static mat4_t get_light_proj_matrix(void) {
-    float half_w = 1;
-    float half_h = 1;
-    float z_near = 0;
-    float z_far = 2;
+static mat4_t get_light_proj_matrix(float half_w, float half_h,
+                                    float z_near, float z_far) {
     return mat4_orthographic(half_w, half_h, z_near, z_far);
 }
 
-static perframe_t perframe_from_context(context_t *context) {
+void test_draw_scene(scene_t *scene, context_t *context) {
     vec3_t light_dir = vec3_normalize(context->light_dir);
     camera_t *camera = context->camera;
-    perframe_t perframe;
+    framedata_t framedata;
 
-    perframe.frame_time          = context->frame_time;
-    perframe.delta_time          = context->delta_time;
-    perframe.light_dir           = light_dir;
-    perframe.camera_pos          = camera_get_position(camera);
-    perframe.light_view_matrix   = get_light_view_matrix(light_dir);
-    perframe.light_proj_matrix   = get_light_proj_matrix();
-    perframe.camera_view_matrix  = camera_get_view_matrix(camera);
-    perframe.camera_proj_matrix  = camera_get_proj_matrix(camera);
-    perframe.shadow_map          = NULL;
-    perframe.light_info.ambient  = 0;
-    perframe.light_info.punctual = 0;
+    framedata.frame_time          = context->frame_time;
+    framedata.delta_time          = context->delta_time;
+    framedata.light_dir           = light_dir;
+    framedata.camera_pos          = camera_get_position(camera);
+    framedata.light_view_matrix   = get_light_view_matrix(light_dir);
+    framedata.light_proj_matrix   = get_light_proj_matrix(1, 1, 0, 2);
+    framedata.camera_view_matrix  = camera_get_view_matrix(camera);
+    framedata.camera_proj_matrix  = camera_get_proj_matrix(camera);
+    framedata.ambient_strength    = scene->lightdata.ambient_strength;
+    framedata.punctual_strength   = scene->lightdata.punctual_strength;
+    framedata.shadow_map          = scene->shadowdata.shadow_map;
 
-    return perframe;
-}
-
-static int compare_models(const void *model1p, const void *model2p) {
-    model_t *model1 = *(model_t**)model1p;
-    model_t *model2 = *(model_t**)model2p;
-
-    if (model1->opaque && model2->opaque) {
-        return model1->distance < model2->distance ? -1 : 1;
-    } else if (model1->opaque && !model2->opaque) {
-        return -1;
-    } else if (!model1->opaque && model2->opaque) {
-        return 1;
-    } else {
-        return model1->distance < model2->distance ? 1 : -1;
-    }
-}
-
-static void sort_models(model_t **models, mat4_t view_matrix) {
-    int num_models = darray_size(models);
-    int i;
-    if (num_models > 1) {
-        for (i = 0; i < num_models; i++) {
-            model_t *model = models[i];
-            vec3_t center = mesh_get_center(model->mesh);
-            vec4_t local_pos = vec4_from_vec3(center, 1);
-            vec4_t world_pos = mat4_mul_vec4(model->transform, local_pos);
-            vec4_t view_pos = mat4_mul_vec4(view_matrix, world_pos);
-            model->distance = -view_pos.z;
-        }
-        qsort(models, num_models, sizeof(model_t*), compare_models);
-    }
-}
-
-void test_draw_scene(scene_t *scene, context_t *context) {
-    framebuffer_t *framebuffer = context->framebuffer;
-    int num_models = darray_size(scene->models);
-    model_t *skybox = scene->skybox;
-    perframe_t perframe;
-    int i;
-
-    perframe = perframe_from_context(context);
-    perframe.shadow_map = scene->shadow_map;
-    perframe.light_info = scene->light_info;
-    for (i = 0; i < num_models; i++) {
-        model_t *model = scene->models[i];
-        model->update(model, &perframe);
-    }
-    if (skybox != NULL) {
-        skybox->update(skybox, &perframe);
-    }
-
-    if (scene->with_shadow) {
-        sort_models(scene->models, perframe.light_view_matrix);
-        framebuffer_clear_depth(scene->shadow_fb, 1);
-        for (i = 0; i < num_models; i++) {
-            model_t *model = scene->models[i];
-            if (model->opaque) {
-                model->draw(model, scene->shadow_fb, 1);
-            }
-        }
-        texture_from_depth(scene->shadow_map, scene->shadow_fb);
-    }
-
-    sort_models(scene->models, perframe.camera_view_matrix);
-    framebuffer_clear_color(framebuffer, scene->background);
-    framebuffer_clear_depth(framebuffer, 1);
-    if (skybox == NULL) {
-        for (i = 0; i < num_models; i++) {
-            model_t *model = scene->models[i];
-            model->draw(model, framebuffer, 0);
-        }
-    } else {
-        int num_opaques = 0;
-        for (i = 0; i < num_models; i++) {
-            model_t *model = scene->models[i];
-            if (model->opaque) {
-                num_opaques += 1;
-            } else {
-                break;
-            }
-        }
-
-        for (i = 0; i < num_opaques; i++) {
-            model_t *model = scene->models[i];
-            model->draw(model, framebuffer, 0);
-        }
-        skybox->draw(skybox, framebuffer, 0);
-        for (i = num_opaques; i < num_models; i++) {
-            model_t *model = scene->models[i];
-            model->draw(model, framebuffer, 0);
-        }
-    }
+    scene_draw(scene, context->framebuffer, &framedata);
 }

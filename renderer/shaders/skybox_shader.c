@@ -28,9 +28,9 @@ vec4_t skybox_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
 
 /* high-level api */
 
-static void update_model(model_t *model, perframe_t *perframe) {
-    mat4_t view_matrix = perframe->camera_view_matrix;
-    mat4_t proj_matrix = perframe->camera_proj_matrix;
+static void update_model(model_t *model, framedata_t *framedata) {
+    mat4_t view_matrix = framedata->camera_view_matrix;
+    mat4_t proj_matrix = framedata->camera_proj_matrix;
     skybox_uniforms_t *uniforms;
 
     /* remove translation */
@@ -87,15 +87,15 @@ model_t *skybox_create_model(const char *skybox_name) {
     uniforms->skybox = cache_acquire_skybox(skybox_name);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh      = cache_acquire_mesh("assets/common/box.obj");
-    model->skeleton  = NULL;
-    model->program   = program;
-    model->transform = mat4_identity();
-    model->opaque    = 1;
-    model->distance  = 0;
-    model->draw      = draw_model;
-    model->update    = update_model;
-    model->release   = release_model;
+    model->mesh              = cache_acquire_mesh("assets/common/box.obj");
+    model->skeleton          = NULL;
+    model->program           = program;
+    model->transform         = mat4_identity();
+    model->sortdata.opaque   = 1;
+    model->sortdata.distance = 0;
+    model->draw              = draw_model;
+    model->update            = update_model;
+    model->release           = release_model;
 
     return model;
 }

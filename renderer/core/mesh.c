@@ -18,8 +18,8 @@ static mesh_t *build_mesh(
         vec3_t *positions, vec2_t *texcoords, vec3_t *normals,
         vec4_t *tangents, vec4_t *joints, vec4_t *weights,
         int *position_indices, int *texcoord_indices, int *normal_indices) {
-    vec3_t bbmin = vec3_new(+1e6, +1e6, +1e6);
-    vec3_t bbmax = vec3_new(-1e6, -1e6, -1e6);
+    vec3_t bbox_min = vec3_new(+1e6, +1e6, +1e6);
+    vec3_t bbox_max = vec3_new(-1e6, -1e6, -1e6);
     int num_indices = darray_size(position_indices);
     int num_faces = num_indices / 3;
     vertex_t *vertices;
@@ -67,14 +67,14 @@ static mesh_t *build_mesh(
             vertices[i].weight = vec4_new(0, 0, 0, 0);
         }
 
-        bbmin = vec3_min(bbmin, vertices[i].position);
-        bbmax = vec3_max(bbmax, vertices[i].position);
+        bbox_min = vec3_min(bbox_min, vertices[i].position);
+        bbox_max = vec3_max(bbox_max, vertices[i].position);
     }
 
     mesh = (mesh_t*)malloc(sizeof(mesh_t));
     mesh->num_faces = num_faces;
     mesh->vertices  = vertices;
-    mesh->center    = vec3_div(vec3_add(bbmin, bbmax), 2);
+    mesh->center    = vec3_div(vec3_add(bbox_min, bbox_max), 2);
 
     return mesh;
 }
