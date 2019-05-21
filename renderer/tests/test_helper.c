@@ -251,12 +251,14 @@ scene_t *test_create_scene(scene_creator_t creators[],
         if (num_creators > 0) {
             int index = rand() % num_creators;
             scene_name = creators[index].scene_name;
+            printf("scene: %s\n", scene_name);
             scene = creators[index].create();
         }
     } else {
         int i;
         for (i = 0; creators[i].scene_name != NULL; i++) {
             if (strcmp(creators[i].scene_name, scene_name) == 0) {
+                printf("scene: %s\n", scene_name);
                 scene = creators[i].create();
                 break;
             }
@@ -268,7 +270,6 @@ scene_t *test_create_scene(scene_creator_t creators[],
         vec3_t center = vec3_div(vec3_add(bbox.min, bbox.max), 2);
         vec3_t extent = vec3_sub(bbox.max, bbox.min);
 
-        printf("scene: %s\n", scene_name);
         printf("faces: %d\n", num_faces);
         printf("center: [%.3f, %.3f, %.3f]\n", center.x, center.y, center.z);
         printf("extent: [%.3f, %.3f, %.3f]\n", extent.x, extent.y, extent.z);
