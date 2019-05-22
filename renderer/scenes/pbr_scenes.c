@@ -243,53 +243,6 @@ scene_t *pbr_helmet_scene(void) {
     return scene_create(background, skybox, models, 1, 1, 0);
 }
 
-scene_t *pbr_helmet2_scene(void) {
-    const char *meshes[] = {
-        "assets/helmet2/glass.obj",
-        "assets/helmet2/helmet.obj",
-    };
-    pbrm_material_t materials[] = {
-        {
-            {0.336f, 0.336f, 0.336f, 0.306f}, 0.725f, 0.240f,
-            NULL,
-            NULL,
-            "assets/helmet2/glass_roughness.tga",
-            NULL,
-            NULL,
-            NULL,
-            0, 1, 0,
-        },
-        {
-            {1, 1, 1, 1}, 1, 1,
-            "assets/helmet2/helmet_basecolor.tga",
-            "assets/helmet2/helmet_metalness.tga",
-            "assets/helmet2/helmet_roughness.tga",
-            NULL,
-            "assets/helmet2/helmet_occlusion.tga",
-            "assets/helmet2/helmet_emission.tga",
-            0, 0, 0,
-        },
-    };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
-    const char *env_name = "papermill";
-    int num_meshes = ARRAY_SIZE(meshes);
-    model_t **models = NULL;
-    model_t *model;
-    mat4_t root;
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    root = mat4_scale(0.5f, 0.5f, 0.5f);
-    for (i = 0; i < num_meshes; i++) {
-        model = pbrm_create_model(meshes[i], NULL, root,
-                                  materials[i], env_name);
-        darray_push(models, model);
-    }
-
-    return scene_create(background, NULL, models, 1, 1, 0);
-}
-
 scene_t *pbr_junkrat_scene(void) {
     const char *skeleton = "assets/junkrat/junkrat.ani";
     pbrm_material_t materials[] = {
