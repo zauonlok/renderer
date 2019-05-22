@@ -4,7 +4,7 @@
 
 [http://www.hdrlabs.com/sibl/archive.html](http://www.hdrlabs.com/sibl/archive.html)
 
-[https://github.com/KhronosGroup/glTF-WebGL-PBR/tree/master/textures/papermill](https://github.com/KhronosGroup/glTF-WebGL-PBR/tree/master/textures/papermill)
+[https://github.com/KhronosGroup/glTF-Sample-Viewer/tree/glTF-WebGL-PBR/textures/papermill](https://github.com/KhronosGroup/glTF-Sample-Viewer/tree/glTF-WebGL-PBR/textures/papermill)
 
 ## License
 

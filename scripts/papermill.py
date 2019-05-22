@@ -1,7 +1,7 @@
 """Preprocess the Papermill Ruins cubemaps
 
 The cubemaps are available for download from
-    https://github.com/KhronosGroup/glTF-WebGL-PBR/archive/master.zip
+    https://github.com/KhronosGroup/glTF-Sample-Viewer/archive/glTF-WebGL-PBR.zip
 
 The Python Imaging Library is required
     pip install pillow
@@ -14,7 +14,7 @@ import zipfile
 
 from PIL import Image
 
-SRC_FILENAME = "glTF-WebGL-PBR-master.zip"
+SRC_FILENAME = "glTF-Sample-Viewer-glTF-WebGL-PBR.zip"
 DST_DIRECTORY = "../assets/common/papermill"
 
 
