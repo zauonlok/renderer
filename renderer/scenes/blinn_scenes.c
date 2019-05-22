@@ -403,17 +403,17 @@ scene_t *blinn_elfgirl_scene(void) {
     return scene_create(background, NULL, models, 0.75f, 0.25f, 0);
 }
 
-scene_t *blinn_kgirls_scene(void) {
+scene_t *blinn_kgirl_scene(void) {
     const char *meshes[] = {
-        "assets/kgirls/body.obj",
-        "assets/kgirls/face.obj",
-        "assets/kgirls/hair.obj",
-        "assets/kgirls/pupils.obj",
+        "assets/kgirl/body.obj",
+        "assets/kgirl/face.obj",
+        "assets/kgirl/hair.obj",
+        "assets/kgirl/pupils.obj",
     };
-    const char *skeleton = "assets/kgirls/kgirls.ani";
+    const char *skeleton = "assets/kgirl/kgirl.ani";
     blinn_material_t material = {
         {1, 1, 1, 1}, 32,
-        "assets/kgirls/kgirls_diffuse.tga", NULL, NULL,
+        "assets/kgirl/kgirl_diffuse.tga", NULL, NULL,
         0, 0, 0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);

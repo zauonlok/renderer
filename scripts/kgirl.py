@@ -1,4 +1,4 @@
-"""Preprocess the Kgirls model
+"""Preprocess the Kgirl model
 
 The model is available for download from
     https://sketchfab.com/models/d2f946f58a8040ae993cda70c97b302c
@@ -18,7 +18,7 @@ from PIL import Image
 from utils.gltf import dump_ani_data, dump_obj_data
 
 SRC_FILENAME = "kgirls01.zip"
-DST_DIRECTORY = "../assets/kgirls"
+DST_DIRECTORY = "../assets/kgirl"
 
 OBJ_FILENAMES = [
     "body.obj",
@@ -39,7 +39,7 @@ def process_meshes(zip_file):
             f.write(obj_data)
 
     ani_data = dump_ani_data(gltf, buffer)
-    ani_filepath = os.path.join(DST_DIRECTORY, "kgirls.ani")
+    ani_filepath = os.path.join(DST_DIRECTORY, "kgirl.ani")
     with open(ani_filepath, "w") as f:
         f.write(ani_data)
 
@@ -59,7 +59,7 @@ def save_image(image, filename):
 
 def process_images(zip_file):
     old_filename = "textures/01_-_Default_baseColor.png"
-    tga_filename = "kgirls_diffuse.tga"
+    tga_filename = "kgirl_diffuse.tga"
 
     image = load_image(zip_file, old_filename)
     save_image(image, tga_filename)

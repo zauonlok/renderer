@@ -7,7 +7,7 @@ scene_t *blinn_azura_scene(void);
 scene_t *blinn_centaur_scene(void);
 scene_t *blinn_craftsman_scene(void);
 scene_t *blinn_elfgirl_scene(void);
-scene_t *blinn_kgirls_scene(void);
+scene_t *blinn_kgirl_scene(void);
 scene_t *blinn_mccree_scene(void);
 scene_t *blinn_nier2b_scene(void);
 scene_t *blinn_phoenix_scene(void);

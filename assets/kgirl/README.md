@@ -10,7 +10,7 @@
 
 ## Preprocessor
 
-[scripts/kgirls.py](../../scripts/kgirls.py)
+[scripts/kgirl.py](../../scripts/kgirl.py)
 
 ## Screenshot
 
