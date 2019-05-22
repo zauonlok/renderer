@@ -59,10 +59,9 @@ scene_t *blinn_azura_scene(void) {
     root = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
         blinn_material_t material = materials[i];
-        const char *tga_template = "assets/azura/%s";
-        char tga_filename[64];
-        sprintf(tga_filename, tga_template, material.diffuse_map);
-        material.diffuse_map = tga_filename;
+        char tga_filepath[64];
+        sprintf(tga_filepath, "assets/azura/%s", material.diffuse_map);
+        material.diffuse_map = tga_filepath;
         model = blinn_create_model(meshes[i], NULL, root, material);
         darray_push(models, model);
     }
@@ -545,14 +544,160 @@ scene_t *blinn_mccree_scene(void) {
         int material_index = mesh2material[i];
         mat4_t transform = mat4_mul_mat4(root, transforms[transform_index]);
         blinn_material_t material = materials[material_index];
-        const char *obj_template = "assets/mccree/mccree%d.obj";
-        char obj_filename[64];
-        sprintf(obj_filename, obj_template, i);
-        model = blinn_create_model(obj_filename, NULL, transform, material);
+        char obj_filepath[64];
+        sprintf(obj_filepath, "assets/mccree/mccree%d.obj", i);
+        model = blinn_create_model(obj_filepath, NULL, transform, material);
         darray_push(models, model);
     }
 
     return scene_create(background, NULL, models, 0.75f, 0.25f, 0);
+}
+
+scene_t *blinn_nier2b_scene(void) {
+    mat4_t transforms[] = {
+        {{
+            {   2.540000f,   -0.000000f,   -0.000000f,   -0.000000f},
+            {   0.000000f,    0.000000f,    2.540000f,   -0.000000f},
+            {   0.000000f,   -2.540000f,    0.000000f,    0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
+            {   0.000000f,    0.000000f,    2.540000f,   -0.000000f},
+            {  -0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
+            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
+            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
+            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
+            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,   -0.000000f,   -0.000000f,   -0.000000f},
+            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
+            {   0.000000f,   -2.540000f,    0.000000f,    0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,   -0.000000f,    0.000000f,    0.000000f},
+            {  -0.000000f,    0.000000f,    2.540000f,   -0.000000f},
+            {  -0.000000f,   -2.540000f,    0.000000f,    0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,    0.000000f,   -0.000000f,   -0.000000f},
+            {  -0.000000f,    0.000000f,    2.540000f,   -0.000000f},
+            {   0.000000f,   -2.540000f,    0.000000f,    0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,    0.000000f,    0.000000f,    0.000000f},
+            {  -0.000000f,    0.000000f,    2.540000f,   -0.000000f},
+            {  -0.000000f,   -2.540000f,    0.000000f,    0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,   -0.000000f,   -0.000000f,   -0.000000f},
+            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
+            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
+            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
+            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
+            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
+            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
+            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
+            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   2.540000f,    0.000000f,   -0.000000f,   -0.000000f},
+            {  -0.000000f,    0.000000f,    2.540000f,   -0.000000f},
+            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   0.079944f,    2.065560f,    0.074996f,  -75.664925f},
+            {   1.976933f,   -0.098317f,    0.600518f,   26.524519f},
+            {   0.603239f,    0.048468f,   -1.977955f,  181.913971f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {   0.330002f,   -2.433185f,   -0.146038f,   47.790666f},
+            {   1.775814f,    0.610336f,    0.624992f,   97.739034f},
+            {  -0.554675f,   -0.110746f,    1.794488f, -131.885258f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+        {{
+            {  59.585812f,    0.000000f,    0.000000f,   -4.785220f},
+            {   0.000000f,    3.310324f,   -0.000000f,   -3.129686f},
+            {   0.000000f,    0.000000f,   59.585812f,   -0.000000f},
+            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
+        }},
+    };
+    blinn_material_t materials[] = {
+        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "head_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "head_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "head_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "hair0_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "hair2_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "hair0_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "hair1_diffuse.tga", NULL, NULL, 1, 1, 0},
+        {{1, 1, 1, 1}, 32, "sword_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "sword_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{0.25f, 0.25f, 0.25f, 1}, 32, NULL, NULL, NULL, 0, 0, 0},
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    mat4_t scale, rotation, translation, root;
+    int num_meshes = ARRAY_SIZE(transforms);
+    model_t **models = NULL;
+    model_t *model;
+    int i;
+
+    assert(ARRAY_SIZE(materials) == num_meshes);
+
+    translation = mat4_translate(4.785f, -105.275f, -23.067f);
+    rotation = mat4_rotate_y(TO_RADIANS(90));
+    scale = mat4_scale(0.004f, 0.004f, 0.004f);
+    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    for (i = 0; i < num_meshes; i++) {
+        mat4_t transform = mat4_mul_mat4(root, transforms[i]);
+        blinn_material_t material = materials[i];
+        char obj_filepath[64];
+        char tga_filepath[64];
+        if (material.diffuse_map) {
+            sprintf(tga_filepath, "assets/nier2b/%s", material.diffuse_map);
+            material.diffuse_map = tga_filepath;
+        }
+        sprintf(obj_filepath, "assets/nier2b/nier2b%d.obj", i);
+        model = blinn_create_model(obj_filepath, NULL, transform, material);
+        darray_push(models, model);
+    }
+
+    return scene_create(background, NULL, models, 0.5f, 1, 0);
 }
 
 scene_t *blinn_phoenix_scene(void) {

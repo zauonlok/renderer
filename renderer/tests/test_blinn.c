@@ -11,6 +11,7 @@ static scene_creator_t g_scene_creators[] = {
     {"elfgirl", blinn_elfgirl_scene},
     {"kgirls", blinn_kgirls_scene},
     {"mccree", blinn_mccree_scene},
+    {"nier2b", blinn_nier2b_scene},
     {"phoenix", blinn_phoenix_scene},
     {"witch", blinn_witch_scene},
     {NULL, NULL},

@@ -256,10 +256,9 @@ scene_t *pbr_junkrat_scene(void) {
     for (i = 0; i < num_meshes; i++) {
         int material_index = mesh2material[i];
         pbrm_material_t material = materials[material_index];
-        const char *obj_template = "assets/junkrat/junkrat%d.obj";
-        char obj_filename[64];
-        sprintf(obj_filename, obj_template, i);
-        model = pbrm_create_model(obj_filename, skeleton, root,
+        char obj_filepath[64];
+        sprintf(obj_filepath, "assets/junkrat/junkrat%d.obj", i);
+        model = pbrm_create_model(obj_filepath, skeleton, root,
                                   material, env_name);
         darray_push(models, model);
     }
