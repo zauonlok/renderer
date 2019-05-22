@@ -16,7 +16,6 @@ static scene_creator_t g_scene_creators[] = {
     {"ponycar", pbr_ponycar_scene},
     {"sphere", pbr_sphere_scene},
     {"spitfire", pbr_spitfire_scene},
-    {"squid", pbr_squid_scene},
     {NULL, NULL},
 };
 

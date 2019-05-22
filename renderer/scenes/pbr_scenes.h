@@ -14,6 +14,5 @@ scene_t *pbr_ornitier_scene(void);
 scene_t *pbr_ponycar_scene(void);
 scene_t *pbr_sphere_scene(void);
 scene_t *pbr_spitfire_scene(void);
-scene_t *pbr_squid_scene(void);
 
 #endif
