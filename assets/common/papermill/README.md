@@ -16,4 +16,6 @@ Maybe [CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/)
 
 ## Screenshot
 
-![Screenshot](screenshot.png)
+![Screenshot1](screenshot1.png)
+
+![Screenshot2](screenshot2.png)
