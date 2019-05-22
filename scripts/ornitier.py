@@ -46,7 +46,7 @@ IMG_FILENAMES = {
     "coat": [
         "textures/Coat.001_baseColor.png",
         "textures/Coat.001_metallicRoughness.png",
-        "textures/Coat.001_normal.png",
+        None,
         None,
     ],
     "feuga": [

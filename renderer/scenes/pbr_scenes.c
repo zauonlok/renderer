@@ -302,7 +302,7 @@ scene_t *pbr_ornitier_scene(void) {
             "assets/ornitier/coat_basecolor.tga",
             "assets/ornitier/coat_metalness.tga",
             "assets/ornitier/coat_roughness.tga",
-            "assets/ornitier/coat_normal.tga",
+            NULL,
             NULL,
             NULL,
             0, 0, 0,
