@@ -291,7 +291,6 @@ typedef struct {
 static envinfo_t g_envinfo[] = {
     {"papermill", "tga", 10, 0, NULL, 0},
     {"footprint", "hdr", 10, 1, NULL, 0},
-    {"doge", "hdr", 11, 1, NULL, 0},
 };
 
 static ibldata_t *load_ibldata(const char *env_name, int mip_level,
