@@ -54,39 +54,26 @@ sudo dnf install gcc libX11-devel
 
 ## Samples
 
-![assassin](assets/assassin/screenshot.gif)
-
-![azura](assets/azura/screenshot.png)
-
-![centaur](assets/centaur/screenshot.png)
-
-![crab](assets/crab/screenshot.gif)
-
-![craftsman](assets/craftsman/screenshot.png)
-
-![dieselpunk](assets/dieselpunk/screenshot.png)
-
-![drone](assets/drone/screenshot.gif)
-
-![elfgirl](assets/elfgirl/screenshot.png)
-
-![helmet](assets/helmet/screenshot.png)
-
-![junkrat](assets/junkrat/screenshot.gif)
-
-![kgirl](assets/kgirl/screenshot.gif)
-
-![mccree](assets/mccree/screenshot.png)
-
-![nier2b](assets/nier2b/screenshot.png)
-
-![ornitier](assets/ornitier/screenshot.png)
-
-![phoenix](assets/phoenix/screenshot.gif)
-
-![ponycar](assets/ponycar/screenshot.png)
-
-![witch](assets/witch/screenshot.png)
+| Screenshot                                                                                           | Command                    |
+| ---------------------------------------------------------------------------------------------------- | -------------------------- |
+| [<img src="assets/azura/screenshot.png" width="360">](assets/assassin/README.md)                     | `./Viewer blinn azura`     |
+| [<img src="assets/centaur/screenshot.png" width="360">](assets/centaur/README.md)                    | `./Viewer blinn centaur`   |
+| [<img src="assets/craftsman/screenshot.png" width="360">](assets/craftsman/README.md)                | `./Viewer blinn craftsman` |
+| [<img src="assets/elfgirl/screenshot.png" width="360">](assets/elfgirl/README.md)                    | `./Viewer blinn elfgirl`   |
+| [<img src="assets/kgirl/screenshot.gif" width="360">](assets/kgirl/README.md)                        | `./Viewer blinn kgirl`     |
+| [<img src="assets/mccree/screenshot.png" width="360">](assets/mccree/README.md)                      | `./Viewer blinn mccree`    |
+| [<img src="assets/nier2b/screenshot.png" width="360">](assets/nier2b/README.md)                      | `./Viewer blinn nier2b`    |
+| [<img src="assets/phoenix/screenshot.gif" width="360">](assets/phoenix/README.md)                    | `./Viewer blinn phoenix`   |
+| [<img src="assets/witch/screenshot.png" width="360">](assets/witch/README.md)                        | `./Viewer blinn witch`     |
+| [<img src="assets/assassin/screenshot.gif" width="360">](assets/assassin/README.md)                  | `./Viewer pbr assassin`    |
+| [<img src="assets/crab/screenshot.gif" width="360">](assets/crab/README.md)                          | `./Viewer pbr crab`        |
+| [<img src="assets/dieselpunk/screenshot.png" width="360">](dieselpunk/assassin/README.md)            | `./Viewer pbr dieselpunk`  |
+| [<img src="assets/drone/screenshot.gif" width="360">](assets/drone/README.md)                        | `./Viewer pbr drone`       |
+| [<img src="assets/helmet/screenshot.png" width="360">](assets/helmet/README.md)                      | `./Viewer pbr helmet`      |
+| [<img src="assets/junkrat/screenshot.gif" width="360">](assets/junkrat/README.md)                    | `./Viewer pbr junkrat`     |
+| [<img src="assets/ornitier/screenshot.png" width="360">](assets/ornitier/README.md)                  | `./Viewer pbr ornitier`    |
+| [<img src="assets/ponycar/screenshot.png" width="360">](assets/ponycar/README.md)                    | `./Viewer pbr ponycar`     |
+| [<img src="assets/common/footprint/screenshot2.png" width="360">](assets/common/footprint/README.md) | `./Viewer pbr sphere`      |
 
 ## License
 
