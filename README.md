@@ -49,8 +49,44 @@ sudo dnf install gcc libX11-devel
 * Orbit: left click and drag
 * Pan: right click and drag
 * Zoom: scroll up/down
-* Rotate lighting: <kbd>A</kbd>, <kbd>D</kbd>, <kbd>S</kbd>, <kbd>W</kbd>
+* Rotate lighting: <kbd>A</kbd> <kbd>D</kbd> <kbd>S</kbd> <kbd>W</kbd>
 * Reset everything: <kbd>Space</kbd>
+
+## Samples
+
+![assassin](assets/assassin/screenshot.gif)
+
+![azura](assets/azura/screenshot.png)
+
+![centaur](assets/centaur/screenshot.png)
+
+![crab](assets/crab/screenshot.gif)
+
+![craftsman](assets/craftsman/screenshot.png)
+
+![dieselpunk](assets/dieselpunk/screenshot.png)
+
+![drone](assets/drone/screenshot.gif)
+
+![elfgirl](assets/elfgirl/screenshot.png)
+
+![helmet](assets/helmet/screenshot.png)
+
+![junkrat](assets/junkrat/screenshot.gif)
+
+![kgirl](assets/kgirl/screenshot.gif)
+
+![mccree](assets/mccree/screenshot.png)
+
+![nier2b](assets/nier2b/screenshot.png)
+
+![ornitier](assets/ornitier/screenshot.png)
+
+![phoenix](assets/phoenix/screenshot.gif)
+
+![ponycar](assets/ponycar/screenshot.png)
+
+![witch](assets/witch/screenshot.png)
 
 ## License
 
