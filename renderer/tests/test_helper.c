@@ -274,7 +274,16 @@ scene_t *test_create_scene(scene_creator_t creators[],
         printf("center: [%.3f, %.3f, %.3f]\n", center.x, center.y, center.z);
         printf("extent: [%.3f, %.3f, %.3f]\n", extent.x, extent.y, extent.z);
     } else {
+        int i;
         printf("scene not found: %s\n", scene_name);
+        printf("available scenes: ");
+        for (i = 0; creators[i].scene_name != NULL; i++) {
+            if (creators[i + 1].scene_name != NULL) {
+                printf("%s, ", creators[i].scene_name);
+            } else {
+                printf("%s\n", creators[i].scene_name);
+            }
+        }
     }
     return scene;
 }

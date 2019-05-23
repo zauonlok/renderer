@@ -41,6 +41,14 @@ int main(int argc, char *argv[]) {
         testfunc(argc, argv);
     } else {
         printf("test not found: %s\n", testname);
+        printf("available tests: ");
+        for (i = 0; i < num_testcases; i++) {
+            if (i != num_testcases - 1) {
+                printf("%s, ", g_testcases[i].testname);
+            } else {
+                printf("%s\n", g_testcases[i].testname);
+            }
+        }
     }
 
     return 0;
