@@ -85,7 +85,7 @@ sudo zypper install gcc libX11-devel
 | [Helmet](assets/helmet/README.md)            | <img src="assets/helmet/screenshot.png" width="480">            | `./Viewer pbr helmet`      |
 | [Junkrat](assets/junkrat/README.md)          | <img src="assets/junkrat/screenshot.gif" width="480">           | `./Viewer pbr junkrat`     |
 | [Ornitier](assets/ornitier/README.md)        | <img src="assets/ornitier/screenshot.png" width="480">          | `./Viewer pbr ornitier`    |
-| [Pony car](assets/ponycar/README.md)         | <img src="assets/ponycar/screenshot.png" width="480">           | `./Viewer pbr ponycar`     |
+| [Pony Car](assets/ponycar/README.md)         | <img src="assets/ponycar/screenshot.png" width="480">           | `./Viewer pbr ponycar`     |
 | [Spheres](assets/common/footprint/README.md) | <img src="assets/common/footprint/screenshot2.png" width="480"> | `./Viewer pbr sphere`      |
 
 ## License
