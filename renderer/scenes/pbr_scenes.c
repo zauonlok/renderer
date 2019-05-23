@@ -77,6 +77,34 @@ scene_t *pbr_assassin_scene(void) {
     return scene_create(background, NULL, models, 1, 1, 0);
 }
 
+scene_t *pbr_crab_scene(void) {
+    const char *mesh = "assets/crab/crab.obj";
+    const char *skeleton = "assets/crab/crab.ani";
+    pbrs_material_t material = {
+        {1, 1, 1, 1}, {1, 1, 1}, 1,
+        "assets/crab/crab_diffuse.tga",
+        "assets/crab/crab_specular.tga",
+        "assets/crab/crab_glossiness.tga",
+        "assets/crab/crab_normal.tga",
+        NULL,
+        NULL,
+        0, 0, 0,
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    const char *env_name = "papermill";
+    model_t **models = NULL;
+
+    mat4_t translation = mat4_translate(-0.285f, 0.780f, 0.572f);
+    mat4_t rotation = mat4_rotate_y(TO_RADIANS(180));
+    mat4_t scale = mat4_scale(0.167f, 0.167f, 0.167f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    model_t *model = pbrs_create_model(mesh, skeleton, root,
+                                       material, env_name);
+    darray_push(models, model);
+
+    return scene_create(background, NULL, models, 1, 1, 0);
+}
+
 scene_t *pbr_dieselpunk_scene(void) {
     const char *meshes[] = {
         "assets/dieselpunk/ground.obj",

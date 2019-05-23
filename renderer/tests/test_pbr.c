@@ -6,6 +6,7 @@
 
 static scene_creator_t g_scene_creators[] = {
     {"assassin", pbr_assassin_scene},
+    {"crab", pbr_crab_scene},
     {"dieselpunk", pbr_dieselpunk_scene},
     {"drone", pbr_drone_scene},
     {"helmet", pbr_helmet_scene},
