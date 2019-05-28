@@ -1,6 +1,6 @@
 # Software Renderer
 
-This is a shader-based software renderer written from scratch.
+This is a shader-based software renderer written from scratch. It is written in C89 with minimal dependencies, available for Windows, macOS, and Linux.
 
 ## Features
 
@@ -8,10 +8,10 @@ This is a shader-based software renderer written from scratch.
 * Shader-based
 * Real-time
 * Blinn–Phong shading
-* Physically based rendering
+* Physically based rendering (PBR)
 * Metalness workflow
 * Specular workflow
-* Image-based lighting
+* Image-based lighting (IBL)
 * Normal mapping
 * Shadow mapping
 * Depth testing
@@ -21,11 +21,19 @@ This is a shader-based software renderer written from scratch.
 * Back-face culling
 * Perspective-correct interpolation
 * Skybox
-* Texture (2D, Cubemap)
+* Texturing (2D, Cubemap)
 * Skeletal animation
-* Camera control
+* Orbit camera control
+* Mesh loading (obj, glTF)
+* Image loading (tga, hdr)
+
+## Download
+
+[Binaries](https://github.com/zauonlok/renderer/releases) for Windows, macOS, and Linux are available.
 
 ## Build
+
+To build the renderer from source, a C89 compiler and development files for your window system are required.
 
 ### Windows
 
@@ -59,9 +67,19 @@ sudo zypper install gcc libX11-devel
 
 ## Usage
 
+### Launch
+
+If the renderer is launched without arguments, one of the available scenes (see below) will be chosen randomly. To display a specific scene, additional arguments should be supplied. The command line syntax is:
+
+```
+./Viewer [test_name [scene_name]]
+```
+
+### Controls
+
 * Orbit: left click and drag
 * Pan: right click and drag
-* Zoom: scroll up/down
+* Zoom: scroll up or down
 * Rotate lighting: <kbd>A</kbd> <kbd>D</kbd> <kbd>S</kbd> <kbd>W</kbd>
 * Reset everything: <kbd>Space</kbd>
 
