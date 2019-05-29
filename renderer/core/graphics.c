@@ -193,7 +193,7 @@ static float get_intersect_ratio(vec4_t prev, vec4_t curr, plane_t plane) {
     }
 }
 
-static int clip_to_plane(
+static int clip_against_plane(
         plane_t plane, int in_num_vertices, int varying_num_floats,
         vec4_t in_coords[MAX_VARYINGS], void *in_varyings[MAX_VARYINGS],
         vec4_t out_coords[MAX_VARYINGS], void *out_varyings[MAX_VARYINGS]) {
@@ -245,7 +245,7 @@ static int clip_to_plane(
 
 #define CLIP_IN2OUT(plane, in_num_vertices)                                 \
     do {                                                                    \
-        num_vertices = clip_to_plane(                                       \
+        num_vertices = clip_against_plane(                                  \
             plane, in_num_vertices, varying_num_floats,                     \
             in_coords, in_varyings, out_coords, out_varyings);              \
         if (num_vertices < 3) {                                             \
@@ -255,7 +255,7 @@ static int clip_to_plane(
 
 #define CLIP_OUT2IN(plane, in_num_vertices)                                 \
     do {                                                                    \
-        num_vertices = clip_to_plane(                                       \
+        num_vertices = clip_against_plane(                                  \
             plane, in_num_vertices, varying_num_floats,                     \
             out_coords, out_varyings, in_coords, in_varyings);              \
         if (num_vertices < 3) {                                             \
