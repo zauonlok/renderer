@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <sys/time.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
@@ -284,15 +283,9 @@ void input_set_callbacks(window_t *window, callbacks_t callbacks) {
 }
 
 static double get_native_time(void) {
-#if _POSIX_C_SOURCE >= 199309L
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
-#else
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (double)tv.tv_sec + (double)tv.tv_usec / 1e6;
-#endif
 }
 
 float input_get_time(void) {
@@ -306,7 +299,8 @@ float input_get_time(void) {
 #define MAX_PATH 2048
 
 void input_init_path(void) {
-    char *path[MAX_PATH];
+    char path[MAX_PATH];
     readlink("/proc/self/exe", path, MAX_PATH);
+    *strrchr(path, '/') = '\0';
     chdir(path);
 }

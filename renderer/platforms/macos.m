@@ -343,8 +343,9 @@ float input_get_time(void) {
 #define MAX_PATH 2048
 
 void input_init_path(void) {
-    char *path[MAX_PATH];
+    char path[MAX_PATH];
     uint32_t size = MAX_PATH;
     _NSGetExecutablePath(path, &size);
+    *strrchr(path, '/') = '\0';
     chdir(path);
 }
