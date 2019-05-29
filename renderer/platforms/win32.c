@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <direct.h>
 #include <windows.h>
 #include "../core/graphics.h"
 #include "../core/image.h"
@@ -308,4 +309,18 @@ float input_get_time(void) {
         initial = get_native_time();
     }
     return (float)(get_native_time() - initial);
+}
+
+void input_init_path(void) {
+#ifdef UNICODE
+    wchar_t path[MAX_PATH];
+    GetModuleFileName(NULL, path, MAX_PATH);
+    *wcsrchr(path, L'\\') = L'\0';
+    _wchdir(path);
+#else
+    char path[MAX_PATH];
+    GetModuleFileName(NULL, path, MAX_PATH);
+    *strrchr(path, '\\') = '\0';
+    _chdir(path);
+#endif
 }

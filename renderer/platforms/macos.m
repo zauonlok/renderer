@@ -1,8 +1,10 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <Cocoa/Cocoa.h>
+#include <mach-o/dyld.h>
 #include <mach/mach_time.h>
-#import <Cocoa/Cocoa.h>
+#include <unistd.h>
 #include "../core/graphics.h"
 #include "../core/image.h"
 #include "../core/platform.h"
@@ -336,4 +338,13 @@ float input_get_time(void) {
         initial = get_native_time();
     }
     return (float)(get_native_time() - initial);
+}
+
+#define MAX_PATH 2048
+
+void input_init_path(void) {
+    char *path[MAX_PATH];
+    uint32_t size = MAX_PATH;
+    _NSGetExecutablePath(path, &size);
+    chdir(path);
 }

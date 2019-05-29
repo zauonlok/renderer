@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
@@ -300,4 +301,12 @@ float input_get_time(void) {
         initial = get_native_time();
     }
     return (float)(get_native_time() - initial);
+}
+
+#define MAX_PATH 2048
+
+void input_init_path(void) {
+    char *path[MAX_PATH];
+    readlink("/proc/self/exe", path, MAX_PATH);
+    chdir(path);
 }
