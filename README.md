@@ -1,47 +1,52 @@
 # Software Renderer
 
-This is a shader-based software renderer written from scratch. It is written in C89 with minimal dependencies, available for Windows, macOS, and Linux.
+This is a shader-based software renderer written from scratch. It is written
+in C89 with minimal dependencies, available for Windows, macOS, and Linux.
 
 ## Features
 
 * Cross-platform (Windows, macOS, and Linux)
+* Minimal dependencies
 * Shader-based
 * Real-time
-* Blinn–Phong shading
+* Blinn–Phong reflection model
 * Physically based rendering (PBR)
 * Metalness workflow
 * Specular workflow
 * Image-based lighting (IBL)
 * Normal mapping
 * Shadow mapping
-* Depth testing
-* Alpha testing
-* Blending
-* Clipping
-* Back-face culling
-* Perspective-correct interpolation
-* Skybox
-* Texturing (2D, Cubemap)
+* Cubemapped skybox
 * Skeletal animation
 * Orbit camera control
-* Mesh loading (obj, glTF)
+* Back-face culling
+* Homogeneous clipping
+* Perspective-correct interpolation
+* Depth testing
+* Alpha testing
+* Alpha Blending
+* Mesh loading (obj, gltf)
 * Image loading (tga, hdr)
 
 ## Download
 
-[Binaries](https://github.com/zauonlok/renderer/releases) for Windows, macOS, and Linux are available.
+[Binaries](https://github.com/zauonlok/renderer/releases) for Windows, macOS,
+and Linux are available.
 
 ## Build
 
-To build the renderer from source, a C89 compiler and development files for your window system are required.
+To build the renderer from source, a C89 compiler and development files for
+your window system are required.
 
 ### Windows
 
-Install [Visual Studio](https://visualstudio.microsoft.com/downloads/) and run `build_win32.bat`.
+Install [Visual Studio](https://visualstudio.microsoft.com/downloads/) and
+run `build_win32.bat`.
 
 ### macOS
 
-Install [Xcode](https://itunes.apple.com/us/app/xcode/id497799835?mt=12) and run `build_macos.sh`.
+Install [Xcode](https://itunes.apple.com/us/app/xcode/id497799835?mt=12) and
+run `build_macos.sh`.
 
 ### Linux
 
@@ -69,7 +74,9 @@ sudo zypper install gcc libX11-devel
 
 ### Launch
 
-If the renderer is launched without arguments, one of the available scenes (see below) will be chosen randomly. To display a specific scene, additional arguments should be supplied. The command line syntax is:
+If the renderer is launched without arguments, one of the available scenes
+(see below) will be chosen randomly. To display a specific scene, additional
+arguments should be supplied. The command line syntax is:
 
 ```
 Viewer [test_name [scene_name]]
@@ -85,8 +92,8 @@ Viewer [test_name [scene_name]]
 
 ## Samples
 
-| Scene                                        | Screenshot                                                      | Command                    |
-| -------------------------------------------- | --------------------------------------------------------------- | -------------------------- |
+| Scene                                        | Screenshot                                                      | Command                  |
+| -------------------------------------------- | --------------------------------------------------------------- | ------------------------ |
 | [Azura](assets/azura/README.md)              | <img src="assets/azura/screenshot.png" width="540">             | `Viewer blinn azura`     |
 | [Centaur](assets/centaur/README.md)          | <img src="assets/centaur/screenshot.png" width="540">           | `Viewer blinn centaur`   |
 | [Craftsman](assets/craftsman/README.md)      | <img src="assets/craftsman/screenshot.png" width="540">         | `Viewer blinn craftsman` |
