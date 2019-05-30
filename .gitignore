@@ -6,4 +6,5 @@ Viewer.pdb
 *.pyc
 *.zip
 
+.DS_Store
 .vscode
