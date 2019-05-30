@@ -1,9 +1,7 @@
 #!/bin/bash
 
-OPTS="-o ../Viewer -g -std=c89 -pedantic -D_POSIX_C_SOURCE=200809L -Wall -Wextra -O3 -flto=full"
+OPTS="-o ../Viewer -std=c89 -pedantic -D_POSIX_C_SOURCE=200809L -Wall -Wextra -O3 -flto"
 SRCS="main.c platforms/linux.c core/*.c scenes/*.c shaders/*.c tests/*.c"
 LIBS="-lm -lX11"
 
-cd renderer
-gcc $OPTS $SRCS $LIBS
-cd ..
+cd renderer && gcc $OPTS $SRCS $LIBS && cd ..
