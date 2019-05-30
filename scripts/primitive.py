@@ -51,7 +51,7 @@ def create_sphere(radius, num_sectors, num_stacks):
             nz = math.sin(stack_angle)
 
             position = [nx * radius, ny * radius, nz * radius]
-            texcoord  = [float(j) / num_sectors, float(i) / num_stacks]
+            texcoord = [float(j) / num_sectors, float(i) / num_stacks]
             normal = [nx, ny, nz]
 
             positions.append(position)
