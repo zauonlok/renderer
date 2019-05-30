@@ -24,7 +24,9 @@ in C89 with minimal dependencies, available for Windows, macOS, and Linux.
 * Perspective-correct interpolation
 * Depth testing
 * Alpha testing
-* Alpha Blending
+* Alpha blending
+* Platform abstraction layer (window, event, and timer)
+* Math library (vector, matrix, and quaternion)
 * Mesh loading (obj, gltf)
 * Image loading (tga, hdr)
 
