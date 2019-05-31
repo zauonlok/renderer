@@ -8,13 +8,12 @@ in C89 with minimal dependencies, available for Windows, macOS, and Linux.
 * Cross-platform (Windows, macOS, and Linux)
 * Minimal dependencies
 * Shader-based
-* Real-time
 * Blinn–Phong reflection model
 * Physically based rendering (PBR)
 * Metalness workflow
 * Specular workflow
 * Image-based lighting (IBL)
-* Normal mapping
+* Tangent space normal mapping
 * Shadow mapping
 * Cubemapped skybox
 * Skeletal animation
@@ -77,7 +76,7 @@ sudo zypper install gcc libX11-devel
 ### Launch
 
 If the renderer is launched without arguments, one of the available scenes
-(see below) will be chosen randomly. To display a specific scene, additional
+will be chosen randomly. To display a specific scene (see below), additional
 arguments should be supplied. The command line syntax is:
 
 ```
@@ -92,7 +91,7 @@ Viewer [test_name [scene_name]]
 * Rotate lighting: <kbd>A</kbd> <kbd>D</kbd> <kbd>S</kbd> <kbd>W</kbd>
 * Reset everything: <kbd>Space</kbd>
 
-## Samples
+## Screenshots
 
 | Scene                                                                                                | Command                  |
 | ---------------------------------------------------------------------------------------------------- | ------------------------ |
@@ -114,6 +113,12 @@ Viewer [test_name [scene_name]]
 | [<img src="assets/ornitier/screenshot.png" width="600">](assets/ornitier/README.md)                  | `Viewer pbr ornitier`    |
 | [<img src="assets/ponycar/screenshot.png" width="600">](assets/ponycar/README.md)                    | `Viewer pbr ponycar`     |
 | [<img src="assets/common/footprint/screenshot2.png" width="600">](assets/common/footprint/README.md) | `Viewer pbr sphere`      |
+
+## References
+
+* [Tiny Renderer](https://github.com/ssloy/tinyrenderer)
+* [glTF 2.0 Sample Viewer](https://github.com/KhronosGroup/glTF-Sample-Viewer)
+* [OpenGL ES 2.0 Specification](https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf)
 
 ## License
 
