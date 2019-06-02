@@ -98,7 +98,7 @@ Viewer [test_name [scene_name]]
 | [<img src="assets/azura/screenshot.png" width="600">](assets/azura/README.md)                        | `Viewer blinn azura`     |
 | [<img src="assets/centaur/screenshot.png" width="600">](assets/centaur/README.md)                    | `Viewer blinn centaur`   |
 | [<img src="assets/craftsman/screenshot2.gif" width="600">](assets/craftsman/README.md)               | `Viewer blinn craftsman` |
-| [<img src="assets/elfgirl/screenshot.png" width="600">](assets/elfgirl/README.md)                    | `Viewer blinn elfgirl`   |
+| [<img src="assets/elfgirl/screenshot2.png" width="600">](assets/elfgirl/README.md)                   | `Viewer blinn elfgirl`   |
 | [<img src="assets/kgirl/screenshot.gif" width="600">](assets/kgirl/README.md)                        | `Viewer blinn kgirl`     |
 | [<img src="assets/mccree/screenshot.png" width="600">](assets/mccree/README.md)                      | `Viewer blinn mccree`    |
 | [<img src="assets/nier2b/screenshot.png" width="600">](assets/nier2b/README.md)                      | `Viewer blinn nier2b`    |
@@ -111,7 +111,7 @@ Viewer [test_name [scene_name]]
 | [<img src="assets/helmet/screenshot.png" width="600">](assets/helmet/README.md)                      | `Viewer pbr helmet`      |
 | [<img src="assets/junkrat/screenshot.gif" width="600">](assets/junkrat/README.md)                    | `Viewer pbr junkrat`     |
 | [<img src="assets/ornitier/screenshot.png" width="600">](assets/ornitier/README.md)                  | `Viewer pbr ornitier`    |
-| [<img src="assets/ponycar/screenshot.png" width="600">](assets/ponycar/README.md)                    | `Viewer pbr ponycar`     |
+| [<img src="assets/ponycar/screenshot2.png" width="600">](assets/ponycar/README.md)                   | `Viewer pbr ponycar`     |
 | [<img src="assets/common/footprint/screenshot2.png" width="600">](assets/common/footprint/README.md) | `Viewer pbr sphere`      |
 
 ## References
