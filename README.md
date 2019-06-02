@@ -97,7 +97,7 @@ Viewer [test_name [scene_name]]
 | ---------------------------------------------------------------------------------------------------- | ------------------------ |
 | [<img src="assets/azura/screenshot.png" width="600">](assets/azura/README.md)                        | `Viewer blinn azura`     |
 | [<img src="assets/centaur/screenshot.png" width="600">](assets/centaur/README.md)                    | `Viewer blinn centaur`   |
-| [<img src="assets/craftsman/screenshot.png" width="600">](assets/craftsman/README.md)                | `Viewer blinn craftsman` |
+| [<img src="assets/craftsman/screenshot2.gif" width="600">](assets/craftsman/README.md)               | `Viewer blinn craftsman` |
 | [<img src="assets/elfgirl/screenshot.png" width="600">](assets/elfgirl/README.md)                    | `Viewer blinn elfgirl`   |
 | [<img src="assets/kgirl/screenshot.gif" width="600">](assets/kgirl/README.md)                        | `Viewer blinn kgirl`     |
 | [<img src="assets/mccree/screenshot.png" width="600">](assets/mccree/README.md)                      | `Viewer blinn mccree`    |
