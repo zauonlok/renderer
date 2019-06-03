@@ -116,12 +116,15 @@ Viewer [test_name [scene_name]]
 
 ## References
 
-* Rendering pipeline
-    * [Tiny Renderer](https://github.com/ssloy/tinyrenderer)
-    * [OpenGL ES 2.0 Specification](https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf)
-* Physically based rendering
-    * [glTF 2.0 Sample Viewer](https://github.com/KhronosGroup/glTF-Sample-Viewer)
-    * [SIGGRAPH 2013 Course](https://blog.selfshadow.com/publications/s2013-shading-course/)
+### Rendering pipeline
+
+* [Tiny Renderer](https://github.com/ssloy/tinyrenderer)
+* [OpenGL ES 2.0 Specification](https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf)
+
+### Physically based rendering
+
+* [glTF 2.0 Sample Viewer](https://github.com/KhronosGroup/glTF-Sample-Viewer)
+* [SIGGRAPH 2013 Course](https://blog.selfshadow.com/publications/s2013-shading-course/)
 
 ## License
 
