@@ -229,15 +229,48 @@ def dump_obj_data(gltf, buffer, mesh_index,
 #
 
 
-def _build_keyframe_data(input_data, output_data):
+def _normalize_floats(floats):
+    return [float(format(x, ".6f")) for x in floats]
+
+
+def _compact_inputs(input_values, output_values):
     keyframes = []
     seen_inputs = set()
-    for input_value, output_value in zip(input_data, output_data):
-        input_string = format(input_value, ".6f")
-        if input_string not in seen_inputs:
-            seen_inputs.add(input_string)
-            keyframes.append([input_value, output_value])
-    return sorted(keyframes)
+    for input_value, output_values in zip(input_values, output_values):
+        if input_value not in seen_inputs:
+            keyframes.append([input_value, output_values])
+            seen_inputs.add(input_value)
+    keyframes.sort()
+    input_values, output_values = zip(*keyframes)
+    return input_values, output_values
+
+
+def _compact_outputs(input_values, output_values):
+    keyframes = []
+    num_indices = min(len(input_values), len(output_values))
+    for index in range(num_indices):
+        this_input = input_values[index]
+        this_output = output_values[index]
+        if index == 0 or index == num_indices - 1:
+            keyframes.append([this_input, this_output])
+        else:
+            prev_value = output_values[index - 1]
+            next_value = output_values[index + 1]
+            if not (this_output == prev_value and this_output == next_value):
+                keyframes.append([this_input, this_output])
+    input_values, output_values = zip(*keyframes)
+    return input_values, output_values
+
+
+def _build_keyframes(input_data, output_data):
+    input_values = _normalize_floats(input_data)
+    output_values = [_normalize_floats(x) for x in output_data]
+    input_values, output_values = _compact_inputs(input_values, output_values)
+    input_values, output_values = _compact_outputs(input_values, output_values)
+    if len(output_values) == 2 and output_values[0] == output_values[1]:
+        return [[input_values[0], output_values[0]]]
+    else:
+        return list(zip(input_values, output_values))
 
 
 def _load_joint_data(gltf, buffer, animation_index,
@@ -278,7 +311,7 @@ def _load_joint_data(gltf, buffer, animation_index,
                 input_data = accessor_parser(channel_sampler["input"])
                 output_data = accessor_parser(channel_sampler["output"])
                 assert len(input_data) == len(output_data)
-                keyframes = _build_keyframe_data(input_data, output_data)
+                keyframes = _build_keyframes(input_data, output_data)
                 if channel_target["path"] == "translation":
                     translations = keyframes
                 elif channel_target["path"] == "rotation":
