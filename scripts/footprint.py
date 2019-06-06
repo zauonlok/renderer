@@ -12,7 +12,7 @@ import zipfile
 from utils.hdr import dump_hdr_image, load_hdr_image
 
 SRC_FILENAME = "Sample-Environments-master.zip"
-DST_DIRECTORY = "../assets/common/footprint"
+DST_DIRECTORY = "../assets/footprint"
 
 
 def compress_image(zip_file, old_filepath):

@@ -15,7 +15,7 @@ import zipfile
 from PIL import Image
 
 SRC_FILENAME = "glTF-Sample-Viewer-glTF-WebGL-PBR.zip"
-DST_DIRECTORY = "../assets/common/papermill"
+DST_DIRECTORY = "../assets/papermill"
 
 
 def linear_to_srgb(image):
