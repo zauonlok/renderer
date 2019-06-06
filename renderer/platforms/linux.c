@@ -298,9 +298,10 @@ float input_get_time(void) {
 
 #define MAX_PATH 2048
 
-void input_init_path(void) {
+void input_initialize_path(void) {
     char path[MAX_PATH];
     readlink("/proc/self/exe", path, MAX_PATH);
     *strrchr(path, '/') = '\0';
     chdir(path);
+    chdir("assets");
 }

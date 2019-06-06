@@ -216,13 +216,12 @@ static skybox_t g_skyboxes[] = {
 
 static cubemap_t *load_skybox(const char *skybox_name) {
     const char *faces[6] = {"right", "left", "top", "bottom", "front", "back"};
-    const char *format = "assets/%s/skybox_%s.tga";
     char paths[6][128];
     cubemap_t *skybox;
     int i;
 
     for (i = 0; i < 6; i++) {
-        sprintf(paths[i], format, skybox_name, faces[i]);
+        sprintf(paths[i], "%s/skybox_%s.tga", skybox_name, faces[i]);
     }
     skybox = cubemap_from_files(paths[0], paths[1], paths[2],
                                 paths[3], paths[4], paths[5]);
@@ -296,7 +295,6 @@ static envinfo_t g_envinfo[] = {
 static ibldata_t *load_ibldata(const char *env_name, int mip_level,
                                const char *img_type, int is_linear) {
     const char *faces[6] = {"right", "left", "top", "bottom", "front", "back"};
-    const char *format = "assets/%s/%s_%s_%d.%s";
     char paths[6][128];
     ibldata_t *ibldata;
     int i, j;
@@ -306,8 +304,7 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_level,
 
     /* diffuse environment map */
     for (j = 0; j < 6; j++) {
-        sprintf(paths[j], format, env_name, "diffuse",
-                faces[j], 0, img_type);
+        sprintf(paths[j], "%s/diffuse_%s_0.%s", env_name, faces[j], img_type);
     }
     ibldata->diffuse_map = cubemap_from_files(paths[0], paths[1], paths[2],
                                               paths[3], paths[4], paths[5]);
@@ -318,8 +315,8 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_level,
     /* specular environment maps */
     for (i = 0; i < mip_level; i++) {
         for (j = 0; j < 6; j++) {
-            sprintf(paths[j], format, env_name, "specular",
-                    faces[j], i, img_type);
+            sprintf(paths[j], "%s/specular_%s_%d.%s",
+                    env_name, faces[j], i, img_type);
         }
         ibldata->specular_maps[i] = cubemap_from_files(paths[0], paths[1],
                                                        paths[2], paths[3],
@@ -330,7 +327,7 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_level,
     }
 
     /* brdf lookup table */
-    ibldata->brdf_lut = cache_acquire_texture("assets/common/brdf_lut.tga", 0);
+    ibldata->brdf_lut = cache_acquire_texture("common/brdf_lut.tga", 0);
 
     return ibldata;
 }

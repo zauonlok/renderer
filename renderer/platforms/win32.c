@@ -311,16 +311,18 @@ float input_get_time(void) {
     return (float)(get_native_time() - initial);
 }
 
-void input_init_path(void) {
+void input_initialize_path(void) {
 #ifdef UNICODE
     wchar_t path[MAX_PATH];
     GetModuleFileName(NULL, path, MAX_PATH);
     *wcsrchr(path, L'\\') = L'\0';
     _wchdir(path);
+    _wchdir(L"assets");
 #else
     char path[MAX_PATH];
     GetModuleFileName(NULL, path, MAX_PATH);
     *strrchr(path, '\\') = '\0';
     _chdir(path);
+    _chdir("assets");
 #endif
 }

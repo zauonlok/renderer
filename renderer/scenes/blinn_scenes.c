@@ -6,44 +6,44 @@
 
 scene_t *blinn_azura_scene(void) {
     const char *meshes[] = {
-        "assets/azura/bijou0.obj",
-        "assets/azura/bijou1.obj",
-        "assets/azura/bijou2.obj",
-        "assets/azura/body.obj",
-        "assets/azura/cuissarde0.obj",
-        "assets/azura/cuissarde1.obj",
-        "assets/azura/hair.obj",
-        "assets/azura/head.obj",
-        "assets/azura/laniere.obj",
-        "assets/azura/motif0.obj",
-        "assets/azura/motif1.obj",
-        "assets/azura/motif2.obj",
-        "assets/azura/robe0.obj",
-        "assets/azura/robe1.obj",
-        "assets/azura/yeux0.obj",
-        "assets/azura/yeux1.obj",
-        "assets/azura/yeux2.obj",
-        "assets/azura/yeux3.obj",
+        "azura/bijou0.obj",
+        "azura/bijou1.obj",
+        "azura/bijou2.obj",
+        "azura/body.obj",
+        "azura/cuissarde0.obj",
+        "azura/cuissarde1.obj",
+        "azura/hair.obj",
+        "azura/head.obj",
+        "azura/laniere.obj",
+        "azura/motif0.obj",
+        "azura/motif1.obj",
+        "azura/motif2.obj",
+        "azura/robe0.obj",
+        "azura/robe1.obj",
+        "azura/yeux0.obj",
+        "azura/yeux1.obj",
+        "azura/yeux2.obj",
+        "azura/yeux3.obj",
     };
     blinn_material_t materials[] = {
-        {{1, 1, 1, 1}, 32, "bijoux_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "bijoux_diffuse.tga", NULL, NULL, 0, 1, 0},
-        {{1, 1, 1, 1}, 32, "bijoux_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "body_diffuse.tga", NULL, NULL, 1, 0, 0},
-        {{1, 1, 1, 1}, 32, "cuissarde_diffuse.tga", NULL, NULL, 0, 0, 1},
-        {{1, 1, 1, 1}, 32, "cuissarde_diffuse.tga", NULL, NULL, 0, 0, 1},
-        {{1, 1, 1, 1}, 32, "hair_diffuse.tga", NULL, NULL, 1, 0, 0},
-        {{1, 1, 1, 1}, 32, "head_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "laniere_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "motif_diffuse.tga", NULL, NULL, 0, 0, 1},
-        {{1, 1, 1, 1}, 32, "motif_diffuse.tga", NULL, NULL, 0, 0, 1},
-        {{1, 1, 1, 1}, 32, "motif_diffuse.tga", NULL, NULL, 0, 0, 1},
-        {{1, 1, 1, 1}, 32, "robe_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "robe_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/bijoux_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/bijoux_diffuse.tga", NULL, NULL, 0, 1, 0},
+        {{1, 1, 1, 1}, 32, "azura/bijoux_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/body_diffuse.tga", NULL, NULL, 1, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/cuissarde_diffuse.tga", NULL, NULL, 0, 0, 1},
+        {{1, 1, 1, 1}, 32, "azura/cuissarde_diffuse.tga", NULL, NULL, 0, 0, 1},
+        {{1, 1, 1, 1}, 32, "azura/hair_diffuse.tga", NULL, NULL, 1, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/head_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/laniere_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/motif_diffuse.tga", NULL, NULL, 0, 0, 1},
+        {{1, 1, 1, 1}, 32, "azura/motif_diffuse.tga", NULL, NULL, 0, 0, 1},
+        {{1, 1, 1, 1}, 32, "azura/motif_diffuse.tga", NULL, NULL, 0, 0, 1},
+        {{1, 1, 1, 1}, 32, "azura/robe_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/robe_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "azura/yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     mat4_t scale, translation, root;
@@ -59,9 +59,6 @@ scene_t *blinn_azura_scene(void) {
     root = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
         blinn_material_t material = materials[i];
-        char tga_filepath[64];
-        sprintf(tga_filepath, "assets/azura/%s", material.diffuse_map);
-        material.diffuse_map = tga_filepath;
         model = blinn_create_model(meshes[i], NULL, root, material);
         darray_push(models, model);
     }
@@ -71,29 +68,29 @@ scene_t *blinn_azura_scene(void) {
 
 scene_t *blinn_centaur_scene(void) {
     const char *meshes[] = {
-        "assets/centaur/body.obj",
-        "assets/centaur/flame.obj",
-        "assets/centaur/gas.obj",
+        "centaur/body.obj",
+        "centaur/flame.obj",
+        "centaur/gas.obj",
     };
     blinn_material_t materials[] = {
         {
             {1, 1, 1, 1}, 32,
-            "assets/centaur/body_diffuse.tga",
-            "assets/centaur/body_specular.tga",
-            "assets/centaur/body_emission.tga",
+            "centaur/body_diffuse.tga",
+            "centaur/body_specular.tga",
+            "centaur/body_emission.tga",
             0, 0, 0,
         },
         {
             {1, 1, 1, 1}, 32,
-            "assets/centaur/flame_diffuse.tga",
+            "centaur/flame_diffuse.tga",
             NULL,
-            "assets/centaur/flame_emission.tga",
+            "centaur/flame_emission.tga",
             0, 1, 0,
         },
         {
             {1, 1, 1, 1}, 32,
-            "assets/centaur/gas_diffuse.tga",
-            "assets/centaur/gas_specular.tga",
+            "centaur/gas_diffuse.tga",
+            "centaur/gas_specular.tga",
             NULL,
             0, 0, 0,
         },
@@ -122,34 +119,34 @@ scene_t *blinn_centaur_scene(void) {
 
 scene_t *blinn_craftsman_scene(void) {
     const char *meshes[] = {
-        "assets/craftsman/anvil.obj",
-        "assets/craftsman/floor.obj",
-        "assets/craftsman/hammer.obj",
-        "assets/craftsman/hotiron.obj",
-        "assets/craftsman/shoulderpad0.obj",
-        "assets/craftsman/shoulderpad1.obj",
-        "assets/craftsman/smith.obj",
+        "craftsman/anvil.obj",
+        "craftsman/floor.obj",
+        "craftsman/hammer.obj",
+        "craftsman/hotiron.obj",
+        "craftsman/shoulderpad0.obj",
+        "craftsman/shoulderpad1.obj",
+        "craftsman/smith.obj",
     };
     blinn_material_t materials[] = {
         {
             {1, 1, 1, 1}, 32,
-            "assets/craftsman/anvil_diffuse.tga",
+            "craftsman/anvil_diffuse.tga",
             NULL,
             NULL,
             0, 0, 0,
         },
         {
             {1, 1, 1, 1}, 32,
-            "assets/craftsman/floor_diffuse.tga",
+            "craftsman/floor_diffuse.tga",
             NULL,
             NULL,
             1, 0, 1,
         },
         {
             {1, 1, 1, 1}, 32,
-            "assets/craftsman/smith_diffuse.tga",
+            "craftsman/smith_diffuse.tga",
             NULL,
-            "assets/craftsman/smith_emission.tga",
+            "craftsman/smith_emission.tga",
             0, 0, 1,
         },
     };
@@ -197,12 +194,12 @@ scene_t *blinn_craftsman_scene(void) {
             {  0.000000f,   0.000000f,   0.000000f,   1.000000f},
         }},
     };
-    const char *spark_mesh = "assets/craftsman/spark.obj";
+    const char *spark_mesh = "craftsman/spark.obj";
     blinn_material_t spark_material = {
         {1, 1, 1, 1}, 32,
-        "assets/craftsman/spark_diffuse.tga",
+        "craftsman/spark_diffuse.tga",
         NULL,
-        "assets/craftsman/spark_emission.tga",
+        "craftsman/spark_emission.tga",
         1, 1, 0,
     };
     mat4_t spark_transforms[] = {
@@ -363,22 +360,22 @@ scene_t *blinn_craftsman_scene(void) {
 
 scene_t *blinn_elfgirl_scene(void) {
     const char *meshes[] = {
-        "assets/elfgirl/base.obj",
-        "assets/elfgirl/body0.obj",
-        "assets/elfgirl/body1.obj",
-        "assets/elfgirl/body2.obj",
-        "assets/elfgirl/face0.obj",
-        "assets/elfgirl/face1.obj",
-        "assets/elfgirl/hair.obj",
+        "elfgirl/base.obj",
+        "elfgirl/body0.obj",
+        "elfgirl/body1.obj",
+        "elfgirl/body2.obj",
+        "elfgirl/face0.obj",
+        "elfgirl/face1.obj",
+        "elfgirl/hair.obj",
     };
     const char *textures[] = {
-        "assets/elfgirl/base_diffuse.tga",
-        "assets/elfgirl/body_diffuse.tga",
-        "assets/elfgirl/body_diffuse.tga",
-        "assets/elfgirl/body_diffuse.tga",
-        "assets/elfgirl/face_diffuse.tga",
-        "assets/elfgirl/face_diffuse.tga",
-        "assets/elfgirl/hair_diffuse.tga",
+        "elfgirl/base_diffuse.tga",
+        "elfgirl/body_diffuse.tga",
+        "elfgirl/body_diffuse.tga",
+        "elfgirl/body_diffuse.tga",
+        "elfgirl/face_diffuse.tga",
+        "elfgirl/face_diffuse.tga",
+        "elfgirl/hair_diffuse.tga",
     };
     blinn_material_t material = {{1, 1, 1, 1}, 32, NULL, NULL, NULL, 0, 0, 0};
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
@@ -405,15 +402,15 @@ scene_t *blinn_elfgirl_scene(void) {
 
 scene_t *blinn_kgirl_scene(void) {
     const char *meshes[] = {
-        "assets/kgirl/body.obj",
-        "assets/kgirl/face.obj",
-        "assets/kgirl/hair.obj",
-        "assets/kgirl/pupils.obj",
+        "kgirl/body.obj",
+        "kgirl/face.obj",
+        "kgirl/hair.obj",
+        "kgirl/pupils.obj",
     };
-    const char *skeleton = "assets/kgirl/kgirl.ani";
+    const char *skeleton = "kgirl/kgirl.ani";
     blinn_material_t material = {
         {1, 1, 1, 1}, 32,
-        "assets/kgirl/kgirl_diffuse.tga", NULL, NULL,
+        "kgirl/kgirl_diffuse.tga", NULL, NULL,
         0, 0, 0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
@@ -545,7 +542,7 @@ scene_t *blinn_mccree_scene(void) {
         mat4_t transform = mat4_mul_mat4(root, transforms[transform_index]);
         blinn_material_t material = materials[material_index];
         char obj_filepath[64];
-        sprintf(obj_filepath, "assets/mccree/mccree%d.obj", i);
+        sprintf(obj_filepath, "mccree/mccree%d.obj", i);
         model = blinn_create_model(obj_filepath, NULL, transform, material);
         darray_push(models, model);
     }
@@ -653,21 +650,21 @@ scene_t *blinn_nier2b_scene(void) {
         }},
     };
     blinn_material_t materials[] = {
-        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "head_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "head_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "head_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "hair0_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "hair2_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "hair0_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "hair1_diffuse.tga", NULL, NULL, 1, 1, 0},
-        {{1, 1, 1, 1}, 32, "sword_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "sword_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/head_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/head_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/head_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/hair0_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/hair2_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/hair0_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/hair1_diffuse.tga", NULL, NULL, 1, 1, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/sword_diffuse.tga", NULL, NULL, 0, 0, 0},
+        {{1, 1, 1, 1}, 32, "nier2b/sword_diffuse.tga", NULL, NULL, 0, 0, 0},
         {{0.25f, 0.25f, 0.25f, 1}, 32, NULL, NULL, NULL, 0, 0, 0},
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
@@ -687,12 +684,7 @@ scene_t *blinn_nier2b_scene(void) {
         mat4_t transform = mat4_mul_mat4(root, transforms[i]);
         blinn_material_t material = materials[i];
         char obj_filepath[64];
-        char tga_filepath[64];
-        if (material.diffuse_map) {
-            sprintf(tga_filepath, "assets/nier2b/%s", material.diffuse_map);
-            material.diffuse_map = tga_filepath;
-        }
-        sprintf(obj_filepath, "assets/nier2b/nier2b%d.obj", i);
+        sprintf(obj_filepath, "nier2b/nier2b%d.obj", i);
         model = blinn_create_model(obj_filepath, NULL, transform, material);
         darray_push(models, model);
     }
@@ -702,23 +694,23 @@ scene_t *blinn_nier2b_scene(void) {
 
 scene_t *blinn_phoenix_scene(void) {
     const char *meshes[] = {
-        "assets/phoenix/body.obj",
-        "assets/phoenix/wings.obj",
+        "phoenix/body.obj",
+        "phoenix/wings.obj",
     };
-    const char *skeleton = "assets/phoenix/phoenix.ani";
+    const char *skeleton = "phoenix/phoenix.ani";
     blinn_material_t materials[] = {
         {
             {1, 1, 1, 1}, 32,
-            "assets/phoenix/body_diffuse.tga",
+            "phoenix/body_diffuse.tga",
             NULL,
-            "assets/phoenix/body_emission.tga",
+            "phoenix/body_emission.tga",
             0, 0, 0.5f,
         },
         {
             {1, 1, 1, 1}, 32,
-            "assets/phoenix/wings_diffuse.tga",
+            "phoenix/wings_diffuse.tga",
             NULL,
-            "assets/phoenix/wings_emission.tga",
+            "phoenix/wings_emission.tga",
             0, 0, 0.5f,
         },
     };
@@ -745,18 +737,18 @@ scene_t *blinn_phoenix_scene(void) {
 
 scene_t *blinn_witch_scene(void) {
     const char *meshes[] = {
-        "assets/witch/object.obj",
-        "assets/witch/witch.obj",
+        "witch/object.obj",
+        "witch/witch.obj",
     };
     blinn_material_t materials[] = {
         {
             {1, 1, 1, 1}, 32,
-            "assets/witch/object_diffuse.tga", NULL, NULL,
+            "witch/object_diffuse.tga", NULL, NULL,
             1, 0, 0,
         },
         {
             {1, 1, 1, 1}, 32,
-            "assets/witch/witch_diffuse.tga", NULL, NULL,
+            "witch/witch_diffuse.tga", NULL, NULL,
             1, 1, 0,
         },
     };

@@ -7,18 +7,18 @@
 
 scene_t *pbr_assassin_scene(void) {
     const char *meshes[] = {
-        "assets/assassin/body.obj",
-        "assets/assassin/face.obj",
-        "assets/assassin/hair.obj",
-        "assets/assassin/weapon.obj",
+        "assassin/body.obj",
+        "assassin/face.obj",
+        "assassin/hair.obj",
+        "assassin/weapon.obj",
     };
-    const char *skeleton = "assets/assassin/assassin.ani";
+    const char *skeleton = "assassin/assassin.ani";
     pbrm_material_t materials[] = {
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/assassin/body_basecolor.tga",
-            "assets/assassin/body_metalness.tga",
-            "assets/assassin/body_roughness.tga",
+            "assassin/body_basecolor.tga",
+            "assassin/body_metalness.tga",
+            "assassin/body_roughness.tga",
             NULL,
             NULL,
             NULL,
@@ -26,7 +26,7 @@ scene_t *pbr_assassin_scene(void) {
         },
         {
             {1, 1, 1, 1}, 0, 0.9f,
-            "assets/assassin/face_basecolor.tga",
+            "assassin/face_basecolor.tga",
             NULL,
             NULL,
             NULL,
@@ -36,9 +36,9 @@ scene_t *pbr_assassin_scene(void) {
         },
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/assassin/hair_basecolor.tga",
-            "assets/assassin/hair_metalness.tga",
-            "assets/assassin/hair_roughness.tga",
+            "assassin/hair_basecolor.tga",
+            "assassin/hair_metalness.tga",
+            "assassin/hair_roughness.tga",
             NULL,
             NULL,
             NULL,
@@ -46,9 +46,9 @@ scene_t *pbr_assassin_scene(void) {
         },
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/assassin/weapon_basecolor.tga",
-            "assets/assassin/weapon_metalness.tga",
-            "assets/assassin/weapon_roughness.tga",
+            "assassin/weapon_basecolor.tga",
+            "assassin/weapon_metalness.tga",
+            "assassin/weapon_roughness.tga",
             NULL,
             NULL,
             NULL,
@@ -78,14 +78,14 @@ scene_t *pbr_assassin_scene(void) {
 }
 
 scene_t *pbr_crab_scene(void) {
-    const char *mesh = "assets/crab/crab.obj";
-    const char *skeleton = "assets/crab/crab.ani";
+    const char *mesh = "crab/crab.obj";
+    const char *skeleton = "crab/crab.ani";
     pbrs_material_t material = {
         {1, 1, 1, 1}, {1, 1, 1}, 1,
-        "assets/crab/crab_diffuse.tga",
-        "assets/crab/crab_specular.tga",
-        "assets/crab/crab_glossiness.tga",
-        "assets/crab/crab_normal.tga",
+        "crab/crab_diffuse.tga",
+        "crab/crab_specular.tga",
+        "crab/crab_glossiness.tga",
+        "crab/crab_normal.tga",
         NULL,
         NULL,
         0, 0, 0,
@@ -107,16 +107,16 @@ scene_t *pbr_crab_scene(void) {
 
 scene_t *pbr_dieselpunk_scene(void) {
     const char *meshes[] = {
-        "assets/dieselpunk/ground.obj",
-        "assets/dieselpunk/mech.obj",
-        "assets/dieselpunk/yingham.obj",
+        "dieselpunk/ground.obj",
+        "dieselpunk/mech.obj",
+        "dieselpunk/yingham.obj",
     };
     pbrm_material_t materials[] = {
         {
             {1, 1, 1, 1}, 0, 1,
-            "assets/dieselpunk/ground_basecolor.tga",
+            "dieselpunk/ground_basecolor.tga",
             NULL,
-            "assets/dieselpunk/ground_roughness.tga",
+            "dieselpunk/ground_roughness.tga",
             NULL,
             NULL,
             NULL,
@@ -124,9 +124,9 @@ scene_t *pbr_dieselpunk_scene(void) {
         },
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/dieselpunk/mech_basecolor.tga",
-            "assets/dieselpunk/mech_metalness.tga",
-            "assets/dieselpunk/mech_roughness.tga",
+            "dieselpunk/mech_basecolor.tga",
+            "dieselpunk/mech_metalness.tga",
+            "dieselpunk/mech_roughness.tga",
             NULL,
             NULL,
             NULL,
@@ -134,9 +134,9 @@ scene_t *pbr_dieselpunk_scene(void) {
         },
         {
             {1, 1, 1, 1}, 0, 1,
-            "assets/dieselpunk/yingham_basecolor.tga",
+            "dieselpunk/yingham_basecolor.tga",
             NULL,
-            "assets/dieselpunk/yingham_roughness.tga",
+            "dieselpunk/yingham_roughness.tga",
             NULL,
             NULL,
             NULL,
@@ -167,16 +167,16 @@ scene_t *pbr_dieselpunk_scene(void) {
 }
 
 scene_t *pbr_drone_scene(void) {
-    const char *mesh = "assets/drone/drone.obj";
-    const char *skeleton = "assets/drone/drone.ani";
+    const char *mesh = "drone/drone.obj";
+    const char *skeleton = "drone/drone.ani";
     pbrs_material_t material = {
         {1, 1, 1, 1}, {1, 1, 1}, 1,
-        "assets/drone/drone_diffuse.tga",
-        "assets/drone/drone_specular.tga",
-        "assets/drone/drone_glossiness.tga",
+        "drone/drone_diffuse.tga",
+        "drone/drone_specular.tga",
+        "drone/drone_glossiness.tga",
         NULL,
-        "assets/drone/drone_occlusion.tga",
-        "assets/drone/drone_emission.tga",
+        "drone/drone_occlusion.tga",
+        "drone/drone_emission.tga",
         0, 0, 0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
@@ -195,15 +195,15 @@ scene_t *pbr_drone_scene(void) {
 }
 
 scene_t *pbr_helmet_scene(void) {
-    const char *mesh = "assets/helmet/helmet.obj";
+    const char *mesh = "helmet/helmet.obj";
     pbrm_material_t material = {
         {1, 1, 1, 1}, 1, 1,
-        "assets/helmet/helmet_basecolor.tga",
-        "assets/helmet/helmet_metalness.tga",
-        "assets/helmet/helmet_roughness.tga",
+        "helmet/helmet_basecolor.tga",
+        "helmet/helmet_metalness.tga",
+        "helmet/helmet_roughness.tga",
         NULL,
-        "assets/helmet/helmet_occlusion.tga",
-        "assets/helmet/helmet_emission.tga",
+        "helmet/helmet_occlusion.tga",
+        "helmet/helmet_emission.tga",
         0, 0, 0,
     };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
@@ -222,12 +222,12 @@ scene_t *pbr_helmet_scene(void) {
 }
 
 scene_t *pbr_junkrat_scene(void) {
-    const char *skeleton = "assets/junkrat/junkrat.ani";
+    const char *skeleton = "junkrat/junkrat.ani";
     pbrm_material_t materials[] = {
         {
             {1, 1, 1, 1}, 1, 0.6f,
-            "assets/junkrat/upper_basecolor.tga",
-            "assets/junkrat/upper_metalness.tga",
+            "junkrat/upper_basecolor.tga",
+            "junkrat/upper_metalness.tga",
             NULL,
             NULL,
             NULL,
@@ -236,8 +236,8 @@ scene_t *pbr_junkrat_scene(void) {
         },
         {
             {1, 1, 1, 1}, 1, 0.6f,
-            "assets/junkrat/lower_basecolor.tga",
-            "assets/junkrat/lower_metalness.tga",
+            "junkrat/lower_basecolor.tga",
+            "junkrat/lower_metalness.tga",
             NULL,
             NULL,
             NULL,
@@ -246,9 +246,9 @@ scene_t *pbr_junkrat_scene(void) {
         },
         {
             {1, 1, 1, 1}, 0, 1,
-            "assets/junkrat/head_basecolor.tga",
+            "junkrat/head_basecolor.tga",
             NULL,
-            "assets/junkrat/head_roughness.tga",
+            "junkrat/head_roughness.tga",
             NULL,
             NULL,
             NULL,
@@ -256,8 +256,8 @@ scene_t *pbr_junkrat_scene(void) {
         },
         {
             {1, 1, 1, 1}, 1, 0.6f,
-            "assets/junkrat/back_basecolor.tga",
-            "assets/junkrat/back_metalness.tga",
+            "junkrat/back_basecolor.tga",
+            "junkrat/back_metalness.tga",
             NULL,
             NULL,
             NULL,
@@ -285,7 +285,7 @@ scene_t *pbr_junkrat_scene(void) {
         int material_index = mesh2material[i];
         pbrm_material_t material = materials[material_index];
         char obj_filepath[64];
-        sprintf(obj_filepath, "assets/junkrat/junkrat%d.obj", i);
+        sprintf(obj_filepath, "junkrat/junkrat%d.obj", i);
         model = pbrm_create_model(obj_filepath, skeleton, root,
                                   material, env_name);
         darray_push(models, model);
@@ -296,40 +296,40 @@ scene_t *pbr_junkrat_scene(void) {
 
 scene_t *pbr_ornitier_scene(void) {
     const char *meshes[] = {
-        "assets/ornitier/base.obj",
-        "assets/ornitier/body.obj",
-        "assets/ornitier/coat.obj",
-        "assets/ornitier/feuga.obj",
-        "assets/ornitier/hands.obj",
-        "assets/ornitier/hat.obj",
-        "assets/ornitier/legs.obj",
+        "ornitier/base.obj",
+        "ornitier/body.obj",
+        "ornitier/coat.obj",
+        "ornitier/feuga.obj",
+        "ornitier/hands.obj",
+        "ornitier/hat.obj",
+        "ornitier/legs.obj",
     };
     pbrm_material_t materials[] = {
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/ornitier/base_basecolor.tga",
-            "assets/ornitier/base_metalness.tga",
-            "assets/ornitier/base_roughness.tga",
-            "assets/ornitier/base_normal.tga",
+            "ornitier/base_basecolor.tga",
+            "ornitier/base_metalness.tga",
+            "ornitier/base_roughness.tga",
+            "ornitier/base_normal.tga",
             NULL,
-            "assets/ornitier/base_emission.tga",
+            "ornitier/base_emission.tga",
             0, 0, 0,
         },
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/ornitier/body_basecolor.tga",
+            "ornitier/body_basecolor.tga",
             NULL,
             NULL,
             NULL,
             NULL,
-            "assets/ornitier/body_emission.tga",
+            "ornitier/body_emission.tga",
             0, 0, 0,
         },
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/ornitier/coat_basecolor.tga",
-            "assets/ornitier/coat_metalness.tga",
-            "assets/ornitier/coat_roughness.tga",
+            "ornitier/coat_basecolor.tga",
+            "ornitier/coat_metalness.tga",
+            "ornitier/coat_roughness.tga",
             NULL,
             NULL,
             NULL,
@@ -337,40 +337,40 @@ scene_t *pbr_ornitier_scene(void) {
         },
         {
             {0.8f, 0.8f, 0.8f, 0.84f}, 0, 0.04f,
-            "assets/ornitier/feuga_basecolor.tga",
+            "ornitier/feuga_basecolor.tga",
             NULL,
             NULL,
             NULL,
             NULL,
-            "assets/ornitier/feuga_emission.tga",
+            "ornitier/feuga_emission.tga",
             0, 1, 0,
         },
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/ornitier/hands_basecolor.tga",
-            "assets/ornitier/hands_metalness.tga",
-            "assets/ornitier/hands_roughness.tga",
-            "assets/ornitier/hands_normal.tga",
+            "ornitier/hands_basecolor.tga",
+            "ornitier/hands_metalness.tga",
+            "ornitier/hands_roughness.tga",
+            "ornitier/hands_normal.tga",
             NULL,
             NULL,
             0, 0, 0,
         },
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/ornitier/hat_basecolor.tga",
-            "assets/ornitier/hat_metalness.tga",
-            "assets/ornitier/hat_roughness.tga",
-            "assets/ornitier/hat_normal.tga",
+            "ornitier/hat_basecolor.tga",
+            "ornitier/hat_metalness.tga",
+            "ornitier/hat_roughness.tga",
+            "ornitier/hat_normal.tga",
             NULL,
             NULL,
             0, 0, 0,
         },
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/ornitier/legs_basecolor.tga",
-            "assets/ornitier/legs_metalness.tga",
-            "assets/ornitier/legs_roughness.tga",
-            "assets/ornitier/legs_normal.tga",
+            "ornitier/legs_basecolor.tga",
+            "ornitier/legs_metalness.tga",
+            "ornitier/legs_roughness.tga",
+            "ornitier/legs_normal.tga",
             NULL,
             NULL,
             0, 0, 0,
@@ -400,26 +400,26 @@ scene_t *pbr_ornitier_scene(void) {
 
 scene_t *pbr_ponycar_scene(void) {
     const char *meshes[] = {
-        "assets/ponycar/body.obj",
-        "assets/ponycar/interior.obj",
-        "assets/ponycar/windows.obj",
+        "ponycar/body.obj",
+        "ponycar/interior.obj",
+        "ponycar/windows.obj",
     };
     pbrm_material_t materials[] = {
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/ponycar/body_basecolor.tga",
-            "assets/ponycar/body_metalness.tga",
-            "assets/ponycar/body_roughness.tga",
+            "ponycar/body_basecolor.tga",
+            "ponycar/body_metalness.tga",
+            "ponycar/body_roughness.tga",
             NULL,
             NULL,
-            "assets/ponycar/body_emission.tga",
+            "ponycar/body_emission.tga",
             0, 0, 0,
         },
         {
             {1, 1, 1, 1}, 1, 1,
-            "assets/ponycar/interior_basecolor.tga",
-            "assets/ponycar/interior_metalness.tga",
-            "assets/ponycar/interior_roughness.tga",
+            "ponycar/interior_basecolor.tga",
+            "ponycar/interior_metalness.tga",
+            "ponycar/interior_roughness.tga",
             NULL,
             NULL,
             NULL,
@@ -427,9 +427,9 @@ scene_t *pbr_ponycar_scene(void) {
         },
         {
             {1, 1, 1, 0.73f}, 0, 1,
-            "assets/ponycar/body_basecolor.tga",
-            "assets/ponycar/body_metalness.tga",
-            "assets/ponycar/body_roughness.tga",
+            "ponycar/body_basecolor.tga",
+            "ponycar/body_metalness.tga",
+            "ponycar/body_roughness.tga",
             NULL,
             NULL,
             NULL,
@@ -460,7 +460,7 @@ scene_t *pbr_ponycar_scene(void) {
 }
 
 scene_t *pbr_sphere_scene(void) {
-    const char *mesh = "assets/common/sphere.obj";
+    const char *mesh = "common/sphere.obj";
     pbrm_material_t material = {
         {1, 1, 1, 1}, 1, 1, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0,
     };
