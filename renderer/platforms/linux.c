@@ -51,9 +51,9 @@ static Window create_window(const char *title, int width, int height) {
 
     /* not resizable */
     size_hints = XAllocSizeHints();
-    size_hints->flags      = PMinSize | PMaxSize;
-    size_hints->min_width  = width;
-    size_hints->max_width  = width;
+    size_hints->flags = PMinSize | PMaxSize;
+    size_hints->min_width = width;
+    size_hints->max_width = width;
     size_hints->min_height = height;
     size_hints->max_height = height;
     XSetWMNormalHints(g_display, handle, size_hints);
@@ -61,7 +61,7 @@ static Window create_window(const char *title, int width, int height) {
 
     /* application name */
     class_hint = XAllocClassHint();
-    class_hint->res_name  = (char*)title;
+    class_hint->res_name = (char*)title;
     class_hint->res_class = (char*)title;
     XSetClassHint(g_display, handle, class_hint);
     XFree(class_hint);
@@ -106,8 +106,8 @@ window_t *window_create(const char *title, int width, int height) {
 
     window = (window_t*)malloc(sizeof(window_t));
     memset(window, 0, sizeof(window_t));
-    window->handle  = handle;
-    window->ximage  = ximage;
+    window->handle = handle;
+    window->ximage = ximage;
     window->surface = surface;
 
     XSaveContext(g_display, handle, g_context, (XPointer)window);

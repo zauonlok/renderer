@@ -106,15 +106,15 @@ static void register_class(void) {
     if (initialized == 0) {
         ATOM class_atom;
         WNDCLASS window_class;
-        window_class.style         = CS_HREDRAW | CS_VREDRAW;
-        window_class.lpfnWndProc   = process_message;
-        window_class.cbClsExtra    = 0;
-        window_class.cbWndExtra    = 0;
-        window_class.hInstance     = GetModuleHandle(NULL);
-        window_class.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
-        window_class.hCursor       = LoadCursor(NULL, IDC_ARROW);
+        window_class.style = CS_HREDRAW | CS_VREDRAW;
+        window_class.lpfnWndProc = process_message;
+        window_class.cbClsExtra = 0;
+        window_class.cbWndExtra = 0;
+        window_class.hInstance = GetModuleHandle(NULL);
+        window_class.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+        window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
         window_class.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-        window_class.lpszMenuName  = NULL;
+        window_class.lpszMenuName = NULL;
         window_class.lpszClassName = WINDOW_CLASS_NAME;
         class_atom = RegisterClass(&window_class);
         assert(class_atom != 0);
@@ -134,9 +134,9 @@ static HWND create_window(const char *title_, int width, int height) {
     const char *title = title_;
 #endif
 
-    rect.left   = 0;
-    rect.top    = 0;
-    rect.right  = width;
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = width;
     rect.bottom = height;
     AdjustWindowRect(&rect, style, 0);
     width = rect.right - rect.left;
@@ -168,11 +168,11 @@ static void create_surface(HWND handle, int width, int height,
     ReleaseDC(handle, window_dc);
 
     memset(&bi_header, 0, sizeof(BITMAPINFOHEADER));
-    bi_header.biSize        = sizeof(BITMAPINFOHEADER);
-    bi_header.biWidth       = width;
-    bi_header.biHeight      = -height;  /* top-down */
-    bi_header.biPlanes      = 1;
-    bi_header.biBitCount    = 32;
+    bi_header.biSize = sizeof(BITMAPINFOHEADER);
+    bi_header.biWidth = width;
+    bi_header.biHeight = -height;  /* top-down */
+    bi_header.biPlanes = 1;
+    bi_header.biBitCount = 32;
     bi_header.biCompression = BI_RGB;
     dib_bitmap = CreateDIBSection(memory_dc, (BITMAPINFO*)&bi_header,
                                   DIB_RGB_COLORS, (void**)&buffer, NULL, 0);
@@ -181,10 +181,10 @@ static void create_surface(HWND handle, int width, int height,
     DeleteObject(old_bitmap);
 
     surface = (image_t*)malloc(sizeof(image_t));
-    surface->width    = width;
-    surface->height   = height;
+    surface->width = width;
+    surface->height = height;
     surface->channels = 4;
-    surface->buffer   = buffer;
+    surface->buffer = buffer;
 
     *out_surface = surface;
     *out_memory_dc = memory_dc;
@@ -204,9 +204,9 @@ window_t *window_create(const char *title, int width, int height) {
 
     window = (window_t*)malloc(sizeof(window_t));
     memset(window, 0, sizeof(window_t));
-    window->handle    = handle;
+    window->handle = handle;
     window->memory_dc = memory_dc;
-    window->surface   = surface;
+    window->surface = surface;
 
     SetProp(handle, WINDOW_ENTRY_NAME, window);
     ShowWindow(handle, SW_SHOW);

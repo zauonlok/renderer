@@ -73,8 +73,8 @@ static mesh_t *build_mesh(
 
     mesh = (mesh_t*)malloc(sizeof(mesh_t));
     mesh->num_faces = num_faces;
-    mesh->vertices  = vertices;
-    mesh->center    = vec3_div(vec3_add(bbox_min, bbox_max), 2);
+    mesh->vertices = vertices;
+    mesh->center = vec3_div(vec3_add(bbox_min, bbox_max), 2);
 
     return mesh;
 }

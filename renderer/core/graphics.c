@@ -15,8 +15,8 @@ framebuffer_t *framebuffer_create(int width, int height) {
     assert(width > 0 && height > 0);
 
     framebuffer = (framebuffer_t*)malloc(sizeof(framebuffer_t));
-    framebuffer->width       = width;
-    framebuffer->height      = height;
+    framebuffer->width = width;
+    framebuffer->height = height;
     framebuffer->colorbuffer = (vec4_t*)malloc(sizeof(vec4_t) * num_elems);
     framebuffer->depthbuffer = (float*)malloc(sizeof(float) * num_elems);
 
@@ -82,13 +82,13 @@ program_t *program_create(
 
     program = (program_t*)malloc(sizeof(program_t));
 
-    program->vertex_shader   = vertex_shader;
+    program->vertex_shader = vertex_shader;
     program->fragment_shader = fragment_shader;
-    program->sizeof_attribs  = sizeof_attribs;
+    program->sizeof_attribs = sizeof_attribs;
     program->sizeof_varyings = sizeof_varyings;
     program->sizeof_uniforms = sizeof_uniforms;
-    program->double_sided    = double_sided;
-    program->enable_blend    = enable_blend;
+    program->double_sided = double_sided;
+    program->enable_blend = enable_blend;
 
     for (i = 0; i < 3; i++) {
         program->shader_attribs[i] = malloc(sizeof_attribs);

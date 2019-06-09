@@ -486,15 +486,15 @@ static model_t *create_model(const char *mesh, const char *skeleton,
                              double_sided, enable_blend);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh              = cache_acquire_mesh(mesh);
-    model->skeleton          = cache_acquire_skeleton(skeleton);
-    model->program           = program;
-    model->transform         = transform;
-    model->sortdata.opaque   = !enable_blend;
+    model->mesh = cache_acquire_mesh(mesh);
+    model->skeleton = cache_acquire_skeleton(skeleton);
+    model->program = program;
+    model->transform = transform;
+    model->sortdata.opaque = !enable_blend;
     model->sortdata.distance = 0;
-    model->draw              = draw_model;
-    model->update            = update_model;
-    model->release           = release_model;
+    model->draw = draw_model;
+    model->update = update_model;
+    model->release = release_model;
 
     return model;
 }

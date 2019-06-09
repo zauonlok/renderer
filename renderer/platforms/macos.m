@@ -235,7 +235,7 @@ window_t *window_create(const char *title, int width, int height) {
     create_application();
     window = (window_t*)malloc(sizeof(window_t));
     memset(window, 0, sizeof(window_t));
-    window->handle  = create_window(window, title, width, height);
+    window->handle = create_window(window, title, width, height);
     window->surface = image_create(width, height, 4);
 
     [window->handle makeKeyAndOrderFront:nil];

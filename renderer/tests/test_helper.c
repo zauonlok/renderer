@@ -141,7 +141,7 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
 
     memset(&record, 0, sizeof(record_t));
     record.light_theta = LIGHT_THETA;
-    record.light_phi   = LIGHT_PHI;
+    record.light_phi = LIGHT_PHI;
 
     memset(&callbacks, 0, sizeof(callbacks_t));
     callbacks.button_callback = button_callback;
@@ -149,7 +149,7 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
 
     memset(&context, 0, sizeof(context_t));
     context.framebuffer = framebuffer;
-    context.camera      = camera;
+    context.camera = camera;
 
     window_set_userdata(window, &record);
     input_set_callbacks(window, callbacks);
@@ -305,17 +305,17 @@ void test_draw_scene(scene_t *scene, context_t *context) {
     camera_t *camera = context->camera;
     framedata_t framedata;
 
-    framedata.frame_time          = context->frame_time;
-    framedata.delta_time          = context->delta_time;
-    framedata.light_dir           = light_dir;
-    framedata.camera_pos          = camera_get_position(camera);
-    framedata.light_view_matrix   = get_light_view_matrix(light_dir);
-    framedata.light_proj_matrix   = get_light_proj_matrix(1, 1, 0, 2);
-    framedata.camera_view_matrix  = camera_get_view_matrix(camera);
-    framedata.camera_proj_matrix  = camera_get_proj_matrix(camera);
-    framedata.ambient_strength    = scene->lightdata.ambient_strength;
-    framedata.punctual_strength   = scene->lightdata.punctual_strength;
-    framedata.shadow_map          = scene->shadowdata.shadow_map;
+    framedata.frame_time = context->frame_time;
+    framedata.delta_time = context->delta_time;
+    framedata.light_dir = light_dir;
+    framedata.camera_pos = camera_get_position(camera);
+    framedata.light_view_matrix = get_light_view_matrix(light_dir);
+    framedata.light_proj_matrix = get_light_proj_matrix(1, 1, 0, 2);
+    framedata.camera_view_matrix = camera_get_view_matrix(camera);
+    framedata.camera_proj_matrix = camera_get_proj_matrix(camera);
+    framedata.ambient_strength = scene->lightdata.ambient_strength;
+    framedata.punctual_strength = scene->lightdata.punctual_strength;
+    framedata.shadow_map = scene->shadowdata.shadow_map;
 
     scene_draw(scene, context->framebuffer, &framedata);
 }

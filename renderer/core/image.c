@@ -14,10 +14,10 @@ image_t *image_create(int width, int height, int channels) {
     assert(width > 0 && height > 0 && channels >= 1 && channels <= 4);
 
     image = (image_t*)malloc(sizeof(image_t));
-    image->width    = width;
-    image->height   = height;
+    image->width = width;
+    image->height = height;
     image->channels = channels;
-    image->buffer   = (unsigned char*)malloc(buffer_size);
+    image->buffer = (unsigned char*)malloc(buffer_size);
     memset(image->buffer, 0, buffer_size);
     return image;
 }
@@ -134,7 +134,7 @@ static void save_tga(image_t *image, const char *filename) {
     assert(file != NULL);
 
     memset(header, 0, TGA_HEADER_SIZE);
-    header[2]  = image->channels == 1 ? 3 : 2;    /* image type */
+    header[2] = image->channels == 1 ? 3 : 2;     /* image type */
     header[12] = image->width & 0xFF;             /* width, lsb */
     header[13] = (image->width >> 8) & 0xFF;      /* width, msb */
     header[14] = image->height & 0xFF;            /* height, lsb */

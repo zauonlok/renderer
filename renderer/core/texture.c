@@ -186,7 +186,7 @@ texture_t *texture_create(int width, int height) {
     assert(width > 0 && height > 0);
 
     texture = (texture_t*)malloc(sizeof(texture_t));
-    texture->width  = width;
+    texture->width = width;
     texture->height = height;
     texture->buffer = (vec4_t*)malloc(buffer_size);
     memset(texture->buffer, 0, buffer_size);

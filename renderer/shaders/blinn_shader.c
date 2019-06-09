@@ -315,15 +315,15 @@ model_t *blinn_create_model(const char *mesh, const char *skeleton,
     uniforms->alpha_cutoff = material.alpha_cutoff;
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh              = cache_acquire_mesh(mesh);
-    model->skeleton          = cache_acquire_skeleton(skeleton);
-    model->program           = program;
-    model->transform         = transform;
-    model->sortdata.opaque   = !material.enable_blend;
+    model->mesh = cache_acquire_mesh(mesh);
+    model->skeleton = cache_acquire_skeleton(skeleton);
+    model->program = program;
+    model->transform = transform;
+    model->sortdata.opaque = !material.enable_blend;
     model->sortdata.distance = 0;
-    model->draw              = draw_model;
-    model->update            = update_model;
-    model->release           = release_model;
+    model->draw = draw_model;
+    model->update = update_model;
+    model->release = release_model;
 
     return model;
 }

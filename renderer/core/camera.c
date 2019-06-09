@@ -25,8 +25,8 @@ camera_t *camera_create(vec3_t position, vec3_t target, float aspect) {
 
     camera = (camera_t*)malloc(sizeof(camera_t));
     camera->position = position;
-    camera->target   = target;
-    camera->aspect   = aspect;
+    camera->target = target;
+    camera->aspect = aspect;
 
     return camera;
 }

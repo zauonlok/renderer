@@ -14,18 +14,19 @@ scene_t *scene_create(
         vec4_t background, model_t *skybox, model_t **models,
         float ambient_strength, float punctual_strength, int with_shadow) {
     scene_t *scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background                  = background;
-    scene->skybox                      = skybox;
-    scene->models                      = models;
-    scene->lightdata.ambient_strength  = ambient_strength;
+    scene->background = background;
+    scene->skybox = skybox;
+    scene->models = models;
+    scene->lightdata.ambient_strength = ambient_strength;
     scene->lightdata.punctual_strength = punctual_strength;
-    scene->shadowdata.framebuffer      = NULL;
-    scene->shadowdata.shadow_map       = NULL;
     if (with_shadow) {
         scene->shadowdata.framebuffer = framebuffer_create(SHADOWMAP_WIDTH,
                                                            SHADOWMAP_HEIGHT);
         scene->shadowdata.shadow_map = texture_create(SHADOWMAP_WIDTH,
                                                       SHADOWMAP_HEIGHT);
+    } else {
+        scene->shadowdata.framebuffer = NULL;
+        scene->shadowdata.shadow_map = NULL;
     }
     return scene;
 }

@@ -87,15 +87,15 @@ model_t *skybox_create_model(const char *skybox_name) {
     uniforms->skybox = cache_acquire_skybox(skybox_name);
 
     model = (model_t*)malloc(sizeof(model_t));
-    model->mesh              = cache_acquire_mesh("common/box.obj");
-    model->skeleton          = NULL;
-    model->program           = program;
-    model->transform         = mat4_identity();
-    model->sortdata.opaque   = 1;
+    model->mesh = cache_acquire_mesh("common/box.obj");
+    model->skeleton = NULL;
+    model->program = program;
+    model->transform = mat4_identity();
+    model->sortdata.opaque = 1;
     model->sortdata.distance = 0;
-    model->draw              = draw_model;
-    model->update            = update_model;
-    model->release           = release_model;
+    model->draw = draw_model;
+    model->update = update_model;
+    model->release = release_model;
 
     return model;
 }
