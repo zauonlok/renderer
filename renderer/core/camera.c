@@ -5,6 +5,11 @@
 #include "geometry.h"
 #include "macro.h"
 
+/*
+ * for orbital camera control, for
+ * https://github.com/mrdoob/three.js/blob/master/examples/js/controls/OrbitControls.js
+ */
+
 static const float NEAR = 0.1f;
 static const float FAR = 10000;
 static const float FOVY = TO_RADIANS(60);

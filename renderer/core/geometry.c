@@ -311,8 +311,8 @@ mat3_t mat3_combine(mat3_t m[4], vec4_t weights_) {
 
     for (i = 0; i < 4; i++) {
         float weight = weights[i];
-        mat3_t source = m[i];
         if (weight > 0) {
+            mat3_t source = m[i];
             for (r = 0; r < 3; r++) {
                 for (c = 0; c < 3; c++) {
                     combined.m[r][c] += weight * source.m[r][c];
@@ -337,11 +337,10 @@ vec3_t mat3_mul_vec3(mat3_t m, vec3_t v) {
 }
 
 mat3_t mat3_mul_mat3(mat3_t a, mat3_t b) {
-    mat3_t m;
+    mat3_t m = {{{0}}};
     int i, j, k;
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++) {
-            m.m[i][j] = 0;
             for (k = 0; k < 3; k++) {
                 m.m[i][j] += a.m[i][k] * b.m[k][j];
             }
@@ -364,6 +363,11 @@ mat3_t mat3_transpose(mat3_t m) {
     }
     return transpose;
 }
+
+/*
+ * for determinant, adjoint, and inverse, see
+ * 3D Math Primer for Graphics and Game Development, 2nd Edition, Chapter 6
+ */
 
 static float mat3_determinant(mat3_t m) {
     float a = +m.m[0][0] * (m.m[1][1] * m.m[2][2] - m.m[1][2] * m.m[2][1]);
@@ -471,8 +475,8 @@ mat4_t mat4_combine(mat4_t m[4], vec4_t weights_) {
 
     for (i = 0; i < 4; i++) {
         float weight = weights[i];
-        mat4_t source = m[i];
         if (weight > 0) {
+            mat4_t source = m[i];
             for (r = 0; r < 4; r++) {
                 for (c = 0; c < 4; c++) {
                     combined.m[r][c] += weight * source.m[r][c];
@@ -498,11 +502,10 @@ vec4_t mat4_mul_vec4(mat4_t m, vec4_t v) {
 }
 
 mat4_t mat4_mul_mat4(mat4_t a, mat4_t b) {
-    mat4_t m;
+    mat4_t m = {{{0}}};
     int i, j, k;
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            m.m[i][j] = 0;
             for (k = 0; k < 4; k++) {
                 m.m[i][j] += a.m[i][k] * b.m[k][j];
             }
@@ -640,7 +643,7 @@ mat4_t mat4_scale(float sx, float sy, float sz) {
  * 0                 0                 0                 1
  *
  * nx, ny, nz: the normalized coordinates of the vector, respectively
- * s, c: sin(angle) and cos(angle)
+ * s, c: sin(angle), cos(angle)
  *
  * see http://docs.gl/gl2/glRotate
  */

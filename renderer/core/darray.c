@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include "darray.h"
 
+/*
+ * for typesafe dynamic array, see
+ * https://github.com/nothings/stb/blob/master/stretchy_buffer.h
+ */
+
 #define DARRAY_RAW_DATA(darray) ((int*)(darray) - 2)
 #define DARRAY_CAPACITY(darray) (DARRAY_RAW_DATA(darray)[0])
 #define DARRAY_OCCUPIED(darray) (DARRAY_RAW_DATA(darray)[1])
@@ -19,7 +24,8 @@ void darray_free(void *darray) {
 void *darray_hold(void *darray, int count, int itemsize) {
     assert(count > 0 && itemsize > 0);
     if (darray == NULL) {
-        int *base = (int*)malloc(sizeof(int) * 2 + itemsize * count);
+        int raw_size = sizeof(int) * 2 + itemsize * count;
+        int *base = (int*)malloc(raw_size);
         base[0] = count;  /* capacity */
         base[1] = count;  /* occupied */
         return base + 2;
