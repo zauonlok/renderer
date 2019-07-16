@@ -79,6 +79,7 @@ program_t *program_create(
     int i;
 
     assert(sizeof_attribs > 0 && sizeof_varyings > 0 && sizeof_uniforms > 0);
+    assert(sizeof_varyings % sizeof(float) == 0);
 
     program = (program_t*)malloc(sizeof(program_t));
 
@@ -396,7 +397,6 @@ static void interpolate_varyings(
     float weight2 = recip_w[2] * weights.z;
     float normalizer = 1 / (weight0 + weight1 + weight2);
     int i;
-    assert(num_floats * (int)sizeof(float) == sizeof_varyings);
     for (i = 0; i < num_floats; i++) {
         float sum = src0[i] * weight0 + src1[i] * weight1 + src2[i] * weight2;
         dst[i] = sum * normalizer;
