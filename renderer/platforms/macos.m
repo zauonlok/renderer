@@ -30,20 +30,20 @@ static NSAutoreleasePool *g_autoreleasepool;
 @end
 
 @implementation WindowDelegate {
-    window_t *window;
+    window_t *_window;
 }
 
-- (instancetype)initWithWindow:(window_t *)aWindow {
+- (instancetype)initWithWindow:(window_t *)window {
     self = [super init];
     if (self != nil) {
-        window = aWindow;
+        _window = window;
     }
     return self;
 }
 
 - (BOOL)windowShouldClose:(NSWindow *)sender {
     UNUSED(sender);
-    window->should_close = 1;
+    _window->should_close = 1;
     return NO;
 }
 
@@ -51,7 +51,7 @@ static NSAutoreleasePool *g_autoreleasepool;
 
 /*
  * for virtual-key codes, see
- * https://stackoverflow.com/questions/3202629/
+ * https://stackoverflow.com/questions/3202629/where-can-i-find-a-list-of-mac-virtual-key-codes
  */
 static void handle_key_event(window_t *window, int virtual_key, char pressed) {
     keycode_t key;
@@ -89,13 +89,13 @@ static void handle_scroll_event(window_t *window, float offset) {
 @end
 
 @implementation ContentView {
-    window_t *window;
+    window_t *_window;
 }
 
-- (instancetype)initWithWindow:(window_t *)aWindow {
+- (instancetype)initWithWindow:(window_t *)window {
     self = [super init];
     if (self != nil) {
-        window = aWindow;
+        _window = window;
     }
     return self;
 }
@@ -105,7 +105,7 @@ static void handle_scroll_event(window_t *window, float offset) {
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
-    image_t *surface = window->surface;
+    image_t *surface = _window->surface;
     NSBitmapImageRep *rep = [[[NSBitmapImageRep alloc]
             initWithBitmapDataPlanes:&(surface->buffer)
                           pixelsWide:surface->width
@@ -123,31 +123,31 @@ static void handle_scroll_event(window_t *window, float offset) {
 }
 
 - (void)keyDown:(NSEvent *)event {
-    handle_key_event(window, [event keyCode], 1);
+    handle_key_event(_window, [event keyCode], 1);
 }
 
 - (void)keyUp:(NSEvent *)event {
-    handle_key_event(window, [event keyCode], 0);
+    handle_key_event(_window, [event keyCode], 0);
 }
 
 - (void)mouseDown:(NSEvent *)event {
     UNUSED(event);
-    handle_button_event(window, BUTTON_L, 1);
+    handle_button_event(_window, BUTTON_L, 1);
 }
 
 - (void)mouseUp:(NSEvent *)event {
     UNUSED(event);
-    handle_button_event(window, BUTTON_L, 0);
+    handle_button_event(_window, BUTTON_L, 0);
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
     UNUSED(event);
-    handle_button_event(window, BUTTON_R, 1);
+    handle_button_event(_window, BUTTON_R, 1);
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
     UNUSED(event);
-    handle_button_event(window, BUTTON_R, 0);
+    handle_button_event(_window, BUTTON_R, 0);
 }
 
 - (void)scrollWheel:(NSEvent *)event {
@@ -155,7 +155,7 @@ static void handle_scroll_event(window_t *window, float offset) {
     if ([event hasPreciseScrollingDeltas]) {
         offset *= 0.1f;
     }
-    handle_scroll_event(window, offset);
+    handle_scroll_event(_window, offset);
 }
 
 @end

@@ -370,7 +370,7 @@ cubemap_t *cubemap_from_files(const char *positive_x, const char *negative_x,
 
     /*
      * for face uv origin, see
-     * https://stackoverflow.com/questions/11685608/
+     * https://stackoverflow.com/questions/11685608/convention-of-faces-in-opengl-cubemapping
      */
     for (i = 0; i < 6; i++) {
         texture_flip_v(cubemap->faces[i]);
