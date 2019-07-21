@@ -3,17 +3,7 @@
 
 #include "../core/api.h"
 
-typedef struct {
-    vec4_t basecolor;
-    float shininess;
-    const char *diffuse_map;
-    const char *specular_map;
-    const char *emission_map;
-    /* render settings */
-    int double_sided;
-    int enable_blend;
-    float alpha_cutoff;
-} blinn_material_t;
+/* low-level api */
 
 typedef struct {
     vec3_t position;
@@ -42,7 +32,7 @@ typedef struct {
     float ambient_strength;
     float punctual_strength;
     texture_t *shadow_map;
-    /* from material */
+    /* surface parameters */
     vec4_t basecolor;
     float shininess;
     texture_t *diffuse_map;
@@ -53,11 +43,23 @@ typedef struct {
     int shadow_pass;
 } blinn_uniforms_t;
 
-/* low-level api */
 vec4_t blinn_vertex_shader(void *attribs, void *varyings, void *uniforms);
 vec4_t blinn_fragment_shader(void *varyings, void *uniforms, int *discard);
 
 /* high-level api */
+
+typedef struct {
+    vec4_t basecolor;
+    float shininess;
+    const char *diffuse_map;
+    const char *specular_map;
+    const char *emission_map;
+    /* render settings */
+    int double_sided;
+    int enable_blend;
+    float alpha_cutoff;
+} blinn_material_t;
+
 model_t *blinn_create_model(const char *mesh, const char *skeleton,
                             mat4_t transform, blinn_material_t material);
 

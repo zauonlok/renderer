@@ -71,12 +71,11 @@ static vec4_t common_vertex_shader(blinn_attribs_t *attribs,
 
     vec3_t input_normal = attribs->normal;
     vec3_t world_normal = mat3_mul_vec3(normal_matrix, input_normal);
-    world_normal = vec3_normalize(world_normal);
 
     varyings->world_position = vec3_from_vec4(world_position);
     varyings->depth_position = vec3_from_vec4(depth_position);
     varyings->texcoord = attribs->texcoord;
-    varyings->normal = world_normal;
+    varyings->normal = vec3_normalize(world_normal);
     return clip_position;
 }
 
@@ -257,10 +256,10 @@ static void update_model(model_t *model, framedata_t *framedata) {
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer,
                        int shadow_pass) {
-    program_t *program = model->program;
     mesh_t *mesh = model->mesh;
     int num_faces = mesh_get_num_faces(mesh);
     vertex_t *vertices = mesh_get_vertices(mesh);
+    program_t *program = model->program;
     blinn_uniforms_t *uniforms;
     blinn_attribs_t *attribs;
     int i, j;
