@@ -11,10 +11,10 @@ vec4_t skybox_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     skybox_uniforms_t *uniforms = (skybox_uniforms_t*)uniforms_;
 
     vec4_t local_pos = vec4_from_vec3(attribs->position, 1);
-    vec4_t clip_pos = mat4_mul_vec4(uniforms->view_proj_matrix, local_pos);
+    vec4_t clip_pos = mat4_mul_vec4(uniforms->vp_matrix, local_pos);
+    clip_pos.z = clip_pos.w * (1 - EPSILON);
 
     varyings->direction = attribs->position;
-    clip_pos.z = clip_pos.w * (1 - EPSILON);
     return clip_pos;
 }
 
@@ -39,15 +39,15 @@ static void update_model(model_t *model, framedata_t *framedata) {
     view_matrix.m[2][3] = 0;
 
     uniforms = (skybox_uniforms_t*)program_get_uniforms(model->program);
-    uniforms->view_proj_matrix = mat4_mul_mat4(proj_matrix, view_matrix);
+    uniforms->vp_matrix = mat4_mul_mat4(proj_matrix, view_matrix);
 }
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer,
                        int shadow_pass) {
-    program_t *program = model->program;
     mesh_t *mesh = model->mesh;
     int num_faces = mesh_get_num_faces(mesh);
     vertex_t *vertices = mesh_get_vertices(mesh);
+    program_t *program = model->program;
     skybox_attribs_t *attribs;
     int i, j;
 
