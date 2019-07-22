@@ -5,8 +5,6 @@
 #include "cache_helper.h"
 #include "pbr_shader.h"
 
-static const vec3_t DIELECTRIC_SPECULAR = {0.04f, 0.04f, 0.04f};
-
 /* low-level api */
 
 static mat4_t get_model_matrix(pbr_attribs_t *attribs,
@@ -282,6 +280,8 @@ static float max_component(vec3_t v) {
     return v.x > v.y && v.x > v.z ? v.x : (v.y > v.z ? v.y : v.z);
 }
 
+static const vec3_t DIELECTRIC_SPECULAR = {0.04f, 0.04f, 0.04f};
+
 static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
                                      pbr_uniforms_t *uniforms,
                                      int *discard) {
@@ -352,9 +352,9 @@ static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
 
         vec3_t color = vec3_new(0, 0, 0);
 
-        if (uniforms->ambient_strength > 0 && uniforms->shared_ibldata) {
+        if (uniforms->ambient_strength > 0 && uniforms->ibldata) {
             float ambient_strength = uniforms->ambient_strength;
-            vec3_t shade = get_ibl_shade(uniforms->shared_ibldata, roughness,
+            vec3_t shade = get_ibl_shade(uniforms->ibldata, roughness,
                                          normal_dir, view_dir,
                                          diffuse, specular);
             color = vec3_add(color, vec3_mul(shade, ambient_strength));
@@ -428,10 +428,10 @@ static void update_model(model_t *model, framedata_t *framedata) {
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer,
                        int shadow_pass) {
-    program_t *program = model->program;
     mesh_t *mesh = model->mesh;
     int num_faces = mesh_get_num_faces(mesh);
     vertex_t *vertices = mesh_get_vertices(mesh);
+    program_t *program = model->program;
     pbr_uniforms_t *uniforms;
     pbr_attribs_t *attribs;
     int i, j;
@@ -465,7 +465,7 @@ static void release_model(model_t *model) {
     cache_release_texture(uniforms->normal_map);
     cache_release_texture(uniforms->occlusion_map);
     cache_release_texture(uniforms->emission_map);
-    cache_release_ibldata(uniforms->shared_ibldata);
+    cache_release_ibldata(uniforms->ibldata);
     program_release(model->program);
     cache_release_skeleton(model->skeleton);
     cache_release_mesh(model->mesh);
@@ -521,7 +521,7 @@ model_t *pbrm_create_model(const char *mesh, const char *skeleton,
     uniforms->normal_map = cache_acquire_texture(material.normal_map, 0);
     uniforms->occlusion_map = cache_acquire_texture(material.occlusion_map, 0);
     uniforms->emission_map = cache_acquire_texture(material.emission_map, 1);
-    uniforms->shared_ibldata = cache_acquire_ibldata(env_name);
+    uniforms->ibldata = cache_acquire_ibldata(env_name);
     uniforms->alpha_cutoff = material.alpha_cutoff;
     uniforms->workflow = METALNESS_WORKFLOW;
 
@@ -549,7 +549,7 @@ model_t *pbrs_create_model(const char *mesh, const char *skeleton,
     uniforms->normal_map = cache_acquire_texture(material.normal_map, 0);
     uniforms->occlusion_map = cache_acquire_texture(material.occlusion_map, 0);
     uniforms->emission_map = cache_acquire_texture(material.emission_map, 1);
-    uniforms->shared_ibldata = cache_acquire_ibldata(env_name);
+    uniforms->ibldata = cache_acquire_ibldata(env_name);
     uniforms->alpha_cutoff = material.alpha_cutoff;
     uniforms->workflow = SPECULAR_WORKFLOW;
 

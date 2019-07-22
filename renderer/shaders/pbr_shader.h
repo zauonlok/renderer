@@ -3,7 +3,12 @@
 
 #include "../core/api.h"
 
-typedef enum {METALNESS_WORKFLOW, SPECULAR_WORKFLOW} workflow_t;
+/* low-level api */
+
+typedef enum {
+    METALNESS_WORKFLOW,
+    SPECULAR_WORKFLOW
+} workflow_t;
 
 typedef struct ibldata {
     int mip_level;
@@ -11,40 +16,6 @@ typedef struct ibldata {
     cubemap_t *specular_maps[15];
     texture_t *brdf_lut;
 } ibldata_t;
-
-typedef struct {
-    vec4_t basecolor_factor;
-    float metalness_factor;
-    float roughness_factor;
-    const char *basecolor_map;
-    const char *metalness_map;
-    const char *roughness_map;
-    /* additional maps */
-    const char *normal_map;
-    const char *occlusion_map;
-    const char *emission_map;
-    /* render settings */
-    int double_sided;
-    int enable_blend;
-    float alpha_cutoff;
-} pbrm_material_t;
-
-typedef struct {
-    vec4_t diffuse_factor;
-    vec3_t specular_factor;
-    float glossiness_factor;
-    const char *diffuse_map;
-    const char *specular_map;
-    const char *glossiness_map;
-    /* additional maps */
-    const char *normal_map;
-    const char *occlusion_map;
-    const char *emission_map;
-    /* render settings */
-    int double_sided;
-    int enable_blend;
-    float alpha_cutoff;
-} pbrs_material_t;
 
 typedef struct {
     vec3_t position;
@@ -94,19 +65,55 @@ typedef struct {
     texture_t *normal_map;
     texture_t *occlusion_map;
     texture_t *emission_map;
-    /* for environment */
-    ibldata_t *shared_ibldata;
+    /* environment maps */
+    ibldata_t *ibldata;
     /* render control */
     workflow_t workflow;
     float alpha_cutoff;
     int shadow_pass;
 } pbr_uniforms_t;
 
-/* low-level api */
 vec4_t pbr_vertex_shader(void *attribs, void *varyings, void *uniforms);
 vec4_t pbr_fragment_shader(void *varyings, void *uniforms, int *discard);
 
 /* high-level api */
+
+typedef struct {
+    /* metalness workflow */
+    vec4_t basecolor_factor;
+    float metalness_factor;
+    float roughness_factor;
+    const char *basecolor_map;
+    const char *metalness_map;
+    const char *roughness_map;
+    /* additional maps */
+    const char *normal_map;
+    const char *occlusion_map;
+    const char *emission_map;
+    /* render settings */
+    int double_sided;
+    int enable_blend;
+    float alpha_cutoff;
+} pbrm_material_t;
+
+typedef struct {
+    /* specular workflow */
+    vec4_t diffuse_factor;
+    vec3_t specular_factor;
+    float glossiness_factor;
+    const char *diffuse_map;
+    const char *specular_map;
+    const char *glossiness_map;
+    /* additional maps */
+    const char *normal_map;
+    const char *occlusion_map;
+    const char *emission_map;
+    /* render settings */
+    int double_sided;
+    int enable_blend;
+    float alpha_cutoff;
+} pbrs_material_t;
+
 model_t *pbrm_create_model(const char *mesh, const char *skeleton,
                            mat4_t transform, pbrm_material_t material,
                            const char *env_name);
