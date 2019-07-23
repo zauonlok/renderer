@@ -28,7 +28,9 @@ int input_key_pressed(window_t *window, keycode_t key);
 int input_button_pressed(window_t *window, button_t button);
 void input_query_cursor(window_t *window, float *xpos, float *ypos);
 void input_set_callbacks(window_t *window, callbacks_t callbacks);
-float input_get_time(void);
-void input_initialize_path(void);
+
+/* misc platform functions */
+float platform_get_time(void);
+void platform_init_path(void);
 
 #endif

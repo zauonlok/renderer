@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     int i;
 
     srand((unsigned int)time(NULL));
-    input_initialize_path();
+    platform_init_path();
 
     if (argc > 1) {
         testname = argv[1];

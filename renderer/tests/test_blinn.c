@@ -4,7 +4,7 @@
 #include "test_blinn.h"
 #include "test_helper.h"
 
-static scene_creator_t g_scene_creators[] = {
+static creator_t g_creators[] = {
     {"azura", blinn_azura_scene},
     {"centaur", blinn_centaur_scene},
     {"craftsman", blinn_craftsman_scene},
@@ -24,7 +24,7 @@ static void tick_function(context_t *context, void *userdata) {
 
 void test_blinn(int argc, char *argv[]) {
     const char *scene_name = argc > 2 ? argv[2] : NULL;
-    scene_t *scene = test_create_scene(g_scene_creators, scene_name);
+    scene_t *scene = test_create_scene(g_creators, scene_name);
     if (scene) {
         test_enter_mainloop(tick_function, scene);
         scene_release(scene);

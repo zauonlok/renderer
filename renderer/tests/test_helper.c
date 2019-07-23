@@ -155,10 +155,10 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
     input_set_callbacks(window, callbacks);
 
     num_frames = 0;
-    prev_time = input_get_time();
+    prev_time = platform_get_time();
     print_time = prev_time;
     while (!window_should_close(window)) {
-        float curr_time = input_get_time();
+        float curr_time = platform_get_time();
         float delta_time = curr_time - prev_time;
         prev_time = curr_time;
 
@@ -240,8 +240,7 @@ static int count_num_faces(scene_t *scene) {
     return num_faces;
 }
 
-scene_t *test_create_scene(scene_creator_t creators[],
-                           const char *scene_name) {
+scene_t *test_create_scene(creator_t creators[], const char *scene_name) {
     scene_t *scene = NULL;
     if (scene_name == NULL) {
         int num_creators = 0;
@@ -269,10 +268,18 @@ scene_t *test_create_scene(scene_creator_t creators[],
         bbox_t bbox = get_scene_bbox(scene);
         vec3_t center = vec3_div(vec3_add(bbox.min, bbox.max), 2);
         vec3_t extent = vec3_sub(bbox.max, bbox.min);
+        int with_skybox = scene->skybox != NULL;
+        int with_shadow = scene->shadowdata.shadow_map != NULL;
+        int with_ambient = scene->lightdata.ambient_strength > 0;
+        int with_punctual = scene->lightdata.punctual_strength > 0;
 
         printf("faces: %d\n", num_faces);
         printf("center: [%.3f, %.3f, %.3f]\n", center.x, center.y, center.z);
         printf("extent: [%.3f, %.3f, %.3f]\n", extent.x, extent.y, extent.z);
+        printf("skybox: %s\n", with_skybox ? "on" : "off");
+        printf("shadow: %s\n", with_shadow ? "on" : "off");
+        printf("ambient: %s\n", with_ambient ? "on" : "off");
+        printf("punctual: %s\n", with_punctual ? "on" : "off");
     } else {
         int i;
         printf("scene not found: %s\n", scene_name);

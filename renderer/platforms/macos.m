@@ -322,6 +322,8 @@ void input_set_callbacks(window_t *window, callbacks_t callbacks) {
     window->callbacks = callbacks;
 }
 
+/* misc platform functions */
+
 static double get_native_time(void) {
     static double period = -1;
     if (period < 0) {
@@ -332,7 +334,7 @@ static double get_native_time(void) {
     return mach_absolute_time() * period;
 }
 
-float input_get_time(void) {
+float platform_get_time(void) {
     static double initial = -1;
     if (initial < 0) {
         initial = get_native_time();
@@ -342,7 +344,7 @@ float input_get_time(void) {
 
 #define MAX_PATH 2048
 
-void input_initialize_path(void) {
+void platform_init_path(void) {
     char path[MAX_PATH];
     uint32_t size = MAX_PATH;
     _NSGetExecutablePath(path, &size);

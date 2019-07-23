@@ -291,6 +291,8 @@ void input_set_callbacks(window_t *window, callbacks_t callbacks) {
     window->callbacks = callbacks;
 }
 
+/* misc platform functions */
+
 static double get_native_time(void) {
     static double period = -1;
     LARGE_INTEGER counter;
@@ -303,7 +305,7 @@ static double get_native_time(void) {
     return counter.QuadPart * period;
 }
 
-float input_get_time(void) {
+float platform_get_time(void) {
     static double initial = -1;
     if (initial < 0) {
         initial = get_native_time();
@@ -311,7 +313,7 @@ float input_get_time(void) {
     return (float)(get_native_time() - initial);
 }
 
-void input_initialize_path(void) {
+void platform_init_path(void) {
 #ifdef UNICODE
     wchar_t path[MAX_PATH];
     GetModuleFileName(NULL, path, MAX_PATH);
