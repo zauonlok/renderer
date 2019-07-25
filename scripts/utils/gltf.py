@@ -273,27 +273,36 @@ def _build_keyframes(input_data, output_data):
         return list(zip(input_values, output_values))
 
 
-def _load_animation(accessor_parser, animation_data, node_index):
+def _load_animation(accessor_parser, animation_data, node_index, node_data):
     translations = []
     rotations = []
     scales = []
     for channel in animation_data["channels"]:
         channel_target = channel["target"]
         if channel_target["node"] == node_index:
-            sampler_index = channel["sampler"]
-            channel_sampler = animation_data["samplers"][sampler_index]
-            input_data = accessor_parser(channel_sampler["input"])
-            output_data = accessor_parser(channel_sampler["output"])
-            assert len(input_data) == len(output_data)
-            keyframes = _build_keyframes(input_data, output_data)
-            if channel_target["path"] == "translation":
-                translations = keyframes
-            elif channel_target["path"] == "rotation":
-                rotations = keyframes
-            elif channel_target["path"] == "scale":
-                scales = keyframes
-            else:
-                raise Exception("unknown target path")
+            if channel_target["path"] != "weights":
+                sampler_index = channel["sampler"]
+                channel_sampler = animation_data["samplers"][sampler_index]
+                input_data = accessor_parser(channel_sampler["input"])
+                output_data = accessor_parser(channel_sampler["output"])
+                assert len(input_data) == len(output_data)
+                keyframes = _build_keyframes(input_data, output_data)
+                if channel_target["path"] == "translation":
+                    translations = keyframes
+                elif channel_target["path"] == "rotation":
+                    rotations = keyframes
+                elif channel_target["path"] == "scale":
+                    scales = keyframes
+                else:
+                    raise Exception("unknown target path")
+
+    if not translations and "translation" in node_data:
+        translations = [(0.0, node_data["translation"])]
+    if not rotations and "rotation" in node_data:
+        rotations = [(0.0, node_data["rotation"])]
+    if not scales and "scale" in node_data:
+        scales = [(0.0, node_data["scale"])]
+
     return translations, rotations, scales
 
 
@@ -359,8 +368,7 @@ def _dump_ani_data(joints):
     return ani_data
 
 
-def dump_skin_ani_data(gltf, buffer, animation_index=0,
-                       skin_index=0, apply_transform=False):
+def dump_skin_ani_data(gltf, buffer, animation_index=0, skin_index=0):
     accessor_parser = functools.partial(parse_accessor_data, gltf, buffer)
     animation_data = gltf["animations"][animation_index]
     skin_data = gltf["skins"][skin_index]
@@ -387,18 +395,9 @@ def dump_skin_ani_data(gltf, buffer, animation_index=0,
             assert 0 <= parent_index < joint_index
 
         translations, rotations, scales = _load_animation(
-            accessor_parser, animation_data, node_index
+            accessor_parser, animation_data,
+            node_index, gltf["nodes"][node_index]
         )
-
-        if apply_transform:
-            if node_index != root_index:
-                node_data = gltf["nodes"][node_index]
-                if not translations and "translation" in node_data:
-                    translations = [(0.0, node_data["translation"])]
-                if not rotations and "rotation" in node_data:
-                    rotations = [(0.0, node_data["rotation"])]
-                if not scales and "scale" in node_data:
-                    scales = [(0.0, node_data["scale"])]
 
         joint = {
             "joint_index": joint_index,
@@ -434,7 +433,7 @@ def dump_node_ani_data(gltf, buffer, animation_index=0):
             assert 0 <= parent_index < node_index
 
         translations, rotations, scales = _load_animation(
-            accessor_parser, animation_data, node_index
+            accessor_parser, animation_data, node_index, node_data
         )
 
         joint = {
