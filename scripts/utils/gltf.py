@@ -273,85 +273,34 @@ def _build_keyframes(input_data, output_data):
         return list(zip(input_values, output_values))
 
 
-def _load_joint_data(gltf, buffer, animation_index,
-                     skin_index, apply_transform):
-    accessor_parser = functools.partial(parse_accessor_data, gltf, buffer)
-    animation_data = gltf["animations"][animation_index]
-    skin_data = gltf["skins"][skin_index]
-
-    root_index = skin_data["skeleton"]
-    inverse_bind_matrices = accessor_parser(skin_data["inverseBindMatrices"])
-    assert len(inverse_bind_matrices) == len(skin_data["joints"])
-
-    child_to_parent = {}
-    for node_index, node_data in enumerate(gltf["nodes"]):
-        for child_index in node_data.get("children", []):
-            assert child_index not in child_to_parent
-            child_to_parent[child_index] = node_index
-
-    joints = []
-    for joint_index, node_index in enumerate(skin_data["joints"]):
-        inverse_bind = inverse_bind_matrices[joint_index]
-
-        if node_index == root_index:
-            parent_index = -1
-        else:
-            parent_node = child_to_parent[node_index]
-            parent_index = skin_data["joints"].index(parent_node)
-            assert 0 <= parent_index < joint_index
-
-        translations = []
-        rotations = []
-        scales = []
-        for channel in animation_data["channels"]:
-            channel_target = channel["target"]
-            if channel_target["node"] == node_index:
-                sampler_index = channel["sampler"]
-                channel_sampler = animation_data["samplers"][sampler_index]
-                input_data = accessor_parser(channel_sampler["input"])
-                output_data = accessor_parser(channel_sampler["output"])
-                assert len(input_data) == len(output_data)
-                keyframes = _build_keyframes(input_data, output_data)
-                if channel_target["path"] == "translation":
-                    translations = keyframes
-                elif channel_target["path"] == "rotation":
-                    rotations = keyframes
-                elif channel_target["path"] == "scale":
-                    scales = keyframes
-                else:
-                    raise Exception("unknown target path")
-
-        if apply_transform:
-            if node_index != root_index:
-                node_data = gltf["nodes"][node_index]
-                if not translations and "translation" in node_data:
-                    translations = [(0.0, node_data["translation"])]
-                if not rotations and "rotation" in node_data:
-                    rotations = [(0.0, node_data["rotation"])]
-                if not scales and "scale" in node_data:
-                    scales = [(0.0, node_data["scale"])]
-
-        joint = {
-            "joint_index": joint_index,
-            "parent_index": parent_index,
-            "inverse_bind": inverse_bind,
-            "translations": translations,
-            "rotations": rotations,
-            "scales": scales,
-        }
-        joints.append(joint)
-
-    return joints
+def _load_animation(accessor_parser, animation_data, node_index):
+    translations = []
+    rotations = []
+    scales = []
+    for channel in animation_data["channels"]:
+        channel_target = channel["target"]
+        if channel_target["node"] == node_index:
+            sampler_index = channel["sampler"]
+            channel_sampler = animation_data["samplers"][sampler_index]
+            input_data = accessor_parser(channel_sampler["input"])
+            output_data = accessor_parser(channel_sampler["output"])
+            assert len(input_data) == len(output_data)
+            keyframes = _build_keyframes(input_data, output_data)
+            if channel_target["path"] == "translation":
+                translations = keyframes
+            elif channel_target["path"] == "rotation":
+                rotations = keyframes
+            elif channel_target["path"] == "scale":
+                scales = keyframes
+            else:
+                raise Exception("unknown target path")
+    return translations, rotations, scales
 
 
-def dump_ani_data(gltf, buffer, animation_index=0,
-                  skin_index=0, apply_transform=False):
-    joint_data = _load_joint_data(gltf, buffer, animation_index,
-                                  skin_index, apply_transform)
-
+def _dump_ani_data(joints):
     min_time = float("+inf")
     max_time = float("-inf")
-    for joint in joint_data:
+    for joint in joints:
         keyframes = joint["translations"] + joint["rotations"] + joint["scales"]
         for time, _ in keyframes:
             min_time = min(min_time, time)
@@ -359,13 +308,13 @@ def dump_ani_data(gltf, buffer, animation_index=0,
 
     lines = []
 
-    line = "joint-size: {}".format(len(joint_data))
+    line = "joint-size: {}".format(len(joints))
     lines.append(line)
 
     line = "time-range: [{:.6f}, {:.6f}]".format(min_time, max_time)
     lines.append(line)
 
-    for joint in joint_data:
+    for joint in joints:
         line = "\n" + "joint {}:".format(joint["joint_index"])
         lines.append(line)
 
@@ -407,6 +356,98 @@ def dump_ani_data(gltf, buffer, animation_index=0,
             lines.append(line)
 
     ani_data = "\n".join(lines) + "\n"
+    return ani_data
+
+
+def dump_skin_ani_data(gltf, buffer, animation_index=0,
+                       skin_index=0, apply_transform=False):
+    accessor_parser = functools.partial(parse_accessor_data, gltf, buffer)
+    animation_data = gltf["animations"][animation_index]
+    skin_data = gltf["skins"][skin_index]
+
+    root_index = skin_data["skeleton"]
+    inverse_bind_matrices = accessor_parser(skin_data["inverseBindMatrices"])
+    assert len(inverse_bind_matrices) == len(skin_data["joints"])
+
+    child_to_parent = {}
+    for node_index, node_data in enumerate(gltf["nodes"]):
+        for child_index in node_data.get("children", []):
+            assert child_index not in child_to_parent
+            child_to_parent[child_index] = node_index
+
+    joints = []
+    for joint_index, node_index in enumerate(skin_data["joints"]):
+        inverse_bind = inverse_bind_matrices[joint_index]
+
+        if node_index == root_index:
+            parent_index = -1
+        else:
+            parent_node = child_to_parent[node_index]
+            parent_index = skin_data["joints"].index(parent_node)
+            assert 0 <= parent_index < joint_index
+
+        translations, rotations, scales = _load_animation(
+            accessor_parser, animation_data, node_index
+        )
+
+        if apply_transform:
+            if node_index != root_index:
+                node_data = gltf["nodes"][node_index]
+                if not translations and "translation" in node_data:
+                    translations = [(0.0, node_data["translation"])]
+                if not rotations and "rotation" in node_data:
+                    rotations = [(0.0, node_data["rotation"])]
+                if not scales and "scale" in node_data:
+                    scales = [(0.0, node_data["scale"])]
+
+        joint = {
+            "joint_index": joint_index,
+            "parent_index": parent_index,
+            "inverse_bind": inverse_bind,
+            "translations": translations,
+            "rotations": rotations,
+            "scales": scales,
+        }
+        joints.append(joint)
+
+    ani_data = _dump_ani_data(joints)
+    return ani_data
+
+
+def dump_node_ani_data(gltf, buffer, animation_index=0):
+    accessor_parser = functools.partial(parse_accessor_data, gltf, buffer)
+    animation_data = gltf["animations"][animation_index]
+    inverse_bind = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+
+    child_to_parent = {}
+    for node_index, node_data in enumerate(gltf["nodes"]):
+        for child_index in node_data.get("children", []):
+            assert child_index not in child_to_parent
+            child_to_parent[child_index] = node_index
+
+    joints = []
+    for node_index, node_data in enumerate(gltf["nodes"]):
+        if node_index == 0:
+            parent_index = -1
+        else:
+            parent_index = child_to_parent[node_index]
+            assert 0 <= parent_index < node_index
+
+        translations, rotations, scales = _load_animation(
+            accessor_parser, animation_data, node_index
+        )
+
+        joint = {
+            "joint_index": node_index,
+            "parent_index": parent_index,
+            "inverse_bind": inverse_bind,
+            "translations": translations,
+            "rotations": rotations,
+            "scales": scales,
+        }
+        joints.append(joint)
+
+    ani_data = _dump_ani_data(joints)
     return ani_data
 
 

@@ -15,7 +15,7 @@ import zipfile
 
 from PIL import Image
 
-from utils.gltf import dump_ani_data, dump_obj_data
+from utils.gltf import dump_obj_data, dump_skin_ani_data
 
 SRC_FILENAME = "junkrat.zip"
 DST_DIRECTORY = "../assets/junkrat"
@@ -58,7 +58,7 @@ def process_meshes(zip_file):
         with open(obj_filepath, "w") as f:
             f.write(obj_data)
 
-    ani_data = dump_ani_data(gltf, buffer)
+    ani_data = dump_skin_ani_data(gltf, buffer)
     ani_filepath = os.path.join(DST_DIRECTORY, "junkrat.ani")
     with open(ani_filepath, "w") as f:
         f.write(ani_data)
