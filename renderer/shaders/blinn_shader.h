@@ -61,6 +61,7 @@ typedef struct {
 } blinn_material_t;
 
 model_t *blinn_create_model(const char *mesh, const char *skeleton,
-                            mat4_t transform, blinn_material_t material);
+                            int node_index, mat4_t transform,
+                            blinn_material_t material);
 
 #endif

@@ -400,27 +400,42 @@ vec4_t pbr_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
 /* high-level api */
 
 static void update_model(model_t *model, framedata_t *framedata) {
-    mat4_t model_matrix = model->transform;
-    mat4_t normal_matrix = mat4_inverse_transpose(model_matrix);
-    skeleton_t *skeleton = model->skeleton;
     float ambient_strength = framedata->ambient_strength;
     float punctual_strength = framedata->punctual_strength;
+    skeleton_t *skeleton = model->skeleton;
+    mat4_t model_matrix = model->transform;
+    mat3_t normal_matrix;
+    mat4_t *joint_matrices;
+    mat3_t *joint_n_matrices;
     pbr_uniforms_t *uniforms;
+
+    if (skeleton) {
+        skeleton_update_joints(skeleton, framedata->frame_time);
+        joint_matrices = skeleton_get_joint_matrices(skeleton);
+        joint_n_matrices = skeleton_get_normal_matrices(skeleton);
+        if (model->node_index >= 0) {
+            mat4_t node_matrix = joint_matrices[model->node_index];
+            model_matrix = mat4_mul_mat4(model_matrix, node_matrix);
+            joint_matrices = NULL;
+            joint_n_matrices = NULL;
+        }
+    } else {
+        joint_matrices = NULL;
+        joint_n_matrices = NULL;
+    }
+    normal_matrix = mat3_inverse_transpose(mat3_from_mat4(model_matrix));
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
     uniforms->light_dir = framedata->light_dir;
     uniforms->camera_pos = framedata->camera_pos;
     uniforms->model_matrix = model_matrix;
-    uniforms->normal_matrix = mat3_from_mat4(normal_matrix);
+    uniforms->normal_matrix = normal_matrix;
     uniforms->light_vp_matrix = mat4_mul_mat4(framedata->light_proj_matrix,
                                               framedata->light_view_matrix);
     uniforms->camera_vp_matrix = mat4_mul_mat4(framedata->camera_proj_matrix,
                                                framedata->camera_view_matrix);
-    if (skeleton) {
-        skeleton_update_joints(skeleton, framedata->frame_time);
-        uniforms->joint_matrices = skeleton_get_joint_matrices(skeleton);
-        uniforms->joint_n_matrices = skeleton_get_normal_matrices(skeleton);
-    }
+    uniforms->joint_matrices = joint_matrices;
+    uniforms->joint_n_matrices = joint_n_matrices;
     uniforms->ambient_strength = float_clamp(ambient_strength, 0, 5);
     uniforms->punctual_strength = float_clamp(punctual_strength, 0, 5);
     uniforms->shadow_map = framedata->shadow_map;
@@ -473,8 +488,8 @@ static void release_model(model_t *model) {
 }
 
 static model_t *create_model(const char *mesh, const char *skeleton,
-                             int double_sided, int enable_blend,
-                             mat4_t transform) {
+                             int node_index, mat4_t transform,
+                             int double_sided, int enable_blend) {
     int sizeof_attribs = sizeof(pbr_attribs_t);
     int sizeof_varyings = sizeof(pbr_varyings_t);
     int sizeof_uniforms = sizeof(pbr_uniforms_t);
@@ -492,6 +507,7 @@ static model_t *create_model(const char *mesh, const char *skeleton,
     model->transform = transform;
     model->sortdata.opaque = !enable_blend;
     model->sortdata.distance = 0;
+    model->node_index = node_index;
     model->draw = draw_model;
     model->update = update_model;
     model->release = release_model;
@@ -500,16 +516,16 @@ static model_t *create_model(const char *mesh, const char *skeleton,
 }
 
 model_t *pbrm_create_model(const char *mesh, const char *skeleton,
-                           mat4_t transform, pbrm_material_t material,
-                           const char *env_name) {
+                           int node_index, mat4_t transform,
+                           pbrm_material_t material, const char *env_name) {
     pbr_uniforms_t *uniforms;
     model_t *model;
 
     assert(material.metalness_factor >= 0 && material.metalness_factor <= 1);
     assert(material.roughness_factor >= 0 && material.roughness_factor <= 1);
 
-    model = create_model(mesh, skeleton, material.double_sided,
-                         material.enable_blend, transform);
+    model = create_model(mesh, skeleton, node_index, transform,
+                         material.double_sided, material.enable_blend);
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
     uniforms->basecolor_factor = material.basecolor_factor;
@@ -529,15 +545,15 @@ model_t *pbrm_create_model(const char *mesh, const char *skeleton,
 }
 
 model_t *pbrs_create_model(const char *mesh, const char *skeleton,
-                           mat4_t transform, pbrs_material_t material,
-                           const char *env_name) {
+                           int node_index, mat4_t transform,
+                           pbrs_material_t material, const char *env_name) {
     pbr_uniforms_t *uniforms;
     model_t *model;
 
     assert(material.glossiness_factor >= 0 && material.glossiness_factor <= 1);
 
-    model = create_model(mesh, skeleton, material.double_sided,
-                         material.enable_blend, transform);
+    model = create_model(mesh, skeleton, node_index, transform,
+                         material.double_sided, material.enable_blend);
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
     uniforms->diffuse_factor = material.diffuse_factor;

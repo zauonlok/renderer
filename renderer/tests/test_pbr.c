@@ -6,6 +6,7 @@
 
 static creator_t g_creators[] = {
     {"assassin", pbr_assassin_scene},
+    {"buster", pbr_buster_scene},
     {"crab", pbr_crab_scene},
     {"dieselpunk", pbr_dieselpunk_scene},
     {"drone", pbr_drone_scene},

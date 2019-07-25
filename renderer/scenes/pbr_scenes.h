@@ -4,6 +4,7 @@
 #include "../core/api.h"
 
 scene_t *pbr_assassin_scene(void);
+scene_t *pbr_buster_scene(void);
 scene_t *pbr_crab_scene(void);
 scene_t *pbr_dieselpunk_scene(void);
 scene_t *pbr_drone_scene(void);

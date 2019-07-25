@@ -59,7 +59,7 @@ scene_t *blinn_azura_scene(void) {
     root = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
         blinn_material_t material = materials[i];
-        model = blinn_create_model(meshes[i], NULL, root, material);
+        model = blinn_create_model(meshes[i], NULL, -1, root, material);
         darray_push(models, model);
     }
 
@@ -110,7 +110,7 @@ scene_t *blinn_centaur_scene(void) {
     scale = mat4_scale(0.016f, 0.016f, 0.016f);
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], NULL, root, materials[i]);
+        model = blinn_create_model(meshes[i], NULL, -1, root, materials[i]);
         darray_push(models, model);
     }
 
@@ -346,12 +346,13 @@ scene_t *blinn_craftsman_scene(void) {
         } else {
             material = materials[ARRAY_SIZE(materials) - 1];
         }
-        model = blinn_create_model(meshes[i], NULL, transform, material);
+        model = blinn_create_model(meshes[i], NULL, -1, transform, material);
         darray_push(models, model);
     }
     for (i = 0; i < num_sparks; i++) {
         mat4_t transform = mat4_mul_mat4(root, spark_transforms[i]);
-        model = blinn_create_model(spark_mesh, NULL, transform, spark_material);
+        blinn_material_t material = spark_material;
+        model = blinn_create_model(spark_mesh, NULL, -1, transform, material);
         darray_push(models, model);
     }
 
@@ -393,7 +394,7 @@ scene_t *blinn_elfgirl_scene(void) {
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
         material.diffuse_map = textures[i];
-        model = blinn_create_model(meshes[i], NULL, root, material);
+        model = blinn_create_model(meshes[i], NULL, -1, root, material);
         darray_push(models, model);
     }
 
@@ -426,7 +427,7 @@ scene_t *blinn_kgirl_scene(void) {
     scale = mat4_scale(0.005f, 0.005f, 0.005f);
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], skeleton, root, material);
+        model = blinn_create_model(meshes[i], skeleton, -1, root, material);
         darray_push(models, model);
     }
 
@@ -543,7 +544,7 @@ scene_t *blinn_mccree_scene(void) {
         blinn_material_t material = materials[material_index];
         char obj_filepath[64];
         sprintf(obj_filepath, "mccree/mccree%d.obj", i);
-        model = blinn_create_model(obj_filepath, NULL, transform, material);
+        model = blinn_create_model(obj_filepath, NULL, -1, transform, material);
         darray_push(models, model);
     }
 
@@ -685,7 +686,7 @@ scene_t *blinn_nier2b_scene(void) {
         blinn_material_t material = materials[i];
         char obj_filepath[64];
         sprintf(obj_filepath, "nier2b/nier2b%d.obj", i);
-        model = blinn_create_model(obj_filepath, NULL, transform, material);
+        model = blinn_create_model(obj_filepath, NULL, -1, transform, material);
         darray_push(models, model);
     }
 
@@ -728,7 +729,7 @@ scene_t *blinn_phoenix_scene(void) {
     scale = mat4_scale(0.001f, 0.001f, 0.001f);
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], skeleton, root, materials[i]);
+        model = blinn_create_model(meshes[i], skeleton, -1, root, materials[i]);
         darray_push(models, model);
     }
 
@@ -766,7 +767,7 @@ scene_t *blinn_witch_scene(void) {
     scale = mat4_scale(0.02f, 0.02f, 0.02f);
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], NULL, root, materials[i]);
+        model = blinn_create_model(meshes[i], NULL, -1, root, materials[i]);
         darray_push(models, model);
     }
 

@@ -69,8 +69,79 @@ scene_t *pbr_assassin_scene(void) {
     scale = mat4_scale(0.0038f, 0.0038f, 0.0038f);
     root = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
-        model = pbrm_create_model(meshes[i], skeleton, root,
+        model = pbrm_create_model(meshes[i], skeleton, -1, root,
                                   materials[i], env_name);
+        darray_push(models, model);
+    }
+
+    return scene_create(background, NULL, models, 1, 1, 0);
+}
+
+scene_t *pbr_buster_scene(void) {
+    const char *skeleton = "buster/buster.ani";
+    int mesh2node[39] = {
+        7, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40,
+        42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 66,
+        68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92,
+    };
+    int mesh2material[39] = {
+        0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2,
+        1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    };
+    pbrm_material_t materials[] = {
+        {
+            {1, 1, 1, 1}, 0, 1,
+            "buster/boden_basecolor.tga",
+            NULL,
+            "buster/boden_roughness.tga",
+            NULL,
+            NULL,
+            NULL,
+            1, 1, 0,
+        },
+        {
+            {1, 1, 1, 1}, 1, 1,
+            "buster/body_basecolor.tga",
+            "buster/body_metalness.tga",
+            "buster/body_roughness.tga",
+            NULL,
+            "buster/body_occlusion.tga",
+            "buster/body_emission.tga",
+            0, 0, 1,
+        },
+        {
+            {1, 1, 1, 1}, 1, 1,
+            "buster/legs_basecolor.tga",
+            "buster/legs_metalness.tga",
+            "buster/legs_roughness.tga",
+            NULL,
+            "buster/legs_occlusion.tga",
+            NULL,
+            0, 0, 0,
+        },
+    };
+    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    const char *env_name = "papermill";
+    mat4_t scale, rotation, translation, root;
+    int num_meshes = ARRAY_SIZE(mesh2node);
+    model_t **models = NULL;
+    model_t *model;
+    int i;
+
+    assert(ARRAY_SIZE(mesh2material) == num_meshes);
+
+    translation = mat4_translate(0, 15.918f, -5.720f);
+    rotation = mat4_rotate_x(TO_RADIANS(90));
+    scale = mat4_scale(0.0045f, 0.0045f, 0.0045f);
+    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    for (i = 1; i < num_meshes; i++) {
+        int node_index = mesh2node[i];
+        int material_index = mesh2material[i];
+        pbrm_material_t material = materials[material_index];
+        char obj_filepath[64];
+        sprintf(obj_filepath, "buster/buster%d.obj", i);
+        model = pbrm_create_model(obj_filepath, skeleton, node_index, root,
+                                  material, env_name);
         darray_push(models, model);
     }
 
@@ -98,7 +169,7 @@ scene_t *pbr_crab_scene(void) {
     mat4_t rotation = mat4_rotate_y(TO_RADIANS(180));
     mat4_t scale = mat4_scale(0.167f, 0.167f, 0.167f);
     mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    model_t *model = pbrs_create_model(mesh, skeleton, root,
+    model_t *model = pbrs_create_model(mesh, skeleton, -1, root,
                                        material, env_name);
     darray_push(models, model);
 
@@ -158,7 +229,7 @@ scene_t *pbr_dieselpunk_scene(void) {
     scale = mat4_scale(0.0012f, 0.0012f, 0.0012f);
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
-        model = pbrm_create_model(meshes[i], NULL, root,
+        model = pbrm_create_model(meshes[i], NULL, -1, root,
                                   materials[i], env_name);
         darray_push(models, model);
     }
@@ -187,7 +258,7 @@ scene_t *pbr_drone_scene(void) {
     mat4_t rotation = mat4_rotate_y(TO_RADIANS(180));
     mat4_t scale = mat4_scale(0.0028f, 0.0028f, 0.0028f);
     mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    model_t *model = pbrs_create_model(mesh, skeleton, root,
+    model_t *model = pbrs_create_model(mesh, skeleton, -1, root,
                                        material, env_name);
     darray_push(models, model);
 
@@ -215,7 +286,8 @@ scene_t *pbr_helmet_scene(void) {
     mat4_t rotation = mat4_rotate_x(TO_RADIANS(90));
     mat4_t scale = mat4_scale(0.5f, 0.5f, 0.5f);
     mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    model_t *model = pbrm_create_model(mesh, NULL, root, material, env_name);
+    model_t *model = pbrm_create_model(mesh, NULL, -1, root,
+                                       material, env_name);
     darray_push(models, model);
 
     return scene_create(background, skybox, models, 1, 1, 0);
@@ -286,7 +358,7 @@ scene_t *pbr_junkrat_scene(void) {
         pbrm_material_t material = materials[material_index];
         char obj_filepath[64];
         sprintf(obj_filepath, "junkrat/junkrat%d.obj", i);
-        model = pbrm_create_model(obj_filepath, skeleton, root,
+        model = pbrm_create_model(obj_filepath, skeleton, -1, root,
                                   material, env_name);
         darray_push(models, model);
     }
@@ -390,7 +462,7 @@ scene_t *pbr_ornitier_scene(void) {
     scale = mat4_scale(0.00095f, 0.00095f, 0.00095f);
     root = mat4_mul_mat4(scale, translation);
     for (i = 0; i < num_meshes; i++) {
-        model = pbrm_create_model(meshes[i], NULL, root,
+        model = pbrm_create_model(meshes[i], NULL, -1, root,
                                   materials[i], env_name);
         darray_push(models, model);
     }
@@ -451,7 +523,7 @@ scene_t *pbr_ponycar_scene(void) {
     scale = mat4_scale(0.0015f, 0.0015f, 0.0015f);
     root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     for (i = 0; i < num_meshes; i++) {
-        model = pbrm_create_model(meshes[i], NULL, root,
+        model = pbrm_create_model(meshes[i], NULL, -1, root,
                                   materials[i], env_name);
         darray_push(models, model);
     }
@@ -477,7 +549,8 @@ scene_t *pbr_sphere_scene(void) {
         material.basecolor_factor = vec4_new(1, 1, 1, 1);
         material.metalness_factor = 1;
         material.roughness_factor = (float)i / 10;
-        model = pbrm_create_model(mesh, NULL, transform, material, env_name);
+        model = pbrm_create_model(mesh, NULL, -1, transform,
+                                  material, env_name);
         darray_push(models, model);
     }
 
@@ -488,7 +561,8 @@ scene_t *pbr_sphere_scene(void) {
         material.basecolor_factor = vec4_new(1, 1, 1, 1);
         material.metalness_factor = 0;
         material.roughness_factor = (float)i / 10;
-        model = pbrm_create_model(mesh, NULL, transform, material, env_name);
+        model = pbrm_create_model(mesh, NULL, -1, transform,
+                                  material, env_name);
         darray_push(models, model);
     }
 
@@ -499,7 +573,8 @@ scene_t *pbr_sphere_scene(void) {
         material.basecolor_factor = vec4_new(0, 0, 0, 1);
         material.metalness_factor = 0;
         material.roughness_factor = (float)i / 10;
-        model = pbrm_create_model(mesh, NULL, transform, material, env_name);
+        model = pbrm_create_model(mesh, NULL, -1, transform,
+                                  material, env_name);
         darray_push(models, model);
     }
 
