@@ -30,7 +30,7 @@ def process_meshes(zip_file):
     with open(filepath, "w") as f:
         f.write(obj_data)
 
-    ani_data = dump_skin_ani_data(gltf, buffer, apply_transform=True)
+    ani_data = dump_skin_ani_data(gltf, buffer)
     ani_filepath = os.path.join(DST_DIRECTORY, "crab.ani")
     with open(ani_filepath, "w") as f:
         f.write(ani_data)
