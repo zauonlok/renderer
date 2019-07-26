@@ -80,9 +80,9 @@ scene_t *pbr_assassin_scene(void) {
 scene_t *pbr_buster_scene(void) {
     const char *skeleton = "buster/buster.ani";
     int mesh2node[39] = {
-        1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-        30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
+        2, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+        18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+        31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
     };
     int mesh2material[39] = {
         0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -238,9 +238,9 @@ scene_t *pbr_dieselpunk_scene(void) {
 }
 
 scene_t *pbr_drone_scene(void) {
-    const char *mesh = "drone/drone.obj";
-    const char *skeleton = "drone/drone.ani";
-    pbrs_material_t material = {
+    const char *drone_mesh = "drone/drone.obj";
+    const char *drone_skeleton = "drone/drone.ani";
+    pbrs_material_t drone_material = {
         {1, 1, 1, 1}, {1, 1, 1}, 1,
         "drone/drone_diffuse.tga",
         "drone/drone_specular.tga",
@@ -250,17 +250,45 @@ scene_t *pbr_drone_scene(void) {
         "drone/drone_emission.tga",
         0, 0, 0,
     };
+    const char *fire_skeleton = "drone/fire.ani";
+    int fire_mesh2node[15] = {
+        5, 7, 9, 11, 13, 16, 18, 20, 22, 24, 27, 29, 31, 33, 35,
+    };
+    pbrs_material_t fire_material = {
+        {0, 0, 0, 0.1f}, {0, 0, 0}, 0.8f,
+        "drone/fire_diffuse.tga",
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        "drone/fire_emission.tga",
+        1, 1, 0,
+    };
     vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
     const char *env_name = "papermill";
+    mat4_t scale, rotation, translation, root;
+    int num_fires = ARRAY_SIZE(fire_mesh2node);
     model_t **models = NULL;
+    model_t *model;
+    int i;
 
-    mat4_t translation = mat4_translate(0, -79.181f, -4.447f);
-    mat4_t rotation = mat4_rotate_y(TO_RADIANS(180));
-    mat4_t scale = mat4_scale(0.0028f, 0.0028f, 0.0028f);
-    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    model_t *model = pbrs_create_model(mesh, skeleton, -1, root,
-                                       material, env_name);
+    translation = mat4_translate(0, -78.288f, -4.447f);
+    rotation = mat4_rotate_y(TO_RADIANS(180));
+    scale = mat4_scale(0.0028f, 0.0028f, 0.0028f);
+    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    model = pbrs_create_model(drone_mesh, drone_skeleton, -1, root,
+                              drone_material, env_name);
     darray_push(models, model);
+
+    root = mat4_mul_mat4(root, mat4_rotate_x(TO_RADIANS(90)));
+    for (i = 0; i < num_fires; i++) {
+        int node_index = fire_mesh2node[i];
+        char obj_filepath[64];
+        sprintf(obj_filepath, "drone/fire%d.obj", i);
+        model = pbrs_create_model(obj_filepath, fire_skeleton, node_index, root,
+                                  fire_material, env_name);
+        darray_push(models, model);
+    }
 
     return scene_create(background, NULL, models, 1, 1, 0);
 }

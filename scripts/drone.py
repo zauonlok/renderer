@@ -15,25 +15,52 @@ import zipfile
 
 from PIL import Image
 
-from utils.gltf import dump_obj_data, dump_skin_ani_data
+from utils.gltf import dump_node_ani_data, dump_obj_data, dump_skin_ani_data
 
 SRC_FILENAME = "mech_drone.zip"
 DST_DIRECTORY = "../assets/drone"
+
+IMG_FILENAMES = {
+    "drone": [
+        "textures/Robot_diffuse.jpeg",
+        "textures/Robot_emissive.jpeg",
+        "textures/Robot_occlusion.jpeg",
+        "textures/Robot_specularGlossiness.png",
+    ],
+    "fire": [
+        "textures/Fire_diffuse.png",
+        "textures/Fire_emissive.jpeg",
+        None,
+        None,
+    ],
+}
 
 
 def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
 
-    obj_data = dump_obj_data(gltf, buffer, 0, with_skin=True)
-    filepath = os.path.join(DST_DIRECTORY, "drone.obj")
-    with open(filepath, "w") as f:
-        f.write(obj_data)
+    drone_obj_data = dump_obj_data(gltf, buffer, 0, with_skin=True)
+    drone_filepath = os.path.join(DST_DIRECTORY, "drone.obj")
+    with open(drone_filepath, "w") as f:
+        f.write(drone_obj_data)
 
-    ani_data = dump_skin_ani_data(gltf, buffer)
-    ani_filepath = os.path.join(DST_DIRECTORY, "drone.ani")
-    with open(ani_filepath, "w") as f:
-        f.write(ani_data)
+    for mesh_index in range(1, len(gltf["meshes"])):
+        fire_obj_data = dump_obj_data(gltf, buffer, mesh_index)
+        fire_filename = "fire{}.obj".format(mesh_index - 1)
+        fire_filepath = os.path.join(DST_DIRECTORY, fire_filename)
+        with open(fire_filepath, "w") as f:
+            f.write(fire_obj_data)
+
+    drone_ani_data = dump_skin_ani_data(gltf, buffer)
+    drone_ani_filepath = os.path.join(DST_DIRECTORY, "drone.ani")
+    with open(drone_ani_filepath, "w") as f:
+        f.write(drone_ani_data)
+
+    fire_ani_data, _ = dump_node_ani_data(gltf, buffer)
+    fire_ani_filepath = os.path.join(DST_DIRECTORY, "fire.ani")
+    with open(fire_ani_filepath, "w") as f:
+        f.write(fire_ani_data)
 
 
 def load_image(zip_file, filename):
@@ -50,29 +77,39 @@ def save_image(image, filename):
 
 
 def process_images(zip_file):
-    diffuse_path = "textures/Robot_diffuse.jpeg"
-    emission_path = "textures/Robot_emissive.jpeg"
-    occlusion_path = "textures/Robot_occlusion.jpeg"
-    packed_path = "textures/Robot_specularGlossiness.png"
+    for name, paths in IMG_FILENAMES.items():
+        diffuse_path, emission_path, occlusion_path, packed_path = paths
 
-    diffuse_image = load_image(zip_file, diffuse_path)
-    save_image(diffuse_image, "drone_diffuse.tga")
+        if diffuse_path:
+            diffuse_image = load_image(zip_file, diffuse_path)
+            save_image(diffuse_image, "{}_diffuse.tga".format(name))
 
-    emission_image = load_image(zip_file, emission_path)
-    save_image(emission_image, "drone_emission.tga")
+        if emission_path:
+            emission_image = load_image(zip_file, emission_path)
+            save_image(emission_image, "{}_emission.tga".format(name))
 
-    occlusion_image = load_image(zip_file, occlusion_path)
-    occlusion_image = occlusion_image.split()[0]
-    save_image(occlusion_image, "drone_occlusion.tga")
+        if occlusion_path:
+            occlusion_image = load_image(zip_file, occlusion_path)
+            occlusion_image = occlusion_image.split()[0]
+            save_image(occlusion_image, "{}_occlusion.tga".format(name))
 
-    packed_image = load_image(zip_file, packed_path)
-    packed_bands = packed_image.split()
+        if packed_path:
+            packed_image = load_image(zip_file, packed_path)
+            packed_bands = packed_image.split()
+            specular_image = Image.merge("RGB", packed_bands[:3])
+            glossiness_image = packed_bands[3]
+            save_image(specular_image, "{}_specular.tga".format(name))
+            save_image(glossiness_image, "{}_glossiness.tga".format(name))
 
-    specular_image = Image.merge("RGB", packed_bands[:3])
-    save_image(specular_image, "drone_specular.tga")
 
-    glossiness_image = packed_bands[3]
-    save_image(glossiness_image, "drone_glossiness.tga")
+def print_mesh2node(zip_file):
+    gltf = json.loads(zip_file.read("scene.gltf"))
+    buffer = zip_file.read("scene.bin")
+    _, mesh2node = dump_node_ani_data(gltf, buffer)
+    mesh2node = [str(j) for j in mesh2node[1:]]
+    print("    int fire_mesh2node[{}] = {{".format(len(mesh2node)))
+    print("        {}".format(", ".join(mesh2node) + ","))
+    print("    };")
 
 
 def main():
@@ -82,6 +119,7 @@ def main():
     with zipfile.ZipFile(SRC_FILENAME) as zip_file:
         process_meshes(zip_file)
         process_images(zip_file)
+        # print_mesh2node(zip_file)
 
 
 if __name__ == "__main__":

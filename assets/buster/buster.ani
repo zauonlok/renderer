@@ -1,4 +1,4 @@
-joint-size: 43
+joint-size: 44
 time-range: [0.000000, 25.000000]
 
 joint 0:
@@ -17,6 +17,17 @@ joint 1:
     parent-index: 0
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
+        0.000000 0.000000 -1.000000 0.000000
+        0.000000 1.000000 0.000000 0.000000
+        0.000000 0.000000 0.000000 1.000000
+    translations 0:
+    rotations 0:
+    scales 0:
+
+joint 2:
+    parent-index: 1
+    inverse-bind:
+        1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
         0.000000 0.000000 1.000000 0.000000
         0.000000 0.000000 0.000000 1.000000
@@ -26,8 +37,8 @@ joint 1:
         time: 0.000000, value: [0.500000, 0.500000, -0.500000, 0.500000]
     scales 0:
 
-joint 2:
-    parent-index: 0
+joint 3:
+    parent-index: 1
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -684,8 +695,8 @@ joint 2:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 3:
-    parent-index: 2
+joint 4:
+    parent-index: 3
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -2798,8 +2809,8 @@ joint 3:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 4:
-    parent-index: 3
+joint 5:
+    parent-index: 4
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -2810,8 +2821,8 @@ joint 4:
     rotations 0:
     scales 0:
 
-joint 5:
-    parent-index: 4
+joint 6:
+    parent-index: 5
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -2823,8 +2834,8 @@ joint 5:
         time: 0.000000, value: [-0.707107, 0.000000, 0.000000, 0.707107]
     scales 0:
 
-joint 6:
-    parent-index: 5
+joint 7:
+    parent-index: 6
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -2835,8 +2846,8 @@ joint 6:
     rotations 0:
     scales 0:
 
-joint 7:
-    parent-index: 6
+joint 8:
+    parent-index: 7
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -3250,8 +3261,8 @@ joint 7:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 8:
-    parent-index: 7
+joint 9:
+    parent-index: 8
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -3698,8 +3709,8 @@ joint 8:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 9:
-    parent-index: 8
+joint 10:
+    parent-index: 9
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -3765,8 +3776,8 @@ joint 9:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 10:
-    parent-index: 9
+joint 11:
+    parent-index: 10
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -4004,8 +4015,8 @@ joint 10:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 11:
-    parent-index: 10
+joint 12:
+    parent-index: 11
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -4216,8 +4227,8 @@ joint 11:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 12:
-    parent-index: 11
+joint 13:
+    parent-index: 12
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -4229,8 +4240,8 @@ joint 12:
         time: 0.000000, value: [-0.000000, -0.000000, 0.000000, 1.000000]
     scales 0:
 
-joint 13:
-    parent-index: 12
+joint 14:
+    parent-index: 13
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -5105,8 +5116,8 @@ joint 13:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 14:
-    parent-index: 5
+joint 15:
+    parent-index: 6
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -5141,8 +5152,8 @@ joint 14:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 15:
-    parent-index: 14
+joint 16:
+    parent-index: 15
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -5177,8 +5188,8 @@ joint 15:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 16:
-    parent-index: 15
+joint 17:
+    parent-index: 16
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -5190,8 +5201,8 @@ joint 16:
         time: 0.000000, value: [-0.410619, 0.575667, -0.410619, 0.575667]
     scales 0:
 
-joint 17:
-    parent-index: 16
+joint 18:
+    parent-index: 17
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -5704,8 +5715,8 @@ joint 17:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 18:
-    parent-index: 17
+joint 19:
+    parent-index: 18
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -6197,8 +6208,8 @@ joint 18:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 19:
-    parent-index: 18
+joint 20:
+    parent-index: 19
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -6593,8 +6604,8 @@ joint 19:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 20:
-    parent-index: 19
+joint 21:
+    parent-index: 20
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -6840,8 +6851,8 @@ joint 20:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 21:
-    parent-index: 20
+joint 22:
+    parent-index: 21
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -7052,8 +7063,8 @@ joint 21:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 22:
-    parent-index: 21
+joint 23:
+    parent-index: 22
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -7065,8 +7076,8 @@ joint 22:
         time: 0.000000, value: [-0.000000, 0.000000, 0.000000, 1.000000]
     scales 0:
 
-joint 23:
-    parent-index: 22
+joint 24:
+    parent-index: 23
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -7925,8 +7936,8 @@ joint 23:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 24:
-    parent-index: 5
+joint 25:
+    parent-index: 6
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -7961,8 +7972,8 @@ joint 24:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 25:
-    parent-index: 24
+joint 26:
+    parent-index: 25
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -7997,8 +8008,8 @@ joint 25:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 26:
-    parent-index: 25
+joint 27:
+    parent-index: 26
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -8010,8 +8021,8 @@ joint 26:
         time: 0.000000, value: [-0.410619, -0.575667, 0.410619, 0.575667]
     scales 0:
 
-joint 27:
-    parent-index: 26
+joint 28:
+    parent-index: 27
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -8532,8 +8543,8 @@ joint 27:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 28:
-    parent-index: 27
+joint 29:
+    parent-index: 28
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -9025,8 +9036,8 @@ joint 28:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 29:
-    parent-index: 28
+joint 30:
+    parent-index: 29
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -9287,8 +9298,8 @@ joint 29:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 30:
-    parent-index: 29
+joint 31:
+    parent-index: 30
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -9510,8 +9521,8 @@ joint 30:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 31:
-    parent-index: 30
+joint 32:
+    parent-index: 31
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -9722,8 +9733,8 @@ joint 31:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 32:
-    parent-index: 31
+joint 33:
+    parent-index: 32
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -9735,8 +9746,8 @@ joint 32:
         time: 0.000000, value: [-0.000000, -0.000000, 0.000000, 1.000000]
     scales 0:
 
-joint 33:
-    parent-index: 32
+joint 34:
+    parent-index: 33
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -10593,8 +10604,8 @@ joint 33:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 34:
-    parent-index: 5
+joint 35:
+    parent-index: 6
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -10633,8 +10644,8 @@ joint 34:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 35:
-    parent-index: 5
+joint 36:
+    parent-index: 6
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -10673,8 +10684,8 @@ joint 35:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 36:
-    parent-index: 5
+joint 37:
+    parent-index: 6
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -10713,8 +10724,8 @@ joint 36:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 37:
-    parent-index: 5
+joint 38:
+    parent-index: 6
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -10725,8 +10736,8 @@ joint 37:
     rotations 0:
     scales 0:
 
-joint 38:
-    parent-index: 37
+joint 39:
+    parent-index: 38
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -11865,8 +11876,8 @@ joint 38:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 39:
-    parent-index: 5
+joint 40:
+    parent-index: 6
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -13052,8 +13063,8 @@ joint 39:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 40:
-    parent-index: 39
+joint 41:
+    parent-index: 40
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -14271,8 +14282,8 @@ joint 40:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 41:
-    parent-index: 5
+joint 42:
+    parent-index: 6
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000
@@ -15458,8 +15469,8 @@ joint 41:
     scales 1:
         time: 0.000000, value: [1.000000, 1.000000, 1.000000]
 
-joint 42:
-    parent-index: 41
+joint 43:
+    parent-index: 42
     inverse-bind:
         1.000000 0.000000 0.000000 0.000000
         0.000000 1.000000 0.000000 0.000000

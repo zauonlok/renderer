@@ -413,13 +413,27 @@ def dump_skin_ani_data(gltf, buffer, animation_index=0, skin_index=0):
     return ani_data
 
 
-def _has_mesh_child(joint, joints):
+IDENTITY_MATRIX = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+
+
+def _has_transform(joint):
+    if joint["translations"] or joint["rotations"] or joint["scales"]:
+        return True
+    elif joint["inverse_bind"] != IDENTITY_MATRIX:
+        return True
+    else:
+        return False
+
+
+def _has_meshes(joint, joints):
+    if joint["meshes"]:
+        return True
+
     for child_index in joint["children"]:
         child_joint = joints[child_index]
-        if child_joint["meshes"]:
+        if _has_meshes(child_joint, joints):
             return True
-        elif _has_mesh_child(child_joint, joints):
-            return True
+
     return False
 
 
@@ -435,20 +449,12 @@ def _compact_joints(joints):
             assert not parent_joint["discarded"]
         joint["parent_index"] = parent_index
 
-        should_discard = False
-        if not _has_mesh_child(joint, joints):
-            should_discard = True
-        elif joint["translations"] or joint["rotations"] or joint["scales"]:
-            pass
+        if _has_transform(joint) and _has_meshes(joint, joints):
+            compacted.append(joint)
         else:
-            should_discard = True
-
-        if should_discard:
             joint["discarded"] = True
             parent_joint["meshes"].extend(joint["meshes"])
             joint["meshes"] = []
-        else:
-            compacted.append(joint)
 
     mesh2joint_dict = {}
     for joint_index, joint in enumerate(compacted):
@@ -486,6 +492,11 @@ def dump_node_ani_data(gltf, buffer, animation_index=0):
         else:
             parent_index = child_to_parent[node_index]
             assert 0 <= parent_index < node_index
+
+        if "matrix" in node_data:
+            inverse_bind = node_data["matrix"]
+        else:
+            inverse_bind = IDENTITY_MATRIX
 
         translations, rotations, scales = _load_animation(
             accessor_parser, animation_data, node_index, node_data
