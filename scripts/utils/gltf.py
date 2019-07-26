@@ -413,6 +413,61 @@ def dump_skin_ani_data(gltf, buffer, animation_index=0, skin_index=0):
     return ani_data
 
 
+def _has_mesh_child(joint, joints):
+    for child_index in joint["children"]:
+        child_joint = joints[child_index]
+        if child_joint["meshes"]:
+            return True
+        elif _has_mesh_child(child_joint, joints):
+            return True
+    return False
+
+
+def _compact_joints(joints):
+    compacted = [joints[0]]
+    for joint in joints[1:]:
+        parent_index = joint["parent_index"]
+        parent_joint = joints[parent_index]
+        if parent_joint["discarded"]:
+            assert not parent_joint["meshes"]
+            parent_index = parent_joint["parent_index"]
+            parent_joint = joints[parent_index]
+            assert not parent_joint["discarded"]
+        joint["parent_index"] = parent_index
+
+        should_discard = False
+        if not _has_mesh_child(joint, joints):
+            should_discard = True
+        elif joint["translations"] or joint["rotations"] or joint["scales"]:
+            pass
+        else:
+            should_discard = True
+
+        if should_discard:
+            joint["discarded"] = True
+            parent_joint["meshes"].extend(joint["meshes"])
+            joint["meshes"] = []
+        else:
+            compacted.append(joint)
+
+    mesh2joint_dict = {}
+    for joint_index, joint in enumerate(compacted):
+        if joint_index > 0:
+            joint["joint_index"] = joint_index
+            parent_index = joint["parent_index"]
+            parent_joint = joints[parent_index]
+            joint["parent_index"] = compacted.index(parent_joint)
+        for mesh_index in joint["meshes"]:
+            mesh2joint_dict[mesh_index] = joint_index
+
+    mesh2joint_list = []
+    for mesh_index in range(len(mesh2joint_dict)):
+        joint_index = mesh2joint_dict[mesh_index]
+        mesh2joint_list.append(joint_index)
+
+    return compacted, mesh2joint_list
+
+
 def dump_node_ani_data(gltf, buffer, animation_index=0):
     accessor_parser = functools.partial(parse_accessor_data, gltf, buffer)
     animation_data = gltf["animations"][animation_index]
@@ -436,6 +491,9 @@ def dump_node_ani_data(gltf, buffer, animation_index=0):
             accessor_parser, animation_data, node_index, node_data
         )
 
+        meshes = [node_data["mesh"]] if "mesh" in node_data else []
+        children = node_data.get("children", [])
+
         joint = {
             "joint_index": node_index,
             "parent_index": parent_index,
@@ -443,11 +501,16 @@ def dump_node_ani_data(gltf, buffer, animation_index=0):
             "translations": translations,
             "rotations": rotations,
             "scales": scales,
+
+            "meshes": meshes,
+            "children": children,
+            "discarded": False,
         }
         joints.append(joint)
 
+    joints, mesh2joint = _compact_joints(joints)
     ani_data = _dump_ani_data(joints)
-    return ani_data
+    return ani_data, mesh2joint
 
 
 #

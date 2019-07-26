@@ -55,7 +55,7 @@ def process_meshes(zip_file):
         with open(obj_filepath, "w") as f:
             f.write(obj_data)
 
-    ani_data = dump_node_ani_data(gltf, buffer)
+    ani_data, _ = dump_node_ani_data(gltf, buffer)
     ani_filepath = os.path.join(DST_DIRECTORY, "buster.ani")
     with open(ani_filepath, "w") as f:
         f.write(ani_data)
@@ -99,23 +99,13 @@ def process_images(zip_file):
         os.remove(del_filepath)
 
 
-def print_mesh2node(gltf):
-    mesh2node_dict = {}
-    for node_index, node_data in enumerate(gltf["nodes"]):
-        if "mesh" in node_data:
-            mesh_index = node_data["mesh"]
-            mesh2node_dict[mesh_index] = node_index
-
-    mesh2node_list = []
-    num_meshes = len(mesh2node_dict)
-    for mesh_index in range(num_meshes):
-        node_index = mesh2node_dict[mesh_index]
-        mesh2node_list.append(node_index)
-
+def print_mesh2node(gltf, buffer):
+    _, mesh2node = dump_node_ani_data(gltf, buffer)
+    num_meshes = len(mesh2node)
     chunk_size = (num_meshes + 2) / 3
     print("    int mesh2node[{}] = {{".format(num_meshes))
     for i in range(0, num_meshes, chunk_size):
-        indices = [str(j) for j in mesh2node_list[i:(i + chunk_size)]]
+        indices = [str(j) for j in mesh2node[i:(i + chunk_size)]]
         print("        {}".format(", ".join(indices) + ","))
     print("    };")
 
@@ -139,7 +129,8 @@ def print_mesh2material(gltf):
 
 def generated_code(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
-    print_mesh2node(gltf)
+    buffer = zip_file.read("scene.bin")
+    print_mesh2node(gltf, buffer)
     print_mesh2material(gltf)
 
 
