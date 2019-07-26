@@ -270,8 +270,8 @@ scene_t *test_create_scene(creator_t creators[], const char *scene_name) {
         vec3_t extent = vec3_sub(bbox.max, bbox.min);
         int with_skybox = scene->skybox != NULL;
         int with_shadow = scene->shadowdata.shadow_map != NULL;
-        int with_ambient = scene->lightdata.ambient_strength > 0;
-        int with_punctual = scene->lightdata.punctual_strength > 0;
+        int with_ambient = scene->lightdata.ambient_intensity > 0;
+        int with_punctual = scene->lightdata.punctual_intensity > 0;
 
         printf("faces: %d\n", num_faces);
         printf("center: [%.3f, %.3f, %.3f]\n", center.x, center.y, center.z);
@@ -320,8 +320,8 @@ void test_draw_scene(scene_t *scene, context_t *context) {
     framedata.light_proj_matrix = get_light_proj_matrix(1, 1, 0, 2);
     framedata.camera_view_matrix = camera_get_view_matrix(camera);
     framedata.camera_proj_matrix = camera_get_proj_matrix(camera);
-    framedata.ambient_strength = scene->lightdata.ambient_strength;
-    framedata.punctual_strength = scene->lightdata.punctual_strength;
+    framedata.ambient_intensity = scene->lightdata.ambient_intensity;
+    framedata.punctual_intensity = scene->lightdata.punctual_intensity;
     framedata.shadow_map = scene->shadowdata.shadow_map;
 
     scene_draw(scene, context->framebuffer, &framedata);

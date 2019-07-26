@@ -8,8 +8,8 @@
 #include "texture.h"
 
 typedef struct {
-    float ambient_strength;
-    float punctual_strength;
+    float ambient_intensity;
+    float punctual_intensity;
 } lightdata_t;
 
 typedef struct {
@@ -26,8 +26,8 @@ typedef struct {
     mat4_t light_proj_matrix;
     mat4_t camera_view_matrix;
     mat4_t camera_proj_matrix;
-    float ambient_strength;
-    float punctual_strength;
+    float ambient_intensity;
+    float punctual_intensity;
     texture_t *shadow_map;
 } framedata_t;
 
@@ -59,7 +59,7 @@ typedef struct {
 
 scene_t *scene_create(
     vec4_t background, model_t *skybox, model_t **models,
-    float ambient_strength, float punctual_strength, int with_shadow);
+    float ambient_intensity, float punctual_intensity, int with_shadow);
 void scene_release(scene_t *scene);
 void scene_draw(scene_t *scene, framebuffer_t *framebuffer,
                 framedata_t *framedata);

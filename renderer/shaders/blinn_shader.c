@@ -195,12 +195,12 @@ static vec4_t common_fragment_shader(blinn_varyings_t *varyings,
         *discard = 1;
         return vec4_new(0, 0, 0, 0);
     } else {
-        vec3_t color = vec3_mul(basecolor, uniforms->ambient_strength);
+        vec3_t color = vec3_mul(basecolor, uniforms->ambient_intensity);
 
-        if (uniforms->punctual_strength > 0){
-            float punctual_strength = uniforms->punctual_strength;
+        if (uniforms->punctual_intensity > 0){
+            float punctual_intensity = uniforms->punctual_intensity;
             vec3_t shade = get_dir_shade(varyings, uniforms, basecolor);
-            color = vec3_add(color, vec3_mul(shade, punctual_strength));
+            color = vec3_add(color, vec3_mul(shade, punctual_intensity));
         }
 
         if (uniforms->emission_map) {
@@ -228,8 +228,8 @@ vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
 /* high-level api */
 
 static void update_model(model_t *model, framedata_t *framedata) {
-    float ambient_strength = framedata->ambient_strength;
-    float punctual_strength = framedata->punctual_strength;
+    float ambient_intensity = framedata->ambient_intensity;
+    float punctual_intensity = framedata->punctual_intensity;
     skeleton_t *skeleton = model->skeleton;
     mat4_t model_matrix = model->transform;
     mat3_t normal_matrix;
@@ -264,8 +264,8 @@ static void update_model(model_t *model, framedata_t *framedata) {
                                                framedata->camera_view_matrix);
     uniforms->joint_matrices = joint_matrices;
     uniforms->joint_n_matrices = joint_n_matrices;
-    uniforms->ambient_strength = float_clamp(ambient_strength, 0, 5);
-    uniforms->punctual_strength = float_clamp(punctual_strength, 0, 5);
+    uniforms->ambient_intensity = float_clamp(ambient_intensity, 0, 5);
+    uniforms->punctual_intensity = float_clamp(punctual_intensity, 0, 5);
     uniforms->shadow_map = framedata->shadow_map;
 }
 

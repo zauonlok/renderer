@@ -352,21 +352,21 @@ static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
 
         vec3_t color = vec3_new(0, 0, 0);
 
-        if (uniforms->ambient_strength > 0 && uniforms->ibldata) {
-            float ambient_strength = uniforms->ambient_strength;
+        if (uniforms->ambient_intensity > 0 && uniforms->ibldata) {
+            float ambient_intensity = uniforms->ambient_intensity;
             vec3_t shade = get_ibl_shade(uniforms->ibldata, roughness,
                                          normal_dir, view_dir,
                                          diffuse, specular);
-            color = vec3_add(color, vec3_mul(shade, ambient_strength));
+            color = vec3_add(color, vec3_mul(shade, ambient_intensity));
         }
 
-        if (uniforms->punctual_strength > 0 && n_dot_l > 0) {
-            float punctual_strength = uniforms->punctual_strength;
+        if (uniforms->punctual_intensity > 0 && n_dot_l > 0) {
+            float punctual_intensity = uniforms->punctual_intensity;
             if (!is_in_shadow(varyings, uniforms, n_dot_l)) {
                 vec3_t shade = get_dir_shade(light_dir, roughness,
                                              normal_dir, view_dir,
                                              diffuse, specular);
-                color = vec3_add(color, vec3_mul(shade, punctual_strength));
+                color = vec3_add(color, vec3_mul(shade, punctual_intensity));
             }
         }
 
@@ -400,8 +400,8 @@ vec4_t pbr_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
 /* high-level api */
 
 static void update_model(model_t *model, framedata_t *framedata) {
-    float ambient_strength = framedata->ambient_strength;
-    float punctual_strength = framedata->punctual_strength;
+    float ambient_intensity = framedata->ambient_intensity;
+    float punctual_intensity = framedata->punctual_intensity;
     skeleton_t *skeleton = model->skeleton;
     mat4_t model_matrix = model->transform;
     mat3_t normal_matrix;
@@ -436,8 +436,8 @@ static void update_model(model_t *model, framedata_t *framedata) {
                                                framedata->camera_view_matrix);
     uniforms->joint_matrices = joint_matrices;
     uniforms->joint_n_matrices = joint_n_matrices;
-    uniforms->ambient_strength = float_clamp(ambient_strength, 0, 5);
-    uniforms->punctual_strength = float_clamp(punctual_strength, 0, 5);
+    uniforms->ambient_intensity = float_clamp(ambient_intensity, 0, 5);
+    uniforms->punctual_intensity = float_clamp(punctual_intensity, 0, 5);
     uniforms->shadow_map = framedata->shadow_map;
 }
 

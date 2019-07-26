@@ -29,8 +29,8 @@ typedef struct {
     mat4_t camera_vp_matrix;
     mat4_t *joint_matrices;
     mat3_t *joint_n_matrices;
-    float ambient_strength;
-    float punctual_strength;
+    float ambient_intensity;
+    float punctual_intensity;
     texture_t *shadow_map;
     /* surface parameters */
     vec4_t basecolor;
