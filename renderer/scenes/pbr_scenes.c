@@ -55,7 +55,7 @@ scene_t *pbr_assassin_scene(void) {
             0, 0, 0,
         },
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     const char *env_name = "papermill";
     mat4_t scale, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
@@ -120,7 +120,7 @@ scene_t *pbr_buster_scene(void) {
             0, 0, 0,
         },
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     const char *env_name = "papermill";
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(mesh2node);
@@ -161,7 +161,7 @@ scene_t *pbr_crab_scene(void) {
         NULL,
         0, 0, 0,
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     const char *env_name = "papermill";
     model_t **models = NULL;
 
@@ -214,7 +214,7 @@ scene_t *pbr_dieselpunk_scene(void) {
             0, 0, 0,
         },
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     const char *env_name = "papermill";
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
@@ -264,7 +264,7 @@ scene_t *pbr_drone_scene(void) {
         "drone/fire_emission.tga",
         1, 1, 0,
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     const char *env_name = "papermill";
     mat4_t scale, rotation, translation, root;
     int num_fires = ARRAY_SIZE(fire_mesh2node);
@@ -305,7 +305,7 @@ scene_t *pbr_helmet_scene(void) {
         "helmet/helmet_emission.tga",
         0, 0, 0,
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     model_t *skybox = skybox_create_model("papermill");
     const char *env_name = "papermill";
     model_t **models = NULL;
@@ -370,7 +370,7 @@ scene_t *pbr_junkrat_scene(void) {
         0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2,
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     const char *env_name = "papermill";
     mat4_t scale, translation, root;
     int num_meshes = ARRAY_SIZE(mesh2material);
@@ -476,7 +476,7 @@ scene_t *pbr_ornitier_scene(void) {
             0, 0, 0,
         },
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     const char *env_name = "footprint";
     mat4_t scale, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
@@ -536,7 +536,7 @@ scene_t *pbr_ponycar_scene(void) {
             0, 1, 0,
         },
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     const char *env_name = "papermill";
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
@@ -564,7 +564,7 @@ scene_t *pbr_sphere_scene(void) {
     pbrm_material_t material = {
         {1, 1, 1, 1}, 1, 1, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0,
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     const char *env_name = "footprint";
     model_t **models = NULL;
     model_t *model;

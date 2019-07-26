@@ -11,10 +11,10 @@ static const int SHADOWMAP_WIDTH = 512;
 static const int SHADOWMAP_HEIGHT = 512;
 
 scene_t *scene_create(
-        vec4_t background, model_t *skybox, model_t **models,
+        vec3_t background, model_t *skybox, model_t **models,
         float ambient_intensity, float punctual_intensity, int with_shadow) {
     scene_t *scene = (scene_t*)malloc(sizeof(scene_t));
-    scene->background = background;
+    scene->background = vec4_from_vec3(background, 1);
     scene->skybox = skybox;
     scene->models = models;
     scene->lightdata.ambient_intensity = ambient_intensity;

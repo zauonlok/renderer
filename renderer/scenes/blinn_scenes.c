@@ -45,7 +45,7 @@ scene_t *blinn_azura_scene(void) {
         {{1, 1, 1, 1}, 32, "azura/yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
         {{1, 1, 1, 1}, 32, "azura/yeux_diffuse.tga", NULL, NULL, 0, 0, 0},
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     mat4_t scale, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
     model_t **models = NULL;
@@ -95,7 +95,7 @@ scene_t *blinn_centaur_scene(void) {
             0, 0, 0,
         },
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
     model_t **models = NULL;
@@ -324,7 +324,7 @@ scene_t *blinn_craftsman_scene(void) {
             {  0.000000f,   0.000000f,   0.000000f,   1.000000f},
         }},
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     mat4_t scale, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
     int num_sparks = ARRAY_SIZE(spark_transforms);
@@ -379,7 +379,7 @@ scene_t *blinn_elfgirl_scene(void) {
         "elfgirl/hair_diffuse.tga",
     };
     blinn_material_t material = {{1, 1, 1, 1}, 32, NULL, NULL, NULL, 0, 0, 0};
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
     model_t **models = NULL;
@@ -414,7 +414,7 @@ scene_t *blinn_kgirl_scene(void) {
         "kgirl/kgirl_diffuse.tga", NULL, NULL,
         0, 0, 0,
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
     model_t **models = NULL;
@@ -525,7 +525,7 @@ scene_t *blinn_mccree_scene(void) {
          1,  6,  9, 27, 12, 13, 14, 15, 16,  3, 11, 10,  4,  1, 10,  4,
          1, 10,  4,  1,  5,  6,  7,  8,  9,  0,  1,  2,  3,  4,
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     mat4_t scale, translation, root;
     int num_meshes = ARRAY_SIZE(mesh2transform);
     model_t **models = NULL;
@@ -668,7 +668,7 @@ scene_t *blinn_nier2b_scene(void) {
         {{1, 1, 1, 1}, 32, "nier2b/sword_diffuse.tga", NULL, NULL, 0, 0, 0},
         {{0.25f, 0.25f, 0.25f, 1}, 32, NULL, NULL, NULL, 0, 0, 0},
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(transforms);
     model_t **models = NULL;
@@ -715,7 +715,7 @@ scene_t *blinn_phoenix_scene(void) {
             0, 0, 0.5f,
         },
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
     model_t **models = NULL;
@@ -753,7 +753,7 @@ scene_t *blinn_witch_scene(void) {
             1, 1, 0,
         },
     };
-    vec4_t background = vec4_new(0.196f, 0.196f, 0.196f, 1);
+    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
     mat4_t scale, rotation, translation, root;
     int num_meshes = ARRAY_SIZE(meshes);
     model_t **models = NULL;
