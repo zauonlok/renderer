@@ -4,6 +4,7 @@
 #include <string.h>
 #include "darray.h"
 #include "geometry.h"
+#include "macro.h"
 #include "mesh.h"
 
 struct mesh {
@@ -78,8 +79,6 @@ static mesh_t *build_mesh(
 
     return mesh;
 }
-
-#define LINE_LENGTH 1024
 
 static mesh_t *load_obj(const char *filename) {
     vec3_t *positions = NULL;

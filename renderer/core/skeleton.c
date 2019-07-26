@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "geometry.h"
+#include "macro.h"
 #include "skeleton.h"
 
 /*
@@ -42,8 +43,6 @@ struct skeleton {
 };
 
 /* skeleton loading/releasing */
-
-#define LINE_LENGTH 1024
 
 static void read_line(FILE *file, char line[LINE_LENGTH]) {
     if (fgets(line, LINE_LENGTH, file) == NULL) {

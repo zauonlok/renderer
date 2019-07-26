@@ -6,14 +6,13 @@
 #include "geometry.h"
 #include "graphics.h"
 #include "image.h"
+#include "macro.h"
 #include "texture.h"
 
 struct texture {int width, height; vec4_t *buffer;};
 struct cubemap {texture_t *faces[6];};
 
 /* radiance hdr related functions */
-
-#define LINE_LENGTH 1024
 
 static void read_line(FILE *file, char line[LINE_LENGTH]) {
     if (fgets(line, LINE_LENGTH, file) == NULL) {

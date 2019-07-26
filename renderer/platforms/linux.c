@@ -8,6 +8,7 @@
 #include <X11/Xutil.h>
 #include "../core/graphics.h"
 #include "../core/image.h"
+#include "../core/macro.h"
 #include "../core/platform.h"
 
 struct window {
@@ -297,8 +298,6 @@ float platform_get_time(void) {
     }
     return (float)(get_native_time() - initial);
 }
-
-#define MAX_PATH 2048
 
 void platform_init_path(void) {
     char path[MAX_PATH];

@@ -22,7 +22,7 @@ vec4_t skybox_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
     skybox_varyings_t *varyings = (skybox_varyings_t*)varyings_;
     skybox_uniforms_t *uniforms = (skybox_uniforms_t*)uniforms_;
 
-    (void)discard;
+    UNUSED(discard);
     return cubemap_sample(uniforms->skybox, varyings->direction);
 }
 
@@ -51,7 +51,7 @@ static void draw_model(model_t *model, framebuffer_t *framebuffer,
     skybox_attribs_t *attribs;
     int i, j;
 
-    (void)shadow_pass;
+    UNUSED(shadow_pass);
     for (i = 0; i < num_faces; i++) {
         for (j = 0; j < 3; j++) {
             vertex_t vertex = vertices[i * 3 + j];
