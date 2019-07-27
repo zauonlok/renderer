@@ -47,6 +47,14 @@ scene_t *blinn_kgirl_scene(void) {
     return helper_load_blinn_scene("kgirl/kgirl.scn", root);
 }
 
+scene_t *blinn_lighthouse_scene(void) {
+    mat4_t translation = mat4_translate(-78.203f, -222.929f, 16.181f);
+    mat4_t rotation = mat4_rotate_y(TO_RADIANS(-135));
+    mat4_t scale = mat4_scale(0.0016f, 0.0016f, 0.0016f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    return helper_load_blinn_scene("lighthouse/lighthouse.scn", root);
+}
+
 scene_t *blinn_mccree_scene(void) {
     mat4_t translation = mat4_translate(0.108f, -1.479f, 0.034f);
     mat4_t scale = mat4_scale(0.337f, 0.337f, 0.337f);

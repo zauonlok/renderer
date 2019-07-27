@@ -10,6 +10,7 @@ static creator_t g_creators[] = {
     {"craftsman", blinn_craftsman_scene},
     {"elfgirl", blinn_elfgirl_scene},
     {"kgirl", blinn_kgirl_scene},
+    {"lighthouse", blinn_lighthouse_scene},
     {"mccree", blinn_mccree_scene},
     {"nier2b", blinn_nier2b_scene},
     {"phoenix", blinn_phoenix_scene},
