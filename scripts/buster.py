@@ -21,11 +21,6 @@ SRC_FILENAME = "buster_drone.zip"
 DST_DIRECTORY = "../assets/buster"
 
 IMG_FILENAMES = {
-    "boden": [
-        "textures/Boden_baseColor.png",
-        "textures/Boden_metallicRoughness.png",
-        None,
-    ],
     "body": [
         "textures/body_baseColor.png",
         "textures/body_metallicRoughness.png",
@@ -38,19 +33,14 @@ IMG_FILENAMES = {
     ],
 }
 
-DEL_FILENAMES = [
-    "boden_metalness.tga",
-    "boden_occlusion.tga",
-]
-
 
 def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
 
-    for mesh_index in range(len(gltf["meshes"])):
+    for mesh_index in range(1, len(gltf["meshes"])):
         obj_data = dump_obj_data(gltf, buffer, mesh_index)
-        obj_filename = "buster{}.obj".format(mesh_index)
+        obj_filename = "buster{}.obj".format(mesh_index - 1)
         obj_filepath = os.path.join(DST_DIRECTORY, obj_filename)
         with open(obj_filepath, "w") as f:
             f.write(obj_data)
@@ -93,10 +83,6 @@ def process_images(zip_file):
         if emission_path:
             emission_image = load_image(zip_file, emission_path)
             save_image(emission_image, "{}_emission.tga".format(name))
-
-    for del_filename in DEL_FILENAMES:
-        del_filepath = os.path.join(DST_DIRECTORY, del_filename)
-        os.remove(del_filepath)
 
 
 def print_mesh2node(gltf, buffer):

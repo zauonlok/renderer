@@ -1,0 +1,147 @@
+type: pbrs
+
+lighting:
+    background: 0.196 0.196 0.196
+    skybox: off
+    shadow: off
+    ambient: 1.0
+    punctual: 1.0
+    environment: papermill
+
+materials 2:
+    material 0:
+        diffuse_factor: 1 1 1 1
+        specular_factor: 1 1 1
+        glossiness_factor: 1
+        diffuse_map: drone/drone_diffuse.tga
+        specular_map: drone/drone_specular.tga
+        glossiness_map: drone/drone_glossiness.tga
+        normal_map: off
+        occlusion_map: drone/drone_occlusion.tga
+        emission_map: drone/drone_emission.tga
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 1:
+        diffuse_factor: 0 0 0 0.1
+        specular_factor: 0 0 0
+        glossiness_factor: 0.8
+        diffuse_map: drone/fire_diffuse.tga
+        specular_map: off
+        glossiness_map: off
+        normal_map: off
+        occlusion_map: off
+        emission_map: drone/fire_emission.tga
+        double_sided: 1
+        enable_blend: 1
+        alpha_cutoff: 0
+
+transforms 2:
+    transform 0:
+        1  0  0  0
+        0  1  0  0
+        0  0  1  0
+        0  0  0  1
+    transform 1:
+        1  0  0  0
+        0  0 -1  0
+        0  1  0  0
+        0  0  0  1
+
+models 16:
+    model 0:
+        mesh: drone/drone.obj
+        skeleton: drone/drone.ani
+        attached: -1
+        material: 0
+        transform: 0
+    model 1:
+        mesh: drone/fire0.obj
+        skeleton: drone/fire.ani
+        attached: 5
+        material: 1
+        transform: 1
+    model 2:
+        mesh: drone/fire1.obj
+        skeleton: drone/fire.ani
+        attached: 7
+        material: 1
+        transform: 1
+    model 3:
+        mesh: drone/fire2.obj
+        skeleton: drone/fire.ani
+        attached: 9
+        material: 1
+        transform: 1
+    model 4:
+        mesh: drone/fire3.obj
+        skeleton: drone/fire.ani
+        attached: 11
+        material: 1
+        transform: 1
+    model 5:
+        mesh: drone/fire4.obj
+        skeleton: drone/fire.ani
+        attached: 13
+        material: 1
+        transform: 1
+    model 6:
+        mesh: drone/fire5.obj
+        skeleton: drone/fire.ani
+        attached: 16
+        material: 1
+        transform: 1
+    model 7:
+        mesh: drone/fire6.obj
+        skeleton: drone/fire.ani
+        attached: 18
+        material: 1
+        transform: 1
+    model 8:
+        mesh: drone/fire7.obj
+        skeleton: drone/fire.ani
+        attached: 20
+        material: 1
+        transform: 1
+    model 9:
+        mesh: drone/fire8.obj
+        skeleton: drone/fire.ani
+        attached: 22
+        material: 1
+        transform: 1
+    model 10:
+        mesh: drone/fire9.obj
+        skeleton: drone/fire.ani
+        attached: 24
+        material: 1
+        transform: 1
+    model 11:
+        mesh: drone/fire10.obj
+        skeleton: drone/fire.ani
+        attached: 27
+        material: 1
+        transform: 1
+    model 12:
+        mesh: drone/fire11.obj
+        skeleton: drone/fire.ani
+        attached: 29
+        material: 1
+        transform: 1
+    model 13:
+        mesh: drone/fire12.obj
+        skeleton: drone/fire.ani
+        attached: 31
+        material: 1
+        transform: 1
+    model 14:
+        mesh: drone/fire13.obj
+        skeleton: drone/fire.ani
+        attached: 33
+        material: 1
+        transform: 1
+    model 15:
+        mesh: drone/fire14.obj
+        skeleton: drone/fire.ani
+        attached: 35
+        material: 1
+        transform: 1
