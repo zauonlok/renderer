@@ -1,0 +1,218 @@
+type: blinn
+
+lighting:
+    background: 0.196 0.196 0.196
+    skybox: off
+    shadow: off
+    ambient: 0.5
+    punctual: 1.0
+    environment: off
+
+materials 10:
+    material 0:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: azura/bijoux_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 1:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: azura/bijoux_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 1
+        alpha_cutoff: 0
+    material 2:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: azura/body_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 3:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: azura/cuissarde_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 1
+    material 4:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: azura/hair_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 5:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: azura/head_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 6:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: azura/laniere_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 7:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: azura/motif_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 1
+    material 8:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: azura/robe_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 9:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: azura/yeux_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+
+transforms 1:
+    transform 0:
+        1  0  0  0
+        0  1  0  0
+        0  0  1  0
+        0  0  0  1
+
+models 18:
+    model 0:
+        mesh: azura/bijou0.obj
+        skeleton: off
+        attached: -1
+        material: 0
+        transform: 0
+    model 1:
+        mesh: azura/bijou1.obj
+        skeleton: off
+        attached: -1
+        material: 1
+        transform: 0
+    model 2:
+        mesh: azura/bijou2.obj
+        skeleton: off
+        attached: -1
+        material: 0
+        transform: 0
+    model 3:
+        mesh: azura/body.obj
+        skeleton: off
+        attached: -1
+        material: 2
+        transform: 0
+    model 4:
+        mesh: azura/cuissarde0.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 0
+    model 5:
+        mesh: azura/cuissarde1.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 0
+    model 6:
+        mesh: azura/hair.obj
+        skeleton: off
+        attached: -1
+        material: 4
+        transform: 0
+    model 7:
+        mesh: azura/head.obj
+        skeleton: off
+        attached: -1
+        material: 5
+        transform: 0
+    model 8:
+        mesh: azura/laniere.obj
+        skeleton: off
+        attached: -1
+        material: 6
+        transform: 0
+    model 9:
+        mesh: azura/motif0.obj
+        skeleton: off
+        attached: -1
+        material: 7
+        transform: 0
+    model 10:
+        mesh: azura/motif1.obj
+        skeleton: off
+        attached: -1
+        material: 7
+        transform: 0
+    model 11:
+        mesh: azura/motif2.obj
+        skeleton: off
+        attached: -1
+        material: 7
+        transform: 0
+    model 12:
+        mesh: azura/robe0.obj
+        skeleton: off
+        attached: -1
+        material: 8
+        transform: 0
+    model 13:
+        mesh: azura/robe1.obj
+        skeleton: off
+        attached: -1
+        material: 8
+        transform: 0
+    model 14:
+        mesh: azura/yeux0.obj
+        skeleton: off
+        attached: -1
+        material: 9
+        transform: 0
+    model 15:
+        mesh: azura/yeux1.obj
+        skeleton: off
+        attached: -1
+        material: 9
+        transform: 0
+    model 16:
+        mesh: azura/yeux2.obj
+        skeleton: off
+        attached: -1
+        material: 9
+        transform: 0
+    model 17:
+        mesh: azura/yeux3.obj
+        skeleton: off
+        attached: -1
+        material: 9
+        transform: 0

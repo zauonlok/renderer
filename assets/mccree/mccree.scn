@@ -1,0 +1,583 @@
+type: blinn
+
+lighting:
+    background: 0.196 0.196 0.196
+    skybox: off
+    shadow: off
+    ambient: 0.75
+    punctual: 0.25
+    environment: off
+
+materials 28:
+    material 0:
+        basecolor: 0.614 0.396 0.464 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 1:
+        basecolor: 0.689 0.441 0.516 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 2:
+        basecolor: 0.736 0.471 0.552 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 3:
+        basecolor: 0.430 0.241 0.296 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 4:
+        basecolor: 0.347 0.855 1.000 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 5:
+        basecolor: 0.399 0.522 0.397 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 6:
+        basecolor: 0.850 0.160 0.086 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 7:
+        basecolor: 1.000 0.423 0.170 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 8:
+        basecolor: 0.193 0.374 0.333 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 9:
+        basecolor: 1.000 1.000 1.000 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 10:
+        basecolor: 0.317 0.158 0.229 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 11:
+        basecolor: 0.425 0.198 0.233 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 12:
+        basecolor: 0.779 0.310 0.263 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 13:
+        basecolor: 0.964 0.744 0.622 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 14:
+        basecolor: 0.641 0.252 0.234 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 15:
+        basecolor: 0.973 0.801 0.705 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 16:
+        basecolor: 0.938 0.814 0.687 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 17:
+        basecolor: 0.748 0.596 0.418 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 18:
+        basecolor: 0.831 0.618 0.525 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 19:
+        basecolor: 0.694 0.510 0.427 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 20:
+        basecolor: 0.336 0.149 0.205 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 21:
+        basecolor: 0.445 0.195 0.270 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 22:
+        basecolor: 0.444 0.187 0.207 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 23:
+        basecolor: 0.927 0.483 0.498 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 24:
+        basecolor: 0.815 0.403 0.418 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 25:
+        basecolor: 0.827 0.430 0.449 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 26:
+        basecolor: 0.542 0.222 0.247 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 27:
+        basecolor: 1.000 0.808 0.571 1
+        shininess: 32
+        diffuse_map: off
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 0
+
+transforms 8:
+    transform 0:
+        0.186340   0.000000   0.000000  -0.006200
+        0.000000   0.000000   0.186340   0.131450
+        0.000000  -0.186340   0.000000  -0.010720
+        0.000000   0.000000   0.000000   1.000000
+    transform 1:
+        0.239850   0.008740   0.004060  -0.014310
+       -0.020360   0.034120   0.052410   2.016510
+        0.008460  -0.165570   0.011010  -0.055260
+        0.000000   0.000000   0.000000   1.000000
+    transform 2:
+        0.287440  -0.019260   0.000000  -0.008370
+       -0.007360  -0.108460  -0.010090   2.267050
+       -0.017800  -0.266190   0.004110  -0.083880
+        0.000000   0.000000   0.000000   1.000000
+    transform 3:
+       -0.039080  -0.003570   0.033020   0.279880
+       -0.009790  -0.000520  -0.132230   1.397640
+       -0.003590   0.040280   0.001210   0.006560
+        0.000000   0.000000   0.000000   1.000000
+    transform 4:
+       -0.039130  -0.006760   0.025830   0.252460
+       -0.006030  -0.009210  -0.131150   1.364990
+       -0.008250   0.038800  -0.026640  -0.108820
+        0.000000   0.000000   0.000000   1.000000
+    transform 5:
+       -0.039130  -0.006760   0.025830   0.182500
+       -0.006030  -0.009210  -0.131150   1.340350
+       -0.008250   0.038800  -0.026640  -0.178540
+        0.000000   0.000000   0.000000   1.000000
+    transform 6:
+       -0.019630  -0.037890   0.016320   0.498480
+       -0.013760  -0.058690  -0.014030   1.926990
+       -0.031050   0.049970  -0.004100   0.389470
+        0.000000   0.000000   0.000000   1.000000
+    transform 7:
+       -0.000780   0.023700   0.000570  -0.440940
+       -0.004270  -0.000700   0.023330   0.955610
+       -0.023320  -0.000670  -0.004290   0.163730
+        0.000000   0.000000   0.000000   1.000000
+
+models 46:
+    model 0:
+        mesh: mccree/mccree0.obj
+        skeleton: off
+        attached: -1
+        material: 17
+        transform: 0
+    model 1:
+        mesh: mccree/mccree1.obj
+        skeleton: off
+        attached: -1
+        material: 13
+        transform: 0
+    model 2:
+        mesh: mccree/mccree2.obj
+        skeleton: off
+        attached: -1
+        material: 18
+        transform: 0
+    model 3:
+        mesh: mccree/mccree3.obj
+        skeleton: off
+        attached: -1
+        material: 19
+        transform: 0
+    model 4:
+        mesh: mccree/mccree4.obj
+        skeleton: off
+        attached: -1
+        material: 20
+        transform: 0
+    model 5:
+        mesh: mccree/mccree5.obj
+        skeleton: off
+        attached: -1
+        material: 21
+        transform: 0
+    model 6:
+        mesh: mccree/mccree6.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 0
+    model 7:
+        mesh: mccree/mccree7.obj
+        skeleton: off
+        attached: -1
+        material: 11
+        transform: 0
+    model 8:
+        mesh: mccree/mccree8.obj
+        skeleton: off
+        attached: -1
+        material: 22
+        transform: 0
+    model 9:
+        mesh: mccree/mccree9.obj
+        skeleton: off
+        attached: -1
+        material: 23
+        transform: 0
+    model 10:
+        mesh: mccree/mccree10.obj
+        skeleton: off
+        attached: -1
+        material: 24
+        transform: 0
+    model 11:
+        mesh: mccree/mccree11.obj
+        skeleton: off
+        attached: -1
+        material: 25
+        transform: 0
+    model 12:
+        mesh: mccree/mccree12.obj
+        skeleton: off
+        attached: -1
+        material: 0
+        transform: 0
+    model 13:
+        mesh: mccree/mccree13.obj
+        skeleton: off
+        attached: -1
+        material: 4
+        transform: 0
+    model 14:
+        mesh: mccree/mccree14.obj
+        skeleton: off
+        attached: -1
+        material: 26
+        transform: 0
+    model 15:
+        mesh: mccree/mccree15.obj
+        skeleton: off
+        attached: -1
+        material: 2
+        transform: 0
+    model 16:
+        mesh: mccree/mccree16.obj
+        skeleton: off
+        attached: -1
+        material: 1
+        transform: 0
+    model 17:
+        mesh: mccree/mccree17.obj
+        skeleton: off
+        attached: -1
+        material: 6
+        transform: 0
+    model 18:
+        mesh: mccree/mccree18.obj
+        skeleton: off
+        attached: -1
+        material: 9
+        transform: 0
+    model 19:
+        mesh: mccree/mccree19.obj
+        skeleton: off
+        attached: -1
+        material: 27
+        transform: 0
+    model 20:
+        mesh: mccree/mccree20.obj
+        skeleton: off
+        attached: -1
+        material: 12
+        transform: 1
+    model 21:
+        mesh: mccree/mccree21.obj
+        skeleton: off
+        attached: -1
+        material: 13
+        transform: 1
+    model 22:
+        mesh: mccree/mccree22.obj
+        skeleton: off
+        attached: -1
+        material: 14
+        transform: 1
+    model 23:
+        mesh: mccree/mccree23.obj
+        skeleton: off
+        attached: -1
+        material: 15
+        transform: 1
+    model 24:
+        mesh: mccree/mccree24.obj
+        skeleton: off
+        attached: -1
+        material: 16
+        transform: 1
+    model 25:
+        mesh: mccree/mccree25.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 2
+    model 26:
+        mesh: mccree/mccree26.obj
+        skeleton: off
+        attached: -1
+        material: 11
+        transform: 2
+    model 27:
+        mesh: mccree/mccree27.obj
+        skeleton: off
+        attached: -1
+        material: 10
+        transform: 3
+    model 28:
+        mesh: mccree/mccree28.obj
+        skeleton: off
+        attached: -1
+        material: 4
+        transform: 3
+    model 29:
+        mesh: mccree/mccree29.obj
+        skeleton: off
+        attached: -1
+        material: 1
+        transform: 3
+    model 30:
+        mesh: mccree/mccree30.obj
+        skeleton: off
+        attached: -1
+        material: 10
+        transform: 4
+    model 31:
+        mesh: mccree/mccree31.obj
+        skeleton: off
+        attached: -1
+        material: 4
+        transform: 4
+    model 32:
+        mesh: mccree/mccree32.obj
+        skeleton: off
+        attached: -1
+        material: 1
+        transform: 4
+    model 33:
+        mesh: mccree/mccree33.obj
+        skeleton: off
+        attached: -1
+        material: 10
+        transform: 5
+    model 34:
+        mesh: mccree/mccree34.obj
+        skeleton: off
+        attached: -1
+        material: 4
+        transform: 5
+    model 35:
+        mesh: mccree/mccree35.obj
+        skeleton: off
+        attached: -1
+        material: 1
+        transform: 5
+    model 36:
+        mesh: mccree/mccree36.obj
+        skeleton: off
+        attached: -1
+        material: 5
+        transform: 6
+    model 37:
+        mesh: mccree/mccree37.obj
+        skeleton: off
+        attached: -1
+        material: 6
+        transform: 6
+    model 38:
+        mesh: mccree/mccree38.obj
+        skeleton: off
+        attached: -1
+        material: 7
+        transform: 6
+    model 39:
+        mesh: mccree/mccree39.obj
+        skeleton: off
+        attached: -1
+        material: 8
+        transform: 6
+    model 40:
+        mesh: mccree/mccree40.obj
+        skeleton: off
+        attached: -1
+        material: 9
+        transform: 6
+    model 41:
+        mesh: mccree/mccree41.obj
+        skeleton: off
+        attached: -1
+        material: 0
+        transform: 7
+    model 42:
+        mesh: mccree/mccree42.obj
+        skeleton: off
+        attached: -1
+        material: 1
+        transform: 7
+    model 43:
+        mesh: mccree/mccree43.obj
+        skeleton: off
+        attached: -1
+        material: 2
+        transform: 7
+    model 44:
+        mesh: mccree/mccree44.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 7
+    model 45:
+        mesh: mccree/mccree45.obj
+        skeleton: off
+        attached: -1
+        material: 4
+        transform: 7

@@ -208,7 +208,7 @@ static scene_pbrm_t read_pbrm_material(FILE *file) {
     assert(items == 1);
     items = fscanf(file, " double_sided: %d", &material.double_sided);
     assert(items == 1);
-    items = fscanf(file, " enable_blend: %d", &material.double_sided);
+    items = fscanf(file, " enable_blend: %d", &material.enable_blend);
     assert(items == 1);
     items = fscanf(file, " alpha_cutoff: %f", &material.alpha_cutoff);
     assert(items == 1);
@@ -265,7 +265,7 @@ static scene_pbrs_t read_pbrs_material(FILE *file) {
     assert(items == 1);
     items = fscanf(file, " double_sided: %d", &material.double_sided);
     assert(items == 1);
-    items = fscanf(file, " enable_blend: %d", &material.double_sided);
+    items = fscanf(file, " enable_blend: %d", &material.enable_blend);
     assert(items == 1);
     items = fscanf(file, " alpha_cutoff: %f", &material.alpha_cutoff);
     assert(items == 1);

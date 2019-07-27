@@ -1,0 +1,348 @@
+type: blinn
+
+lighting:
+    background: 0.196 0.196 0.196
+    skybox: off
+    shadow: on
+    ambient: 0.5
+    punctual: 1.0
+    environment: off
+
+materials 4:
+    material 0:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: craftsman/anvil_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 1:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: craftsman/floor_diffuse.tga
+        specular_map: off
+        emission_map: off
+        double_sided: 1
+        enable_blend: 0
+        alpha_cutoff: 1
+    material 2:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: craftsman/smith_diffuse.tga
+        specular_map: off
+        emission_map: craftsman/smith_emission.tga
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 1
+    material 3:
+        basecolor: 1 1 1 1
+        shininess: 32
+        diffuse_map: craftsman/spark_diffuse.tga
+        specular_map: off
+        emission_map: craftsman/spark_emission.tga
+        double_sided: 1
+        enable_blend: 1
+        alpha_cutoff: 0
+
+transforms 27:
+    transform 0:
+        0.936571   0.000000   0.000000   0.000000
+        0.000000   0.000000   0.936571   0.000000
+        0.000000  -0.936571   0.000000  23.366537
+        0.000000   0.000000   0.000000   1.000000
+    transform 1:
+        1.259828   0.000000   0.000000   1.668093
+        0.000000   0.000000   0.885767   0.000000
+        0.000000  -1.259828   0.000000  10.833580
+        0.000000   0.000000   0.000000   1.000000
+    transform 2:
+        0.324427   0.217420   0.920584  11.052060
+       -0.852411   0.489096   0.184888  78.562383
+       -0.410056  -0.844697   0.344006  -8.390521
+        0.000000   0.000000   0.000000   1.000000
+    transform 3:
+        0.840193  -0.540788  -0.040288 -34.668739
+       -0.102606  -0.085585  -0.991035  17.130267
+        0.532492   0.836793  -0.127395  56.477256
+        0.000000   0.000000   0.000000   1.000000
+    transform 4:
+        1.000000   0.000000   0.000000   0.000000
+        0.000000   0.000000   1.000000   0.000000
+        0.000000  -1.000000   0.000000   0.000000
+        0.000000   0.000000   0.000000   1.000000
+    transform 5:
+        0.954568  -0.168932  -0.248769  10.987287
+        0.171253  -0.392511   0.908502   8.632905
+       -0.243870  -0.936879  -0.335766  10.008259
+        0.000000   0.000000   0.000000   1.000000
+    transform 6:
+        1.000000   0.000000   0.000000   0.000000
+        0.000000   0.000000   1.000000   0.000000
+        0.000000  -1.000000   0.000000   0.000000
+        0.000000   0.000000   0.000000   1.000000
+    transform 7:
+        0.104984   0.009185   0.000000   9.940392
+       -0.009185   0.104984   0.000000  23.342182
+        0.000000   0.000000   0.105385  23.126503
+        0.000000   0.000000   0.000000   1.000000
+    transform 8:
+       -0.058686  -0.101646   0.000000  -9.783746
+        0.101646  -0.058686   0.000000  24.797363
+        0.000000   0.000000   0.117371  23.126503
+        0.000000   0.000000   0.000000   1.000000
+    transform 9:
+        0.020583   0.001801   0.117176   1.669557
+       -0.049384  -0.107757   0.010331  11.562137
+        0.106276  -0.050421  -0.017893  36.131775
+        0.000000   0.000000   0.000000   1.000000
+    transform 10:
+       -0.032629  -0.046599   0.098531  -5.532722
+        0.093198  -0.065258   0.000000  20.369579
+        0.056515   0.080712   0.056887  30.495888
+        0.000000   0.000000   0.000000   1.000000
+    transform 11:
+        0.050042   0.004378   0.087006   3.001525
+       -0.008756   0.100084   0.000000  23.325027
+       -0.086675  -0.007583   0.050233  17.500957
+        0.000000   0.000000   0.000000   1.000000
+    transform 12:
+       -0.081984  -0.007173   0.057625  -2.616677
+       -0.008756   0.100084   0.000000  22.141081
+       -0.057406  -0.005022  -0.082297  21.804188
+        0.000000   0.000000   0.000000   1.000000
+    transform 13:
+        0.068182  -0.039782  -0.089026   6.102993
+       -0.049384  -0.107757   0.010331  16.986937
+       -0.084080   0.031031  -0.078261  15.379788
+        0.000000   0.000000   0.000000   1.000000
+    transform 14:
+        0.064266   0.091782  -0.019757   6.415188
+        0.093198  -0.065258   0.000000  20.369579
+       -0.011332  -0.016184  -0.112045  24.519733
+        0.000000   0.000000   0.000000   1.000000
+    transform 15:
+        0.037722   0.065337   0.089912   3.502418
+        0.101646  -0.058686   0.000000  24.797363
+        0.044956   0.077866  -0.075445  32.513157
+        0.000000   0.000000   0.000000   1.000000
+    transform 16:
+        0.008723   0.000763  -0.100084  -0.887759
+       -0.008756   0.100084   0.000000  21.874636
+        0.099703   0.008723   0.008756  27.667028
+        0.000000   0.000000   0.000000   1.000000
+    transform 17:
+       -0.098563  -0.008623  -0.017446 -16.835070
+       -0.008756   0.100084   0.000000  28.851065
+        0.017379   0.001521  -0.098940  26.335102
+        0.000000   0.000000   0.000000   1.000000
+    transform 18:
+       -0.067482  -0.005904   0.080729  -7.468997
+       -0.009185   0.104984   0.000000  27.920433
+       -0.080422  -0.007036  -0.067740  19.437935
+        0.000000   0.000000   0.000000   1.000000
+    transform 19:
+       -0.098563  -0.008623   0.017446   0.181899
+       -0.008756   0.100084   0.000000  21.874636
+       -0.017379  -0.001520  -0.098940  22.585428
+        0.000000   0.000000   0.000000   1.000000
+    transform 20:
+       -0.005688  -0.008123   0.113340   1.477568
+        0.093198  -0.065258   0.000000  20.274914
+        0.065009   0.092843   0.009916  26.414782
+        0.000000   0.000000   0.000000   1.000000
+    transform 21:
+       -0.053187  -0.092123   0.049603  -5.980136
+        0.101646  -0.058686   0.000000  24.797363
+        0.024802   0.042958   0.106374  24.368771
+        0.000000   0.000000   0.000000   1.000000
+    transform 22:
+        0.076669   0.006708   0.064578   4.792371
+       -0.008756   0.100084   0.000000  22.141081
+       -0.064333  -0.005628   0.076962  22.409786
+        0.000000   0.000000   0.000000   1.000000
+    transform 23:
+        0.070770   0.006192  -0.071040   8.650177
+       -0.008756   0.100084   0.000000  23.325027
+        0.070770   0.006192   0.071040  27.770390
+        0.000000   0.000000   0.000000   1.000000
+    transform 24:
+        0.059841  -0.059590  -0.054420   0.180720
+        0.065058   0.075709  -0.011363  27.998913
+        0.047749  -0.028472   0.083683  22.997925
+        0.000000   0.000000   0.000000   1.000000
+    transform 25:
+        0.015977   0.096166  -0.024297  21.038574
+       -0.069497   0.028413   0.066756  23.325027
+        0.070770   0.006192   0.071040  27.770390
+        0.000000   0.000000   0.000000   1.000000
+    transform 26:
+        0.059841  -0.059590  -0.054420  -2.989837
+        0.065058   0.075709  -0.011363  34.510429
+        0.047749  -0.028472   0.083683  22.997925
+        0.000000   0.000000   0.000000   1.000000
+
+models 27:
+    model 0:
+        mesh: craftsman/anvil.obj
+        skeleton: off
+        attached: -1
+        material: 0
+        transform: 0
+    model 1:
+        mesh: craftsman/floor.obj
+        skeleton: off
+        attached: -1
+        material: 1
+        transform: 1
+    model 2:
+        mesh: craftsman/hammer.obj
+        skeleton: off
+        attached: -1
+        material: 2
+        transform: 2
+    model 3:
+        mesh: craftsman/hotiron.obj
+        skeleton: off
+        attached: -1
+        material: 2
+        transform: 3
+    model 4:
+        mesh: craftsman/shoulderpad0.obj
+        skeleton: off
+        attached: -1
+        material: 2
+        transform: 4
+    model 5:
+        mesh: craftsman/shoulderpad1.obj
+        skeleton: off
+        attached: -1
+        material: 2
+        transform: 5
+    model 6:
+        mesh: craftsman/smith.obj
+        skeleton: off
+        attached: -1
+        material: 2
+        transform: 6
+    model 7:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 7
+    model 8:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 8
+    model 9:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 9
+    model 10:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 10
+    model 11:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 11
+    model 12:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 12
+    model 13:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 13
+    model 14:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 14
+    model 15:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 15
+    model 16:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 16
+    model 17:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 17
+    model 18:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 18
+    model 19:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 19
+    model 20:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 20
+    model 21:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 21
+    model 22:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 22
+    model 23:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 23
+    model 24:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 24
+    model 25:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 25
+    model 26:
+        mesh: craftsman/spark.obj
+        skeleton: off
+        attached: -1
+        material: 3
+        transform: 26
