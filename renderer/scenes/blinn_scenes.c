@@ -3,6 +3,7 @@
 #include "../core/api.h"
 #include "../shaders/blinn_shader.h"
 #include "blinn_scenes.h"
+#include "scene_helper.h"
 
 scene_t *blinn_azura_scene(void) {
     const char *meshes[] = {
@@ -67,54 +68,13 @@ scene_t *blinn_azura_scene(void) {
 }
 
 scene_t *blinn_centaur_scene(void) {
-    const char *meshes[] = {
-        "centaur/body.obj",
-        "centaur/flame.obj",
-        "centaur/gas.obj",
-    };
-    blinn_material_t materials[] = {
-        {
-            {1, 1, 1, 1}, 32,
-            "centaur/body_diffuse.tga",
-            "centaur/body_specular.tga",
-            "centaur/body_emission.tga",
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 32,
-            "centaur/flame_diffuse.tga",
-            NULL,
-            "centaur/flame_emission.tga",
-            0, 1, 0,
-        },
-        {
-            {1, 1, 1, 1}, 32,
-            "centaur/gas_diffuse.tga",
-            "centaur/gas_specular.tga",
-            NULL,
-            0, 0, 0,
-        },
-    };
-    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
-    mat4_t scale, rotation, translation, root;
-    int num_meshes = ARRAY_SIZE(meshes);
-    model_t **models = NULL;
-    model_t *model;
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    translation = mat4_translate(0.154f, -7.579f, -30.749f);
-    rotation = mat4_rotate_x(TO_RADIANS(-90));
-    rotation = mat4_mul_mat4(mat4_rotate_y(TO_RADIANS(-90)), rotation);
-    scale = mat4_scale(0.016f, 0.016f, 0.016f);
-    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], NULL, -1, root, materials[i]);
-        darray_push(models, model);
-    }
-
-    return scene_create(background, NULL, models, 0.5f, 1, 0);
+    mat4_t translation = mat4_translate(0.154f, -7.579f, -30.749f);
+    mat4_t rotation_x = mat4_rotate_x(TO_RADIANS(-90));
+    mat4_t rotation_y = mat4_rotate_y(TO_RADIANS(-90));
+    mat4_t rotation = mat4_mul_mat4(rotation_y, rotation_x);
+    mat4_t scale = mat4_scale(0.016f, 0.016f, 0.016f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    return helper_load_blinn_scene("centaur/centaur.scn", root);
 }
 
 scene_t *blinn_craftsman_scene(void) {
@@ -552,224 +512,25 @@ scene_t *blinn_mccree_scene(void) {
 }
 
 scene_t *blinn_nier2b_scene(void) {
-    mat4_t transforms[] = {
-        {{
-            {   2.540000f,   -0.000000f,   -0.000000f,   -0.000000f},
-            {   0.000000f,    0.000000f,    2.540000f,   -0.000000f},
-            {   0.000000f,   -2.540000f,    0.000000f,    0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
-            {   0.000000f,    0.000000f,    2.540000f,   -0.000000f},
-            {  -0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
-            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
-            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
-            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
-            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,   -0.000000f,   -0.000000f,   -0.000000f},
-            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
-            {   0.000000f,   -2.540000f,    0.000000f,    0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,   -0.000000f,    0.000000f,    0.000000f},
-            {  -0.000000f,    0.000000f,    2.540000f,   -0.000000f},
-            {  -0.000000f,   -2.540000f,    0.000000f,    0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,    0.000000f,   -0.000000f,   -0.000000f},
-            {  -0.000000f,    0.000000f,    2.540000f,   -0.000000f},
-            {   0.000000f,   -2.540000f,    0.000000f,    0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,    0.000000f,    0.000000f,    0.000000f},
-            {  -0.000000f,    0.000000f,    2.540000f,   -0.000000f},
-            {  -0.000000f,   -2.540000f,    0.000000f,    0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,   -0.000000f,   -0.000000f,   -0.000000f},
-            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
-            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
-            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
-            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
-            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
-            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,   -0.000000f,   -0.000000f,    0.000000f},
-            {   0.000000f,    0.000000f,    2.540000f,    0.000000f},
-            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   2.540000f,    0.000000f,   -0.000000f,   -0.000000f},
-            {  -0.000000f,    0.000000f,    2.540000f,   -0.000000f},
-            {   0.000000f,   -2.540000f,    0.000000f,   -0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   0.079944f,    2.065560f,    0.074996f,  -75.664925f},
-            {   1.976933f,   -0.098317f,    0.600518f,   26.524519f},
-            {   0.603239f,    0.048468f,   -1.977955f,  181.913971f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {   0.330002f,   -2.433185f,   -0.146038f,   47.790666f},
-            {   1.775814f,    0.610336f,    0.624992f,   97.739034f},
-            {  -0.554675f,   -0.110746f,    1.794488f, -131.885258f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-        {{
-            {  59.585812f,    0.000000f,    0.000000f,   -4.785220f},
-            {   0.000000f,    3.310324f,   -0.000000f,   -3.129686f},
-            {   0.000000f,    0.000000f,   59.585812f,   -0.000000f},
-            {   0.000000f,    0.000000f,    0.000000f,    1.000000f},
-        }},
-    };
-    blinn_material_t materials[] = {
-        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/suit_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/head_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/head_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/head_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/hair0_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/hair2_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/hair0_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/hair1_diffuse.tga", NULL, NULL, 1, 1, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/sword_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{1, 1, 1, 1}, 32, "nier2b/sword_diffuse.tga", NULL, NULL, 0, 0, 0},
-        {{0.25f, 0.25f, 0.25f, 1}, 32, NULL, NULL, NULL, 0, 0, 0},
-    };
-    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
-    mat4_t scale, rotation, translation, root;
-    int num_meshes = ARRAY_SIZE(transforms);
-    model_t **models = NULL;
-    model_t *model;
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    translation = mat4_translate(4.785f, -105.275f, -23.067f);
-    rotation = mat4_rotate_y(TO_RADIANS(90));
-    scale = mat4_scale(0.004f, 0.004f, 0.004f);
-    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    for (i = 0; i < num_meshes; i++) {
-        mat4_t transform = mat4_mul_mat4(root, transforms[i]);
-        blinn_material_t material = materials[i];
-        char obj_filepath[64];
-        sprintf(obj_filepath, "nier2b/nier2b%d.obj", i);
-        model = blinn_create_model(obj_filepath, NULL, -1, transform, material);
-        darray_push(models, model);
-    }
-
-    return scene_create(background, NULL, models, 0.5f, 1, 0);
+    mat4_t translation = mat4_translate(4.785f, -105.275f, -23.067f);
+    mat4_t rotation = mat4_rotate_y(TO_RADIANS(90));
+    mat4_t scale = mat4_scale(0.004f, 0.004f, 0.004f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    return helper_load_blinn_scene("nier2b/nier2b.scn", root);
 }
 
 scene_t *blinn_phoenix_scene(void) {
-    const char *meshes[] = {
-        "phoenix/body.obj",
-        "phoenix/wings.obj",
-    };
-    const char *skeleton = "phoenix/phoenix.ani";
-    blinn_material_t materials[] = {
-        {
-            {1, 1, 1, 1}, 32,
-            "phoenix/body_diffuse.tga",
-            NULL,
-            "phoenix/body_emission.tga",
-            0, 0, 0.5f,
-        },
-        {
-            {1, 1, 1, 1}, 32,
-            "phoenix/wings_diffuse.tga",
-            NULL,
-            "phoenix/wings_emission.tga",
-            0, 0, 0.5f,
-        },
-    };
-    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
-    mat4_t scale, rotation, translation, root;
-    int num_meshes = ARRAY_SIZE(meshes);
-    model_t **models = NULL;
-    model_t *model;
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    translation = mat4_translate(376.905f, -169.495f, 0);
-    rotation = mat4_rotate_y(TO_RADIANS(180));
-    scale = mat4_scale(0.001f, 0.001f, 0.001f);
-    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], skeleton, -1, root, materials[i]);
-        darray_push(models, model);
-    }
-
-    return scene_create(background, NULL, models, 0.75f, 0.25f, 0);
+    mat4_t translation = mat4_translate(376.905f, -169.495f, 0);
+    mat4_t rotation = mat4_rotate_y(TO_RADIANS(180));
+    mat4_t scale = mat4_scale(0.001f, 0.001f, 0.001f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    return helper_load_blinn_scene("phoenix/phoenix.scn", root);
 }
 
 scene_t *blinn_witch_scene(void) {
-    const char *meshes[] = {
-        "witch/object.obj",
-        "witch/witch.obj",
-    };
-    blinn_material_t materials[] = {
-        {
-            {1, 1, 1, 1}, 32,
-            "witch/object_diffuse.tga", NULL, NULL,
-            1, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 32,
-            "witch/witch_diffuse.tga", NULL, NULL,
-            1, 1, 0,
-        },
-    };
-    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
-    mat4_t scale, rotation, translation, root;
-    int num_meshes = ARRAY_SIZE(meshes);
-    model_t **models = NULL;
-    model_t *model;
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    translation = mat4_translate(-17.924f, -16.974f, -32.691f);
-    rotation = mat4_rotate_x(TO_RADIANS(-90));
-    scale = mat4_scale(0.02f, 0.02f, 0.02f);
-    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    for (i = 0; i < num_meshes; i++) {
-        model = blinn_create_model(meshes[i], NULL, -1, root, materials[i]);
-        darray_push(models, model);
-    }
-
-    return scene_create(background, NULL, models, 0.5f, 1, 0);
+    mat4_t translation = mat4_translate(-17.924f, -16.974f, -32.691f);
+    mat4_t rotation = mat4_rotate_x(TO_RADIANS(-90));
+    mat4_t scale = mat4_scale(0.02f, 0.02f, 0.02f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    return helper_load_blinn_scene("witch/witch.scn", root);
 }
