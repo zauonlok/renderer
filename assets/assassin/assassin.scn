@@ -1,0 +1,96 @@
+type: pbrm
+
+lighting:
+    background: 0.196 0.196 0.196
+    skybox: off
+    shadow: off
+    ambient: 1.0
+    punctual: 1.0
+    environment: papermill
+
+materials 4:
+    material 0:
+        basecolor_factor: 1 1 1 1
+        metalness_factor: 1
+        roughness_factor: 1
+        basecolor_map: assassin/body_basecolor.tga
+        metalness_map: assassin/body_metalness.tga
+        roughness_map: assassin/body_roughness.tga
+        normal_map: off
+        occlusion_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 1:
+        basecolor_factor: 1 1 1 1
+        metalness_factor: 0
+        roughness_factor: 0.9
+        basecolor_map: assassin/face_basecolor.tga
+        metalness_map: off
+        roughness_map: off
+        normal_map: off
+        occlusion_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 2:
+        basecolor_factor: 1 1 1 1
+        metalness_factor: 1
+        roughness_factor: 1
+        basecolor_map: assassin/hair_basecolor.tga
+        metalness_map: assassin/hair_metalness.tga
+        roughness_map: assassin/hair_roughness.tga
+        normal_map: off
+        occlusion_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 3:
+        basecolor_factor: 1 1 1 1
+        metalness_factor: 1
+        roughness_factor: 1
+        basecolor_map: assassin/weapon_basecolor.tga
+        metalness_map: assassin/weapon_metalness.tga
+        roughness_map: assassin/weapon_roughness.tga
+        normal_map: off
+        occlusion_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+
+transforms 1:
+    transform 0:
+        1  0  0  0
+        0  1  0  0
+        0  0  1  0
+        0  0  0  1
+
+models 4:
+    model 0:
+        mesh: assassin/body.obj
+        skeleton: assassin/assassin.ani
+        attached: -1
+        material: 0
+        transform: 0
+    model 1:
+        mesh: assassin/face.obj
+        skeleton: assassin/assassin.ani
+        attached: -1
+        material: 1
+        transform: 0
+    model 2:
+        mesh: assassin/hair.obj
+        skeleton: assassin/assassin.ani
+        attached: -1
+        material: 2
+        transform: 0
+    model 3:
+        mesh: assassin/weapon.obj
+        skeleton: assassin/assassin.ani
+        attached: -1
+        material: 3
+        transform: 0

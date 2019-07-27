@@ -1,0 +1,39 @@
+type: pbrs
+
+lighting:
+    background: 0.196 0.196 0.196
+    skybox: off
+    shadow: off
+    ambient: 1.0
+    punctual: 1.0
+    environment: papermill
+
+materials 1:
+    material 0:
+        diffuse_factor: 1 1 1 1
+        specular_factor: 1 1 1
+        glossiness_factor: 1
+        diffuse_map: crab/crab_diffuse.tga
+        specular_map: crab/crab_specular.tga
+        glossiness_map: crab/crab_glossiness.tga
+        normal_map: crab/crab_normal.tga
+        occlusion_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+
+transforms 1:
+    transform 0:
+        1  0  0  0
+        0  1  0  0
+        0  0  1  0
+        0  0  0  1
+
+models 1:
+    model 0:
+        mesh: crab/crab.obj
+        skeleton: crab/crab.ani
+        attached: -1
+        material: 0
+        transform: 0

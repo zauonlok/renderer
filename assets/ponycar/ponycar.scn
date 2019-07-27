@@ -1,0 +1,77 @@
+type: pbrm
+
+lighting:
+    background: 0.196 0.196 0.196
+    skybox: off
+    shadow: off
+    ambient: 1.0
+    punctual: 1.0
+    environment: papermill
+
+materials 3:
+    material 0:
+        basecolor_factor: 1 1 1 1
+        metalness_factor: 1
+        roughness_factor: 1
+        basecolor_map: ponycar/body_basecolor.tga
+        metalness_map: ponycar/body_metalness.tga
+        roughness_map: ponycar/body_roughness.tga
+        normal_map: off
+        occlusion_map: off
+        emission_map: ponycar/body_emission.tga
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 1:
+        basecolor_factor: 1 1 1 1
+        metalness_factor: 1
+        roughness_factor: 1
+        basecolor_map: ponycar/interior_basecolor.tga
+        metalness_map: ponycar/interior_metalness.tga
+        roughness_map: ponycar/interior_roughness.tga
+        normal_map: off
+        occlusion_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 0
+        alpha_cutoff: 0
+    material 2:
+        basecolor_factor: 1 1 1 0.75
+        metalness_factor: 0
+        roughness_factor: 1
+        basecolor_map: ponycar/body_basecolor.tga
+        metalness_map: ponycar/body_metalness.tga
+        roughness_map: ponycar/body_roughness.tga
+        normal_map: off
+        occlusion_map: off
+        emission_map: off
+        double_sided: 0
+        enable_blend: 1
+        alpha_cutoff: 0
+
+transforms 1:
+    transform 0:
+        1  0  0  0
+        0  1  0  0
+        0  0  1  0
+        0  0  0  1
+
+models 3:
+    model 0:
+        mesh: ponycar/body.obj
+        skeleton: off
+        attached: -1
+        material: 0
+        transform: 0
+    model 1:
+        mesh: ponycar/interior.obj
+        skeleton: off
+        attached: -1
+        material: 1
+        transform: 0
+    model 2:
+        mesh: ponycar/windows.obj
+        skeleton: off
+        attached: -1
+        material: 2
+        transform: 0

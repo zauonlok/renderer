@@ -4,77 +4,13 @@
 #include "../shaders/pbr_shader.h"
 #include "../shaders/skybox_shader.h"
 #include "pbr_scenes.h"
+#include "scene_helper.h"
 
 scene_t *pbr_assassin_scene(void) {
-    const char *meshes[] = {
-        "assassin/body.obj",
-        "assassin/face.obj",
-        "assassin/hair.obj",
-        "assassin/weapon.obj",
-    };
-    const char *skeleton = "assassin/assassin.ani";
-    pbrm_material_t materials[] = {
-        {
-            {1, 1, 1, 1}, 1, 1,
-            "assassin/body_basecolor.tga",
-            "assassin/body_metalness.tga",
-            "assassin/body_roughness.tga",
-            NULL,
-            NULL,
-            NULL,
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 0, 0.9f,
-            "assassin/face_basecolor.tga",
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 1, 1,
-            "assassin/hair_basecolor.tga",
-            "assassin/hair_metalness.tga",
-            "assassin/hair_roughness.tga",
-            NULL,
-            NULL,
-            NULL,
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 1, 1,
-            "assassin/weapon_basecolor.tga",
-            "assassin/weapon_metalness.tga",
-            "assassin/weapon_roughness.tga",
-            NULL,
-            NULL,
-            NULL,
-            0, 0, 0,
-        },
-    };
-    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
-    const char *env_name = "papermill";
-    mat4_t scale, translation, root;
-    int num_meshes = ARRAY_SIZE(meshes);
-    model_t **models = NULL;
-    model_t *model;
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    translation = mat4_translate(0, -125.815f, 18.898f);
-    scale = mat4_scale(0.0038f, 0.0038f, 0.0038f);
-    root = mat4_mul_mat4(scale, translation);
-    for (i = 0; i < num_meshes; i++) {
-        model = pbrm_create_model(meshes[i], skeleton, -1, root,
-                                  materials[i], env_name);
-        darray_push(models, model);
-    }
-
-    return scene_create(background, NULL, models, 1, 1, 0);
+    mat4_t translation = mat4_translate(0, -125.815f, 18.898f);
+    mat4_t scale = mat4_scale(0.0038f, 0.0038f, 0.0038f);
+    mat4_t root = mat4_mul_mat4(scale, translation);
+    return helper_load_pbrm_scene("assassin/assassin.scn", root);
 }
 
 scene_t *pbr_buster_scene(void) {
@@ -149,92 +85,19 @@ scene_t *pbr_buster_scene(void) {
 }
 
 scene_t *pbr_crab_scene(void) {
-    const char *mesh = "crab/crab.obj";
-    const char *skeleton = "crab/crab.ani";
-    pbrs_material_t material = {
-        {1, 1, 1, 1}, {1, 1, 1}, 1,
-        "crab/crab_diffuse.tga",
-        "crab/crab_specular.tga",
-        "crab/crab_glossiness.tga",
-        "crab/crab_normal.tga",
-        NULL,
-        NULL,
-        0, 0, 0,
-    };
-    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
-    const char *env_name = "papermill";
-    model_t **models = NULL;
-
     mat4_t translation = mat4_translate(-0.285f, 0.780f, 0.572f);
     mat4_t rotation = mat4_rotate_y(TO_RADIANS(180));
     mat4_t scale = mat4_scale(0.167f, 0.167f, 0.167f);
     mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    model_t *model = pbrs_create_model(mesh, skeleton, -1, root,
-                                       material, env_name);
-    darray_push(models, model);
-
-    return scene_create(background, NULL, models, 1, 1, 0);
+    return helper_load_pbrs_scene("crab/crab.scn", root);
 }
 
 scene_t *pbr_dieselpunk_scene(void) {
-    const char *meshes[] = {
-        "dieselpunk/ground.obj",
-        "dieselpunk/mech.obj",
-        "dieselpunk/yingham.obj",
-    };
-    pbrm_material_t materials[] = {
-        {
-            {1, 1, 1, 1}, 0, 1,
-            "dieselpunk/ground_basecolor.tga",
-            NULL,
-            "dieselpunk/ground_roughness.tga",
-            NULL,
-            NULL,
-            NULL,
-            1, 1, 0,
-        },
-        {
-            {1, 1, 1, 1}, 1, 1,
-            "dieselpunk/mech_basecolor.tga",
-            "dieselpunk/mech_metalness.tga",
-            "dieselpunk/mech_roughness.tga",
-            NULL,
-            NULL,
-            NULL,
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 0, 1,
-            "dieselpunk/yingham_basecolor.tga",
-            NULL,
-            "dieselpunk/yingham_roughness.tga",
-            NULL,
-            NULL,
-            NULL,
-            0, 0, 0,
-        },
-    };
-    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
-    const char *env_name = "papermill";
-    mat4_t scale, rotation, translation, root;
-    int num_meshes = ARRAY_SIZE(meshes);
-    model_t **models = NULL;
-    model_t *model;
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    translation = mat4_translate(1.036f, -114.817f, 27.682f);
-    rotation = mat4_rotate_y(TO_RADIANS(-90));
-    scale = mat4_scale(0.0012f, 0.0012f, 0.0012f);
-    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    for (i = 0; i < num_meshes; i++) {
-        model = pbrm_create_model(meshes[i], NULL, -1, root,
-                                  materials[i], env_name);
-        darray_push(models, model);
-    }
-
-    return scene_create(background, NULL, models, 1, 1, 0);
+    mat4_t translation = mat4_translate(1.036f, -114.817f, 27.682f);
+    mat4_t rotation = mat4_rotate_y(TO_RADIANS(-90));
+    mat4_t scale = mat4_scale(0.0012f, 0.0012f, 0.0012f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    return helper_load_pbrm_scene("dieselpunk/dieselpunk.scn", root);
 }
 
 scene_t *pbr_drone_scene(void) {
@@ -294,31 +157,11 @@ scene_t *pbr_drone_scene(void) {
 }
 
 scene_t *pbr_helmet_scene(void) {
-    const char *mesh = "helmet/helmet.obj";
-    pbrm_material_t material = {
-        {1, 1, 1, 1}, 1, 1,
-        "helmet/helmet_basecolor.tga",
-        "helmet/helmet_metalness.tga",
-        "helmet/helmet_roughness.tga",
-        NULL,
-        "helmet/helmet_occlusion.tga",
-        "helmet/helmet_emission.tga",
-        0, 0, 0,
-    };
-    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
-    model_t *skybox = skybox_create_model("papermill");
-    const char *env_name = "papermill";
-    model_t **models = NULL;
-
     mat4_t translation = mat4_translate(0.002f, 0.187f, 0);
     mat4_t rotation = mat4_rotate_x(TO_RADIANS(90));
     mat4_t scale = mat4_scale(0.5f, 0.5f, 0.5f);
     mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    model_t *model = pbrm_create_model(mesh, NULL, -1, root,
-                                       material, env_name);
-    darray_push(models, model);
-
-    return scene_create(background, skybox, models, 1, 1, 0);
+    return helper_load_pbrm_scene("helmet/helmet.scn", root);
 }
 
 scene_t *pbr_junkrat_scene(void) {
@@ -499,64 +342,11 @@ scene_t *pbr_ornitier_scene(void) {
 }
 
 scene_t *pbr_ponycar_scene(void) {
-    const char *meshes[] = {
-        "ponycar/body.obj",
-        "ponycar/interior.obj",
-        "ponycar/windows.obj",
-    };
-    pbrm_material_t materials[] = {
-        {
-            {1, 1, 1, 1}, 1, 1,
-            "ponycar/body_basecolor.tga",
-            "ponycar/body_metalness.tga",
-            "ponycar/body_roughness.tga",
-            NULL,
-            NULL,
-            "ponycar/body_emission.tga",
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 1}, 1, 1,
-            "ponycar/interior_basecolor.tga",
-            "ponycar/interior_metalness.tga",
-            "ponycar/interior_roughness.tga",
-            NULL,
-            NULL,
-            NULL,
-            0, 0, 0,
-        },
-        {
-            {1, 1, 1, 0.73f}, 0, 1,
-            "ponycar/body_basecolor.tga",
-            "ponycar/body_metalness.tga",
-            "ponycar/body_roughness.tga",
-            NULL,
-            NULL,
-            NULL,
-            0, 1, 0,
-        },
-    };
-    vec3_t background = vec3_new(0.196f, 0.196f, 0.196f);
-    const char *env_name = "papermill";
-    mat4_t scale, rotation, translation, root;
-    int num_meshes = ARRAY_SIZE(meshes);
-    model_t **models = NULL;
-    model_t *model;
-    int i;
-
-    assert(ARRAY_SIZE(materials) == num_meshes);
-
-    translation = mat4_translate(-10.343f, -13.252f, -186.343f);
-    rotation = mat4_rotate_x(TO_RADIANS(-90));
-    scale = mat4_scale(0.0015f, 0.0015f, 0.0015f);
-    root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    for (i = 0; i < num_meshes; i++) {
-        model = pbrm_create_model(meshes[i], NULL, -1, root,
-                                  materials[i], env_name);
-        darray_push(models, model);
-    }
-
-    return scene_create(background, NULL, models, 1, 1, 0);
+    mat4_t translation = mat4_translate(-10.343f, -13.252f, -186.343f);
+    mat4_t rotation = mat4_rotate_x(TO_RADIANS(-90));
+    mat4_t scale = mat4_scale(0.0015f, 0.0015f, 0.0015f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    return helper_load_pbrm_scene("ponycar/ponycar.scn", root);
 }
 
 scene_t *pbr_sphere_scene(void) {
