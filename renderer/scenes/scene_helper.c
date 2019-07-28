@@ -9,20 +9,20 @@
 
 typedef struct {
     vec3_t background;
-    char skybox[128];
-    char shadow[128];
+    char skybox[LINE_SIZE];
+    char shadow[LINE_SIZE];
     float ambient;
     float punctual;
-    char environment[128];
+    char environment[LINE_SIZE];
 } scene_light_t;
 
 typedef struct {
     int index;
     vec4_t basecolor;
     float shininess;
-    char diffuse_map[128];
-    char specular_map[128];
-    char emission_map[128];
+    char diffuse_map[LINE_SIZE];
+    char specular_map[LINE_SIZE];
+    char emission_map[LINE_SIZE];
     int double_sided;
     int enable_blend;
     float alpha_cutoff;
@@ -33,12 +33,12 @@ typedef struct {
     vec4_t basecolor_factor;
     float metalness_factor;
     float roughness_factor;
-    char basecolor_map[128];
-    char metalness_map[128];
-    char roughness_map[128];
-    char normal_map[128];
-    char occlusion_map[128];
-    char emission_map[128];
+    char basecolor_map[LINE_SIZE];
+    char metalness_map[LINE_SIZE];
+    char roughness_map[LINE_SIZE];
+    char normal_map[LINE_SIZE];
+    char occlusion_map[LINE_SIZE];
+    char emission_map[LINE_SIZE];
     int double_sided;
     int enable_blend;
     float alpha_cutoff;
@@ -49,12 +49,12 @@ typedef struct {
     vec4_t diffuse_factor;
     vec3_t specular_factor;
     float glossiness_factor;
-    char diffuse_map[128];
-    char specular_map[128];
-    char glossiness_map[128];
-    char normal_map[128];
-    char occlusion_map[128];
-    char emission_map[128];
+    char diffuse_map[LINE_SIZE];
+    char specular_map[LINE_SIZE];
+    char glossiness_map[LINE_SIZE];
+    char normal_map[LINE_SIZE];
+    char occlusion_map[LINE_SIZE];
+    char emission_map[LINE_SIZE];
     int double_sided;
     int enable_blend;
     float alpha_cutoff;
@@ -67,8 +67,8 @@ typedef struct {
 
 typedef struct {
     int index;
-    char mesh[128];
-    char skeleton[128];
+    char mesh[LINE_SIZE];
+    char skeleton[LINE_SIZE];
     int attached;
     int material;
     int transform;
@@ -88,7 +88,7 @@ static const char *wrap_path(const char *filepath) {
 
 static scene_light_t read_light(FILE *file) {
     scene_light_t light;
-    char header[128];
+    char header[LINE_SIZE];
     int items;
 
     items = fscanf(file, " %s", header);
@@ -524,7 +524,7 @@ static scene_t *create_pbrs_scene(scene_light_t scene_light,
 }
 
 scene_t *helper_load_scene(const char *filename, mat4_t root) {
-    char scene_type[128];
+    char scene_type[LINE_SIZE];
     scene_t *scene;
     FILE *file;
     int items;

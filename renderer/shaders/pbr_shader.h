@@ -115,10 +115,10 @@ typedef struct {
 } pbrs_material_t;
 
 model_t *pbrm_create_model(const char *mesh, const char *skeleton,
-                           int node_index, mat4_t transform,
+                           int attached, mat4_t transform,
                            pbrm_material_t material, const char *env_name);
 model_t *pbrs_create_model(const char *mesh, const char *skeleton,
-                           int node_index, mat4_t transform,
+                           int attached, mat4_t transform,
                            pbrs_material_t material, const char *env_name);
 
 #endif

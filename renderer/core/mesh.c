@@ -90,7 +90,7 @@ static mesh_t *load_obj(const char *filename) {
     int *position_indices = NULL;
     int *texcoord_indices = NULL;
     int *normal_indices = NULL;
-    char line[LINE_LENGTH];
+    char line[LINE_SIZE];
     mesh_t *mesh;
     FILE *file;
 
@@ -98,7 +98,7 @@ static mesh_t *load_obj(const char *filename) {
     assert(file != NULL);
     while (1) {
         int items;
-        if (fgets(line, LINE_LENGTH, file) == NULL) {
+        if (fgets(line, LINE_SIZE, file) == NULL) {
             break;
         } else if (strncmp(line, "v ", 2) == 0) {               /* position */
             vec3_t position;

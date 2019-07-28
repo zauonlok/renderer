@@ -216,7 +216,7 @@ static skybox_t g_skyboxes[] = {
 
 static cubemap_t *load_skybox(const char *skybox_name) {
     const char *faces[6] = {"right", "left", "top", "bottom", "front", "back"};
-    char paths[6][128];
+    char paths[6][PATH_SIZE];
     cubemap_t *skybox;
     int i;
 
@@ -295,7 +295,7 @@ static envinfo_t g_envinfo[] = {
 static ibldata_t *load_ibldata(const char *env_name, int mip_level,
                                const char *img_type, int is_linear) {
     const char *faces[6] = {"right", "left", "top", "bottom", "front", "back"};
-    char paths[6][128];
+    char paths[6][PATH_SIZE];
     ibldata_t *ibldata;
     int i, j;
 

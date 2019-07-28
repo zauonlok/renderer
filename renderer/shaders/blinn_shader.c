@@ -241,8 +241,8 @@ static void update_model(model_t *model, framedata_t *framedata) {
         skeleton_update_joints(skeleton, framedata->frame_time);
         joint_matrices = skeleton_get_joint_matrices(skeleton);
         joint_n_matrices = skeleton_get_normal_matrices(skeleton);
-        if (model->node_index >= 0) {
-            mat4_t node_matrix = joint_matrices[model->node_index];
+        if (model->attached >= 0) {
+            mat4_t node_matrix = joint_matrices[model->attached];
             model_matrix = mat4_mul_mat4(model_matrix, node_matrix);
             joint_matrices = NULL;
             joint_n_matrices = NULL;
@@ -308,7 +308,7 @@ static void release_model(model_t *model) {
 }
 
 model_t *blinn_create_model(const char *mesh, const char *skeleton,
-                            int node_index, mat4_t transform,
+                            int attached, mat4_t transform,
                             blinn_material_t material) {
     int sizeof_attribs = sizeof(blinn_attribs_t);
     int sizeof_varyings = sizeof(blinn_varyings_t);
@@ -332,11 +332,11 @@ model_t *blinn_create_model(const char *mesh, const char *skeleton,
     model = (model_t*)malloc(sizeof(model_t));
     model->mesh = cache_acquire_mesh(mesh);
     model->skeleton = cache_acquire_skeleton(skeleton);
+    model->attached = attached;
     model->program = program;
     model->transform = transform;
     model->sortdata.opaque = !material.enable_blend;
     model->sortdata.distance = 0;
-    model->node_index = node_index;
     model->draw = draw_model;
     model->update = update_model;
     model->release = release_model;

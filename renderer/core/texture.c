@@ -14,8 +14,8 @@ struct cubemap {texture_t *faces[6];};
 
 /* radiance hdr related functions */
 
-static void read_line(FILE *file, char line[LINE_LENGTH]) {
-    if (fgets(line, LINE_LENGTH, file) == NULL) {
+static void read_line(FILE *file, char line[LINE_SIZE]) {
+    if (fgets(line, LINE_SIZE, file) == NULL) {
         assert(0);
     }
 }
@@ -25,7 +25,7 @@ static int starts_with(const char *string, const char *prefix) {
 }
 
 static void read_hdr_header(FILE *file, int *width, int *height) {
-    char line[LINE_LENGTH];
+    char line[LINE_SIZE];
     int header_found = 0;
     int format_found = 0;
     int items;

@@ -39,10 +39,10 @@ typedef struct {
 typedef struct model {
     mesh_t *mesh;
     skeleton_t *skeleton;
+    int attached;
     program_t *program;
     mat4_t transform;
     sortdata_t sortdata;
-    int node_index;
     void (*draw)(struct model *model, framebuffer_t *framebuffer,
                  int shadow_pass);
     void (*update)(struct model *model, framedata_t *framedata);

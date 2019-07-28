@@ -41,7 +41,7 @@ static NSAutoreleasePool *g_autoreleasepool;
 }
 
 - (BOOL)windowShouldClose:(NSWindow *)sender {
-    UNUSED(sender);
+    UNUSED_VAR(sender);
     _window->should_close = 1;
     return NO;
 }
@@ -130,22 +130,22 @@ static void handle_scroll_event(window_t *window, float offset) {
 }
 
 - (void)mouseDown:(NSEvent *)event {
-    UNUSED(event);
+    UNUSED_VAR(event);
     handle_button_event(_window, BUTTON_L, 1);
 }
 
 - (void)mouseUp:(NSEvent *)event {
-    UNUSED(event);
+    UNUSED_VAR(event);
     handle_button_event(_window, BUTTON_L, 0);
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
-    UNUSED(event);
+    UNUSED_VAR(event);
     handle_button_event(_window, BUTTON_R, 1);
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
-    UNUSED(event);
+    UNUSED_VAR(event);
     handle_button_event(_window, BUTTON_R, 0);
 }
 
@@ -342,8 +342,8 @@ float platform_get_time(void) {
 }
 
 void platform_init_path(void) {
-    char path[MAX_PATH];
-    uint32_t size = MAX_PATH;
+    char path[PATH_SIZE];
+    uint32_t size = PATH_SIZE;
     _NSGetExecutablePath(path, &size);
     *strrchr(path, '/') = '\0';
     chdir(path);

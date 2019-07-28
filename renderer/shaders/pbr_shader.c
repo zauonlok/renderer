@@ -413,8 +413,8 @@ static void update_model(model_t *model, framedata_t *framedata) {
         skeleton_update_joints(skeleton, framedata->frame_time);
         joint_matrices = skeleton_get_joint_matrices(skeleton);
         joint_n_matrices = skeleton_get_normal_matrices(skeleton);
-        if (model->node_index >= 0) {
-            mat4_t node_matrix = joint_matrices[model->node_index];
+        if (model->attached >= 0) {
+            mat4_t node_matrix = joint_matrices[model->attached];
             model_matrix = mat4_mul_mat4(model_matrix, node_matrix);
             joint_matrices = NULL;
             joint_n_matrices = NULL;
@@ -488,7 +488,7 @@ static void release_model(model_t *model) {
 }
 
 static model_t *create_model(const char *mesh, const char *skeleton,
-                             int node_index, mat4_t transform,
+                             int attached, mat4_t transform,
                              int double_sided, int enable_blend) {
     int sizeof_attribs = sizeof(pbr_attribs_t);
     int sizeof_varyings = sizeof(pbr_varyings_t);
@@ -503,11 +503,11 @@ static model_t *create_model(const char *mesh, const char *skeleton,
     model = (model_t*)malloc(sizeof(model_t));
     model->mesh = cache_acquire_mesh(mesh);
     model->skeleton = cache_acquire_skeleton(skeleton);
+    model->attached = attached;
     model->program = program;
     model->transform = transform;
     model->sortdata.opaque = !enable_blend;
     model->sortdata.distance = 0;
-    model->node_index = node_index;
     model->draw = draw_model;
     model->update = update_model;
     model->release = release_model;
@@ -516,7 +516,7 @@ static model_t *create_model(const char *mesh, const char *skeleton,
 }
 
 model_t *pbrm_create_model(const char *mesh, const char *skeleton,
-                           int node_index, mat4_t transform,
+                           int attached, mat4_t transform,
                            pbrm_material_t material, const char *env_name) {
     pbr_uniforms_t *uniforms;
     model_t *model;
@@ -524,7 +524,7 @@ model_t *pbrm_create_model(const char *mesh, const char *skeleton,
     assert(material.metalness_factor >= 0 && material.metalness_factor <= 1);
     assert(material.roughness_factor >= 0 && material.roughness_factor <= 1);
 
-    model = create_model(mesh, skeleton, node_index, transform,
+    model = create_model(mesh, skeleton, attached, transform,
                          material.double_sided, material.enable_blend);
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
@@ -545,14 +545,14 @@ model_t *pbrm_create_model(const char *mesh, const char *skeleton,
 }
 
 model_t *pbrs_create_model(const char *mesh, const char *skeleton,
-                           int node_index, mat4_t transform,
+                           int attached, mat4_t transform,
                            pbrs_material_t material, const char *env_name) {
     pbr_uniforms_t *uniforms;
     model_t *model;
 
     assert(material.glossiness_factor >= 0 && material.glossiness_factor <= 1);
 
-    model = create_model(mesh, skeleton, node_index, transform,
+    model = create_model(mesh, skeleton, attached, transform,
                          material.double_sided, material.enable_blend);
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);

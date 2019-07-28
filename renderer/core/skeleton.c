@@ -46,7 +46,7 @@ struct skeleton {
 /* skeleton loading/releasing */
 
 static void read_inverse_bind(FILE *file, joint_t *joint) {
-    char line[LINE_LENGTH];
+    char line[LINE_SIZE];
     int items;
     int i;
     items = fscanf(file, " %s", line);

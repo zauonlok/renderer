@@ -7,10 +7,10 @@
 #define TO_RADIANS(degrees) ((PI / 180) * (degrees))
 #define TO_DEGREES(radians) ((180 / PI) * (radians))
 
-#define MAX_PATH 2048
-#define LINE_LENGTH 1024
+#define LINE_SIZE 1024
+#define PATH_SIZE 2048
 
-#define UNUSED(x) ((void)(x))
+#define UNUSED_VAR(x) ((void)(x))
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 
 #endif

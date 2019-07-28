@@ -300,8 +300,8 @@ float platform_get_time(void) {
 }
 
 void platform_init_path(void) {
-    char path[MAX_PATH];
-    readlink("/proc/self/exe", path, MAX_PATH);
+    char path[PATH_SIZE];
+    readlink("/proc/self/exe", path, PATH_SIZE);
     *strrchr(path, '/') = '\0';
     chdir(path);
     chdir("assets");

@@ -5,6 +5,7 @@
 #include <windows.h>
 #include "../core/graphics.h"
 #include "../core/image.h"
+#include "../core/macro.h"
 #include "../core/platform.h"
 
 struct window {
@@ -128,8 +129,8 @@ static HWND create_window(const char *title_, int width, int height) {
     HWND handle;
 
 #ifdef UNICODE
-    wchar_t title[128];
-    mbstowcs(title, title_, 128);
+    wchar_t title[LINE_SIZE];
+    mbstowcs(title, title_, LINE_SIZE);
 #else
     const char *title = title_;
 #endif
