@@ -2,6 +2,7 @@
 
 The cubemaps are available for download from
     https://github.com/KhronosGroup/glTF-Sample-Viewer/archive/glTF-WebGL-PBR.zip
+    https://github.com/ux3d/glTF-Sample-Environments/archive/master.zip
 
 The Python Imaging Library is required
     pip install pillow

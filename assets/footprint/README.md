@@ -4,7 +4,7 @@
 
 [http://www.hdrlabs.com/sibl/archive.html](http://www.hdrlabs.com/sibl/archive.html)
 
-[https://github.com/ux3d/Sample-Environments/tree/master/footprint_court](https://github.com/ux3d/Sample-Environments/tree/master/footprint_court)
+[https://github.com/ux3d/glTF-Sample-Environments/tree/master/footprint_court](https://github.com/ux3d/glTF-Sample-Environments/tree/master/footprint_court)
 
 ## License
 

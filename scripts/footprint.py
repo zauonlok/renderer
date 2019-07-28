@@ -1,7 +1,7 @@
 """Compress the Footprint Court cubemaps
 
 The cubemaps are available for download from
-    https://github.com/ux3d/Sample-Environments/archive/master.zip
+    https://github.com/ux3d/glTF-Sample-Environments/archive/master.zip
 """
 
 from __future__ import print_function
@@ -11,7 +11,7 @@ import zipfile
 
 from utils.hdr import dump_hdr_image, load_hdr_image
 
-SRC_FILENAME = "Sample-Environments-master.zip"
+SRC_FILENAME = "glTF-Sample-Environments-master.zip"
 DST_DIRECTORY = "../assets/footprint"
 
 
