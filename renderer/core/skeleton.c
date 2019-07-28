@@ -13,6 +13,7 @@
  */
 
 typedef struct {
+    int joint_index;
     int parent_index;
     mat4_t inverse_bind;
     /* translations */
@@ -44,29 +45,14 @@ struct skeleton {
 
 /* skeleton loading/releasing */
 
-static void read_line(FILE *file, char line[LINE_LENGTH]) {
-    if (fgets(line, LINE_LENGTH, file) == NULL) {
-        assert(0);
-    }
-}
-
-static void read_parent_index(FILE *file, joint_t *joint) {
-    char line[LINE_LENGTH];
-    int items;
-    read_line(file, line);
-    items = sscanf(line, "    parent-index: %d", &joint->parent_index);
-    assert(items == 1);
-}
-
 static void read_inverse_bind(FILE *file, joint_t *joint) {
     char line[LINE_LENGTH];
     int items;
     int i;
-    read_line(file, line);
-    assert(strstr(line, "    inverse-bind:") != NULL);
+    items = fscanf(file, " %s", line);
+    assert(items == 1 && strcmp(line, "inverse-bind:") == 0);
     for (i = 0; i < 4; i++) {
-        read_line(file, line);
-        items = sscanf(line, "        %f %f %f %f",
+        items = fscanf(file, " %f %f %f %f",
                        &joint->inverse_bind.m[i][0],
                        &joint->inverse_bind.m[i][1],
                        &joint->inverse_bind.m[i][2],
@@ -76,11 +62,9 @@ static void read_inverse_bind(FILE *file, joint_t *joint) {
 }
 
 static void read_translations(FILE *file, joint_t *joint) {
-    char line[LINE_LENGTH];
     int items;
     int i;
-    read_line(file, line);
-    items = sscanf(line, "    translations %d:", &joint->num_translations);
+    items = fscanf(file, " translations %d:", &joint->num_translations);
     assert(items == 1 && joint->num_translations >= 0);
     if (joint->num_translations > 0) {
         int time_size = sizeof(float) * joint->num_translations;
@@ -88,8 +72,7 @@ static void read_translations(FILE *file, joint_t *joint) {
         joint->translation_times = (float*)malloc(time_size);
         joint->translation_values = (vec3_t*)malloc(value_size);
         for (i = 0; i < joint->num_translations; i++) {
-            read_line(file, line);
-            items = sscanf(line, "        time: %f, value: [%f, %f, %f]",
+            items = fscanf(file, " time: %f, value: [%f, %f, %f]",
                            &joint->translation_times[i],
                            &joint->translation_values[i].x,
                            &joint->translation_values[i].y,
@@ -103,11 +86,9 @@ static void read_translations(FILE *file, joint_t *joint) {
 }
 
 static void read_rotations(FILE *file, joint_t *joint) {
-    char line[LINE_LENGTH];
     int items;
     int i;
-    read_line(file, line);
-    items = sscanf(line, "    rotations %d:", &joint->num_rotations);
+    items = fscanf(file, " rotations %d:", &joint->num_rotations);
     assert(items == 1 && joint->num_rotations >= 0);
     if (joint->num_rotations > 0) {
         int time_size = sizeof(float) * joint->num_rotations;
@@ -115,8 +96,7 @@ static void read_rotations(FILE *file, joint_t *joint) {
         joint->rotation_times = (float*)malloc(time_size);
         joint->rotation_values = (quat_t*)malloc(value_size);
         for (i = 0; i < joint->num_rotations; i++) {
-            read_line(file, line);
-            items = sscanf(line, "        time: %f, value: [%f, %f, %f, %f]",
+            items = fscanf(file, " time: %f, value: [%f, %f, %f, %f]",
                            &joint->rotation_times[i],
                            &joint->rotation_values[i].x,
                            &joint->rotation_values[i].y,
@@ -131,11 +111,9 @@ static void read_rotations(FILE *file, joint_t *joint) {
 }
 
 static void read_scales(FILE *file, joint_t *joint) {
-    char line[LINE_LENGTH];
     int items;
     int i;
-    read_line(file, line);
-    items = sscanf(line, "    scales %d:", &joint->num_scales);
+    items = fscanf(file, " scales %d:", &joint->num_scales);
     assert(items == 1 && joint->num_scales >= 0);
     if (joint->num_scales > 0) {
         int time_size = sizeof(float) * joint->num_scales;
@@ -143,8 +121,7 @@ static void read_scales(FILE *file, joint_t *joint) {
         joint->scale_times = (float*)malloc(time_size);
         joint->scale_values = (vec3_t*)malloc(value_size);
         for (i = 0; i < joint->num_scales; i++) {
-            read_line(file, line);
-            items = sscanf(line, "        time: %f, value: [%f, %f, %f]",
+            items = fscanf(file, " time: %f, value: [%f, %f, %f]",
                            &joint->scale_times[i],
                            &joint->scale_values[i].x,
                            &joint->scale_values[i].y,
@@ -158,21 +135,14 @@ static void read_scales(FILE *file, joint_t *joint) {
 }
 
 static joint_t load_joint(FILE *file) {
-    char line[LINE_LENGTH];
     joint_t joint;
     int items;
-    int dummy;
 
-    while (1) {
-        read_line(file, line);
-        if (line[0] != '\0' && line[0] != '\r' && line[0] != '\n') {
-            break;
-        }
-    }
-    items = sscanf(line, "joint %d:", &dummy);
+    items = fscanf(file, " joint %d:", &joint.joint_index);
+    assert(items == 1);
+    items = fscanf(file, " parent-index: %d", &joint.parent_index);
     assert(items == 1);
 
-    read_parent_index(file, &joint);
     read_inverse_bind(file, &joint);
     read_translations(file, &joint);
     read_rotations(file, &joint);
@@ -192,7 +162,6 @@ static void initialize_cache(skeleton_t *skeleton) {
 }
 
 static skeleton_t *load_ani(const char *filename) {
-    char line[LINE_LENGTH];
     skeleton_t *skeleton;
     FILE *file;
     int items;
@@ -203,18 +172,17 @@ static skeleton_t *load_ani(const char *filename) {
     file = fopen(filename, "rb");
     assert(file != NULL);
 
-    read_line(file, line);
-    items = sscanf(line, "joint-size: %d", &skeleton->num_joints);
+    items = fscanf(file, " joint-size: %d", &skeleton->num_joints);
     assert(items == 1 && skeleton->num_joints > 0);
-
-    read_line(file, line);
-    items = sscanf(line, "time-range: [%f, %f]",
+    items = fscanf(file, " time-range: [%f, %f]",
                    &skeleton->min_time, &skeleton->max_time);
     assert(items == 2 && skeleton->min_time < skeleton->max_time);
 
     skeleton->joints = (joint_t*)malloc(sizeof(joint_t) * skeleton->num_joints);
     for (i = 0; i < skeleton->num_joints; i++) {
-        skeleton->joints[i] = load_joint(file);
+        joint_t joint = load_joint(file);
+        assert(joint.joint_index == i);
+        skeleton->joints[i] = joint;
     }
 
     fclose(file);
