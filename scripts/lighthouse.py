@@ -15,7 +15,7 @@ import zipfile
 
 from PIL import Image
 
-from utils.gltf import dump_obj_data, load_node_data
+from utils.gltf import dump_obj_data
 
 SRC_FILENAME = "the_lighthouse.zip"
 DST_DIRECTORY = "../assets/lighthouse"
@@ -83,26 +83,6 @@ def process_images(zip_file):
         save_image(image, tga_filename)
 
 
-def print_transforms(zip_file):
-    gltf = json.loads(zip_file.read("scene.gltf"))
-    nodes = load_node_data(gltf)
-    nodes = [node for node in nodes if node.mesh is not None]
-
-    transforms = []
-    for node in nodes:
-        if node.world_transform not in transforms:
-            transforms.append(node.world_transform)
-
-    row_pattern = "            {{{:11.6f}f, {:11.6f}f, {:11.6f}f, {:11.6f}f}},"
-    print("    mat4_t transforms[{}] = {{".format(len(transforms)))
-    for transform in transforms:
-        print("        {{")
-        for i in range(4):
-            print(row_pattern.format(*transform.data[i]))
-        print("        }},")
-    print("    };")
-
-
 def main():
     if not os.path.exists(DST_DIRECTORY):
         os.makedirs(DST_DIRECTORY)
@@ -110,7 +90,6 @@ def main():
     with zipfile.ZipFile(SRC_FILENAME) as zip_file:
         process_meshes(zip_file)
         process_images(zip_file)
-        # print_transforms(zip_file)
 
 
 if __name__ == "__main__":

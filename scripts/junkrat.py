@@ -92,25 +92,6 @@ def process_images(zip_file):
         os.remove(del_filepath)
 
 
-def print_mesh2material(zip_file):
-    gltf = json.loads(zip_file.read("scene.gltf"))
-    meshes = gltf["meshes"]
-
-    mesh2material = []
-    for mesh in meshes:
-        assert len(mesh["primitives"]) == 1
-        primitive = mesh["primitives"][0]
-        mesh2material.append(primitive["material"])
-
-    num_meshes = len(meshes)
-    chunk_size = (num_meshes + 2) / 3
-    print("    int mesh2material[{}] = {{".format(num_meshes))
-    for i in range(0, num_meshes, chunk_size):
-        indices = [str(j) for j in mesh2material[i:(i + chunk_size)]]
-        print("        {}".format(", ".join(indices) + ","))
-    print("    };")
-
-
 def main():
     if not os.path.exists(DST_DIRECTORY):
         os.makedirs(DST_DIRECTORY)
@@ -118,7 +99,6 @@ def main():
     with zipfile.ZipFile(SRC_FILENAME) as zip_file:
         process_meshes(zip_file)
         process_images(zip_file)
-        # print_mesh2material(zip_file)
 
 
 if __name__ == "__main__":

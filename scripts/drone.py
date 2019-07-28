@@ -102,16 +102,6 @@ def process_images(zip_file):
             save_image(glossiness_image, "{}_glossiness.tga".format(name))
 
 
-def print_mesh2node(zip_file):
-    gltf = json.loads(zip_file.read("scene.gltf"))
-    buffer = zip_file.read("scene.bin")
-    _, mesh2node = dump_node_ani_data(gltf, buffer)
-    mesh2node = [str(j) for j in mesh2node[1:]]
-    print("    int fire_mesh2node[{}] = {{".format(len(mesh2node)))
-    print("        {}".format(", ".join(mesh2node) + ","))
-    print("    };")
-
-
 def main():
     if not os.path.exists(DST_DIRECTORY):
         os.makedirs(DST_DIRECTORY)
@@ -119,7 +109,6 @@ def main():
     with zipfile.ZipFile(SRC_FILENAME) as zip_file:
         process_meshes(zip_file)
         process_images(zip_file)
-        # print_mesh2node(zip_file)
 
 
 if __name__ == "__main__":

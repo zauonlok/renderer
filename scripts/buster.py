@@ -85,41 +85,6 @@ def process_images(zip_file):
             save_image(emission_image, "{}_emission.tga".format(name))
 
 
-def print_mesh2node(gltf, buffer):
-    _, mesh2node = dump_node_ani_data(gltf, buffer)
-    num_meshes = len(mesh2node)
-    chunk_size = (num_meshes + 2) / 3
-    print("    int mesh2node[{}] = {{".format(num_meshes))
-    for i in range(0, num_meshes, chunk_size):
-        indices = [str(j) for j in mesh2node[i:(i + chunk_size)]]
-        print("        {}".format(", ".join(indices) + ","))
-    print("    };")
-
-
-def print_mesh2material(gltf):
-    mesh2material = []
-    meshes = gltf["meshes"]
-    for mesh in meshes:
-        assert len(mesh["primitives"]) == 1
-        primitive = mesh["primitives"][0]
-        mesh2material.append(primitive["material"])
-
-    num_meshes = len(meshes)
-    chunk_size = (num_meshes + 1) / 2
-    print("    int mesh2material[{}] = {{".format(num_meshes))
-    for i in range(0, num_meshes, chunk_size):
-        indices = [str(j) for j in mesh2material[i:(i + chunk_size)]]
-        print("        {}".format(", ".join(indices) + ","))
-    print("    };")
-
-
-def generated_code(zip_file):
-    gltf = json.loads(zip_file.read("scene.gltf"))
-    buffer = zip_file.read("scene.bin")
-    print_mesh2node(gltf, buffer)
-    print_mesh2material(gltf)
-
-
 def main():
     if not os.path.exists(DST_DIRECTORY):
         os.makedirs(DST_DIRECTORY)
@@ -127,7 +92,6 @@ def main():
     with zipfile.ZipFile(SRC_FILENAME) as zip_file:
         process_meshes(zip_file)
         process_images(zip_file)
-        # generated_code(zip_file)
 
 
 if __name__ == "__main__":

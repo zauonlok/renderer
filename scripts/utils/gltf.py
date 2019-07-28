@@ -477,7 +477,6 @@ def _compact_joints(joints):
 def dump_node_ani_data(gltf, buffer, animation_index=0):
     accessor_parser = functools.partial(parse_accessor_data, gltf, buffer)
     animation_data = gltf["animations"][animation_index]
-    inverse_bind = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
 
     child_to_parent = {}
     for node_index, node_data in enumerate(gltf["nodes"]):
