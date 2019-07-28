@@ -17,6 +17,7 @@ typedef struct {
 } scene_light_t;
 
 typedef struct {
+    int index;
     vec4_t basecolor;
     float shininess;
     char diffuse_map[128];
@@ -28,6 +29,7 @@ typedef struct {
 } scene_blinn_t;
 
 typedef struct {
+    int index;
     vec4_t basecolor_factor;
     float metalness_factor;
     float roughness_factor;
@@ -43,6 +45,7 @@ typedef struct {
 } scene_pbrm_t;
 
 typedef struct {
+    int index;
     vec4_t diffuse_factor;
     vec3_t specular_factor;
     float glossiness_factor;
@@ -58,6 +61,12 @@ typedef struct {
 } scene_pbrs_t;
 
 typedef struct {
+    int index;
+    mat4_t matrix;
+} scene_transform_t;
+
+typedef struct {
+    int index;
     char mesh[128];
     char skeleton[128];
     int attached;
@@ -65,53 +74,25 @@ typedef struct {
     int transform;
 } scene_model_t;
 
-static void read_line(FILE *file, char line[LINE_LENGTH]) {
-    if (fgets(line, LINE_LENGTH, file) == NULL) {
-        assert(0);
-    }
-}
-
-static int starts_with(const char *string, const char *prefix) {
-    return strncmp(string, prefix, strlen(prefix)) == 0;
-}
-
 static int equals_to(const char *string1, const char *string2) {
     return strcmp(string1, string2) == 0;
 }
 
-static const char *wrap_string(const char *string) {
-    if (equals_to(string, "off")) {
+static const char *wrap_path(const char *filepath) {
+    if (equals_to(filepath, "off")) {
         return NULL;
     } else {
-        return string;
+        return filepath;
     }
 }
 
-static void read_blinn_type(FILE *file) {
-    char line[LINE_LENGTH];
-    read_line(file, line);
-    assert(starts_with(line, "type: blinn"));
-}
-
-static void read_pbrm_type(FILE *file) {
-    char line[LINE_LENGTH];
-    read_line(file, line);
-    assert(starts_with(line, "type: pbrm"));
-}
-
-static void read_pbrs_type(FILE *file) {
-    char line[LINE_LENGTH];
-    read_line(file, line);
-    assert(starts_with(line, "type: pbrs"));
-}
-
 static scene_light_t read_light(FILE *file) {
-    char line[LINE_LENGTH];
     scene_light_t light;
+    char header[128];
     int items;
 
-    read_line(file, line);
-    assert(starts_with(line, "lighting:"));
+    items = fscanf(file, " %s", header);
+    assert(equals_to(header, "lighting:"));
     items = fscanf(file, " background: %f %f %f",
                    &light.background.x,
                    &light.background.y,
@@ -134,9 +115,8 @@ static scene_light_t read_light(FILE *file) {
 static scene_blinn_t read_blinn_material(FILE *file) {
     scene_blinn_t material;
     int items;
-    int dummy;
 
-    items = fscanf(file, " material %d:", &dummy);
+    items = fscanf(file, " material %d:", &material.index);
     assert(items == 1);
     items = fscanf(file, " basecolor: %f %f %f %f",
                    &material.basecolor.x,
@@ -172,6 +152,7 @@ static scene_blinn_t *read_blinn_materials(FILE *file) {
     assert(items == 1);
     for (i = 0; i < num_materials; i++) {
         scene_blinn_t material = read_blinn_material(file);
+        assert(material.index == i);
         darray_push(materials, material);
     }
     return materials;
@@ -180,9 +161,8 @@ static scene_blinn_t *read_blinn_materials(FILE *file) {
 static scene_pbrm_t read_pbrm_material(FILE *file) {
     scene_pbrm_t material;
     int items;
-    int dummy;
 
-    items = fscanf(file, " material %d:", &dummy);
+    items = fscanf(file, " material %d:", &material.index);
     assert(items == 1);
     items = fscanf(file, " basecolor_factor: %f %f %f %f",
                    &material.basecolor_factor.x,
@@ -226,6 +206,7 @@ static scene_pbrm_t *read_pbrm_materials(FILE *file) {
     assert(items == 1);
     for (i = 0; i < num_materials; i++) {
         scene_pbrm_t material = read_pbrm_material(file);
+        assert(material.index == i);
         darray_push(materials, material);
     }
     return materials;
@@ -234,9 +215,8 @@ static scene_pbrm_t *read_pbrm_materials(FILE *file) {
 static scene_pbrs_t read_pbrs_material(FILE *file) {
     scene_pbrs_t material;
     int items;
-    int dummy;
 
-    items = fscanf(file, " material %d:", &dummy);
+    items = fscanf(file, " material %d:", &material.index);
     assert(items == 1);
     items = fscanf(file, " diffuse_factor: %f %f %f %f",
                    &material.diffuse_factor.x,
@@ -283,33 +263,33 @@ static scene_pbrs_t *read_pbrs_materials(FILE *file) {
     assert(items == 1);
     for (i = 0; i < num_materials; i++) {
         scene_pbrs_t material = read_pbrs_material(file);
+        assert(material.index == i);
         darray_push(materials, material);
     }
     return materials;
 }
 
-static mat4_t read_transform(FILE *file) {
-    mat4_t transform;
+static scene_transform_t read_transform(FILE *file) {
+    scene_transform_t transform;
     int items;
-    int dummy;
     int i;
 
-    items = fscanf(file, " transform %d:", &dummy);
+    items = fscanf(file, " transform %d:", &transform.index);
     assert(items == 1);
     for (i = 0; i < 4; i++) {
         items = fscanf(file, " %f %f %f %f",
-                      &transform.m[i][0],
-                      &transform.m[i][1],
-                      &transform.m[i][2],
-                      &transform.m[i][3]);
+                       &transform.matrix.m[i][0],
+                       &transform.matrix.m[i][1],
+                       &transform.matrix.m[i][2],
+                       &transform.matrix.m[i][3]);
         assert(items == 4);
     }
 
     return transform;
 }
 
-static mat4_t *read_transforms(FILE *file) {
-    mat4_t *transforms = NULL;
+static scene_transform_t *read_transforms(FILE *file) {
+    scene_transform_t *transforms = NULL;
     int num_transforms;
     int items;
     int i;
@@ -317,7 +297,8 @@ static mat4_t *read_transforms(FILE *file) {
     items = fscanf(file, " transforms %d:", &num_transforms);
     assert(items == 1);
     for (i = 0; i < num_transforms; i++) {
-        mat4_t transform = read_transform(file);
+        scene_transform_t transform = read_transform(file);
+        assert(transform.index == i);
         darray_push(transforms, transform);
     }
     return transforms;
@@ -326,9 +307,8 @@ static mat4_t *read_transforms(FILE *file) {
 static scene_model_t read_model(FILE *file) {
     scene_model_t model;
     int items;
-    int dummy;
 
-    items = fscanf(file, " model %d:", &dummy);
+    items = fscanf(file, " model %d:", &model.index);
     assert(items == 1);
     items = fscanf(file, " mesh: %s", model.mesh);
     assert(items == 1);
@@ -354,6 +334,7 @@ static scene_model_t *read_models(FILE *file) {
     assert(items == 1);
     for (i = 0; i < num_models; i++) {
         scene_model_t model = read_model(file);
+        assert(model.index == i);
         darray_push(models, model);
     }
     return models;
@@ -365,6 +346,7 @@ static scene_t *create_scene(scene_light_t light, model_t **models) {
     if (equals_to(light.skybox, "off")) {
         skybox = NULL;
     } else {
+        assert(!equals_to(light.skybox, "on"));
         skybox = skybox_create_model(light.skybox);
     }
     if (equals_to(light.shadow, "off")) {
@@ -377,224 +359,212 @@ static scene_t *create_scene(scene_light_t light, model_t **models) {
                         light.ambient, light.punctual, with_shadow);
 }
 
-scene_t *helper_load_blinn_scene(const char *filename, mat4_t root_transform) {
-    char line[LINE_LENGTH];
-    scene_light_t scene_light;
-    scene_blinn_t *scene_materials;
-    mat4_t *scene_transforms;
-    scene_model_t *scene_models;
-    int num_materials;
-    int num_transforms;
-    int num_models;
+static scene_t *create_blinn_scene(scene_light_t scene_light,
+                                   scene_blinn_t *scene_materials,
+                                   scene_transform_t *scene_transforms,
+                                   scene_model_t *scene_models,
+                                   mat4_t root_transform) {
+    int num_materials = darray_size(scene_materials);
+    int num_transforms = darray_size(scene_transforms);
+    int num_models = darray_size(scene_models);
     model_t **models = NULL;
-    scene_t *scene;
-    FILE *file;
     int i;
 
-    file = fopen(filename, "rb");
-    assert(file != NULL);
-    read_blinn_type(file);
-    read_line(file, line);
-    scene_light = read_light(file);
-    read_line(file, line);
-    scene_materials = read_blinn_materials(file);
-    read_line(file, line);
-    scene_transforms = read_transforms(file);
-    read_line(file, line);
-    scene_models = read_models(file);
-    fclose(file);
-
-    num_materials = darray_size(scene_materials);
-    num_transforms = darray_size(scene_transforms);
-    num_models = darray_size(scene_models);
     for (i = 0; i < num_models; i++) {
-        scene_model_t scene_model = scene_models[i];
         scene_blinn_t scene_material;
-        blinn_material_t material;
+        scene_transform_t scene_transform;
+        scene_model_t scene_model;
+        const char *mesh;
         const char *skeleton;
+        int attached;
         mat4_t transform;
+        blinn_material_t material;
         model_t *model;
-        int node_index;
 
+        scene_model = scene_models[i];
         assert(scene_model.transform < num_transforms);
-        transform = scene_transforms[scene_model.transform];
-        transform = mat4_mul_mat4(root_transform, transform);
-
         assert(scene_model.material < num_materials);
+
+        mesh = wrap_path(scene_model.mesh);
+        skeleton = wrap_path(scene_model.skeleton);
+        attached = scene_model.attached;
+
+        scene_transform = scene_transforms[scene_model.transform];
+        transform = mat4_mul_mat4(root_transform, scene_transform.matrix);
+
+        scene_material = scene_materials[scene_model.material];
         scene_material = scene_materials[scene_model.material];
         material.basecolor = scene_material.basecolor;
         material.shininess = scene_material.shininess;
-        material.diffuse_map = wrap_string(scene_material.diffuse_map);
-        material.specular_map = wrap_string(scene_material.specular_map);
-        material.emission_map = wrap_string(scene_material.emission_map);
+        material.diffuse_map = wrap_path(scene_material.diffuse_map);
+        material.specular_map = wrap_path(scene_material.specular_map);
+        material.emission_map = wrap_path(scene_material.emission_map);
         material.double_sided = scene_material.double_sided;
         material.enable_blend = scene_material.enable_blend;
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
-        skeleton = wrap_string(scene_model.skeleton);
-        node_index = scene_model.attached;
-
-        model = blinn_create_model(scene_model.mesh, skeleton, node_index,
+        model = blinn_create_model(mesh, skeleton, attached,
                                    transform, material);
         darray_push(models, model);
     }
 
-    scene = create_scene(scene_light, models);
-    darray_free(scene_materials);
-    darray_free(scene_transforms);
-    darray_free(scene_models);
-
-    return scene;
+    return create_scene(scene_light, models);
 }
 
-scene_t *helper_load_pbrm_scene(const char *filename, mat4_t root_transform) {
-    char line[LINE_LENGTH];
-    scene_light_t scene_light;
-    scene_pbrm_t *scene_materials;
-    mat4_t *scene_transforms;
-    scene_model_t *scene_models;
-    int num_materials;
-    int num_transforms;
-    int num_models;
-    const char *env_name;
+static scene_t *create_pbrm_scene(scene_light_t scene_light,
+                                  scene_pbrm_t *scene_materials,
+                                  scene_transform_t *scene_transforms,
+                                  scene_model_t *scene_models,
+                                  mat4_t root_transform) {
+    const char *env_name = wrap_path(scene_light.environment);
+    int num_materials = darray_size(scene_materials);
+    int num_transforms = darray_size(scene_transforms);
+    int num_models = darray_size(scene_models);
     model_t **models = NULL;
-    scene_t *scene;
-    FILE *file;
     int i;
 
-    file = fopen(filename, "rb");
-    assert(file != NULL);
-    read_pbrm_type(file);
-    read_line(file, line);
-    scene_light = read_light(file);
-    read_line(file, line);
-    scene_materials = read_pbrm_materials(file);
-    read_line(file, line);
-    scene_transforms = read_transforms(file);
-    read_line(file, line);
-    scene_models = read_models(file);
-    fclose(file);
-
-    env_name = wrap_string(scene_light.environment);
-    num_materials = darray_size(scene_materials);
-    num_transforms = darray_size(scene_transforms);
-    num_models = darray_size(scene_models);
     for (i = 0; i < num_models; i++) {
-        scene_model_t scene_model = scene_models[i];
         scene_pbrm_t scene_material;
-        pbrm_material_t material;
+        scene_transform_t scene_transform;
+        scene_model_t scene_model;
+        const char *mesh;
         const char *skeleton;
+        int attached;
         mat4_t transform;
+        pbrm_material_t material;
         model_t *model;
-        int node_index;
 
+        scene_model = scene_models[i];
         assert(scene_model.transform < num_transforms);
-        transform = scene_transforms[scene_model.transform];
-        transform = mat4_mul_mat4(root_transform, transform);
-
         assert(scene_model.material < num_materials);
+
+        mesh = wrap_path(scene_model.mesh);
+        skeleton = wrap_path(scene_model.skeleton);
+        attached = scene_model.attached;
+
+        scene_transform = scene_transforms[scene_model.transform];
+        transform = mat4_mul_mat4(root_transform, scene_transform.matrix);
+
         scene_material = scene_materials[scene_model.material];
         material.basecolor_factor = scene_material.basecolor_factor;
         material.metalness_factor = scene_material.metalness_factor;
         material.roughness_factor = scene_material.roughness_factor;
-        material.basecolor_map = wrap_string(scene_material.basecolor_map);
-        material.metalness_map = wrap_string(scene_material.metalness_map);
-        material.roughness_map = wrap_string(scene_material.roughness_map);
-        material.normal_map = wrap_string(scene_material.normal_map);
-        material.occlusion_map = wrap_string(scene_material.occlusion_map);
-        material.emission_map = wrap_string(scene_material.emission_map);
+        material.basecolor_map = wrap_path(scene_material.basecolor_map);
+        material.metalness_map = wrap_path(scene_material.metalness_map);
+        material.roughness_map = wrap_path(scene_material.roughness_map);
+        material.normal_map = wrap_path(scene_material.normal_map);
+        material.occlusion_map = wrap_path(scene_material.occlusion_map);
+        material.emission_map = wrap_path(scene_material.emission_map);
         material.double_sided = scene_material.double_sided;
         material.enable_blend = scene_material.enable_blend;
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
-        skeleton = wrap_string(scene_model.skeleton);
-        node_index = scene_model.attached;
-
-        model = pbrm_create_model(scene_model.mesh, skeleton, node_index,
-                                   transform, material, env_name);
+        model = pbrm_create_model(mesh, skeleton, attached,
+                                  transform, material, env_name);
         darray_push(models, model);
     }
 
-    scene = create_scene(scene_light, models);
-    darray_free(scene_materials);
-    darray_free(scene_transforms);
-    darray_free(scene_models);
-
-    return scene;
+    return create_scene(scene_light, models);
 }
 
-scene_t *helper_load_pbrs_scene(const char *filename, mat4_t root_transform) {
-    char line[LINE_LENGTH];
-    scene_light_t scene_light;
-    scene_pbrs_t *scene_materials;
-    mat4_t *scene_transforms;
-    scene_model_t *scene_models;
-    int num_materials;
-    int num_transforms;
-    int num_models;
-    const char *env_name;
+static scene_t *create_pbrs_scene(scene_light_t scene_light,
+                                  scene_pbrs_t *scene_materials,
+                                  scene_transform_t *scene_transforms,
+                                  scene_model_t *scene_models,
+                                  mat4_t root_transform) {
+    const char *env_name = wrap_path(scene_light.environment);
+    int num_materials = darray_size(scene_materials);
+    int num_transforms = darray_size(scene_transforms);
+    int num_models = darray_size(scene_models);
     model_t **models = NULL;
-    scene_t *scene;
-    FILE *file;
     int i;
 
-    file = fopen(filename, "rb");
-    assert(file != NULL);
-    read_pbrs_type(file);
-    read_line(file, line);
-    scene_light = read_light(file);
-    read_line(file, line);
-    scene_materials = read_pbrs_materials(file);
-    read_line(file, line);
-    scene_transforms = read_transforms(file);
-    read_line(file, line);
-    scene_models = read_models(file);
-    fclose(file);
-
-    env_name = wrap_string(scene_light.environment);
-    num_materials = darray_size(scene_materials);
-    num_transforms = darray_size(scene_transforms);
-    num_models = darray_size(scene_models);
     for (i = 0; i < num_models; i++) {
-        scene_model_t scene_model = scene_models[i];
         scene_pbrs_t scene_material;
-        pbrs_material_t material;
+        scene_transform_t scene_transform;
+        scene_model_t scene_model;
+        const char *mesh;
         const char *skeleton;
+        int attached;
         mat4_t transform;
+        pbrs_material_t material;
         model_t *model;
-        int node_index;
 
+        scene_model = scene_models[i];
         assert(scene_model.transform < num_transforms);
-        transform = scene_transforms[scene_model.transform];
-        transform = mat4_mul_mat4(root_transform, transform);
-
         assert(scene_model.material < num_materials);
+
+        mesh = wrap_path(scene_model.mesh);
+        skeleton = wrap_path(scene_model.skeleton);
+        attached = scene_model.attached;
+
+        scene_transform = scene_transforms[scene_model.transform];
+        transform = mat4_mul_mat4(root_transform, scene_transform.matrix);
+
         scene_material = scene_materials[scene_model.material];
         material.diffuse_factor = scene_material.diffuse_factor;
         material.specular_factor = scene_material.specular_factor;
         material.glossiness_factor = scene_material.glossiness_factor;
-        material.diffuse_map = wrap_string(scene_material.diffuse_map);
-        material.specular_map = wrap_string(scene_material.specular_map);
-        material.glossiness_map = wrap_string(scene_material.glossiness_map);
-        material.normal_map = wrap_string(scene_material.normal_map);
-        material.occlusion_map = wrap_string(scene_material.occlusion_map);
-        material.emission_map = wrap_string(scene_material.emission_map);
+        material.diffuse_map = wrap_path(scene_material.diffuse_map);
+        material.specular_map = wrap_path(scene_material.specular_map);
+        material.glossiness_map = wrap_path(scene_material.glossiness_map);
+        material.normal_map = wrap_path(scene_material.normal_map);
+        material.occlusion_map = wrap_path(scene_material.occlusion_map);
+        material.emission_map = wrap_path(scene_material.emission_map);
         material.double_sided = scene_material.double_sided;
         material.enable_blend = scene_material.enable_blend;
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
-        skeleton = wrap_string(scene_model.skeleton);
-        node_index = scene_model.attached;
-
-        model = pbrs_create_model(scene_model.mesh, skeleton, node_index,
-                                   transform, material, env_name);
+        model = pbrs_create_model(mesh, skeleton, attached,
+                                  transform, material, env_name);
         darray_push(models, model);
     }
 
-    scene = create_scene(scene_light, models);
-    darray_free(scene_materials);
-    darray_free(scene_transforms);
-    darray_free(scene_models);
+    return create_scene(scene_light, models);
+}
+
+scene_t *helper_load_scene(const char *filename, mat4_t root) {
+    char scene_type[128];
+    scene_t *scene;
+    FILE *file;
+    int items;
+
+    file = fopen(filename, "rb");
+    assert(file != NULL);
+    items = fscanf(file, " type: %s", scene_type);
+    assert(items == 1);
+    if (equals_to(scene_type, "blinn")) {
+        scene_light_t light = read_light(file);
+        scene_blinn_t *materials = read_blinn_materials(file);
+        scene_transform_t *transforms = read_transforms(file);
+        scene_model_t *models = read_models(file);
+        scene = create_blinn_scene(light, materials, transforms, models, root);
+        darray_free(materials);
+        darray_free(transforms);
+        darray_free(models);
+    } else if (equals_to(scene_type, "pbrm")) {
+        scene_light_t light = read_light(file);
+        scene_pbrm_t *materials = read_pbrm_materials(file);
+        scene_transform_t *transforms = read_transforms(file);
+        scene_model_t *models = read_models(file);
+        scene = create_pbrm_scene(light, materials, transforms, models, root);
+        darray_free(materials);
+        darray_free(transforms);
+        darray_free(models);
+    } else if (equals_to(scene_type, "pbrs")) {
+        scene_light_t light = read_light(file);
+        scene_pbrs_t *materials = read_pbrs_materials(file);
+        scene_transform_t *transforms = read_transforms(file);
+        scene_model_t *models = read_models(file);
+        scene = create_pbrs_scene(light, materials, transforms, models, root);
+        darray_free(materials);
+        darray_free(transforms);
+        darray_free(models);
+    } else {
+        assert(0);
+        scene = NULL;
+    }
+    fclose(file);
 
     return scene;
 }
