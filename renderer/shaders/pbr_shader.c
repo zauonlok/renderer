@@ -219,20 +219,32 @@ static int is_in_shadow(pbr_varyings_t *varyings,
     }
 }
 
+/*
+ * for normal distribution function, see
+ * Microfacet Models for Refraction through Rough Surfaces
+ */
 static float get_distribution(float n_dot_h, float alpha2) {
     float n_dot_h_2 = n_dot_h * n_dot_h;
     float factor = n_dot_h_2 * (alpha2 - 1) + 1;
     return alpha2 / (PI * factor * factor);
 }
 
+/*
+ * for geometry function, see
+ * Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs
+ */
 static float get_visibility(float n_dot_v, float n_dot_l, float alpha2) {
     float n_dot_v_2 = n_dot_v * n_dot_v;
     float n_dot_l_2 = n_dot_l * n_dot_l;
-    float term_v = n_dot_l * (float)sqrt(n_dot_v_2 * (1 - alpha2) + alpha2);
-    float term_l = n_dot_v * (float)sqrt(n_dot_l_2 * (1 - alpha2) + alpha2);
-    return 0.5f / (term_v + term_l);
+    float ggx_v = n_dot_l * (float)sqrt(n_dot_v_2 * (1 - alpha2) + alpha2);
+    float ggx_l = n_dot_v * (float)sqrt(n_dot_l_2 * (1 - alpha2) + alpha2);
+    return 0.5f / (ggx_v + ggx_l);
 }
 
+/*
+ * for fresnel approximation, see
+ * An Inexpensive BRDF Model for Physically-based Rendering
+ */
 static vec3_t get_fresnel(float v_dot_h, vec3_t reflectance0) {
     vec3_t reflectance90 = vec3_new(1, 1, 1);
     return vec3_lerp(reflectance0, reflectance90, (float)pow(1 - v_dot_h, 5));
