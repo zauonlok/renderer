@@ -22,6 +22,10 @@ float float_lerp(float a, float b, float t) {
     return a + (b - a) * t;
 }
 
+float float_saturate(float f) {
+    return f < 0 ? 0 : (f > 1 ? 1 : f);
+}
+
 void float_print(const char *name, float f) {
     printf("float %s = %f\n", name, f);
 }
@@ -131,9 +135,9 @@ vec3_t vec3_lerp(vec3_t a, vec3_t b, float t) {
 }
 
 vec3_t vec3_saturate(vec3_t v) {
-    float x = float_clamp(v.x, 0, 1);
-    float y = float_clamp(v.y, 0, 1);
-    float z = float_clamp(v.z, 0, 1);
+    float x = float_saturate(v.x);
+    float y = float_saturate(v.y);
+    float z = float_saturate(v.z);
     return vec3_new(x, y, z);
 }
 
@@ -186,15 +190,49 @@ vec4_t vec4_lerp(vec4_t a, vec4_t b, float t) {
 }
 
 vec4_t vec4_saturate(vec4_t v) {
-    float x = float_clamp(v.x, 0, 1);
-    float y = float_clamp(v.y, 0, 1);
-    float z = float_clamp(v.z, 0, 1);
-    float w = float_clamp(v.w, 0, 1);
+    float x = float_saturate(v.x);
+    float y = float_saturate(v.y);
+    float z = float_saturate(v.z);
+    float w = float_saturate(v.w);
     return vec4_new(x, y, z, w);
 }
 
 vec4_t vec4_modulate(vec4_t a, vec4_t b) {
     return vec4_new(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
+}
+
+vec4_t vec4_srgb2linear(vec4_t color) {
+    float r = (float)pow(color.x, 2.2);
+    float g = (float)pow(color.y, 2.2);
+    float b = (float)pow(color.z, 2.2);
+    float a = color.w;
+    return vec4_new(r, g, b, a);
+}
+
+/*
+ * for aces filmic tone mapping curve, see
+ * https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+ */
+vec4_t vec4_linear2srgb(vec4_t color) {
+    float a = 2.51f;
+    float b = 0.03f;
+    float c = 2.43f;
+    float d = 0.59f;
+    float e = 0.14f;
+
+    float x = color.x;
+    float y = color.y;
+    float z = color.z;
+
+    x = (x * (a * x + b)) / (x * (c * x + d) + e);
+    y = (y * (a * y + b)) / (y * (c * y + d) + e);
+    z = (z * (a * z + b)) / (z * (c * z + d) + e);
+
+    x = (float)pow(float_saturate(x), 1 / 2.2);
+    y = (float)pow(float_saturate(y), 1 / 2.2);
+    z = (float)pow(float_saturate(z), 1 / 2.2);
+
+    return vec4_new(x, y, z, color.w);
 }
 
 void vec4_print(const char *name, vec4_t v) {

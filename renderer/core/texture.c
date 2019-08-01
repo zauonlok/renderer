@@ -292,10 +292,8 @@ void texture_srgb2linear(texture_t *texture) {
     int num_elems = texture->width * texture->height;
     int i;
     for (i = 0; i < num_elems; i++) {
-        vec4_t *texel = &texture->buffer[i];
-        texel->x = (float)pow(texel->x, 2.2);
-        texel->y = (float)pow(texel->y, 2.2);
-        texel->z = (float)pow(texel->z, 2.2);
+        vec4_t texel = texture->buffer[i];
+        texture->buffer[i] = vec4_srgb2linear(texel);
     }
 }
 
@@ -303,10 +301,8 @@ void texture_linear2srgb(texture_t *texture) {
     int num_elems = texture->width * texture->height;
     int i;
     for (i = 0; i < num_elems; i++) {
-        vec4_t *texel = &texture->buffer[i];
-        texel->x = (float)pow(texel->x, 1 / 2.2);
-        texel->y = (float)pow(texel->y, 1 / 2.2);
-        texel->z = (float)pow(texel->z, 1 / 2.2);
+        vec4_t texel = texture->buffer[i];
+        texture->buffer[i] = vec4_linear2srgb(texel);
     }
 }
 
@@ -350,8 +346,8 @@ vec4_t texture_repeat_sample(texture_t *texture, vec2_t texcoord) {
 }
 
 vec4_t texture_clamp_sample(texture_t *texture, vec2_t texcoord) {
-    float u = float_clamp(texcoord.x, 0, 1);
-    float v = float_clamp(texcoord.y, 0, 1);
+    float u = float_saturate(texcoord.x);
+    float v = float_saturate(texcoord.y);
     int c = (int)((texture->width - 1) * u);
     int r = (int)((texture->height - 1) * v);
     int index = r * texture->width + c;

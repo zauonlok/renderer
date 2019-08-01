@@ -281,13 +281,6 @@ static vec3_t get_dir_shade(vec3_t light_dir, float roughness,
     }
 }
 
-static vec3_t linear_to_srgb(vec3_t color) {
-    float r = (float)pow(color.x, 1 / 2.2);
-    float g = (float)pow(color.y, 1 / 2.2);
-    float b = (float)pow(color.z, 1 / 2.2);
-    return vec3_new(r, g, b);
-}
-
 static float max_component(vec3_t v) {
     return v.x > v.y && v.x > v.z ? v.x : (v.y > v.z ? v.y : v.z);
 }
@@ -394,7 +387,7 @@ static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
             color = vec3_add(color, emission);
         }
 
-        return vec4_from_vec3(linear_to_srgb(color), alpha);
+        return vec4_linear2srgb(vec4_from_vec3(color, alpha));
     }
 }
 

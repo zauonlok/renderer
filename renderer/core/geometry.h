@@ -13,6 +13,7 @@ float float_min(float a, float b);
 float float_max(float a, float b);
 float float_clamp(float f, float min, float max);
 float float_lerp(float a, float b, float t);
+float float_saturate(float f);
 void float_print(const char *name, float f);
 
 /* vec2 related functions */
@@ -52,6 +53,8 @@ vec4_t vec4_div(vec4_t v, float divisor);
 vec4_t vec4_lerp(vec4_t a, vec4_t b, float t);
 vec4_t vec4_saturate(vec4_t v);
 vec4_t vec4_modulate(vec4_t a, vec4_t b);
+vec4_t vec4_srgb2linear(vec4_t color);
+vec4_t vec4_linear2srgb(vec4_t color);
 void vec4_print(const char *name, vec4_t v);
 
 /* quat related functions */
