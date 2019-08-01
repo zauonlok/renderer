@@ -299,6 +299,17 @@ void texture_srgb2linear(texture_t *texture) {
     }
 }
 
+void texture_linear2srgb(texture_t *texture) {
+    int num_elems = texture->width * texture->height;
+    int i;
+    for (i = 0; i < num_elems; i++) {
+        vec4_t *texel = &texture->buffer[i];
+        texel->x = (float)pow(texel->x, 1 / 2.2);
+        texel->y = (float)pow(texel->y, 1 / 2.2);
+        texel->z = (float)pow(texel->z, 1 / 2.2);
+    }
+}
+
 void texture_flip_h(texture_t *texture) {
     int half_width = texture->width / 2;
     int r, c;
@@ -390,6 +401,13 @@ void cubemap_srgb2linear(cubemap_t *cubemap) {
     int i;
     for (i = 0; i < 6; i++) {
         texture_srgb2linear(cubemap->faces[i]);
+    }
+}
+
+void cubemap_linear2srgb(cubemap_t *cubemap) {
+    int i;
+    for (i = 0; i < 6; i++) {
+        texture_linear2srgb(cubemap->faces[i]);
     }
 }
 
