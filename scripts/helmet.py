@@ -39,8 +39,9 @@ def load_image(zip_file, filename):
         return image
 
 
-def save_image(image, filename):
-    image = image.resize((512, 512), Image.LANCZOS)
+def save_image(image, filename, size=512):
+    if max(image.size) > size:
+        image = image.resize((size, size), Image.LANCZOS)
     filepath = os.path.join(DST_DIRECTORY, filename)
     image.save(filepath, rle=True)
 
@@ -63,7 +64,7 @@ def process_images(zip_file):
     save_image(metalness_image, "helmet_metalness.tga")
 
     occlusion_image = load_image(zip_file, occlusion_path)
-    occlusion_image, _, _ = occlusion_image.split()
+    occlusion_image = occlusion_image.split()[0]
     save_image(occlusion_image, "helmet_occlusion.tga")
 
 

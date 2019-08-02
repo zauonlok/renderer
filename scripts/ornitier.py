@@ -94,8 +94,9 @@ def load_image(zip_file, filename):
         return image
 
 
-def save_image(image, filename):
-    image = image.resize((512, 512), Image.LANCZOS)
+def save_image(image, filename, size=512):
+    if max(image.size) > size:
+        image = image.resize((size, size), Image.LANCZOS)
     filepath = os.path.join(DST_DIRECTORY, filename)
     image.save(filepath, rle=True)
 
