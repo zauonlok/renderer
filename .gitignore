@@ -5,7 +5,8 @@ Viewer.pdb
 
 .DS_Store
 .vscode
+Thumbs.db
+
 scripts/**/*.hdr
 scripts/**/*.pyc
 scripts/**/*.zip
-Thumbs.db
