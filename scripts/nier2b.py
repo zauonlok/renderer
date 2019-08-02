@@ -36,9 +36,9 @@ def process_meshes(zip_file):
 
     for mesh_index in range(len(gltf["meshes"])):
         obj_data = dump_obj_data(gltf, buffer, mesh_index)
-        obj_filename = "nier2b{}.obj".format(mesh_index)
-        obj_filepath = os.path.join(DST_DIRECTORY, obj_filename)
-        with open(obj_filepath, "w") as f:
+        filename = "nier2b{}.obj".format(mesh_index)
+        filepath = os.path.join(DST_DIRECTORY, filename)
+        with open(filepath, "w") as f:
             f.write(obj_data)
 
 
@@ -49,8 +49,9 @@ def load_image(zip_file, filename):
         return image
 
 
-def save_image(image, filename):
-    image = image.resize((512, 512), Image.LANCZOS)
+def save_image(image, filename, size=512):
+    if max(image.size) > size:
+        image = image.resize((size, size), Image.LANCZOS)
     filepath = os.path.join(DST_DIRECTORY, filename)
     image.save(filepath, rle=True)
 

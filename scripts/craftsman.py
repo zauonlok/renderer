@@ -59,8 +59,9 @@ def load_image(zip_file, filename):
         return image
 
 
-def save_image(image, filename, size=(512, 512)):
-    image = image.resize(size, Image.LANCZOS)
+def save_image(image, filename, size=512):
+    if max(image.size) > size:
+        image = image.resize((size, size), Image.LANCZOS)
     filepath = os.path.join(DST_DIRECTORY, filename)
     image.save(filepath, rle=True)
 
@@ -68,10 +69,7 @@ def save_image(image, filename, size=(512, 512)):
 def process_images(zip_file):
     for old_filename, tga_filename in IMG_FILENAMES.items():
         image = load_image(zip_file, old_filename)
-        if "spark_" in tga_filename:
-            save_image(image, tga_filename, size=(128, 128))
-        else:
-            save_image(image, tga_filename)
+        save_image(image, tga_filename)
 
 
 def main():
