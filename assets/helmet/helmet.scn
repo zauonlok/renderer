@@ -1,7 +1,7 @@
 type: pbrm
 
 lighting:
-    background: 0.196 0.196 0.196
+    background: 0.15 0.15 0.15
     skybox: papermill
     shadow: off
     ambient: 1.0
