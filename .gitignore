@@ -3,8 +3,9 @@ Viewer.dSYM
 Viewer.exe
 Viewer.pdb
 
-*.pyc
-*.zip
-
 .DS_Store
 .vscode
+scripts/**/*.hdr
+scripts/**/*.pyc
+scripts/**/*.zip
+Thumbs.db
