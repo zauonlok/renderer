@@ -2,11 +2,11 @@ type: pbrm
 
 lighting:
     background: 0.15 0.15 0.15
-    skybox: papermill
+    environment: papermill
+    skybox: on
     shadow: off
     ambient: 1.0
     punctual: 1.0
-    environment: papermill
 
 materials 1:
     material 0:
@@ -16,11 +16,11 @@ materials 1:
         basecolor_map: helmet/helmet_basecolor.tga
         metalness_map: helmet/helmet_metalness.tga
         roughness_map: helmet/helmet_roughness.tga
-        normal_map: off
+        normal_map: null
         occlusion_map: helmet/helmet_occlusion.tga
         emission_map: helmet/helmet_emission.tga
-        double_sided: 0
-        enable_blend: 0
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
 
 transforms 1:
@@ -33,7 +33,7 @@ transforms 1:
 models 1:
     model 0:
         mesh: helmet/helmet.obj
-        skeleton: off
+        skeleton: null
         attached: -1
         material: 0
         transform: 0

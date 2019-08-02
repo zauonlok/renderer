@@ -2,11 +2,11 @@ type: pbrs
 
 lighting:
     background: 0.15 0.15 0.15
+    environment: papermill
     skybox: off
     shadow: off
     ambient: 1.0
     punctual: 1.0
-    environment: papermill
 
 materials 2:
     material 0:
@@ -16,24 +16,24 @@ materials 2:
         diffuse_map: drone/drone_diffuse.tga
         specular_map: drone/drone_specular.tga
         glossiness_map: drone/drone_glossiness.tga
-        normal_map: off
+        normal_map: null
         occlusion_map: drone/drone_occlusion.tga
         emission_map: drone/drone_emission.tga
-        double_sided: 0
-        enable_blend: 0
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
     material 1:
         diffuse_factor: 0 0 0 0.1
         specular_factor: 0 0 0
         glossiness_factor: 0.8
         diffuse_map: drone/fire_diffuse.tga
-        specular_map: off
-        glossiness_map: off
-        normal_map: off
-        occlusion_map: off
+        specular_map: null
+        glossiness_map: null
+        normal_map: null
+        occlusion_map: null
         emission_map: drone/fire_emission.tga
-        double_sided: 1
-        enable_blend: 1
+        double_sided: on
+        enable_blend: on
         alpha_cutoff: 0
 
 transforms 2:

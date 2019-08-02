@@ -2,11 +2,11 @@ type: blinn
 
 lighting:
     background: 0.15 0.15 0.15
+    environment: null
     skybox: off
     shadow: off
     ambient: 0.5
     punctual: 1.0
-    environment: off
 
 materials 3:
     material 0:
@@ -15,26 +15,26 @@ materials 3:
         diffuse_map: centaur/body_diffuse.tga
         specular_map: centaur/body_specular.tga
         emission_map: centaur/body_emission.tga
-        double_sided: 0
-        enable_blend: 0
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
     material 1:
         basecolor: 1 1 1 1
         shininess: 32
         diffuse_map: centaur/flame_diffuse.tga
-        specular_map: off
+        specular_map: null
         emission_map: centaur/flame_emission.tga
-        double_sided: 0
-        enable_blend: 1
+        double_sided: off
+        enable_blend: on
         alpha_cutoff: 0
     material 2:
         basecolor: 1 1 1 1
         shininess: 32
         diffuse_map: centaur/gas_diffuse.tga
         specular_map: centaur/gas_specular.tga
-        emission_map: off
-        double_sided: 0
-        enable_blend: 0
+        emission_map: null
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
 
 transforms 1:
@@ -47,19 +47,19 @@ transforms 1:
 models 3:
     model 0:
         mesh: centaur/body.obj
-        skeleton: off
+        skeleton: null
         attached: -1
         material: 0
         transform: 0
     model 1:
         mesh: centaur/flame.obj
-        skeleton: off
+        skeleton: null
         attached: -1
         material: 1
         transform: 0
     model 2:
         mesh: centaur/gas.obj
-        skeleton: off
+        skeleton: null
         attached: -1
         material: 2
         transform: 0

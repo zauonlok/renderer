@@ -2,11 +2,11 @@ type: pbrm
 
 lighting:
     background: 0.15 0.15 0.15
+    environment: footprint
     skybox: off
     shadow: off
     ambient: 1.0
     punctual: 1.0
-    environment: footprint
 
 materials 7:
     material 0:
@@ -17,23 +17,23 @@ materials 7:
         metalness_map: ornitier/base_metalness.tga
         roughness_map: ornitier/base_roughness.tga
         normal_map: ornitier/base_normal.tga
-        occlusion_map: off
+        occlusion_map: null
         emission_map: ornitier/base_emission.tga
-        double_sided: 0
-        enable_blend: 0
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
     material 1:
         basecolor_factor: 1 1 1 1
         metalness_factor: 1
         roughness_factor: 1
         basecolor_map: ornitier/body_basecolor.tga
-        metalness_map: off
-        roughness_map: off
-        normal_map: off
-        occlusion_map: off
+        metalness_map: null
+        roughness_map: null
+        normal_map: null
+        occlusion_map: null
         emission_map: ornitier/body_emission.tga
-        double_sided: 0
-        enable_blend: 0
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
     material 2:
         basecolor_factor: 1 1 1 1
@@ -42,24 +42,24 @@ materials 7:
         basecolor_map: ornitier/coat_basecolor.tga
         metalness_map: ornitier/coat_metalness.tga
         roughness_map: ornitier/coat_roughness.tga
-        normal_map: off
-        occlusion_map: off
-        emission_map: off
-        double_sided: 0
-        enable_blend: 0
+        normal_map: null
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
     material 3:
         basecolor_factor: 0.8 0.8 0.8 0.84
         metalness_factor: 0
         roughness_factor: 0.04
         basecolor_map: ornitier/feuga_basecolor.tga
-        metalness_map: off
-        roughness_map: off
-        normal_map: off
-        occlusion_map: off
+        metalness_map: null
+        roughness_map: null
+        normal_map: null
+        occlusion_map: null
         emission_map: ornitier/feuga_emission.tga
-        double_sided: 0
-        enable_blend: 1
+        double_sided: off
+        enable_blend: on
         alpha_cutoff: 0
     material 4:
         basecolor_factor: 1 1 1 1
@@ -69,10 +69,10 @@ materials 7:
         metalness_map: ornitier/hands_metalness.tga
         roughness_map: ornitier/hands_roughness.tga
         normal_map: ornitier/hands_normal.tga
-        occlusion_map: off
-        emission_map: off
-        double_sided: 0
-        enable_blend: 0
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
     material 5:
         basecolor_factor: 1 1 1 1
@@ -82,10 +82,10 @@ materials 7:
         metalness_map: ornitier/hat_metalness.tga
         roughness_map: ornitier/hat_roughness.tga
         normal_map: ornitier/hat_normal.tga
-        occlusion_map: off
-        emission_map: off
-        double_sided: 0
-        enable_blend: 0
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
     material 6:
         basecolor_factor: 1 1 1 1
@@ -95,10 +95,10 @@ materials 7:
         metalness_map: ornitier/legs_metalness.tga
         roughness_map: ornitier/legs_roughness.tga
         normal_map: ornitier/legs_normal.tga
-        occlusion_map: off
-        emission_map: off
-        double_sided: 0
-        enable_blend: 0
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
 
 transforms 1:
@@ -111,43 +111,43 @@ transforms 1:
 models 7:
     model 0:
         mesh: ornitier/base.obj
-        skeleton: off
+        skeleton: null
         attached: -1
         material: 0
         transform: 0
     model 1:
         mesh: ornitier/body.obj
-        skeleton: off
+        skeleton: null
         attached: -1
         material: 1
         transform: 0
     model 2:
         mesh: ornitier/coat.obj
-        skeleton: off
+        skeleton: null
         attached: -1
         material: 2
         transform: 0
     model 3:
         mesh: ornitier/feuga.obj
-        skeleton: off
+        skeleton: null
         attached: -1
         material: 3
         transform: 0
     model 4:
         mesh: ornitier/hands.obj
-        skeleton: off
+        skeleton: null
         attached: -1
         material: 4
         transform: 0
     model 5:
         mesh: ornitier/hat.obj
-        skeleton: off
+        skeleton: null
         attached: -1
         material: 5
         transform: 0
     model 6:
         mesh: ornitier/legs.obj
-        skeleton: off
+        skeleton: null
         attached: -1
         material: 6
         transform: 0

@@ -2,11 +2,11 @@ type: pbrs
 
 lighting:
     background: 0.15 0.15 0.15
+    environment: papermill
     skybox: off
     shadow: off
     ambient: 1.0
     punctual: 1.0
-    environment: papermill
 
 materials 1:
     material 0:
@@ -17,10 +17,10 @@ materials 1:
         specular_map: crab/crab_specular.tga
         glossiness_map: crab/crab_glossiness.tga
         normal_map: crab/crab_normal.tga
-        occlusion_map: off
-        emission_map: off
-        double_sided: 0
-        enable_blend: 0
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
 
 transforms 1:

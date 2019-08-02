@@ -9,11 +9,11 @@
 
 typedef struct {
     vec3_t background;
+    char environment[LINE_SIZE];
     char skybox[LINE_SIZE];
     char shadow[LINE_SIZE];
     float ambient;
     float punctual;
-    char environment[LINE_SIZE];
 } scene_light_t;
 
 typedef struct {
@@ -23,8 +23,8 @@ typedef struct {
     char diffuse_map[LINE_SIZE];
     char specular_map[LINE_SIZE];
     char emission_map[LINE_SIZE];
-    int double_sided;
-    int enable_blend;
+    char double_sided[LINE_SIZE];
+    char enable_blend[LINE_SIZE];
     float alpha_cutoff;
 } scene_blinn_t;
 
@@ -39,8 +39,8 @@ typedef struct {
     char normal_map[LINE_SIZE];
     char occlusion_map[LINE_SIZE];
     char emission_map[LINE_SIZE];
-    int double_sided;
-    int enable_blend;
+    char double_sided[LINE_SIZE];
+    char enable_blend[LINE_SIZE];
     float alpha_cutoff;
 } scene_pbrm_t;
 
@@ -55,8 +55,8 @@ typedef struct {
     char normal_map[LINE_SIZE];
     char occlusion_map[LINE_SIZE];
     char emission_map[LINE_SIZE];
-    int double_sided;
-    int enable_blend;
+    char double_sided[LINE_SIZE];
+    char enable_blend[LINE_SIZE];
     float alpha_cutoff;
 } scene_pbrs_t;
 
@@ -74,15 +74,24 @@ typedef struct {
     int transform;
 } scene_model_t;
 
-static int equals_to(const char *string1, const char *string2) {
-    return strcmp(string1, string2) == 0;
+static int equals_to(const char *str1, const char *str2) {
+    return strcmp(str1, str2) == 0;
 }
 
-static const char *wrap_path(const char *filepath) {
-    if (equals_to(filepath, "off")) {
+static const char *wrap_path(const char *path) {
+    if (equals_to(path, "null")) {
         return NULL;
     } else {
-        return filepath;
+        return path;
+    }
+}
+
+static int wrap_knob(const char *knob) {
+    if (equals_to(knob, "on")) {
+        return 1;
+    } else {
+        assert(equals_to(knob, "off"));
+        return 0;
     }
 }
 
@@ -98,6 +107,8 @@ static scene_light_t read_light(FILE *file) {
                    &light.background.y,
                    &light.background.z);
     assert(items == 3);
+    items = fscanf(file, " environment: %s", light.environment);
+    assert(items == 1);
     items = fscanf(file, " skybox: %s", light.skybox);
     assert(items == 1);
     items = fscanf(file, " shadow: %s", light.shadow);
@@ -105,8 +116,6 @@ static scene_light_t read_light(FILE *file) {
     items = fscanf(file, " ambient: %f", &light.ambient);
     assert(items == 1);
     items = fscanf(file, " punctual: %f", &light.punctual);
-    assert(items == 1);
-    items = fscanf(file, " environment: %s", light.environment);
     assert(items == 1);
 
     return light;
@@ -132,9 +141,9 @@ static scene_blinn_t read_blinn_material(FILE *file) {
     assert(items == 1);
     items = fscanf(file, " emission_map: %s", material.emission_map);
     assert(items == 1);
-    items = fscanf(file, " double_sided: %d", &material.double_sided);
+    items = fscanf(file, " double_sided: %s", &material.double_sided);
     assert(items == 1);
-    items = fscanf(file, " enable_blend: %d", &material.enable_blend);
+    items = fscanf(file, " enable_blend: %s", &material.enable_blend);
     assert(items == 1);
     items = fscanf(file, " alpha_cutoff: %f", &material.alpha_cutoff);
     assert(items == 1);
@@ -186,9 +195,9 @@ static scene_pbrm_t read_pbrm_material(FILE *file) {
     assert(items == 1);
     items = fscanf(file, " emission_map: %s", material.emission_map);
     assert(items == 1);
-    items = fscanf(file, " double_sided: %d", &material.double_sided);
+    items = fscanf(file, " double_sided: %s", &material.double_sided);
     assert(items == 1);
-    items = fscanf(file, " enable_blend: %d", &material.enable_blend);
+    items = fscanf(file, " enable_blend: %s", &material.enable_blend);
     assert(items == 1);
     items = fscanf(file, " alpha_cutoff: %f", &material.alpha_cutoff);
     assert(items == 1);
@@ -243,9 +252,9 @@ static scene_pbrs_t read_pbrs_material(FILE *file) {
     assert(items == 1);
     items = fscanf(file, " emission_map: %s", material.emission_map);
     assert(items == 1);
-    items = fscanf(file, " double_sided: %d", &material.double_sided);
+    items = fscanf(file, " double_sided: %s", &material.double_sided);
     assert(items == 1);
-    items = fscanf(file, " enable_blend: %d", &material.enable_blend);
+    items = fscanf(file, " enable_blend: %s", &material.enable_blend);
     assert(items == 1);
     items = fscanf(file, " alpha_cutoff: %f", &material.alpha_cutoff);
     assert(items == 1);
@@ -341,19 +350,14 @@ static scene_model_t *read_models(FILE *file) {
 }
 
 static scene_t *create_scene(scene_light_t light, model_t **models) {
+    int with_skybox = wrap_knob(light.skybox);
+    int with_shadow = wrap_knob(light.shadow);
     model_t *skybox;
-    int with_shadow;
-    if (equals_to(light.skybox, "off")) {
+    if (with_skybox) {
+        const char *skybox_name = wrap_path(light.environment);
+        skybox = skybox_create_model(skybox_name);
+    } else {
         skybox = NULL;
-    } else {
-        assert(!equals_to(light.skybox, "on"));
-        skybox = skybox_create_model(light.skybox);
-    }
-    if (equals_to(light.shadow, "off")) {
-        with_shadow = 0;
-    } else {
-        assert(equals_to(light.shadow, "on"));
-        with_shadow = 1;
     }
     return scene_create(light.background, skybox, models,
                         light.ambient, light.punctual, with_shadow);
@@ -393,14 +397,13 @@ static scene_t *create_blinn_scene(scene_light_t scene_light,
         transform = mat4_mul_mat4(root_transform, scene_transform.matrix);
 
         scene_material = scene_materials[scene_model.material];
-        scene_material = scene_materials[scene_model.material];
         material.basecolor = scene_material.basecolor;
         material.shininess = scene_material.shininess;
         material.diffuse_map = wrap_path(scene_material.diffuse_map);
         material.specular_map = wrap_path(scene_material.specular_map);
         material.emission_map = wrap_path(scene_material.emission_map);
-        material.double_sided = scene_material.double_sided;
-        material.enable_blend = scene_material.enable_blend;
+        material.double_sided = wrap_knob(scene_material.double_sided);
+        material.enable_blend = wrap_knob(scene_material.enable_blend);
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
         model = blinn_create_model(mesh, skeleton, attached,
@@ -455,8 +458,8 @@ static scene_t *create_pbrm_scene(scene_light_t scene_light,
         material.normal_map = wrap_path(scene_material.normal_map);
         material.occlusion_map = wrap_path(scene_material.occlusion_map);
         material.emission_map = wrap_path(scene_material.emission_map);
-        material.double_sided = scene_material.double_sided;
-        material.enable_blend = scene_material.enable_blend;
+        material.double_sided = wrap_knob(scene_material.double_sided);
+        material.enable_blend = wrap_knob(scene_material.enable_blend);
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
         model = pbrm_create_model(mesh, skeleton, attached,
@@ -511,8 +514,8 @@ static scene_t *create_pbrs_scene(scene_light_t scene_light,
         material.normal_map = wrap_path(scene_material.normal_map);
         material.occlusion_map = wrap_path(scene_material.occlusion_map);
         material.emission_map = wrap_path(scene_material.emission_map);
-        material.double_sided = scene_material.double_sided;
-        material.enable_blend = scene_material.enable_blend;
+        material.double_sided = wrap_knob(scene_material.double_sided);
+        material.enable_blend = wrap_knob(scene_material.enable_blend);
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
         model = pbrs_create_model(mesh, skeleton, attached,

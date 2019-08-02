@@ -2,11 +2,11 @@ type: pbrm
 
 lighting:
     background: 0.15 0.15 0.15
+    environment: papermill
     skybox: off
     shadow: off
     ambient: 1.0
     punctual: 1.0
-    environment: papermill
 
 materials 2:
     material 0:
@@ -16,11 +16,11 @@ materials 2:
         basecolor_map: buster/body_basecolor.tga
         metalness_map: buster/body_metalness.tga
         roughness_map: buster/body_roughness.tga
-        normal_map: off
+        normal_map: null
         occlusion_map: buster/body_occlusion.tga
         emission_map: buster/body_emission.tga
-        double_sided: 0
-        enable_blend: 0
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 1
     material 1:
         basecolor_factor: 1 1 1 1
@@ -29,11 +29,11 @@ materials 2:
         basecolor_map: buster/legs_basecolor.tga
         metalness_map: buster/legs_metalness.tga
         roughness_map: buster/legs_roughness.tga
-        normal_map: off
+        normal_map: null
         occlusion_map: buster/legs_occlusion.tga
-        emission_map: off
-        double_sided: 0
-        enable_blend: 0
+        emission_map: null
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
 
 transforms 1:

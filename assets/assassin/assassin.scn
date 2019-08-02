@@ -2,11 +2,11 @@ type: pbrm
 
 lighting:
     background: 0.15 0.15 0.15
+    environment: papermill
     skybox: off
     shadow: off
     ambient: 1.0
     punctual: 1.0
-    environment: papermill
 
 materials 4:
     material 0:
@@ -16,24 +16,24 @@ materials 4:
         basecolor_map: assassin/body_basecolor.tga
         metalness_map: assassin/body_metalness.tga
         roughness_map: assassin/body_roughness.tga
-        normal_map: off
-        occlusion_map: off
-        emission_map: off
-        double_sided: 0
-        enable_blend: 0
+        normal_map: null
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
     material 1:
         basecolor_factor: 1 1 1 1
         metalness_factor: 0
         roughness_factor: 0.9
         basecolor_map: assassin/face_basecolor.tga
-        metalness_map: off
-        roughness_map: off
-        normal_map: off
-        occlusion_map: off
-        emission_map: off
-        double_sided: 0
-        enable_blend: 0
+        metalness_map: null
+        roughness_map: null
+        normal_map: null
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
     material 2:
         basecolor_factor: 1 1 1 1
@@ -42,11 +42,11 @@ materials 4:
         basecolor_map: assassin/hair_basecolor.tga
         metalness_map: assassin/hair_metalness.tga
         roughness_map: assassin/hair_roughness.tga
-        normal_map: off
-        occlusion_map: off
-        emission_map: off
-        double_sided: 0
-        enable_blend: 0
+        normal_map: null
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
     material 3:
         basecolor_factor: 1 1 1 1
@@ -55,11 +55,11 @@ materials 4:
         basecolor_map: assassin/weapon_basecolor.tga
         metalness_map: assassin/weapon_metalness.tga
         roughness_map: assassin/weapon_roughness.tga
-        normal_map: off
-        occlusion_map: off
-        emission_map: off
-        double_sided: 0
-        enable_blend: 0
+        normal_map: null
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
         alpha_cutoff: 0
 
 transforms 1:
