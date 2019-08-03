@@ -212,6 +212,7 @@ typedef struct {
 
 static cached_skybox_t g_skyboxes[] = {
     {"spruit", NULL, 0},
+    {"workshop", NULL, 0},
 };
 
 static cubemap_t *load_skybox(const char *skybox_name) {
@@ -288,6 +289,7 @@ typedef struct {
 
 static cached_ibldata_t g_ibldata[] = {
     {"spruit", 10, NULL, 0},
+    {"workshop", 10, NULL, 0},
 };
 
 static ibldata_t *load_ibldata(const char *env_name, int mip_level) {
