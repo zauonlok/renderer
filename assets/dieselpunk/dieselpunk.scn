@@ -2,7 +2,7 @@ type: pbrm
 
 lighting:
     background: 0.15 0.15 0.15
-    environment: papermill
+    environment: spruit
     skybox: off
     shadow: off
     ambient: 1.0

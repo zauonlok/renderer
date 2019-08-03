@@ -367,12 +367,12 @@ cubemap_t *cubemap_from_files(const char *positive_x, const char *negative_x,
     int i;
 
     cubemap = (cubemap_t*)malloc(sizeof(cubemap_t));
-    cubemap->faces[0] = texture_from_file(positive_x);  /* right */
-    cubemap->faces[1] = texture_from_file(negative_x);  /* left */
-    cubemap->faces[2] = texture_from_file(positive_y);  /* top */
-    cubemap->faces[3] = texture_from_file(negative_y);  /* bottom */
-    cubemap->faces[4] = texture_from_file(positive_z);  /* front */
-    cubemap->faces[5] = texture_from_file(negative_z);  /* back */
+    cubemap->faces[0] = texture_from_file(positive_x);
+    cubemap->faces[1] = texture_from_file(negative_x);
+    cubemap->faces[2] = texture_from_file(positive_y);
+    cubemap->faces[3] = texture_from_file(negative_y);
+    cubemap->faces[4] = texture_from_file(positive_z);
+    cubemap->faces[5] = texture_from_file(negative_z);
 
     /*
      * for face uv origin, see

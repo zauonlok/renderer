@@ -208,23 +208,24 @@ typedef struct {
     const char *skybox_name;
     cubemap_t *skybox;
     int references;
-} skybox_t;
+} cached_skybox_t;
 
-static skybox_t g_skyboxes[] = {
-    {"papermill", NULL, 0},
+static cached_skybox_t g_skyboxes[] = {
+    {"spruit", NULL, 0},
 };
 
 static cubemap_t *load_skybox(const char *skybox_name) {
-    const char *faces[6] = {"right", "left", "top", "bottom", "front", "back"};
+    const char *faces[6] = {"px", "nx", "py", "ny", "pz", "nz"};
     char paths[6][PATH_SIZE];
     cubemap_t *skybox;
     int i;
 
     for (i = 0; i < 6; i++) {
-        sprintf(paths[i], "%s/skybox_%s.tga", skybox_name, faces[i]);
+        sprintf(paths[i], "%s/m0_%s.hdr", skybox_name, faces[i]);
     }
     skybox = cubemap_from_files(paths[0], paths[1], paths[2],
                                 paths[3], paths[4], paths[5]);
+    cubemap_linear2srgb(skybox);
 
     return skybox;
 }
@@ -280,21 +281,17 @@ void cache_release_skybox(cubemap_t *skybox) {
 
 typedef struct {
     const char *env_name;
-    const char *img_type;
     int mip_level;
-    int is_linear;
     ibldata_t *ibldata;
     int references;
-} envinfo_t;
+} cached_ibldata_t;
 
-static envinfo_t g_envinfo[] = {
-    {"papermill", "tga", 10, 0, NULL, 0},
-    {"footprint", "hdr", 10, 1, NULL, 0},
+static cached_ibldata_t g_ibldata[] = {
+    {"spruit", 10, NULL, 0},
 };
 
-static ibldata_t *load_ibldata(const char *env_name, int mip_level,
-                               const char *img_type, int is_linear) {
-    const char *faces[6] = {"right", "left", "top", "bottom", "front", "back"};
+static ibldata_t *load_ibldata(const char *env_name, int mip_level) {
+    const char *faces[6] = {"px", "nx", "py", "ny", "pz", "nz"};
     char paths[6][PATH_SIZE];
     ibldata_t *ibldata;
     int i, j;
@@ -304,30 +301,23 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_level,
 
     /* diffuse environment map */
     for (j = 0; j < 6; j++) {
-        sprintf(paths[j], "%s/diffuse_%s_0.%s", env_name, faces[j], img_type);
+        sprintf(paths[j], "%s/i_%s.hdr", env_name, faces[j]);
     }
     ibldata->diffuse_map = cubemap_from_files(paths[0], paths[1], paths[2],
                                               paths[3], paths[4], paths[5]);
-    if (!is_linear) {
-        cubemap_srgb2linear(ibldata->diffuse_map);
-    }
 
     /* specular environment maps */
     for (i = 0; i < mip_level; i++) {
         for (j = 0; j < 6; j++) {
-            sprintf(paths[j], "%s/specular_%s_%d.%s",
-                    env_name, faces[j], i, img_type);
+            sprintf(paths[j], "%s/m%d_%s.hdr", env_name, i, faces[j]);
         }
         ibldata->specular_maps[i] = cubemap_from_files(paths[0], paths[1],
                                                        paths[2], paths[3],
                                                        paths[4], paths[5]);
-        if (!is_linear) {
-            cubemap_srgb2linear(ibldata->specular_maps[i]);
-        }
     }
 
-    /* brdf lookup table */
-    ibldata->brdf_lut = cache_acquire_texture("common/brdf_lut.tga", 0);
+    /* brdf lookup texture */
+    ibldata->brdf_lut = cache_acquire_texture("common/brdf_lut.hdr", 0);
 
     return ibldata;
 }
@@ -344,23 +334,20 @@ static void free_ibldata(ibldata_t *ibldata) {
 
 ibldata_t *cache_acquire_ibldata(const char *env_name) {
     if (env_name != NULL) {
-        int num_envinfo = ARRAY_SIZE(g_envinfo);
+        int num_ibldata = ARRAY_SIZE(g_ibldata);
         int i;
-        for (i = 0; i < num_envinfo; i++) {
-            if (strcmp(g_envinfo[i].env_name, env_name) == 0) {
-                if (g_envinfo[i].references > 0) {
-                    g_envinfo[i].references += 1;
+        for (i = 0; i < num_ibldata; i++) {
+            if (strcmp(g_ibldata[i].env_name, env_name) == 0) {
+                if (g_ibldata[i].references > 0) {
+                    g_ibldata[i].references += 1;
                 } else {
-                    const char *img_type = g_envinfo[i].img_type;
-                    int mip_level = g_envinfo[i].mip_level;
-                    int is_linear = g_envinfo[i].is_linear;
-                    assert(g_envinfo[i].ibldata == NULL);
-                    assert(g_envinfo[i].references == 0);
-                    g_envinfo[i].ibldata = load_ibldata(env_name, mip_level,
-                                                        img_type, is_linear);
-                    g_envinfo[i].references = 1;
+                    int mip_level = g_ibldata[i].mip_level;
+                    assert(g_ibldata[i].ibldata == NULL);
+                    assert(g_ibldata[i].references == 0);
+                    g_ibldata[i].ibldata = load_ibldata(env_name, mip_level);
+                    g_ibldata[i].references = 1;
                 }
-                return g_envinfo[i].ibldata;
+                return g_ibldata[i].ibldata;
             }
         }
         assert(0);
@@ -372,15 +359,15 @@ ibldata_t *cache_acquire_ibldata(const char *env_name) {
 
 void cache_release_ibldata(ibldata_t *ibldata) {
     if (ibldata != NULL) {
-        int num_envinfo = ARRAY_SIZE(g_envinfo);
+        int num_ibldata = ARRAY_SIZE(g_ibldata);
         int i;
-        for (i = 0; i < num_envinfo; i++) {
-            if (g_envinfo[i].ibldata == ibldata) {
-                assert(g_envinfo[i].references > 0);
-                g_envinfo[i].references -= 1;
-                if (g_envinfo[i].references == 0) {
-                    free_ibldata(g_envinfo[i].ibldata);
-                    g_envinfo[i].ibldata = NULL;
+        for (i = 0; i < num_ibldata; i++) {
+            if (g_ibldata[i].ibldata == ibldata) {
+                assert(g_ibldata[i].references > 0);
+                g_ibldata[i].references -= 1;
+                if (g_ibldata[i].references == 0) {
+                    free_ibldata(g_ibldata[i].ibldata);
+                    g_ibldata[i].ibldata = NULL;
                 }
                 return;
             }
