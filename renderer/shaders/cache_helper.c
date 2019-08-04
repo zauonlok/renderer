@@ -212,6 +212,7 @@ typedef struct {
 
 static cached_skybox_t g_skyboxes[] = {
     {"spruit", NULL, 0},
+    {"venice", NULL, 0},
     {"workshop", NULL, 0},
 };
 
@@ -289,6 +290,7 @@ typedef struct {
 
 static cached_ibldata_t g_ibldata[] = {
     {"spruit", 10, NULL, 0},
+    {"venice", 10, NULL, 0},
     {"workshop", 10, NULL, 0},
 };
 
