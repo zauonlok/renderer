@@ -33,7 +33,7 @@ def dump_obj_data(filename, positions, texcoords, normals, indices):
         f.write(obj_data)
 
 
-def create_sphere(radius, num_sectors, num_stacks):
+def create_sphere(filename, radius, num_sectors, num_stacks):
     positions = []
     texcoords = []
     normals = []
@@ -69,11 +69,11 @@ def create_sphere(radius, num_sectors, num_stacks):
             curr_stack += 1
             next_stack += 1
 
-    dump_obj_data("sphere.obj", positions, texcoords, normals, indices)
+    dump_obj_data(filename, positions, texcoords, normals, indices)
 
 
 def main():
-    create_sphere(0.5, 50, 25)
+    create_sphere("sphere.obj", 0.5, 50, 25)
 
 
 if __name__ == "__main__":

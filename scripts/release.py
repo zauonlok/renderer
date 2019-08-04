@@ -21,16 +21,16 @@ ARCHIVE_INFO = {
 
 def main():
     system_name = platform.system()
-    archive_name, name_list = ARCHIVE_INFO[system_name]
+    archive_name, filenames = ARCHIVE_INFO[system_name]
     os.makedirs(archive_name)
 
-    for name in name_list:
-        old_path = os.path.join("..", name)
-        new_path = os.path.join(archive_name, name)
-        if os.path.isdir(old_path):
-            shutil.copytree(old_path, new_path)
+    for filename in filenames:
+        old_filepath = os.path.join("..", filename)
+        new_filepath = os.path.join(archive_name, filename)
+        if os.path.isdir(old_filepath):
+            shutil.copytree(old_filepath, new_filepath)
         else:
-            shutil.copy(old_path, new_path)
+            shutil.copy(old_filepath, new_filepath)
 
     archive_path = os.path.join("..", archive_name)
     shutil.make_archive(archive_path, "zip", None, archive_name)
