@@ -404,7 +404,7 @@ static void interpolate_varyings(
 }
 
 static void draw_fragment(framebuffer_t *framebuffer, program_t *program,
-                          int index, float depth) {
+                          int index, float depth, int backface) {
     vec4_t color;
     int discard;
 
@@ -412,7 +412,8 @@ static void draw_fragment(framebuffer_t *framebuffer, program_t *program,
     discard = 0;
     color = program->fragment_shader(program->shader_varyings,
                                      program->shader_uniforms,
-                                     &discard);
+                                     &discard,
+                                     backface);
     if (discard) {
         return;
     }
@@ -438,11 +439,11 @@ static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
                               vec4_t clip_coords[3], void *varyings[3]) {
     int width = framebuffer->width;
     int height = framebuffer->height;
-    int sizeof_varyings = program->sizeof_varyings;
     vec3_t ndc_coords[3];
     vec2_t screen_coords[3];
     float screen_depths[3];
     float recip_w[3];
+    int backface;
     bbox_t bbox;
     int i, x, y;
 
@@ -453,10 +454,9 @@ static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
     }
 
     /* back-face culling */
-    if (!program->double_sided) {
-        if (is_back_facing(ndc_coords)) {
-            return 1;
-        }
+    backface = is_back_facing(ndc_coords);
+    if (backface && !program->double_sided) {
+        return 1;
     }
 
     /* reciprocals of w */
@@ -482,9 +482,10 @@ static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
                 float depth = interpolate_depth(screen_depths, weights);
                 /* early depth testing */
                 if (depth <= framebuffer->depthbuffer[index]) {
+                    int sizeof_varyings = program->sizeof_varyings;
                     interpolate_varyings(varyings, program->shader_varyings,
                                          sizeof_varyings, weights, recip_w);
-                    draw_fragment(framebuffer, program, index, depth);
+                    draw_fragment(framebuffer, program, index, depth, backface);
                 }
             }
         }

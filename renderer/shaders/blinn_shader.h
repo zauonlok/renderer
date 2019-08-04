@@ -44,7 +44,8 @@ typedef struct {
 } blinn_uniforms_t;
 
 vec4_t blinn_vertex_shader(void *attribs, void *varyings, void *uniforms);
-vec4_t blinn_fragment_shader(void *varyings, void *uniforms, int *discard);
+vec4_t blinn_fragment_shader(void *varyings, void *uniforms,
+                             int *discard, int backface);
 
 /* high-level api */
 

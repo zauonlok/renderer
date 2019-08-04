@@ -18,11 +18,13 @@ vec4_t skybox_vertex_shader(void *attribs_, void *varyings_, void *uniforms_) {
     return clip_pos;
 }
 
-vec4_t skybox_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
+vec4_t skybox_fragment_shader(void *varyings_, void *uniforms_,
+                              int *discard, int backface) {
     skybox_varyings_t *varyings = (skybox_varyings_t*)varyings_;
     skybox_uniforms_t *uniforms = (skybox_uniforms_t*)uniforms_;
 
     UNUSED_VAR(discard);
+    UNUSED_VAR(backface);
     return cubemap_sample(uniforms->skybox, varyings->direction);
 }
 

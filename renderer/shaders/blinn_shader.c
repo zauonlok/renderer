@@ -128,13 +128,9 @@ static vec3_t get_view_dir(blinn_varyings_t *varyings,
     return vec3_normalize(vec3_sub(camera_pos, world_pos));
 }
 
-static vec3_t get_normal_dir(blinn_varyings_t *varyings, vec3_t view_dir) {
+static vec3_t get_normal_dir(blinn_varyings_t *varyings, int backface) {
     vec3_t normal_dir = vec3_normalize(varyings->normal);
-    if (vec3_dot(normal_dir, view_dir) < 0) {
-        return vec3_negate(normal_dir);
-    } else {
-        return normal_dir;
-    }
+    return backface ? vec3_negate(normal_dir) : normal_dir;
 }
 
 static int is_in_shadow(blinn_varyings_t *varyings,
@@ -158,10 +154,11 @@ static int is_in_shadow(blinn_varyings_t *varyings,
 
 static vec3_t get_dir_shade(blinn_varyings_t *varyings,
                             blinn_uniforms_t *uniforms,
-                            vec3_t basecolor) {
+                            vec3_t basecolor,
+                            int backface) {
     vec3_t light_dir = vec3_negate(uniforms->light_dir);
     vec3_t view_dir = get_view_dir(varyings, uniforms);
-    vec3_t normal_dir = get_normal_dir(varyings, view_dir);
+    vec3_t normal_dir = get_normal_dir(varyings, backface);
     float n_dot_l = vec3_dot(normal_dir, light_dir);
 
     if (n_dot_l > 0 && !is_in_shadow(varyings, uniforms, n_dot_l)) {
@@ -170,9 +167,9 @@ static vec3_t get_dir_shade(blinn_varyings_t *varyings,
 
         if (uniforms->specular_map) {
             vec3_t half_dir = vec3_normalize(vec3_add(light_dir, view_dir));
-            float closeness = vec3_dot(normal_dir, half_dir);
-            if (closeness > 0) {
-                float strength = (float)pow(closeness, uniforms->shininess);
+            float n_dot_h = vec3_dot(normal_dir, half_dir);
+            if (n_dot_h > 0) {
+                float strength = (float)pow(n_dot_h, uniforms->shininess);
                 texture_t *specular_map = uniforms->specular_map;
                 vec2_t texcoord = varyings->texcoord;
                 vec4_t sample = texture_sample(specular_map, texcoord);
@@ -188,7 +185,8 @@ static vec3_t get_dir_shade(blinn_varyings_t *varyings,
 
 static vec4_t common_fragment_shader(blinn_varyings_t *varyings,
                                      blinn_uniforms_t *uniforms,
-                                     int *discard) {
+                                     int *discard,
+                                     int backface) {
     float alpha;
     vec3_t basecolor = get_basecolor(varyings, uniforms, &alpha);
     if (uniforms->alpha_cutoff > 0 && alpha < uniforms->alpha_cutoff) {
@@ -198,9 +196,10 @@ static vec4_t common_fragment_shader(blinn_varyings_t *varyings,
         vec3_t color = vec3_mul(basecolor, uniforms->ambient_intensity);
 
         if (uniforms->punctual_intensity > 0){
-            float punctual_intensity = uniforms->punctual_intensity;
-            vec3_t shade = get_dir_shade(varyings, uniforms, basecolor);
-            color = vec3_add(color, vec3_mul(shade, punctual_intensity));
+            float intensity = uniforms->punctual_intensity;
+            vec3_t shade = get_dir_shade(varyings, uniforms,
+                                         basecolor, backface);
+            color = vec3_add(color, vec3_mul(shade, intensity));
         }
 
         if (uniforms->emission_map) {
@@ -214,14 +213,15 @@ static vec4_t common_fragment_shader(blinn_varyings_t *varyings,
     }
 }
 
-vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_, int *discard) {
+vec4_t blinn_fragment_shader(void *varyings_, void *uniforms_,
+                             int *discard, int backface) {
     blinn_varyings_t *varyings = (blinn_varyings_t*)varyings_;
     blinn_uniforms_t *uniforms = (blinn_uniforms_t*)uniforms_;
 
     if (uniforms->shadow_pass) {
         return shadow_fragment_shader(varyings, uniforms, discard);
     } else {
-        return common_fragment_shader(varyings, uniforms, discard);
+        return common_fragment_shader(varyings, uniforms, discard, backface);
     }
 }
 
