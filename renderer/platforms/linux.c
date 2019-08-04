@@ -301,8 +301,16 @@ float platform_get_time(void) {
 
 void platform_init_path(void) {
     char path[PATH_SIZE];
-    readlink("/proc/self/exe", path, PATH_SIZE);
+    ssize_t bytes;
+    int error;
+
+    bytes = readlink("/proc/self/exe", path, PATH_SIZE - 1);
+    assert(bytes != -1);
+    path[bytes] = '\0';
     *strrchr(path, '/') = '\0';
-    chdir(path);
-    chdir("assets");
+
+    error = chdir(path);
+    assert(error == 0);
+    error = chdir("assets");
+    assert(error == 0);
 }
