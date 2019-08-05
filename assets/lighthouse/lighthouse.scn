@@ -2,11 +2,11 @@ type: blinn
 
 lighting:
     background: 0.15 0.15 0.15
-    environment: null
+    environment: venice
     skybox: off
     shadow: off
-    ambient: 1.0
-    punctual: 0.0
+    ambient: 0.75
+    punctual: 0.25
 
 materials 29:
     material 0:

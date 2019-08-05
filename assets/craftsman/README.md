@@ -1,4 +1,4 @@
-# The Noble Craftsman
+# Noble Craftsman
 
 ## Source
 

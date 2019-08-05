@@ -2,7 +2,7 @@ type: blinn
 
 lighting:
     background: 0.15 0.15 0.15
-    environment: null
+    environment: spruit
     skybox: off
     shadow: off
     ambient: 0.75
