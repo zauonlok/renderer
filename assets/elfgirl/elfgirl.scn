@@ -5,8 +5,8 @@ lighting:
     environment: workshop
     skybox: off
     shadow: off
-    ambient: 0.75
-    punctual: 0.25
+    ambient: 0.7
+    punctual: 0.3
 
 materials 4:
     material 0:
