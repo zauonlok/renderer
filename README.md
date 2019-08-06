@@ -114,7 +114,7 @@ Viewer [test_name [scene_name]]
 | [<img src="assets/junkrat/screenshot.gif" width="600">](assets/junkrat/README.md)       | `Viewer pbr junkrat`      |
 | [<img src="assets/ornitier/screenshot.png" width="600">](assets/ornitier/README.md)     | `Viewer pbr ornitier`     |
 | [<img src="assets/ponycar/screenshot2.png" width="600">](assets/ponycar/README.md)      | `Viewer pbr ponycar`      |
-| [<img src="assets/footprint/screenshot2.png" width="600">](assets/footprint/README.md)  | `Viewer pbr sphere`       |
+| [<img src="assets/footprint/screenshot2.png" width="600">](assets/footprint/README.md)  | `Viewer pbr spheres`      |
 
 ## References
 
