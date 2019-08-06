@@ -1,5 +1,9 @@
 # Spruit Sunrise
 
+## Panorama
+
+![Panorama](https://hdrihaven.com/files/hdri_images/tonemapped/1500/spruit_sunrise.jpg)
+
 ## Source
 
 [https://hdrihaven.com/hdri/?h=spruit_sunrise](https://hdrihaven.com/hdri/?h=spruit_sunrise)
