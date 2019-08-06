@@ -93,26 +93,28 @@ Viewer [test_name [scene_name]]
 
 ## Screenshots
 
-| Scene                                                                                   | Command                  |
-| --------------------------------------------------------------------------------------- | ------------------------ |
-| [<img src="assets/azura/screenshot.png" width="600">](assets/azura/README.md)           | `Viewer blinn azura`     |
-| [<img src="assets/centaur/screenshot.png" width="600">](assets/centaur/README.md)       | `Viewer blinn centaur`   |
-| [<img src="assets/craftsman/screenshot2.gif" width="600">](assets/craftsman/README.md)  | `Viewer blinn craftsman` |
-| [<img src="assets/elfgirl/screenshot2.png" width="600">](assets/elfgirl/README.md)      | `Viewer blinn elfgirl`   |
-| [<img src="assets/kgirl/screenshot.gif" width="600">](assets/kgirl/README.md)           | `Viewer blinn kgirl`     |
-| [<img src="assets/mccree/screenshot.png" width="600">](assets/mccree/README.md)         | `Viewer blinn mccree`    |
-| [<img src="assets/nier2b/screenshot.png" width="600">](assets/nier2b/README.md)         | `Viewer blinn nier2b`    |
-| [<img src="assets/phoenix/screenshot.gif" width="600">](assets/phoenix/README.md)       | `Viewer blinn phoenix`   |
-| [<img src="assets/witch/screenshot.png" width="600">](assets/witch/README.md)           | `Viewer blinn witch`     |
-| [<img src="assets/assassin/screenshot.gif" width="600">](assets/assassin/README.md)     | `Viewer pbr assassin`    |
-| [<img src="assets/crab/screenshot.gif" width="600">](assets/crab/README.md)             | `Viewer pbr crab`        |
-| [<img src="assets/dieselpunk/screenshot.png" width="600">](assets/dieselpunk/README.md) | `Viewer pbr dieselpunk`  |
-| [<img src="assets/drone/screenshot.gif" width="600">](assets/drone/README.md)           | `Viewer pbr drone`       |
-| [<img src="assets/helmet/screenshot.png" width="600">](assets/helmet/README.md)         | `Viewer pbr helmet`      |
-| [<img src="assets/junkrat/screenshot.gif" width="600">](assets/junkrat/README.md)       | `Viewer pbr junkrat`     |
-| [<img src="assets/ornitier/screenshot.png" width="600">](assets/ornitier/README.md)     | `Viewer pbr ornitier`    |
-| [<img src="assets/ponycar/screenshot2.png" width="600">](assets/ponycar/README.md)      | `Viewer pbr ponycar`     |
-| [<img src="assets/footprint/screenshot2.png" width="600">](assets/footprint/README.md)  | `Viewer pbr sphere`      |
+| Scene                                                                                   | Command                   |
+| --------------------------------------------------------------------------------------- | ------------------------- |
+| [<img src="assets/azura/screenshot.png" width="600">](assets/azura/README.md)           | `Viewer blinn azura`      |
+| [<img src="assets/centaur/screenshot.png" width="600">](assets/centaur/README.md)       | `Viewer blinn centaur`    |
+| [<img src="assets/craftsman/screenshot2.gif" width="600">](assets/craftsman/README.md)  | `Viewer blinn craftsman`  |
+| [<img src="assets/elfgirl/screenshot2.png" width="600">](assets/elfgirl/README.md)      | `Viewer blinn elfgirl`    |
+| [<img src="assets/kgirl/screenshot.gif" width="600">](assets/kgirl/README.md)           | `Viewer blinn kgirl`      |
+| [<img src="assets/lighthouse/screenshot.png" width="600">](assets/lighthouse/README.md) | `Viewer blinn lighthouse` |
+| [<img src="assets/mccree/screenshot.png" width="600">](assets/mccree/README.md)         | `Viewer blinn mccree`     |
+| [<img src="assets/nier2b/screenshot.png" width="600">](assets/nier2b/README.md)         | `Viewer blinn nier2b`     |
+| [<img src="assets/phoenix/screenshot.gif" width="600">](assets/phoenix/README.md)       | `Viewer blinn phoenix`    |
+| [<img src="assets/witch/screenshot.png" width="600">](assets/witch/README.md)           | `Viewer blinn witch`      |
+| [<img src="assets/assassin/screenshot.gif" width="600">](assets/assassin/README.md)     | `Viewer pbr assassin`     |
+| [<img src="assets/buster/screenshot.gif" width="600">](assets/buster/README.md)         | `Viewer pbr buster`       |
+| [<img src="assets/crab/screenshot.gif" width="600">](assets/crab/README.md)             | `Viewer pbr crab`         |
+| [<img src="assets/dieselpunk/screenshot.png" width="600">](assets/dieselpunk/README.md) | `Viewer pbr dieselpunk`   |
+| [<img src="assets/drone/screenshot.gif" width="600">](assets/drone/README.md)           | `Viewer pbr drone`        |
+| [<img src="assets/helmet/screenshot.png" width="600">](assets/helmet/README.md)         | `Viewer pbr helmet`       |
+| [<img src="assets/junkrat/screenshot.gif" width="600">](assets/junkrat/README.md)       | `Viewer pbr junkrat`      |
+| [<img src="assets/ornitier/screenshot.png" width="600">](assets/ornitier/README.md)     | `Viewer pbr ornitier`     |
+| [<img src="assets/ponycar/screenshot2.png" width="600">](assets/ponycar/README.md)      | `Viewer pbr ponycar`      |
+| [<img src="assets/footprint/screenshot2.png" width="600">](assets/footprint/README.md)  | `Viewer pbr sphere`       |
 
 ## References
 
