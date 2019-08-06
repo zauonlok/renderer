@@ -72,7 +72,7 @@ scene_t *pbr_ponycar_scene(void) {
 }
 
 scene_t *pbr_sphere_scene(void) {
-    mat4_t root = mat4_scale(1.25f, 1.25f, 1.25f);
+    mat4_t root = mat4_scale(1.1f, 1.1f, 1.1f);
     return helper_load_scene("common/sphere.scn", root);
 }
 
