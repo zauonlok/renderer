@@ -1,9 +1,9 @@
 @echo off
 
-for /f "delims=" %%i in ('vswhere -latest -property installationPath') do (
+for /f "delims=" %%i in ('tools\win32\vswhere -latest -property installationPath') do (
     set VS150COMNTOOLS=%%i\Common7\Tools\
 )
-for /f "delims=" %%i in ('vswhere -latest -property displayName') do (
+for /f "delims=" %%i in ('tools\win32\vswhere -latest -property displayName') do (
     set VS150COMNTITLE=%%i
 )
 

@@ -4,9 +4,9 @@ import shutil
 import tempfile
 
 CMGEN_FILEPATH = {
-    "Windows": "../tools/win32/cmgen.exe",
-    "Darwin": "../tools/macos/cmgen",
-    "Linux": "../tools/linux/cmgen",
+    "Windows": "../../tools/win32/cmgen.exe",
+    "Darwin": "../../tools/macos/cmgen",
+    "Linux": "../../tools/linux/cmgen",
 }
 
 LOOKUP_COMMAND = "{cmgen} --ibl-dfg={filepath}.hdr"
