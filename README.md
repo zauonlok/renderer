@@ -129,6 +129,13 @@ Viewer [test_name [scene_name]]
 * [glTF 2.0 Sample Viewer](https://github.com/KhronosGroup/glTF-Sample-Viewer)
 * [SIGGRAPH 2013 Course](https://blog.selfshadow.com/publications/s2013-shading-course/)
 
+### File formats
+
+* [Truevision TGA](http://www.dca.fee.unicamp.br/~martino/disciplinas/ea978/tgaffs.pdf)
+* [Radiance HDR](https://www.graphics.cornell.edu/~bjw/rgbe.html)
+* [Wavefront OBJ](http://www.cs.utah.edu/~boulos/cs3505/obj_spec.pdf)
+* [Khronos glTF](https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md)
+
 ## License
 
 [MIT](LICENSE)
