@@ -221,7 +221,7 @@ static int clip_against_plane(
             *dest_coord = vec4_lerp(prev_coord, curr_coord, ratio);
             /*
              * since this computation is performed in clip space before
-             * division by w, clipped varying values are perspective-correct
+             * division by w, clipped varying values are perspective correct
              */
             for (j = 0; j < varying_num_floats; j++) {
                 float prev_value = prev_varyings[j];

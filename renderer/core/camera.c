@@ -6,7 +6,7 @@
 #include "macro.h"
 
 /*
- * for orbital camera control, see
+ * for orbital camera controls, see
  * https://github.com/mrdoob/three.js/blob/master/examples/js/controls/OrbitControls.js
  */
 

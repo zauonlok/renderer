@@ -17,7 +17,7 @@ in C89 with minimal dependencies, available for Windows, macOS, and Linux.
 * Shadow mapping
 * Cubemapped skybox
 * Skeletal animation
-* Orbit camera control
+* Orbital camera controls
 * Back-face culling
 * Homogeneous clipping
 * Perspective-correct interpolation
@@ -127,7 +127,8 @@ Viewer [test_name [scene_name]]
 ### Physically based rendering
 
 * [glTF 2.0 Sample Viewer](https://github.com/KhronosGroup/glTF-Sample-Viewer)
-* [SIGGRAPH 2013 Course](https://blog.selfshadow.com/publications/s2013-shading-course/)
+* [SIGGRAPH 2013 Shading Course](https://blog.selfshadow.com/publications/s2013-shading-course/)
+* [Physically Based Rendering in Filament](https://google.github.io/filament/Filament.html)
 
 ### File formats
 
@@ -136,6 +137,18 @@ Viewer [test_name [scene_name]]
 * [Wavefront OBJ](http://www.cs.utah.edu/~boulos/cs3505/obj_spec.pdf)
 * [Khronos glTF](https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md)
 
+### Miscellaneous
+
+* [Barycentric coordinates](http://blackpawn.com/texts/pointinpoly/)
+* [Homogeneous clipping](http://fabiensanglard.net/polygon_codec/)
+* [Perspective-correct interpolation](https://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf)
+* [Skeletal animation](https://people.rennes.inria.fr/Ludovic.Hoyet/teaching/IMO/05_IMO2016_Skinning.pdf)
+* [ACES tone mapping](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/)
+* [Orbital camera controls](https://github.com/mrdoob/three.js/blob/master/examples/js/controls/OrbitControls.js)
+* [Type-safe dynamic array](https://github.com/nothings/stb/blob/master/stretchy_buffer.h)
+* [Xlib programming tutorial](http://osiris.df.unipi.it/~moruzzi/xlib-programming.html)
+* [Cocoa programming tutorial](https://www.amazon.com/Rys-Cocoa-Tutorial-Ryan-Hodson-ebook/dp/B00QFEYK60)
+
 ## License
 
-[MIT](LICENSE)
+[MIT License](LICENSE)
