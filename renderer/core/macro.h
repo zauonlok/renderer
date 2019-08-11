@@ -1,7 +1,7 @@
 #ifndef MACRO_H
 #define MACRO_H
 
-#define EPSILON 1e-6f
+#define EPSILON 1e-5f
 #define PI 3.1415927f
 
 #define TO_RADIANS(degrees) ((PI / 180) * (degrees))
