@@ -13,7 +13,7 @@ typedef struct {
 
 typedef struct {
     const char *scene_name;
-    scene_t *(*create)(void);
+    scene_t *(*create_scene)(void);
 } creator_t;
 
 typedef void tickfunc_t(context_t *context, void *userdata);

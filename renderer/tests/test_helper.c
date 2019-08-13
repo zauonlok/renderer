@@ -251,14 +251,14 @@ scene_t *test_create_scene(creator_t creators[], const char *scene_name) {
             int index = rand() % num_creators;
             scene_name = creators[index].scene_name;
             printf("scene: %s\n", scene_name);
-            scene = creators[index].create();
+            scene = creators[index].create_scene();
         }
     } else {
         int i;
         for (i = 0; creators[i].scene_name != NULL; i++) {
             if (strcmp(creators[i].scene_name, scene_name) == 0) {
                 printf("scene: %s\n", scene_name);
-                scene = creators[i].create();
+                scene = creators[i].create_scene();
                 break;
             }
         }

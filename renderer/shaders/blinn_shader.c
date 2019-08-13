@@ -6,6 +6,15 @@
 
 /* low-level api */
 
+typedef struct {
+    vec3_t diffuse;
+    vec3_t specular;
+    float alpha;
+    float shininess;
+    vec3_t normal;
+    vec3_t emission;
+} material_t;
+
 static mat4_t get_model_matrix(blinn_attribs_t *attribs,
                                blinn_uniforms_t *uniforms) {
     if (uniforms->joint_matrices) {
@@ -107,18 +116,47 @@ static vec4_t shadow_fragment_shader(blinn_varyings_t *varyings,
     return vec4_new(0, 0, 0, 0);
 }
 
-static vec3_t get_basecolor(blinn_varyings_t *varyings,
-                            blinn_uniforms_t *uniforms,
-                            float *alpha) {
-    vec3_t basecolor = vec3_from_vec4(uniforms->basecolor);
-    *alpha = uniforms->basecolor.w;
+static material_t get_material(blinn_varyings_t *varyings,
+                               blinn_uniforms_t *uniforms,
+                               int backface) {
+    vec2_t texcoord = varyings->texcoord;
+    vec3_t diffuse, specular, normal, emission;
+    float alpha, shininess;
+    material_t material;
+
+    diffuse = vec3_from_vec4(uniforms->basecolor);
+    alpha = uniforms->basecolor.w;
     if (uniforms->diffuse_map) {
-        vec2_t texcoord = varyings->texcoord;
         vec4_t sample = texture_sample(uniforms->diffuse_map, texcoord);
-        basecolor = vec3_modulate(basecolor, vec3_from_vec4(sample));
-        *alpha *= sample.w;
+        diffuse = vec3_modulate(diffuse, vec3_from_vec4(sample));
+        alpha *= sample.w;
     }
-    return basecolor;
+
+    specular = vec3_new(0, 0, 0);
+    if (uniforms->specular_map) {
+        vec4_t sample = texture_sample(uniforms->specular_map, texcoord);
+        specular = vec3_from_vec4(sample);
+    }
+    shininess = uniforms->shininess;
+
+    normal = vec3_normalize(varyings->normal);
+    if (backface) {
+        normal = vec3_negate(normal);
+    }
+
+    emission = vec3_new(0, 0, 0);
+    if (uniforms->emission_map) {
+        vec4_t sample = texture_sample(uniforms->emission_map, texcoord);
+        emission = vec3_from_vec4(sample);
+    }
+
+    material.diffuse = diffuse;
+    material.specular = specular;
+    material.alpha = alpha;
+    material.shininess = shininess;
+    material.normal = normal;
+    material.emission = emission;
+    return material;
 }
 
 static vec3_t get_view_dir(blinn_varyings_t *varyings,
@@ -126,11 +164,6 @@ static vec3_t get_view_dir(blinn_varyings_t *varyings,
     vec3_t camera_pos = uniforms->camera_pos;
     vec3_t world_pos = varyings->world_position;
     return vec3_normalize(vec3_sub(camera_pos, world_pos));
-}
-
-static vec3_t get_normal_dir(blinn_varyings_t *varyings, int backface) {
-    vec3_t normal_dir = vec3_normalize(varyings->normal);
-    return backface ? vec3_negate(normal_dir) : normal_dir;
 }
 
 static int is_in_shadow(blinn_varyings_t *varyings,
@@ -152,64 +185,54 @@ static int is_in_shadow(blinn_varyings_t *varyings,
     }
 }
 
-static vec3_t get_dir_shade(blinn_varyings_t *varyings,
-                            blinn_uniforms_t *uniforms,
-                            vec3_t basecolor,
-                            int backface) {
-    vec3_t light_dir = vec3_negate(uniforms->light_dir);
-    vec3_t view_dir = get_view_dir(varyings, uniforms);
-    vec3_t normal_dir = get_normal_dir(varyings, backface);
-    float n_dot_l = vec3_dot(normal_dir, light_dir);
+static int is_zero_vector(vec3_t v) {
+    return v.x == 0 && v.y == 0 && v.z == 0;
+}
 
-    if (n_dot_l > 0 && !is_in_shadow(varyings, uniforms, n_dot_l)) {
-        vec3_t diffuse = vec3_mul(basecolor, n_dot_l);
-        vec3_t specular = vec3_new(0, 0, 0);
-
-        if (uniforms->specular_map) {
-            vec3_t half_dir = vec3_normalize(vec3_add(light_dir, view_dir));
-            float n_dot_h = vec3_dot(normal_dir, half_dir);
-            if (n_dot_h > 0) {
-                float strength = (float)pow(n_dot_h, uniforms->shininess);
-                texture_t *specular_map = uniforms->specular_map;
-                vec2_t texcoord = varyings->texcoord;
-                vec4_t sample = texture_sample(specular_map, texcoord);
-                specular = vec3_mul(vec3_from_vec4(sample), strength);
-            }
+static vec3_t get_specular(vec3_t light_dir, vec3_t view_dir,
+                           material_t material) {
+    if (!is_zero_vector(material.specular)) {
+        vec3_t half_dir = vec3_normalize(vec3_add(light_dir, view_dir));
+        float n_dot_h = vec3_dot(material.normal, half_dir);
+        if (n_dot_h > 0) {
+            float strength = (float)pow(n_dot_h, material.shininess);
+            return vec3_mul(material.specular, strength);
         }
-
-        return vec3_add(diffuse, specular);
-    } else {
-        return vec3_new(0, 0, 0);
     }
+    return vec3_new(0, 0, 0);
 }
 
 static vec4_t common_fragment_shader(blinn_varyings_t *varyings,
                                      blinn_uniforms_t *uniforms,
                                      int *discard,
                                      int backface) {
-    float alpha;
-    vec3_t basecolor = get_basecolor(varyings, uniforms, &alpha);
-    if (uniforms->alpha_cutoff > 0 && alpha < uniforms->alpha_cutoff) {
+    material_t material = get_material(varyings, uniforms, backface);
+    if (uniforms->alpha_cutoff > 0 && material.alpha < uniforms->alpha_cutoff) {
         *discard = 1;
         return vec4_new(0, 0, 0, 0);
     } else {
-        vec3_t color = vec3_mul(basecolor, uniforms->ambient_intensity);
+        vec3_t color = material.emission;
 
-        if (uniforms->punctual_intensity > 0){
-            float intensity = uniforms->punctual_intensity;
-            vec3_t shade = get_dir_shade(varyings, uniforms,
-                                         basecolor, backface);
-            color = vec3_add(color, vec3_mul(shade, intensity));
+        if (uniforms->ambient_intensity > 0) {
+            vec3_t ambient = material.diffuse;
+            float intensity = uniforms->ambient_intensity;
+            color = vec3_add(color, vec3_mul(ambient, intensity));
         }
 
-        if (uniforms->emission_map) {
-            vec2_t texcoord = varyings->texcoord;
-            vec4_t sample = texture_sample(uniforms->emission_map, texcoord);
-            vec3_t emission = vec3_from_vec4(sample);
-            color = vec3_add(color, emission);
+        if (uniforms->punctual_intensity > 0) {
+            vec3_t light_dir = vec3_negate(uniforms->light_dir);
+            float n_dot_l = vec3_dot(material.normal, light_dir);
+            if (n_dot_l > 0 && !is_in_shadow(varyings, uniforms, n_dot_l)) {
+                vec3_t view_dir = get_view_dir(varyings, uniforms);
+                vec3_t specular = get_specular(light_dir, view_dir, material);
+                vec3_t diffuse = vec3_mul(material.diffuse, n_dot_l);
+                vec3_t punctual = vec3_add(diffuse, specular);
+                float intensity = uniforms->punctual_intensity;
+                color = vec3_add(color, vec3_mul(punctual, intensity));
+            }
         }
 
-        return vec4_from_vec3(color, alpha);
+        return vec4_from_vec3(color, material.alpha);
     }
 }
 
