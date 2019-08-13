@@ -2,7 +2,6 @@
 Thumbs.db
 
 .vscode
-*.pyc
 *.zip
 
 Viewer
