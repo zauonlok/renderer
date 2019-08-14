@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include "geometry.h"
@@ -245,42 +246,57 @@ static int clip_against_plane(
     return out_num_vertices;
 }
 
-#define CLIP_IN2OUT(plane, in_num_vertices)                                 \
+#define CLIP_IN2OUT(plane)                                                  \
     do {                                                                    \
         num_vertices = clip_against_plane(                                  \
-            plane, in_num_vertices, varying_num_floats,                     \
+            plane, num_vertices, varying_num_floats,                        \
             in_coords, in_varyings, out_coords, out_varyings);              \
         if (num_vertices < 3) {                                             \
             return 0;                                                       \
         }                                                                   \
     } while (0)
 
-#define CLIP_OUT2IN(plane, in_num_vertices)                                 \
+#define CLIP_OUT2IN(plane)                                                  \
     do {                                                                    \
         num_vertices = clip_against_plane(                                  \
-            plane, in_num_vertices, varying_num_floats,                     \
+            plane, num_vertices, varying_num_floats,                        \
             out_coords, out_varyings, in_coords, in_varyings);              \
         if (num_vertices < 3) {                                             \
             return 0;                                                       \
         }                                                                   \
     } while (0)
 
+static int is_vertex_visible(vec4_t v) {
+    return fabs(v.x) <= v.w && fabs(v.y) <= v.w && fabs(v.z) <= v.w;
+}
+
 static int clip_triangle(
         int sizeof_varyings,
         vec4_t in_coords[MAX_VARYINGS], void *in_varyings[MAX_VARYINGS],
         vec4_t out_coords[MAX_VARYINGS], void *out_varyings[MAX_VARYINGS]) {
-    int varying_num_floats = sizeof_varyings / sizeof(float);
-    int num_vertices;
-
-    CLIP_IN2OUT(POSITIVE_W, 3);
-    CLIP_OUT2IN(POSITIVE_X, num_vertices);
-    CLIP_IN2OUT(NEGATIVE_X, num_vertices);
-    CLIP_OUT2IN(POSITIVE_Y, num_vertices);
-    CLIP_IN2OUT(NEGATIVE_Y, num_vertices);
-    CLIP_OUT2IN(POSITIVE_Z, num_vertices);
-    CLIP_IN2OUT(NEGATIVE_Z, num_vertices);
-
-    return num_vertices;
+    int v0_visible = is_vertex_visible(in_coords[0]);
+    int v1_visible = is_vertex_visible(in_coords[1]);
+    int v2_visible = is_vertex_visible(in_coords[2]);
+    if (v0_visible && v1_visible && v2_visible) {
+        out_coords[0] = in_coords[0];
+        out_coords[1] = in_coords[1];
+        out_coords[2] = in_coords[2];
+        memcpy(out_varyings[0], in_varyings[0], sizeof_varyings);
+        memcpy(out_varyings[1], in_varyings[1], sizeof_varyings);
+        memcpy(out_varyings[2], in_varyings[2], sizeof_varyings);
+        return 3;
+    } else {
+        int varying_num_floats = sizeof_varyings / sizeof(float);
+        int num_vertices = 3;
+        CLIP_IN2OUT(POSITIVE_W);
+        CLIP_OUT2IN(POSITIVE_X);
+        CLIP_IN2OUT(NEGATIVE_X);
+        CLIP_OUT2IN(POSITIVE_Y);
+        CLIP_IN2OUT(NEGATIVE_Y);
+        CLIP_OUT2IN(POSITIVE_Z);
+        CLIP_IN2OUT(NEGATIVE_Z);
+        return num_vertices;
+    }
 }
 
 /*
@@ -501,22 +517,16 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
 
     /* execute vertex shader */
     for (i = 0; i < 3; i++) {
-        vec4_t clip_coord = program->vertex_shader(program->shader_attribs[i],
-                                                   program->shader_varyings,
-                                                   program->shader_uniforms);
-        program->in_coords[i] = clip_coord;
-        memcpy(program->in_varyings[i],
-               program->shader_varyings,
-               program->sizeof_varyings);
+        vertex_shader_t *vertex_shader = program->vertex_shader;
+        program->in_coords[i] = vertex_shader(program->shader_attribs[i],
+                                              program->in_varyings[i],
+                                              program->shader_uniforms);
     }
 
     /* triangle clipping */
     num_vertices = clip_triangle(program->sizeof_varyings,
                                  program->in_coords, program->in_varyings,
                                  program->out_coords, program->out_varyings);
-    if (num_vertices < 3) {
-        return;
-    }
 
     /* triangle assembly */
     for (i = 0; i < num_vertices - 2; i++) {
