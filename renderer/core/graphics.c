@@ -327,14 +327,6 @@ static vec3_t viewport_transform(int width_, int height_, vec3_t ndc_coord) {
     return vec3_new(x, y, z);
 }
 
-static float bounded_min_float(float a, float b, float c, float lower_bound) {
-    return float_max(float_min(float_min(a, b), c), lower_bound);
-}
-
-static float bounded_max_float(float a, float b, float c, float upper_bound) {
-    return float_min(float_max(float_max(a, b), c), upper_bound);
-}
-
 typedef struct {vec2_t min; vec2_t max;} bbox_t;
 
 static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
@@ -342,10 +334,17 @@ static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
     vec2_t b = abc[1];
     vec2_t c = abc[2];
     bbox_t bbox;
-    bbox.min.x = bounded_min_float(a.x, b.x, c.x, 0);
-    bbox.min.y = bounded_min_float(a.y, b.y, c.y, 0);
-    bbox.max.x = bounded_max_float(a.x, b.x, c.x, (float)(width - 1));
-    bbox.max.y = bounded_max_float(a.y, b.y, c.y, (float)(height - 1));
+
+    bbox.min.x = float_min(a.x, float_min(b.x, c.x));
+    bbox.min.y = float_min(a.y, float_min(b.y, c.y));
+    bbox.max.x = float_max(a.x, float_max(b.x, c.x));
+    bbox.max.y = float_max(a.y, float_max(b.y, c.y));
+
+    bbox.min.x = float_max((float)ceil(bbox.min.x), 0);
+    bbox.min.y = float_max((float)ceil(bbox.min.y), 0);
+    bbox.max.x = float_min((float)floor(bbox.max.x), (float)(width - 1));
+    bbox.max.y = float_min((float)floor(bbox.max.y), (float)(height - 1));
+
     return bbox;
 }
 
