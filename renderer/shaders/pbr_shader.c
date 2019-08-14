@@ -8,16 +8,6 @@
 
 /* low-level api */
 
-typedef struct {
-    vec3_t diffuse;
-    vec3_t specular;
-    float alpha;
-    float roughness;
-    vec3_t normal;
-    float occlusion;
-    vec3_t emission;
-} material_t;
-
 static mat4_t get_model_matrix(pbr_attribs_t *attribs,
                                pbr_uniforms_t *uniforms) {
     if (uniforms->joint_matrices) {
@@ -144,6 +134,16 @@ static vec4_t shadow_fragment_shader(pbr_varyings_t *varyings,
     }
     return vec4_new(0, 0, 0, 0);
 }
+
+typedef struct {
+    vec3_t diffuse;
+    vec3_t specular;
+    float alpha;
+    float roughness;
+    vec3_t normal;
+    float occlusion;
+    vec3_t emission;
+} material_t;
 
 static material_t get_pbrm_material(pbr_uniforms_t *uniforms, vec2_t texcoord) {
     vec3_t diffuse, specular, basecolor;
@@ -532,8 +532,8 @@ static void release_model(model_t *model) {
     free(model);
 }
 
-static model_t *create_model(const char *mesh, const char *skeleton,
-                             int attached, mat4_t transform,
+static model_t *create_model(const char *mesh, mat4_t transform,
+                             const char *skeleton, int attached,
                              int double_sided, int enable_blend) {
     int sizeof_attribs = sizeof(pbr_attribs_t);
     int sizeof_varyings = sizeof(pbr_varyings_t);
@@ -547,21 +547,21 @@ static model_t *create_model(const char *mesh, const char *skeleton,
 
     model = (model_t*)malloc(sizeof(model_t));
     model->mesh = cache_acquire_mesh(mesh);
-    model->skeleton = cache_acquire_skeleton(skeleton);
-    model->attached = attached;
     model->program = program;
     model->transform = transform;
-    model->sortdata.opaque = !enable_blend;
-    model->sortdata.distance = 0;
-    model->draw = draw_model;
+    model->skeleton = cache_acquire_skeleton(skeleton);
+    model->attached = attached;
+    model->opaque = !enable_blend;
+    model->distance = 0;
     model->update = update_model;
+    model->draw = draw_model;
     model->release = release_model;
 
     return model;
 }
 
-model_t *pbrm_create_model(const char *mesh, const char *skeleton,
-                           int attached, mat4_t transform,
+model_t *pbrm_create_model(const char *mesh, mat4_t transform,
+                           const char *skeleton, int attached,
                            pbrm_material_t material, const char *env_name) {
     pbr_uniforms_t *uniforms;
     model_t *model;
@@ -569,7 +569,7 @@ model_t *pbrm_create_model(const char *mesh, const char *skeleton,
     assert(material.metalness_factor >= 0 && material.metalness_factor <= 1);
     assert(material.roughness_factor >= 0 && material.roughness_factor <= 1);
 
-    model = create_model(mesh, skeleton, attached, transform,
+    model = create_model(mesh, transform, skeleton, attached,
                          material.double_sided, material.enable_blend);
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
@@ -589,15 +589,15 @@ model_t *pbrm_create_model(const char *mesh, const char *skeleton,
     return model;
 }
 
-model_t *pbrs_create_model(const char *mesh, const char *skeleton,
-                           int attached, mat4_t transform,
+model_t *pbrs_create_model(const char *mesh, mat4_t transform,
+                           const char *skeleton, int attached,
                            pbrs_material_t material, const char *env_name) {
     pbr_uniforms_t *uniforms;
     model_t *model;
 
     assert(material.glossiness_factor >= 0 && material.glossiness_factor <= 1);
 
-    model = create_model(mesh, skeleton, attached, transform,
+    model = create_model(mesh, transform, skeleton, attached,
                          material.double_sided, material.enable_blend);
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);

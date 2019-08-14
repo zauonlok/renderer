@@ -61,8 +61,8 @@ typedef struct {
     float alpha_cutoff;
 } blinn_material_t;
 
-model_t *blinn_create_model(const char *mesh, const char *skeleton,
-                            int attached, mat4_t transform,
+model_t *blinn_create_model(const char *mesh, mat4_t transform,
+                            const char *skeleton, int attached,
                             blinn_material_t material);
 
 #endif

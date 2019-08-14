@@ -6,15 +6,6 @@
 
 /* low-level api */
 
-typedef struct {
-    vec3_t diffuse;
-    vec3_t specular;
-    float alpha;
-    float shininess;
-    vec3_t normal;
-    vec3_t emission;
-} material_t;
-
 static mat4_t get_model_matrix(blinn_attribs_t *attribs,
                                blinn_uniforms_t *uniforms) {
     if (uniforms->joint_matrices) {
@@ -115,6 +106,15 @@ static vec4_t shadow_fragment_shader(blinn_varyings_t *varyings,
     }
     return vec4_new(0, 0, 0, 0);
 }
+
+typedef struct {
+    vec3_t diffuse;
+    vec3_t specular;
+    float alpha;
+    float shininess;
+    vec3_t normal;
+    vec3_t emission;
+} material_t;
 
 static material_t get_material(blinn_varyings_t *varyings,
                                blinn_uniforms_t *uniforms,
@@ -330,8 +330,8 @@ static void release_model(model_t *model) {
     free(model);
 }
 
-model_t *blinn_create_model(const char *mesh, const char *skeleton,
-                            int attached, mat4_t transform,
+model_t *blinn_create_model(const char *mesh, mat4_t transform,
+                            const char *skeleton, int attached,
                             blinn_material_t material) {
     int sizeof_attribs = sizeof(blinn_attribs_t);
     int sizeof_varyings = sizeof(blinn_varyings_t);
@@ -354,14 +354,14 @@ model_t *blinn_create_model(const char *mesh, const char *skeleton,
 
     model = (model_t*)malloc(sizeof(model_t));
     model->mesh = cache_acquire_mesh(mesh);
-    model->skeleton = cache_acquire_skeleton(skeleton);
-    model->attached = attached;
     model->program = program;
     model->transform = transform;
-    model->sortdata.opaque = !material.enable_blend;
-    model->sortdata.distance = 0;
-    model->draw = draw_model;
+    model->skeleton = cache_acquire_skeleton(skeleton);
+    model->attached = attached;
+    model->opaque = !material.enable_blend;
+    model->distance = 0;
     model->update = update_model;
+    model->draw = draw_model;
     model->release = release_model;
 
     return model;

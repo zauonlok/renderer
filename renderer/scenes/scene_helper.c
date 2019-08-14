@@ -406,8 +406,8 @@ static scene_t *create_blinn_scene(scene_light_t scene_light,
         material.enable_blend = wrap_knob(scene_material.enable_blend);
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
-        model = blinn_create_model(mesh, skeleton, attached,
-                                   transform, material);
+        model = blinn_create_model(mesh, transform, skeleton, attached,
+                                   material);
         darray_push(models, model);
     }
 
@@ -462,8 +462,8 @@ static scene_t *create_pbrm_scene(scene_light_t scene_light,
         material.enable_blend = wrap_knob(scene_material.enable_blend);
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
-        model = pbrm_create_model(mesh, skeleton, attached,
-                                  transform, material, env_name);
+        model = pbrm_create_model(mesh, transform, skeleton, attached,
+                                  material, env_name);
         darray_push(models, model);
     }
 
@@ -518,8 +518,8 @@ static scene_t *create_pbrs_scene(scene_light_t scene_light,
         material.enable_blend = wrap_knob(scene_material.enable_blend);
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
-        model = pbrs_create_model(mesh, skeleton, attached,
-                                  transform, material, env_name);
+        model = pbrs_create_model(mesh, transform, skeleton, attached,
+                                  material, env_name);
         darray_push(models, model);
     }
 
