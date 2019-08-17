@@ -280,10 +280,11 @@ static vec3_t get_incident_dir(vec3_t normal_dir, vec3_t view_dir) {
 
 static vec3_t get_ibl_shade(material_t material, ibldata_t *ibldata,
                             vec3_t normal_dir, vec3_t view_dir) {
+    vec3_t diffuse_color = vec3_mul(material.diffuse, material.occlusion);
     cubemap_t *diffuse_map = ibldata->diffuse_map;
     vec4_t diffuse_sample = cubemap_clamp_sample(diffuse_map, normal_dir);
     vec3_t diffuse_light = vec3_from_vec4(diffuse_sample);
-    vec3_t diffuse_shade = vec3_modulate(diffuse_light, material.diffuse);
+    vec3_t diffuse_shade = vec3_modulate(diffuse_light, diffuse_color);
 
     float n_dot_v = vec3_dot(normal_dir, view_dir);
     vec2_t lut_texcoord = vec2_new(n_dot_v, material.roughness);
@@ -405,7 +406,7 @@ static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
         vec3_t light_dir = vec3_negate(uniforms->light_dir);
         vec3_t normal_dir = material.normal;
         float n_dot_l = vec3_dot(normal_dir, light_dir);
-        vec3_t color = vec3_new(0, 0, 0);
+        vec3_t color = material.emission;
 
         if (uniforms->ambient_intensity > 0 && uniforms->ibldata) {
             float intensity = uniforms->ambient_intensity;
@@ -422,9 +423,6 @@ static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
                 color = vec3_add(color, vec3_mul(shade, intensity));
             }
         }
-
-        color = vec3_mul(color, material.occlusion);
-        color = vec3_add(color, material.emission);
 
         return vec4_linear2srgb(vec4_from_vec3(color, material.alpha));
     }
