@@ -139,10 +139,12 @@ Viewer [test_name [scene_name]]
 
 ### Miscellaneous
 
-* [Barycentric coordinates](http://blackpawn.com/texts/pointinpoly/)
 * [Homogeneous clipping](http://fabiensanglard.net/polygon_codec/)
+* [Barycentric coordinates](http://blackpawn.com/texts/pointinpoly/)
 * [Perspective-correct interpolation](https://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf)
 * [Skeletal animation](https://people.rennes.inria.fr/Ludovic.Hoyet/teaching/IMO/05_IMO2016_Skinning.pdf)
+* [Tangent space normal mapping](http://www.terathon.com/code/tangent.html)
+* [Ambient occlusion](http://mentalraytips.blogspot.com/2008/11/joy-of-little-ambience.html)
 * [ACES tone mapping](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/)
 * [Orbital camera controls](https://github.com/mrdoob/three.js/blob/master/examples/js/controls/OrbitControls.js)
 * [Type-safe dynamic array](https://github.com/nothings/stb/blob/master/stretchy_buffer.h)
