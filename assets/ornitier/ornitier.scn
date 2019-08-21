@@ -42,7 +42,7 @@ materials 7:
         basecolor_map: ornitier/coat_basecolor.tga
         metalness_map: ornitier/coat_metalness.tga
         roughness_map: ornitier/coat_roughness.tga
-        normal_map: ornitier/coat_normal.tga
+        normal_map: null
         occlusion_map: null
         emission_map: null
         double_sided: off
