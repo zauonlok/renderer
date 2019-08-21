@@ -25,7 +25,7 @@ def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
 
-    obj_data = dump_obj_data(gltf, buffer, 0, with_tangent=True, with_skin=True)
+    obj_data = dump_obj_data(gltf, buffer, 0, with_skin=True, with_tangent=True)
     obj_filepath = os.path.join(DST_DIRECTORY, "crab.obj")
     with open(obj_filepath, "w") as f:
         f.write(obj_data)
