@@ -16,7 +16,7 @@ materials 2:
         diffuse_map: drone/drone_diffuse.tga
         specular_map: drone/drone_specular.tga
         glossiness_map: drone/drone_glossiness.tga
-        normal_map: null
+        normal_map: drone/drone_normal.tga
         occlusion_map: drone/drone_occlusion.tga
         emission_map: drone/drone_emission.tga
         double_sided: off

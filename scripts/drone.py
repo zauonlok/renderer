@@ -25,11 +25,13 @@ IMG_FILENAMES = {
         "textures/Robot_diffuse.jpeg",
         "textures/Robot_emissive.jpeg",
         "textures/Robot_occlusion.jpeg",
+        "textures/Robot_normal.jpeg",
         "textures/Robot_specularGlossiness.png",
     ],
     "fire": [
         "textures/Fire_diffuse.png",
         "textures/Fire_emissive.jpeg",
+        None,
         None,
         None,
     ],
@@ -40,7 +42,9 @@ def process_meshes(zip_file):
     gltf = json.loads(zip_file.read("scene.gltf"))
     buffer = zip_file.read("scene.bin")
 
-    drone_obj_data = dump_obj_data(gltf, buffer, 0, with_skin=True)
+    drone_obj_data = dump_obj_data(
+        gltf, buffer, 0, with_skin=True, with_tangent=True
+    )
     drone_filepath = os.path.join(DST_DIRECTORY, "drone.obj")
     with open(drone_filepath, "w") as f:
         f.write(drone_obj_data)
@@ -79,7 +83,8 @@ def save_image(image, filename, size=512):
 
 def process_images(zip_file):
     for name, paths in IMG_FILENAMES.items():
-        diffuse_path, emission_path, occlusion_path, packed_path = paths
+        diffuse_path, emission_path = paths[:2]
+        occlusion_path, normal_path, packed_path = paths[2:]
 
         if diffuse_path:
             diffuse_image = load_image(zip_file, diffuse_path)
@@ -93,6 +98,10 @@ def process_images(zip_file):
             occlusion_image = load_image(zip_file, occlusion_path)
             occlusion_image = occlusion_image.split()[0]
             save_image(occlusion_image, "{}_occlusion.tga".format(name))
+
+        if normal_path:
+            normal_image = load_image(zip_file, normal_path)
+            save_image(normal_image, "{}_normal.tga".format(name))
 
         if packed_path:
             packed_image = load_image(zip_file, packed_path)
