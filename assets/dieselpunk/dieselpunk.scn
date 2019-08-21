@@ -29,7 +29,7 @@ materials 3:
         basecolor_map: dieselpunk/mech_basecolor.tga
         metalness_map: dieselpunk/mech_metalness.tga
         roughness_map: dieselpunk/mech_roughness.tga
-        normal_map: null
+        normal_map: dieselpunk/mech_normal.tga
         occlusion_map: null
         emission_map: null
         double_sided: off
@@ -42,7 +42,7 @@ materials 3:
         basecolor_map: dieselpunk/yingham_basecolor.tga
         metalness_map: null
         roughness_map: dieselpunk/yingham_roughness.tga
-        normal_map: null
+        normal_map: dieselpunk/yingham_normal.tga
         occlusion_map: null
         emission_map: null
         double_sided: off

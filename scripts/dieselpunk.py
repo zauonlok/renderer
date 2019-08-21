@@ -30,14 +30,17 @@ IMG_FILENAMES = {
     "ground": [
         "textures/Ground_baseColor.png",
         "textures/Ground_metallicRoughness.png",
+        None,
     ],
     "mech": [
         "textures/Mech_baseColor.png",
         "textures/Mech_metallicRoughness.png",
+        "textures/Mech_normal.png",
     ],
     "yingham": [
         "textures/Yingham_MAT_baseColor.png",
         "textures/Yingham_MAT_metallicRoughness.png",
+        "textures/Yingham_MAT_normal.png",
     ],
 }
 
@@ -52,7 +55,7 @@ def process_meshes(zip_file):
     buffer = zip_file.read("scene.bin")
 
     for mesh_index, filename in enumerate(OBJ_FILENAMES):
-        obj_data = dump_obj_data(gltf, buffer, mesh_index)
+        obj_data = dump_obj_data(gltf, buffer, mesh_index, with_tangent=True)
         filepath = os.path.join(DST_DIRECTORY, filename)
         with open(filepath, "w") as f:
             f.write(obj_data)
@@ -73,18 +76,26 @@ def save_image(image, filename, size=512):
 
 
 def process_images(zip_file):
-    for name, (basecolor_path, packed_path) in IMG_FILENAMES.items():
-        basecolor_image = load_image(zip_file, basecolor_path)
-        save_image(basecolor_image, "{}_basecolor.tga".format(name))
+    for name, paths in IMG_FILENAMES.items():
+        basecolor_path, packed_path, normal_path = paths
 
-        packed_image = load_image(zip_file, packed_path)
-        if packed_image.mode == "P":
-            packed_bands = packed_image.convert("RGBA").split()[:3]
-        else:
-            packed_bands = packed_image.split()
-        _, roughness_image, metalness_image = packed_bands
-        save_image(roughness_image, "{}_roughness.tga".format(name))
-        save_image(metalness_image, "{}_metalness.tga".format(name))
+        if basecolor_path:
+            basecolor_image = load_image(zip_file, basecolor_path)
+            save_image(basecolor_image, "{}_basecolor.tga".format(name))
+
+        if packed_path:
+            packed_image = load_image(zip_file, packed_path)
+            if packed_image.mode == "P":
+                packed_bands = packed_image.convert("RGBA").split()[:3]
+            else:
+                packed_bands = packed_image.split()
+            _, roughness_image, metalness_image = packed_bands
+            save_image(roughness_image, "{}_roughness.tga".format(name))
+            save_image(metalness_image, "{}_metalness.tga".format(name))
+
+        if normal_path:
+            normal_image = load_image(zip_file, normal_path)
+            save_image(normal_image, "{}_normal.tga".format(name))
 
     for del_filename in DEL_FILENAMES:
         del_filepath = os.path.join(DST_DIRECTORY, del_filename)
