@@ -16,7 +16,7 @@ materials 4:
         basecolor_map: junkrat/upper_basecolor.tga
         metalness_map: junkrat/upper_metalness.tga
         roughness_map: null
-        normal_map: null
+        normal_map: junkrat/upper_normal.tga
         occlusion_map: null
         emission_map: null
         double_sided: off
@@ -29,7 +29,7 @@ materials 4:
         basecolor_map: junkrat/lower_basecolor.tga
         metalness_map: junkrat/lower_metalness.tga
         roughness_map: null
-        normal_map: null
+        normal_map: junkrat/lower_normal.tga
         occlusion_map: null
         emission_map: null
         double_sided: off
@@ -42,7 +42,7 @@ materials 4:
         basecolor_map: junkrat/head_basecolor.tga
         metalness_map: null
         roughness_map: junkrat/head_roughness.tga
-        normal_map: null
+        normal_map: junkrat/head_normal.tga
         occlusion_map: null
         emission_map: null
         double_sided: off
@@ -55,7 +55,7 @@ materials 4:
         basecolor_map: junkrat/back_basecolor.tga
         metalness_map: junkrat/back_metalness.tga
         roughness_map: null
-        normal_map: null
+        normal_map: junkrat/back_normal.tga
         occlusion_map: null
         emission_map: null
         double_sided: off

@@ -24,18 +24,22 @@ IMG_FILENAMES = {
     "back": [
         "textures/Material_20_baseColor.png",
         "textures/Material_20_metallicRoughness.png",
+        "textures/Material_20_normal.png",
     ],
     "head": [
         "textures/Material_34_baseColor.png",
         "textures/Material_34_metallicRoughness.png",
+        "textures/Material_34_normal.png",
     ],
     "lower": [
         "textures/Material_19_baseColor.png",
         "textures/Material_19_metallicRoughness.png",
+        "textures/Material_19_normal.png",
     ],
     "upper": [
         "textures/Material_22_baseColor.png",
         "textures/Material_22_metallicRoughness.png",
+        "textures/Material_22_normal.png",
     ],
 }
 
@@ -52,7 +56,9 @@ def process_meshes(zip_file):
     buffer = zip_file.read("scene.bin")
 
     for mesh_index in range(len(gltf["meshes"])):
-        obj_data = dump_obj_data(gltf, buffer, mesh_index, with_skin=True)
+        obj_data = dump_obj_data(
+            gltf, buffer, mesh_index, with_skin=True, with_tangent=True
+        )
         obj_filename = "junkrat{}.obj".format(mesh_index)
         obj_filepath = os.path.join(DST_DIRECTORY, obj_filename)
         with open(obj_filepath, "w") as f:
@@ -79,7 +85,9 @@ def save_image(image, filename, size=512):
 
 
 def process_images(zip_file):
-    for name, (basecolor_path, packed_path) in IMG_FILENAMES.items():
+    for name, paths in IMG_FILENAMES.items():
+        basecolor_path, packed_path, normal_path = paths
+
         basecolor_image = load_image(zip_file, basecolor_path)
         save_image(basecolor_image, "{}_basecolor.tga".format(name))
 
@@ -87,6 +95,9 @@ def process_images(zip_file):
         _, roughness_image, metalness_image = packed_image.split()
         save_image(roughness_image, "{}_roughness.tga".format(name))
         save_image(metalness_image, "{}_metalness.tga".format(name))
+
+        normal_image = load_image(zip_file, normal_path)
+        save_image(normal_image, "{}_normal.tga".format(name))
 
     for del_filename in DEL_FILENAMES:
         del_filepath = os.path.join(DST_DIRECTORY, del_filename)
