@@ -24,11 +24,13 @@ IMG_FILENAMES = {
     "body": [
         "textures/body_baseColor.png",
         "textures/body_metallicRoughness.png",
+        "textures/body_normal.png",
         "textures/body_emissive.png",
     ],
     "legs": [
         "textures/material_baseColor.png",
         "textures/material_metallicRoughness.png",
+        "textures/material_normal.png",
         None,
     ],
 }
@@ -39,7 +41,7 @@ def process_meshes(zip_file):
     buffer = zip_file.read("scene.bin")
 
     for mesh_index in range(1, len(gltf["meshes"])):
-        obj_data = dump_obj_data(gltf, buffer, mesh_index)
+        obj_data = dump_obj_data(gltf, buffer, mesh_index, with_tangent=True)
         obj_filename = "buster{}.obj".format(mesh_index - 1)
         obj_filepath = os.path.join(DST_DIRECTORY, obj_filename)
         with open(obj_filepath, "w") as f:
@@ -67,7 +69,7 @@ def save_image(image, filename, size=512):
 
 def process_images(zip_file):
     for name, paths in IMG_FILENAMES.items():
-        basecolor_path, packed_path, emission_path = paths
+        basecolor_path, packed_path, normal_path, emission_path = paths
 
         if basecolor_path:
             basecolor_image = load_image(zip_file, basecolor_path)
@@ -80,6 +82,10 @@ def process_images(zip_file):
             save_image(occlusion_image, "{}_occlusion.tga".format(name))
             save_image(roughness_image, "{}_roughness.tga".format(name))
             save_image(metalness_image, "{}_metalness.tga".format(name))
+
+        if normal_path:
+            normal_image = load_image(zip_file, normal_path)
+            save_image(normal_image, "{}_normal.tga".format(name))
 
         if emission_path:
             emission_image = load_image(zip_file, emission_path)

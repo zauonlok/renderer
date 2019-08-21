@@ -16,7 +16,7 @@ materials 2:
         basecolor_map: buster/body_basecolor.tga
         metalness_map: buster/body_metalness.tga
         roughness_map: buster/body_roughness.tga
-        normal_map: null
+        normal_map: buster/body_normal.tga
         occlusion_map: buster/body_occlusion.tga
         emission_map: buster/body_emission.tga
         double_sided: off
@@ -29,7 +29,7 @@ materials 2:
         basecolor_map: buster/legs_basecolor.tga
         metalness_map: buster/legs_metalness.tga
         roughness_map: buster/legs_roughness.tga
-        normal_map: null
+        normal_map: buster/legs_normal.tga
         occlusion_map: buster/legs_occlusion.tga
         emission_map: null
         double_sided: off
