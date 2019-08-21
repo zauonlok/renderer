@@ -31,18 +31,22 @@ IMG_FILENAMES = {
     "body": [
         "textures/Material_854_baseColor.png",
         "textures/Material_854_metallicRoughness.png",
+        "textures/Material_854_normal.png",
     ],
     "face": [
         "textures/Material_850_baseColor.png",
+        None,
         None,
     ],
     "hair": [
         "textures/Material_852_baseColor.png",
         "textures/Material_852_metallicRoughness.png",
+        "textures/Material_852_normal.png",
     ],
     "weapon": [
         "textures/Material_853_baseColor.png",
         "textures/Material_853_metallicRoughness.png",
+        "textures/Material_853_normal.png",
     ],
 }
 
@@ -52,7 +56,9 @@ def process_meshes(zip_file):
     buffer = zip_file.read("scene.bin")
 
     for mesh_index, obj_filename in enumerate(OBJ_FILENAMES):
-        obj_data = dump_obj_data(gltf, buffer, mesh_index, with_skin=True)
+        obj_data = dump_obj_data(
+            gltf, buffer, mesh_index, with_skin=True, with_tangent=True
+        )
         obj_filepath = os.path.join(DST_DIRECTORY, obj_filename)
         with open(obj_filepath, "w") as f:
             f.write(obj_data)
@@ -78,7 +84,9 @@ def save_image(image, filename, size=512):
 
 
 def process_images(zip_file):
-    for name, (basecolor_path, packed_path) in IMG_FILENAMES.items():
+    for name, paths in IMG_FILENAMES.items():
+        basecolor_path, packed_path, normal_path = paths
+
         if basecolor_path:
             basecolor_image = load_image(zip_file, basecolor_path)
             save_image(basecolor_image, "{}_basecolor.tga".format(name))
@@ -88,6 +96,10 @@ def process_images(zip_file):
             _, roughness_image, metalness_image = packed_image.split()
             save_image(roughness_image, "{}_roughness.tga".format(name))
             save_image(metalness_image, "{}_metalness.tga".format(name))
+
+        if normal_path:
+            normal_image = load_image(zip_file, normal_path)
+            save_image(normal_image, "{}_normal.tga".format(name))
 
 
 def main():

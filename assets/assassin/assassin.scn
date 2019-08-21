@@ -16,7 +16,7 @@ materials 4:
         basecolor_map: assassin/body_basecolor.tga
         metalness_map: assassin/body_metalness.tga
         roughness_map: assassin/body_roughness.tga
-        normal_map: null
+        normal_map: assassin/body_normal.tga
         occlusion_map: null
         emission_map: null
         double_sided: off
@@ -42,7 +42,7 @@ materials 4:
         basecolor_map: assassin/hair_basecolor.tga
         metalness_map: assassin/hair_metalness.tga
         roughness_map: assassin/hair_roughness.tga
-        normal_map: null
+        normal_map: assassin/hair_normal.tga
         occlusion_map: null
         emission_map: null
         double_sided: off
@@ -55,7 +55,7 @@ materials 4:
         basecolor_map: assassin/weapon_basecolor.tga
         metalness_map: assassin/weapon_metalness.tga
         roughness_map: assassin/weapon_roughness.tga
-        normal_map: null
+        normal_map: assassin/weapon_normal.tga
         occlusion_map: null
         emission_map: null
         double_sided: off
