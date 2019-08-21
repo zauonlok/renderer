@@ -22,7 +22,7 @@ DST_DIRECTORY = "../assets/ponycar"
 
 OBJ_FILENAMES = [
     "body.obj",
-    "ground.obj",
+    None,
     "interior.obj",
     "windows.obj",
 ]
@@ -30,18 +30,15 @@ OBJ_FILENAMES = [
 IMG_FILENAMES = {
     "body": [
         "textures/Body_SG1_baseColor.jpeg",
-        "textures/Body_SG1_emissive.jpeg",
         "textures/Body_SG1_metallicRoughness.png",
-    ],
-    "ground": [
-        "textures/Ground_SG_baseColor.png",
-        None,
-        None,
+        "textures/Body_SG1_emissive.jpeg",
+        "textures/Body_SG1_normal.jpg",
     ],
     "interior": [
         "textures/Interior_SG_baseColor.jpg",
-        None,
         "textures/Interior_SG_metallicRoughness.png",
+        None,
+        None,
     ],
 }
 
@@ -51,10 +48,13 @@ def process_meshes(zip_file):
     buffer = zip_file.read("scene.bin")
 
     for mesh_index, filename in enumerate(OBJ_FILENAMES):
-        obj_data = dump_obj_data(gltf, buffer, mesh_index)
-        filepath = os.path.join(DST_DIRECTORY, filename)
-        with open(filepath, "w") as f:
-            f.write(obj_data)
+        if filename:
+            obj_data = dump_obj_data(
+                gltf, buffer, mesh_index, with_tangent=True
+            )
+            filepath = os.path.join(DST_DIRECTORY, filename)
+            with open(filepath, "w") as f:
+                f.write(obj_data)
 
 
 def load_image(zip_file, filename):
@@ -73,21 +73,25 @@ def save_image(image, filename, size=512):
 
 def process_images(zip_file):
     for name, paths in IMG_FILENAMES.items():
-        basecolor_path, emission_path, packed_path = paths
+        basecolor_path, packed_path, emission_path, normal_path = paths
 
         if basecolor_path:
             basecolor_image = load_image(zip_file, basecolor_path)
             save_image(basecolor_image, "{}_basecolor.tga".format(name))
-
-        if emission_path:
-            emission_image = load_image(zip_file, emission_path)
-            save_image(emission_image, "{}_emission.tga".format(name))
 
         if packed_path:
             packed_image = load_image(zip_file, packed_path)
             _, roughness_image, metalness_image = packed_image.split()
             save_image(roughness_image, "{}_roughness.tga".format(name))
             save_image(metalness_image, "{}_metalness.tga".format(name))
+
+        if emission_path:
+            emission_image = load_image(zip_file, emission_path)
+            save_image(emission_image, "{}_emission.tga".format(name))
+
+        if normal_path:
+            normal_image = load_image(zip_file, normal_path)
+            save_image(normal_image, "{}_normal.tga".format(name))
 
 
 def main():

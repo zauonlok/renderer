@@ -16,7 +16,7 @@ materials 3:
         basecolor_map: ponycar/body_basecolor.tga
         metalness_map: ponycar/body_metalness.tga
         roughness_map: ponycar/body_roughness.tga
-        normal_map: null
+        normal_map: ponycar/body_normal.tga
         occlusion_map: null
         emission_map: ponycar/body_emission.tga
         double_sided: off
@@ -42,7 +42,7 @@ materials 3:
         basecolor_map: ponycar/body_basecolor.tga
         metalness_map: ponycar/body_metalness.tga
         roughness_map: ponycar/body_roughness.tga
-        normal_map: null
+        normal_map: ponycar/body_normal.tga
         occlusion_map: null
         emission_map: null
         double_sided: off
