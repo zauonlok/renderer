@@ -19,6 +19,7 @@ typedef struct {
     float ambient_intensity;
     float punctual_intensity;
     texture_t *shadow_map;
+    int layer_view;
 } framedata_t;
 
 typedef struct model {

@@ -7,6 +7,9 @@ typedef struct {
     framebuffer_t *framebuffer;
     camera_t *camera;
     vec3_t light_dir;
+    vec2_t click_pos;
+    int single_click;
+    int double_click;
     float frame_time;
     float delta_time;
 } context_t;
@@ -20,6 +23,6 @@ typedef void tickfunc_t(context_t *context, void *userdata);
 
 void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata);
 scene_t *test_create_scene(creator_t creators[], const char *scene_name);
-void test_draw_scene(scene_t *scene, context_t *context);
+framedata_t test_build_framedata(scene_t *scene, context_t *context);
 
 #endif

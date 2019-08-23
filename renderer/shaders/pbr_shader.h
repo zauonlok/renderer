@@ -29,6 +29,7 @@ typedef struct {
 typedef struct {
     vec3_t world_position;
     vec3_t depth_position;
+    vec4_t clip_position;
     vec3_t world_normal;
     vec3_t world_tangent;
     vec3_t world_bitangent;
@@ -71,6 +72,7 @@ typedef struct {
     workflow_t workflow;
     float alpha_cutoff;
     int shadow_pass;
+    int layer_view;
 } pbr_uniforms_t;
 
 vec4_t pbr_vertex_shader(void *attribs, void *varyings, void *uniforms);

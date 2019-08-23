@@ -18,11 +18,30 @@ static const float LIGHT_THETA = TO_RADIANS(45);
 static const float LIGHT_PHI = TO_RADIANS(45);
 static const float LIGHT_SPEED = PI;
 
+static const float CLICK_DELAY = 0.25f;
+
 typedef struct {
-    motion_t motion;
-    int orbiting, panning;
-    vec2_t orbit_pos, pan_pos;
-    float light_theta, light_phi;
+    /* orbit */
+    int is_orbiting;
+    vec2_t orbit_pos;
+    vec2_t orbit_delta;
+    /* pan */
+    int is_panning;
+    vec2_t pan_pos;
+    vec2_t pan_delta;
+    /* zoom */
+    float dolly_delta;
+    /* light */
+    float light_theta;
+    float light_phi;
+    /* click */
+    float press_time;
+    float release_time;
+    vec2_t press_pos;
+    vec2_t release_pos;
+    int single_click;
+    int double_click;
+    vec2_t click_pos;
 } record_t;
 
 static vec2_t get_pos_delta(vec2_t old_pos, vec2_t new_pos) {
@@ -38,55 +57,66 @@ static vec2_t get_cursor_pos(window_t *window) {
 
 static void button_callback(window_t *window, button_t button, int pressed) {
     record_t *record = (record_t*)window_get_userdata(window);
-    motion_t *motion = &record->motion;
     vec2_t cursor_pos = get_cursor_pos(window);
     if (button == BUTTON_L) {
+        float curr_time = platform_get_time();
         if (pressed) {
-            record->orbiting = 1;
+            record->is_orbiting = 1;
             record->orbit_pos = cursor_pos;
+            record->press_time = curr_time;
+            record->press_pos = cursor_pos;
         } else {
-            vec2_t delta = get_pos_delta(record->orbit_pos, cursor_pos);
-            record->orbiting = 0;
-            motion->orbit = vec2_add(motion->orbit, delta);
+            float prev_time = record->release_time;
+            vec2_t pos_delta = get_pos_delta(record->orbit_pos, cursor_pos);
+            record->is_orbiting = 0;
+            record->orbit_delta = vec2_add(record->orbit_delta, pos_delta);
+            if (prev_time && curr_time - prev_time < CLICK_DELAY) {
+                record->double_click = 1;
+                record->release_time = 0;
+            } else {
+                record->release_time = curr_time;
+                record->release_pos = cursor_pos;
+            }
         }
     } else if (button == BUTTON_R) {
         if (pressed) {
-            record->panning = 1;
+            record->is_panning = 1;
             record->pan_pos = cursor_pos;
         } else {
-            vec2_t delta = get_pos_delta(record->pan_pos, cursor_pos);
-            record->panning = 0;
-            motion->pan = vec2_add(motion->pan, delta);
+            vec2_t pos_delta = get_pos_delta(record->pan_pos, cursor_pos);
+            record->is_panning = 0;
+            record->pan_delta = vec2_add(record->pan_delta, pos_delta);
         }
     }
 }
 
 static void scroll_callback(window_t *window, float offset) {
     record_t *record = (record_t*)window_get_userdata(window);
-    motion_t *motion = &record->motion;
-    motion->dolly += offset;
+    record->dolly_delta += offset;
 }
 
 static void update_camera(window_t *window, camera_t *camera,
                           record_t *record) {
-    motion_t *motion = &record->motion;
     vec2_t cursor_pos = get_cursor_pos(window);
-    if (record->orbiting) {
-        vec2_t delta = get_pos_delta(record->orbit_pos, cursor_pos);
-        motion->orbit = vec2_add(motion->orbit, delta);
+    if (record->is_orbiting) {
+        vec2_t pos_delta = get_pos_delta(record->orbit_pos, cursor_pos);
+        record->orbit_delta = vec2_add(record->orbit_delta, pos_delta);
         record->orbit_pos = cursor_pos;
     }
-    if (record->panning) {
-        vec2_t delta = get_pos_delta(record->pan_pos, cursor_pos);
-        motion->pan = vec2_add(motion->pan, delta);
+    if (record->is_panning) {
+        vec2_t pos_delta = get_pos_delta(record->pan_pos, cursor_pos);
+        record->pan_delta = vec2_add(record->pan_delta, pos_delta);
         record->pan_pos = cursor_pos;
     }
     if (input_key_pressed(window, KEY_SPACE)) {
         camera_set_transform(camera, CAMERA_POSITION, CAMERA_TARGET);
     } else {
-        camera_orbit_update(camera, *motion);
+        motion_t motion;
+        motion.orbit = record->orbit_delta;
+        motion.pan = record->pan_delta;
+        motion.dolly = record->dolly_delta;
+        camera_orbit_update(camera, motion);
     }
-    memset(motion, 0, sizeof(motion_t));
 }
 
 static void update_light(window_t *window, float delta_time,
@@ -110,6 +140,23 @@ static void update_light(window_t *window, float delta_time,
             float phi_min = EPSILON;
             record->light_phi = float_max(record->light_phi - angle, phi_min);
         }
+    }
+}
+
+static void update_click(record_t *record) {
+    float curr_time = platform_get_time();
+    float last_time = record->release_time;
+    if (last_time && curr_time - last_time > CLICK_DELAY) {
+        vec2_t pos_delta = vec2_sub(record->release_pos, record->press_pos);
+        if (fabs(pos_delta.x) + fabs(pos_delta.y) < 5) {
+            record->single_click = 1;
+        }
+        record->release_time = 0;
+    }
+    if (record->single_click || record->double_click) {
+        float click_x = record->release_pos.x / WINDOW_WIDTH;
+        float click_y = record->release_pos.y / WINDOW_HEIGHT;
+        record->click_pos = vec2_new(click_x, 1 - click_y);
     }
 }
 
@@ -160,12 +207,15 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
     while (!window_should_close(window)) {
         float curr_time = platform_get_time();
         float delta_time = curr_time - prev_time;
-        prev_time = curr_time;
 
         update_camera(window, camera, &record);
         update_light(window, delta_time, &record);
+        update_click(&record);
 
         context.light_dir = get_light_dir(&record);
+        context.click_pos = record.click_pos;
+        context.single_click = record.single_click;
+        context.double_click = record.double_click;
         context.frame_time = curr_time;
         context.delta_time = delta_time;
         tickfunc(&context, userdata);
@@ -177,6 +227,13 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
             num_frames = 0;
             print_time = curr_time;
         }
+        prev_time = curr_time;
+
+        record.orbit_delta = vec2_new(0, 0);
+        record.pan_delta = vec2_new(0, 0);
+        record.dolly_delta = 0;
+        record.single_click = 0;
+        record.double_click = 0;
 
         input_poll_events();
     }
@@ -307,7 +364,7 @@ static mat4_t get_light_proj_matrix(float half_w, float half_h,
     return mat4_orthographic(half_w, half_h, z_near, z_far);
 }
 
-void test_draw_scene(scene_t *scene, context_t *context) {
+framedata_t test_build_framedata(scene_t *scene, context_t *context) {
     vec3_t light_dir = vec3_normalize(context->light_dir);
     camera_t *camera = context->camera;
     framedata_t framedata;
@@ -323,6 +380,7 @@ void test_draw_scene(scene_t *scene, context_t *context) {
     framedata.ambient_intensity = scene->ambient_intensity;
     framedata.punctual_intensity = scene->punctual_intensity;
     framedata.shadow_map = scene->shadow_map;
+    framedata.layer_view = -1;
 
-    scene_draw(scene, context->framebuffer, &framedata);
+    return framedata;
 }
