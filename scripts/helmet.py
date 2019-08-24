@@ -48,15 +48,13 @@ def save_image(image, filename, size=512):
 
 def process_images(zip_file):
     basecolor_path = MODEL_DIR + "Default_albedo.jpg"
-    emission_path = MODEL_DIR + "Default_emissive.jpg"
     packed_path = MODEL_DIR + "Default_metalRoughness.jpg"
     occlusion_path = MODEL_DIR + "Default_AO.jpg"
+    normal_path = MODEL_DIR + "Default_normal.jpg"
+    emission_path = MODEL_DIR + "Default_emissive.jpg"
 
     basecolor_image = load_image(zip_file, basecolor_path)
     save_image(basecolor_image, "helmet_basecolor.tga")
-
-    emission_image = load_image(zip_file, emission_path)
-    save_image(emission_image, "helmet_emission.tga")
 
     packed_image = load_image(zip_file, packed_path)
     _, roughness_image, metalness_image = packed_image.split()
@@ -66,6 +64,12 @@ def process_images(zip_file):
     occlusion_image = load_image(zip_file, occlusion_path)
     occlusion_image = occlusion_image.split()[0]
     save_image(occlusion_image, "helmet_occlusion.tga")
+
+    normal_image = load_image(zip_file, normal_path)
+    save_image(normal_image, "helmet_normal.tga")
+
+    emission_image = load_image(zip_file, emission_path)
+    save_image(emission_image, "helmet_emission.tga")
 
 
 def main():

@@ -16,7 +16,7 @@ materials 1:
         basecolor_map: helmet/helmet_basecolor.tga
         metalness_map: helmet/helmet_metalness.tga
         roughness_map: helmet/helmet_roughness.tga
-        normal_map: null
+        normal_map: helmet/helmet_normal.tga
         occlusion_map: helmet/helmet_occlusion.tga
         emission_map: helmet/helmet_emission.tga
         double_sided: off
