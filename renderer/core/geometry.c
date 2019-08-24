@@ -55,6 +55,18 @@ vec2_t vec2_div(vec2_t v, float divisor) {
     return vec2_mul(v, 1 / divisor);
 }
 
+/*
+ * for edge function, see
+ * https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
+ */
+float vec2_edge(vec2_t s, vec2_t e, vec2_t v) {
+    return (v.x - s.x) * (e.y - s.y) - (v.y - s.y) * (e.x - s.x);
+}
+
+float vec2_length(vec2_t v) {
+    return (float)sqrt(v.x * v.x + v.y * v.y);
+}
+
 void vec2_print(const char *name, vec2_t v) {
     printf("vec2 %s =\n", name);
     printf("    %12f    %12f\n", v.x, v.y);

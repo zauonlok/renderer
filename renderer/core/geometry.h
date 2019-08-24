@@ -22,6 +22,8 @@ vec2_t vec2_add(vec2_t a, vec2_t b);
 vec2_t vec2_sub(vec2_t a, vec2_t b);
 vec2_t vec2_mul(vec2_t v, float factor);
 vec2_t vec2_div(vec2_t v, float divisor);
+float vec2_edge(vec2_t start, vec2_t end, vec2_t v);
+float vec2_length(vec2_t v);
 void vec2_print(const char *name, vec2_t v);
 
 /* vec3 related functions */

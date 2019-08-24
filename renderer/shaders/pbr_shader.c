@@ -243,9 +243,9 @@ static vec3_t get_normal_dir(pbr_varyings_t *varyings,
     return backface ? vec3_negate(normal_dir) : normal_dir;
 }
 
-static material_t get_material(pbr_varyings_t *varyings,
-                               pbr_uniforms_t *uniforms,
-                               int backface) {
+static material_t get_pixel_material(pbr_varyings_t *varyings,
+                                     pbr_uniforms_t *uniforms,
+                                     int backface) {
     vec2_t texcoord = varyings->texcoord;
     material_t material;
 
@@ -395,39 +395,36 @@ static vec3_t get_view_dir(pbr_varyings_t *varyings, pbr_uniforms_t *uniforms) {
 }
 
 #define NUM_EDGES 5
-#define LAYER_WIDTH 0.15f
-#define EDGE_START (1 - LAYER_WIDTH * 0.5f)
-#define EDGE_END (LAYER_WIDTH * (NUM_EDGES - 0.5f))
+#define EDGE_SPACE 0.15f
+#define EDGE_START (1 - EDGE_SPACE * 0.5f)
+#define EDGE_END (EDGE_SPACE * (NUM_EDGES - 0.5f))
 
-/*
- * for edge function, see
- * https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
- */
 static int above_layer_edge(int edge, vec2_t coord) {
-    float offset = LAYER_WIDTH * (float)edge;
-    vec2_t s = vec2_new(EDGE_START - offset, 0);
-    vec2_t e = vec2_new(EDGE_END - offset, 1);
-    return (coord.x - s.x) * (e.y - s.y) - (coord.y - s.y) * (e.x - s.x) > 0;
+    float offset = EDGE_SPACE * (float)edge;
+    vec2_t start = vec2_new(EDGE_START - offset, 0);
+    vec2_t end = vec2_new(EDGE_END - offset, 1);
+    return vec2_edge(start, end, coord) > 0;
 }
 
 static vec4_t get_layer_color(int layer, material_t material) {
+    float alpha = material.alpha;
     if (layer == 1) {
-        vec4_t diffuse = vec4_from_vec3(material.diffuse, material.alpha);
+        vec4_t diffuse = vec4_from_vec3(material.diffuse, alpha);
         return vec4_linear2srgb(diffuse);
     } else if (layer == 2) {
-        vec4_t specular = vec4_from_vec3(material.specular, 1);
+        vec4_t specular = vec4_from_vec3(material.specular, alpha);
         return vec4_linear2srgb(specular);
     } else if (layer == 3) {
         float roughness = material.roughness;
-        return vec4_new(roughness, roughness, roughness, 1);
+        return vec4_new(roughness, roughness, roughness, alpha);
     } else if (layer == 4) {
         float occlusion = material.occlusion;
-        return vec4_new(occlusion, occlusion, occlusion, 1);
+        return vec4_new(occlusion, occlusion, occlusion, alpha);
     } else {
         float normal_x = material.normal.x * 0.5f + 0.5f;
         float normal_y = material.normal.y * 0.5f + 0.5f;
         float normal_z = material.normal.z * 0.5f + 0.5f;
-        return vec4_new(normal_x, normal_y, normal_z, 1);
+        return vec4_new(normal_x, normal_y, normal_z, alpha);
     }
 }
 
@@ -441,7 +438,7 @@ static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
                                      pbr_uniforms_t *uniforms,
                                      int *discard,
                                      int backface) {
-    material_t material = get_material(varyings, uniforms, backface);
+    material_t material = get_pixel_material(varyings, uniforms, backface);
     vec2_t coord = get_normalized_coord(varyings->clip_position);
     if (uniforms->alpha_cutoff > 0 && material.alpha < uniforms->alpha_cutoff) {
         *discard = 1;
@@ -668,6 +665,7 @@ model_t *pbrs_create_model(const char *mesh, mat4_t transform,
     uniforms->ibldata = cache_acquire_ibldata(env_name);
     uniforms->alpha_cutoff = material.alpha_cutoff;
     uniforms->workflow = SPECULAR_WORKFLOW;
+    uniforms->layer_view = -1;
 
     return model;
 }

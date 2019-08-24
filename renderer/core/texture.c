@@ -9,9 +9,6 @@
 #include "macro.h"
 #include "texture.h"
 
-struct texture {int width, height; vec4_t *buffer;};
-struct cubemap {texture_t *faces[6];};
-
 /* radiance hdr related functions */
 
 static void read_line(FILE *file, char line[LINE_SIZE]) {

@@ -143,12 +143,11 @@ static void update_light(window_t *window, float delta_time,
     }
 }
 
-static void update_click(record_t *record) {
-    float curr_time = platform_get_time();
+static void update_click(float curr_time, record_t *record) {
     float last_time = record->release_time;
     if (last_time && curr_time - last_time > CLICK_DELAY) {
         vec2_t pos_delta = vec2_sub(record->release_pos, record->press_pos);
-        if (fabs(pos_delta.x) + fabs(pos_delta.y) < 5) {
+        if (vec2_length(pos_delta) < 5) {
             record->single_click = 1;
         }
         record->release_time = 0;
@@ -210,7 +209,7 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
 
         update_camera(window, camera, &record);
         update_light(window, delta_time, &record);
-        update_click(&record);
+        update_click(curr_time, &record);
 
         context.light_dir = get_light_dir(&record);
         context.click_pos = record.click_pos;

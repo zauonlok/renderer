@@ -5,8 +5,8 @@
 #include "graphics.h"
 #include "image.h"
 
-typedef struct texture texture_t;
-typedef struct cubemap cubemap_t;
+typedef struct {int width, height; vec4_t *buffer;} texture_t;
+typedef struct {texture_t *faces[6];} cubemap_t;
 
 /* texture related functions */
 texture_t *texture_create(int width, int height);
