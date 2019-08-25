@@ -29,7 +29,7 @@ materials 3:
         basecolor_map: ponycar/interior_basecolor.tga
         metalness_map: ponycar/interior_metalness.tga
         roughness_map: ponycar/interior_roughness.tga
-        normal_map: null
+        normal_map: ponycar/interior_normal.tga
         occlusion_map: null
         emission_map: null
         double_sided: off

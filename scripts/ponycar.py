@@ -31,13 +31,13 @@ IMG_FILENAMES = {
     "body": [
         "textures/Body_SG1_baseColor.jpeg",
         "textures/Body_SG1_metallicRoughness.png",
-        "textures/Body_SG1_emissive.jpeg",
         "textures/Body_SG1_normal.jpg",
+        "textures/Body_SG1_emissive.jpeg",
     ],
     "interior": [
         "textures/Interior_SG_baseColor.jpg",
         "textures/Interior_SG_metallicRoughness.png",
-        None,
+        "textures/Interior_SG_normal.jpg",
         None,
     ],
 }
@@ -73,7 +73,7 @@ def save_image(image, filename, size=512):
 
 def process_images(zip_file):
     for name, paths in IMG_FILENAMES.items():
-        basecolor_path, packed_path, emission_path, normal_path = paths
+        basecolor_path, packed_path, normal_path, emission_path = paths
 
         if basecolor_path:
             basecolor_image = load_image(zip_file, basecolor_path)
@@ -85,13 +85,13 @@ def process_images(zip_file):
             save_image(roughness_image, "{}_roughness.tga".format(name))
             save_image(metalness_image, "{}_metalness.tga".format(name))
 
-        if emission_path:
-            emission_image = load_image(zip_file, emission_path)
-            save_image(emission_image, "{}_emission.tga".format(name))
-
         if normal_path:
             normal_image = load_image(zip_file, normal_path)
             save_image(normal_image, "{}_normal.tga".format(name))
+
+        if emission_path:
+            emission_image = load_image(zip_file, emission_path)
+            save_image(emission_image, "{}_emission.tga".format(name))
 
 
 def main():
