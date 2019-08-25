@@ -104,23 +104,25 @@ static void draw_bottom_text(framebuffer_t *framebuffer, int layer) {
     draw2d_draw_texture(framebuffer, texture, row, col);
 }
 
-static void tick_function(context_t *context, void *userdata_) {
-    userdata_t *userdata = (userdata_t*)userdata_;
-    framebuffer_t *framebuffer = context->framebuffer;
-    framedata_t framedata = test_build_framedata(userdata->scene, context);
-    userdata->layer = query_curr_layer(context, userdata->layer);
-    framedata.layer_view = userdata->layer;
-    scene_draw(userdata->scene, framebuffer, &framedata);
-
-    if (userdata->layer == 0) {
+static void draw_layer_view(framebuffer_t *framebuffer, int layer) {
+    if (layer == 0) {
         int edge;
         for (edge = 0; edge < NUM_EDGES; edge++) {
             draw_layer_edge(framebuffer, edge);
             draw_bottom_text(framebuffer, edge + 1);
         }
-    } else if (userdata->layer > 0) {
-        draw_top_text(framebuffer, userdata->layer);
+    } else if (layer > 0) {
+        draw_top_text(framebuffer, layer);
     }
+}
+
+static void tick_function(context_t *context, void *userdata_) {
+    userdata_t *userdata = (userdata_t*)userdata_;
+    framedata_t framedata = test_build_framedata(userdata->scene, context);
+    userdata->layer = query_curr_layer(context, userdata->layer);
+    framedata.layer_view = userdata->layer;
+    scene_draw(userdata->scene, context->framebuffer, &framedata);
+    draw_layer_view(context->framebuffer, userdata->layer);
 }
 
 void test_pbr(int argc, char *argv[]) {
