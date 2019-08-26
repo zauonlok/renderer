@@ -18,7 +18,7 @@ texture_t *cache_acquire_texture(const char *filename, int srgb2linear);
 void cache_release_texture(texture_t *texture);
 
 /* skybox related functions */
-cubemap_t *cache_acquire_skybox(const char *skybox_name);
+cubemap_t *cache_acquire_skybox(const char *skybox_name, int blur_level);
 void cache_release_skybox(cubemap_t *skybox);
 
 /* ibldata related functions */

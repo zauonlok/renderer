@@ -350,17 +350,44 @@ static scene_model_t *read_models(FILE *file) {
 }
 
 static scene_t *create_scene(scene_light_t light, model_t **models) {
-    int with_skybox = wrap_knob(light.skybox);
-    int with_shadow = wrap_knob(light.shadow);
     model_t *skybox;
-    if (with_skybox) {
-        const char *skybox_name = wrap_path(light.environment);
-        skybox = skybox_create_model(skybox_name);
-    } else {
+    int shadow_width;
+    int shadow_height;
+
+    if (equals_to(light.skybox, "off")) {
         skybox = NULL;
+    } else {
+        const char *skybox_name = wrap_path(light.environment);
+        int blur_level;
+        if (equals_to(light.skybox, "on")) {
+            blur_level = 0;
+        } else {
+            int items;
+            items = sscanf(light.skybox, "blur%d", &blur_level);
+            assert(items == 1 && blur_level >= 0 && blur_level < 5);
+        }
+        assert(skybox_name != NULL);
+        skybox = skybox_create_model(skybox_name, blur_level);
     }
+
+    if (equals_to(light.shadow, "off")) {
+        shadow_width = -1;
+        shadow_height = -1;
+    } else {
+        if (equals_to(light.shadow, "on")) {
+            shadow_width = 512;
+            shadow_height = 512;
+        } else {
+            int items;
+            items = sscanf(light.shadow, "%dx%d",
+                           &shadow_width, &shadow_height);
+            assert(items == 2 && shadow_width > 0 && shadow_height > 0);
+        }
+    }
+
     return scene_create(light.background, skybox, models,
-                        light.ambient, light.punctual, with_shadow);
+                        light.ambient, light.punctual,
+                        shadow_width, shadow_height);
 }
 
 static scene_t *create_blinn_scene(scene_light_t scene_light,

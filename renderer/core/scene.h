@@ -53,7 +53,7 @@ typedef struct {
 
 scene_t *scene_create(vec3_t background, model_t *skybox, model_t **models,
                       float ambient_intensity, float punctual_intensity,
-                      int with_shadow);
+                      int shadow_width, int shadow_height);
 void scene_release(scene_t *scene);
 void scene_draw(scene_t *scene, framebuffer_t *framebuffer,
                 framedata_t *framedata);

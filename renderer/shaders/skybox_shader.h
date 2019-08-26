@@ -24,6 +24,6 @@ vec4_t skybox_fragment_shader(void *varyings, void *uniforms,
 
 /* high-level api */
 
-model_t *skybox_create_model(const char *skybox_name);
+model_t *skybox_create_model(const char *skybox_name, int blur_level);
 
 #endif

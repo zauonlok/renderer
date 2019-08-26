@@ -73,7 +73,7 @@ static void release_model(model_t *model) {
     free(model);
 }
 
-model_t *skybox_create_model(const char *skybox_name) {
+model_t *skybox_create_model(const char *skybox_name, int blur_level) {
     int sizeof_attribs = sizeof(skybox_attribs_t);
     int sizeof_varyings = sizeof(skybox_varyings_t);
     int sizeof_uniforms = sizeof(skybox_uniforms_t);
@@ -86,7 +86,7 @@ model_t *skybox_create_model(const char *skybox_name) {
                              1, 0);
 
     uniforms = (skybox_uniforms_t*)program_get_uniforms(program);
-    uniforms->skybox = cache_acquire_skybox(skybox_name);
+    uniforms->skybox = cache_acquire_skybox(skybox_name, blur_level);
 
     model = (model_t*)malloc(sizeof(model_t));
     model->mesh = cache_acquire_mesh("common/box.obj");

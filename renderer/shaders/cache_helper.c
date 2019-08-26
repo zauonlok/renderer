@@ -186,7 +186,6 @@ void cache_release_texture(texture_t *texture) {
     if (texture != NULL) {
         int num_textures = darray_size(g_textures);
         int i;
-
         for (i = 0; i < num_textures; i++) {
             if (g_textures[i].texture == texture) {
                 assert(g_textures[i].references > 0);
@@ -205,25 +204,22 @@ void cache_release_texture(texture_t *texture) {
 /* skybox related functions */
 
 typedef struct {
-    const char *skybox_name;
+    char *skybox_name;
+    int blur_level;
     cubemap_t *skybox;
     int references;
 } cached_skybox_t;
 
-static cached_skybox_t g_skyboxes[] = {
-    {"spruit", NULL, 0},
-    {"venice", NULL, 0},
-    {"workshop", NULL, 0},
-};
+static cached_skybox_t *g_skyboxes = NULL;
 
-static cubemap_t *load_skybox(const char *skybox_name) {
+static cubemap_t *load_skybox(const char *skybox_name, int blur_level) {
     const char *faces[6] = {"px", "nx", "py", "ny", "pz", "nz"};
     char paths[6][PATH_SIZE];
     cubemap_t *skybox;
     int i;
 
     for (i = 0; i < 6; i++) {
-        sprintf(paths[i], "%s/m0_%s.hdr", skybox_name, faces[i]);
+        sprintf(paths[i], "%s/m%d_%s.hdr", skybox_name, blur_level, faces[i]);
     }
     skybox = cubemap_from_files(paths[0], paths[1], paths[2],
                                 paths[3], paths[4], paths[5]);
@@ -236,25 +232,35 @@ static void free_skybox(cubemap_t *skybox) {
     cubemap_release(skybox);
 }
 
-cubemap_t *cache_acquire_skybox(const char *skybox_name) {
+cubemap_t *cache_acquire_skybox(const char *skybox_name, int blur_level) {
     if (skybox_name != NULL) {
-        int num_skyboxes = ARRAY_SIZE(g_skyboxes);
+        cached_skybox_t cached_skybox;
+        int num_skyboxes = darray_size(g_skyboxes);
         int i;
+
         for (i = 0; i < num_skyboxes; i++) {
             if (strcmp(g_skyboxes[i].skybox_name, skybox_name) == 0) {
-                if (g_skyboxes[i].references > 0) {
-                    g_skyboxes[i].references += 1;
-                } else {
-                    assert(g_skyboxes[i].skybox == NULL);
-                    assert(g_skyboxes[i].references == 0);
-                    g_skyboxes[i].skybox = load_skybox(skybox_name);
-                    g_skyboxes[i].references = 1;
+                if (g_skyboxes[i].blur_level == blur_level) {
+                    if (g_skyboxes[i].references > 0) {
+                        g_skyboxes[i].references += 1;
+                    } else {
+                        assert(g_skyboxes[i].skybox == NULL);
+                        assert(g_skyboxes[i].references == 0);
+                        g_skyboxes[i].skybox = load_skybox(skybox_name,
+                                                           blur_level);
+                        g_skyboxes[i].references = 1;
+                    }
+                    return g_skyboxes[i].skybox;
                 }
-                return g_skyboxes[i].skybox;
             }
         }
-        assert(0);
-        return NULL;
+
+        cached_skybox.skybox_name = duplicate_string(skybox_name);
+        cached_skybox.blur_level = blur_level;
+        cached_skybox.skybox = load_skybox(skybox_name, blur_level);
+        cached_skybox.references = 1;
+        darray_push(g_skyboxes, cached_skybox);
+        return cached_skybox.skybox;
     } else {
         return NULL;
     }
@@ -262,7 +268,7 @@ cubemap_t *cache_acquire_skybox(const char *skybox_name) {
 
 void cache_release_skybox(cubemap_t *skybox) {
     if (skybox != NULL) {
-        int num_skyboxes = ARRAY_SIZE(g_skyboxes);
+        int num_skyboxes = darray_size(g_skyboxes);
         int i;
         for (i = 0; i < num_skyboxes; i++) {
             if (g_skyboxes[i].skybox == skybox) {
