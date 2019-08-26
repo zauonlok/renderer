@@ -113,7 +113,7 @@ void scene_draw(scene_t *scene, framebuffer_t *framebuffer,
     sort_models(models, framedata->camera_view_matrix);
     framebuffer_clear_color(framebuffer, scene->background);
     framebuffer_clear_depth(framebuffer, 1);
-    if (skybox == NULL) {
+    if (skybox == NULL || framedata->layer_view >= 0) {
         for (i = 0; i < num_models; i++) {
             model_t *model = models[i];
             model->draw(model, framebuffer, 0);
