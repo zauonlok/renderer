@@ -283,7 +283,7 @@ void cache_release_skybox(cubemap_t *skybox) {
 
 typedef struct {
     const char *env_name;
-    int mip_level;
+    int mip_levels;
     ibldata_t *ibldata;
     int references;
 } cached_ibldata_t;
@@ -294,14 +294,14 @@ static cached_ibldata_t g_ibldata[] = {
     {"workshop", 10, NULL, 0},
 };
 
-static ibldata_t *load_ibldata(const char *env_name, int mip_level) {
+static ibldata_t *load_ibldata(const char *env_name, int mip_levels) {
     const char *faces[6] = {"px", "nx", "py", "ny", "pz", "nz"};
     char paths[6][PATH_SIZE];
     ibldata_t *ibldata;
     int i, j;
 
     ibldata = (ibldata_t*)malloc(sizeof(ibldata_t));
-    ibldata->mip_level = mip_level;
+    ibldata->mip_levels = mip_levels;
 
     /* diffuse environment map */
     for (j = 0; j < 6; j++) {
@@ -311,7 +311,7 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_level) {
                                               paths[3], paths[4], paths[5]);
 
     /* specular environment maps */
-    for (i = 0; i < mip_level; i++) {
+    for (i = 0; i < mip_levels; i++) {
         for (j = 0; j < 6; j++) {
             sprintf(paths[j], "%s/m%d_%s.hdr", env_name, i, faces[j]);
         }
@@ -329,7 +329,7 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_level) {
 static void free_ibldata(ibldata_t *ibldata) {
     int i;
     cubemap_release(ibldata->diffuse_map);
-    for (i = 0; i < ibldata->mip_level; i++) {
+    for (i = 0; i < ibldata->mip_levels; i++) {
         cubemap_release(ibldata->specular_maps[i]);
     }
     cache_release_texture(ibldata->brdf_lut);
@@ -345,10 +345,10 @@ ibldata_t *cache_acquire_ibldata(const char *env_name) {
                 if (g_ibldata[i].references > 0) {
                     g_ibldata[i].references += 1;
                 } else {
-                    int mip_level = g_ibldata[i].mip_level;
+                    int mip_levels = g_ibldata[i].mip_levels;
                     assert(g_ibldata[i].ibldata == NULL);
                     assert(g_ibldata[i].references == 0);
-                    g_ibldata[i].ibldata = load_ibldata(env_name, mip_level);
+                    g_ibldata[i].ibldata = load_ibldata(env_name, mip_levels);
                     g_ibldata[i].references = 1;
                 }
                 return g_ibldata[i].ibldata;

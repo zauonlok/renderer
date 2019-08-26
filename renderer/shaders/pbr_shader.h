@@ -11,7 +11,7 @@ typedef enum {
 } workflow_t;
 
 typedef struct ibldata {
-    int mip_level;
+    int mip_levels;
     cubemap_t *diffuse_map;
     cubemap_t *specular_maps[15];
     texture_t *brdf_lut;

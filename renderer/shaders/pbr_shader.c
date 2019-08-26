@@ -299,8 +299,8 @@ static vec3_t get_ibl_shade(material_t material, ibldata_t *ibldata,
     vec3_t specular_color = vec3_new(specular_r, specular_g, specular_b);
 
     vec3_t incident_dir = get_incident_dir(normal_dir, view_dir);
-    int specular_lod = (int)(material.roughness * (ibldata->mip_level - 1));
-    cubemap_t *specular_map = ibldata->specular_maps[specular_lod];
+    double specular_lod = material.roughness * (ibldata->mip_levels - 1);
+    cubemap_t *specular_map = ibldata->specular_maps[(int)(specular_lod + 0.5)];
     vec4_t specular_sample = cubemap_clamp_sample(specular_map, incident_dir);
     vec3_t specular_light = vec3_from_vec4(specular_sample);
     vec3_t specular_shade = vec3_modulate(specular_light, specular_color);
