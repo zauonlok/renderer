@@ -19,6 +19,7 @@
 | lighthouse | ![lighthouse](lighthouse/thumbnail.png) | No       | No  |
 | mccree     | ![mccree](mccree/thumbnail.png)         | No       | No  |
 | nier2b     | ![nier2b](nier2b/thumbnail.png)         | No       | No  |
+| orb        | ![orb](orb/thumbnail.png)               | No       | Yes |
 | ornitier   | ![ornitier](ornitier/thumbnail.png)     | No       | Yes |
 | phoenix    | ![phoenix](phoenix/thumbnail.png)       | Yes      | No  |
 | ponycar    | ![ponycar](ponycar/thumbnail.png)       | No       | Yes |

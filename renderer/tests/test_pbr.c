@@ -13,6 +13,7 @@ static creator_t g_creators[] = {
     {"drone", pbr_drone_scene},
     {"helmet", pbr_helmet_scene},
     {"junkrat", pbr_junkrat_scene},
+    {"orb", pbr_orb_scene},
     {"ornitier", pbr_ornitier_scene},
     {"ponycar", pbr_ponycar_scene},
     {"sphere", pbr_sphere_scene},

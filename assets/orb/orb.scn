@@ -1,0 +1,83 @@
+type: pbrm
+
+lighting:
+    background: 0.15 0.15 0.15
+    environment: venice
+    skybox: off
+    shadow: off
+    ambient: 1.0
+    punctual: 1.0
+
+materials 3:
+    material 0:
+        basecolor_factor: 0.026 0.026 0.026 1
+        metalness_factor: 0
+        roughness_factor: 0.5
+        basecolor_map: null
+        metalness_map: null
+        roughness_map: null
+        normal_map: null
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
+        alpha_cutoff: 0
+    material 1:
+        basecolor_factor: 0.664 0.629 0.579 1
+        metalness_factor: 1
+        roughness_factor: 0.3
+        basecolor_map: null
+        metalness_map: null
+        roughness_map: null
+        normal_map: null
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
+        alpha_cutoff: 0
+    material 2:
+        basecolor_factor: 1.000 0.699 0.290 1
+        metalness_factor: 1
+        roughness_factor: 0.1
+        basecolor_map: null
+        metalness_map: null
+        roughness_map: null
+        normal_map: null
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
+        alpha_cutoff: 0
+
+transforms 1:
+    transform 0:
+        1  0  0  0
+        0  1  0  0
+        0  0  1  0
+        0  0  0  1
+
+models 4:
+    model 0:
+        mesh: orb/base.obj
+        skeleton: null
+        attached: -1
+        material: 0
+        transform: 0
+    model 1:
+        mesh: orb/outer.obj
+        skeleton: null
+        attached: -1
+        material: 1
+        transform: 0
+    model 2:
+        mesh: orb/equation.obj
+        skeleton: null
+        attached: -1
+        material: 1
+        transform: 0
+    model 3:
+        mesh: orb/inner.obj
+        skeleton: null
+        attached: -1
+        material: 2
+        transform: 0
