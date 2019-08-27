@@ -33,6 +33,8 @@ void double_print(const char *name, double d);
 
 /* vec2 related functions */
 vec2_t vec2_new(float x, float y);
+vec2_t vec2_min(vec2_t a, vec2_t b);
+vec2_t vec2_max(vec2_t a, vec2_t b);
 vec2_t vec2_add(vec2_t a, vec2_t b);
 vec2_t vec2_sub(vec2_t a, vec2_t b);
 vec2_t vec2_mul(vec2_t v, float factor);

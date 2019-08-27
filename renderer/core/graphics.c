@@ -327,24 +327,19 @@ static vec3_t viewport_transform(int width_, int height_, vec3_t ndc_coord) {
     return vec3_new(x, y, z);
 }
 
-typedef struct {vec2_t min; vec2_t max;} bbox_t;
+typedef struct {int min_x, min_y, max_x, max_y;} bbox_t;
 
 static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
     vec2_t a = abc[0];
     vec2_t b = abc[1];
     vec2_t c = abc[2];
+    vec2_t min = vec2_min(vec2_min(a, b), c);
+    vec2_t max = vec2_max(vec2_max(a, b), c);
     bbox_t bbox;
-
-    bbox.min.x = float_min(a.x, float_min(b.x, c.x));
-    bbox.min.y = float_min(a.y, float_min(b.y, c.y));
-    bbox.max.x = float_max(a.x, float_max(b.x, c.x));
-    bbox.max.y = float_max(a.y, float_max(b.y, c.y));
-
-    bbox.min.x = float_max((float)ceil(bbox.min.x), 0);
-    bbox.min.y = float_max((float)ceil(bbox.min.y), 0);
-    bbox.max.x = float_min((float)floor(bbox.max.x), (float)(width - 1));
-    bbox.max.y = float_min((float)floor(bbox.max.y), (float)(height - 1));
-
+    bbox.min_x = int_max((int)ceil(min.x), 0);
+    bbox.min_y = int_max((int)ceil(min.y), 0);
+    bbox.max_x = int_min((int)floor(max.x), width - 1);
+    bbox.max_y = int_min((int)floor(max.y), height - 1);
     return bbox;
 }
 
@@ -489,8 +484,8 @@ static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
 
     /* perform rasterization */
     bbox = find_bounding_box(screen_coords, width, height);
-    for (x = (int)bbox.min.x; x <= bbox.max.x; x++) {
-        for (y = (int)bbox.min.y; y <= bbox.max.y; y++) {
+    for (x = bbox.min_x; x <= bbox.max_x; x++) {
+        for (y = bbox.min_y; y <= bbox.max_y; y++) {
             vec2_t point = vec2_new((float)x, (float)y);
             vec3_t weights = calculate_weights(screen_coords, point);
             if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
