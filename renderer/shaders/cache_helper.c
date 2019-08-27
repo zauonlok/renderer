@@ -219,7 +219,16 @@ static cubemap_t *load_skybox(const char *skybox_name, int blur_level) {
     int i;
 
     for (i = 0; i < 6; i++) {
-        sprintf(paths[i], "%s/m%d_%s.hdr", skybox_name, blur_level, faces[i]);
+        const char *format;
+        if (blur_level == -1) {
+            format = "%s/i_%s.hdr";
+        } else if (blur_level == 1) {
+            format = "%s/m1_%s.hdr";
+        } else {
+            assert(blur_level == 0);
+            format = "%s/m0_%s.hdr";
+        }
+        sprintf(paths[i], format, skybox_name, faces[i]);
     }
     skybox = cubemap_from_files(paths[0], paths[1], paths[2],
                                 paths[3], paths[4], paths[5]);

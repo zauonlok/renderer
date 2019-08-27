@@ -359,12 +359,13 @@ static scene_t *create_scene(scene_light_t light, model_t **models) {
     } else {
         const char *skybox_name = wrap_path(light.environment);
         int blur_level;
-        if (equals_to(light.skybox, "on")) {
-            blur_level = 0;
+        if (equals_to(light.skybox, "ambient")) {
+            blur_level = -1;
+        } else if (equals_to(light.skybox, "blurred")) {
+            blur_level = 1;
         } else {
-            int items;
-            items = sscanf(light.skybox, "blur%d", &blur_level);
-            assert(items == 1 && blur_level >= 0 && blur_level < 5);
+            assert(equals_to(light.skybox, "on"));
+            blur_level = 0;
         }
         assert(skybox_name != NULL);
         skybox = skybox_create_model(skybox_name, blur_level);
