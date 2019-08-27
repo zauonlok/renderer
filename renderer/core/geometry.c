@@ -4,6 +4,24 @@
 #include "geometry.h"
 #include "macro.h"
 
+/* int related functions */
+
+int int_min(int a, int b) {
+    return a < b ? a : b;
+}
+
+int int_max(int a, int b) {
+    return a > b ? a : b;
+}
+
+int int_lerp(int a, int b, float t) {
+    return (int)(a + (b - a) * t);
+}
+
+void int_print(const char *name, int i) {
+    printf("int %s = %d\n", name, i);
+}
+
 /* float related functions */
 
 float float_min(float a, float b) {
@@ -28,6 +46,24 @@ float float_saturate(float f) {
 
 void float_print(const char *name, float f) {
     printf("float %s = %f\n", name, f);
+}
+
+/* double related functions */
+
+double double_min(double a, double b) {
+    return a < b ? a : b;
+}
+
+double double_max(double a, double b) {
+    return a > b ? a : b;
+}
+
+double double_lerp(double a, double b, double t) {
+    return a + (b - a) * t;
+}
+
+void double_print(const char *name, double d) {
+    printf("double %s = %f\n", name, d);
 }
 
 /* vec2 related functions */
@@ -177,6 +213,10 @@ vec4_t vec4_from_vec3(vec3_t v, float w) {
     return vec4_new(v.x, v.y, v.z, w);
 }
 
+vec4_t vec4_from_dvec4(dvec4_t v) {
+    return vec4_new((float)v.x, (float)v.y, (float)v.z, (float)v.w);
+}
+
 vec4_t vec4_add(vec4_t a, vec4_t b) {
     return vec4_new(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
 }
@@ -249,6 +289,50 @@ vec4_t vec4_linear2srgb(vec4_t color) {
 
 void vec4_print(const char *name, vec4_t v) {
     printf("vec4 %s =\n", name);
+    printf("    %12f    %12f    %12f    %12f\n", v.x, v.y, v.z, v.w);
+}
+
+/* ivec4 related functions */
+
+ivec4_t ivec4_new(int x, int y, int z, int w) {
+    ivec4_t v;
+    v.x = x;
+    v.y = y;
+    v.z = z;
+    v.w = w;
+    return v;
+}
+
+void ivec4_print(const char *name, ivec4_t v) {
+    printf("ivec4 %s =\n", name);
+    printf("    %12d    %12d    %12d    %12d\n", v.x, v.y, v.z, v.w);
+}
+
+/* dvec4 related functions */
+
+dvec4_t dvec4_new(double x, double y, double z, double w) {
+    dvec4_t v;
+    v.x = x;
+    v.y = y;
+    v.z = z;
+    v.w = w;
+    return v;
+}
+
+dvec4_t dvec4_from_vec4(vec4_t v) {
+    return dvec4_new(v.x, v.y, v.z, v.w);
+}
+
+dvec4_t dvec4_lerp(dvec4_t a, dvec4_t b, double t) {
+    double x = double_lerp(a.x, b.x, t);
+    double y = double_lerp(a.y, b.y, t);
+    double z = double_lerp(a.z, b.z, t);
+    double w = double_lerp(a.w, b.w, t);
+    return dvec4_new(x, y, z, w);
+}
+
+void dvec4_print(const char *name, dvec4_t v) {
+    printf("dvec4 %s =\n", name);
     printf("    %12f    %12f    %12f    %12f\n", v.x, v.y, v.z, v.w);
 }
 
