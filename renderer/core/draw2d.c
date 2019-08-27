@@ -11,7 +11,7 @@ static void swap_integers(int *a, int *b) {
     *b = t;
 }
 
-static int lerp_integers(int a, int b, double t) {
+static int lerp_integers(int a, int b, float t) {
     return (int)(a + (b - a) * t);
 }
 
@@ -27,8 +27,8 @@ static void draw_point(framebuffer_t *framebuffer, vec4_t color,
  */
 static void draw_line(framebuffer_t *framebuffer, vec4_t color,
                       int row0, int row1, int col0, int col1) {
-    double row_distance = abs(row0 - row1);
-    double col_distance = abs(col0 - col1);
+    int row_distance = abs(row0 - row1);
+    int col_distance = abs(col0 - col1);
     if (row_distance == 0 && col_distance == 0) {
         draw_point(framebuffer, color, row0, col0);
     } else if (row_distance > col_distance) {
@@ -38,7 +38,7 @@ static void draw_line(framebuffer_t *framebuffer, vec4_t color,
             swap_integers(&col0, &col1);
         }
         for (row = row0; row <= row1; row++) {
-            double t = (row - row0) / row_distance;
+            float t = (float)(row - row0) / (float)row_distance;
             int col = lerp_integers(col0, col1, t);
             draw_point(framebuffer, color, row, col);
         }
@@ -49,7 +49,7 @@ static void draw_line(framebuffer_t *framebuffer, vec4_t color,
             swap_integers(&row0, &row1);
         }
         for (col = col0; col <= col1; col++) {
-            double t = (col - col0) / col_distance;
+            float t = (float)(col - col0) / (float)col_distance;
             int row = lerp_integers(row0, row1, t);
             draw_point(framebuffer, color, row, col);
         }
