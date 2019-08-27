@@ -1,5 +1,8 @@
 # Software Renderer
 
+![Model View](assets/helmet/screenshot2.png)
+![Layer View](assets/helmet/screenshot3.png)
+
 This is a shader-based software renderer written from scratch. It is written
 in C89 with minimal dependencies, available for Windows, macOS, and Linux.
 
@@ -110,7 +113,7 @@ Viewer [test_name [scene_name]]
 | [<img src="assets/crab/screenshot.gif" width="600">](assets/crab/README.md)             | `Viewer pbr crab`         |
 | [<img src="assets/dieselpunk/screenshot.png" width="600">](assets/dieselpunk/README.md) | `Viewer pbr dieselpunk`   |
 | [<img src="assets/drone/screenshot.gif" width="600">](assets/drone/README.md)           | `Viewer pbr drone`        |
-| [<img src="assets/helmet/screenshot.png" width="600">](assets/helmet/README.md)         | `Viewer pbr helmet`       |
+| [<img src="assets/helmet/screenshot1.png" width="600">](assets/helmet/README.md)         | `Viewer pbr helmet`       |
 | [<img src="assets/junkrat/screenshot.gif" width="600">](assets/junkrat/README.md)       | `Viewer pbr junkrat`      |
 | [<img src="assets/orb/screenshot.png" width="600">](assets/orb/README.md)               | `Viewer pbr orb`          |
 | [<img src="assets/ornitier/screenshot.png" width="600">](assets/ornitier/README.md)     | `Viewer pbr ornitier`     |
