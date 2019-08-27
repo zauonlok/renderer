@@ -14,10 +14,10 @@ static mat4_t get_model_matrix(pbr_attribs_t *attribs,
         mat4_t joint_matrices[4];
         mat4_t skin_matrix;
 
-        joint_matrices[0] = uniforms->joint_matrices[(int)attribs->joint.x];
-        joint_matrices[1] = uniforms->joint_matrices[(int)attribs->joint.y];
-        joint_matrices[2] = uniforms->joint_matrices[(int)attribs->joint.z];
-        joint_matrices[3] = uniforms->joint_matrices[(int)attribs->joint.w];
+        joint_matrices[0] = uniforms->joint_matrices[attribs->joint.x];
+        joint_matrices[1] = uniforms->joint_matrices[attribs->joint.y];
+        joint_matrices[2] = uniforms->joint_matrices[attribs->joint.z];
+        joint_matrices[3] = uniforms->joint_matrices[attribs->joint.w];
 
         skin_matrix = mat4_combine(joint_matrices, attribs->weight);
         return mat4_mul_mat4(uniforms->model_matrix, skin_matrix);
@@ -32,10 +32,10 @@ static mat3_t get_normal_matrix(pbr_attribs_t *attribs,
         mat3_t joint_n_matrices[4];
         mat3_t skin_n_matrix;
 
-        joint_n_matrices[0] = uniforms->joint_n_matrices[(int)attribs->joint.x];
-        joint_n_matrices[1] = uniforms->joint_n_matrices[(int)attribs->joint.y];
-        joint_n_matrices[2] = uniforms->joint_n_matrices[(int)attribs->joint.z];
-        joint_n_matrices[3] = uniforms->joint_n_matrices[(int)attribs->joint.w];
+        joint_n_matrices[0] = uniforms->joint_n_matrices[attribs->joint.x];
+        joint_n_matrices[1] = uniforms->joint_n_matrices[attribs->joint.y];
+        joint_n_matrices[2] = uniforms->joint_n_matrices[attribs->joint.z];
+        joint_n_matrices[3] = uniforms->joint_n_matrices[attribs->joint.w];
 
         skin_n_matrix = mat3_combine(joint_n_matrices, attribs->weight);
         return mat3_mul_mat3(uniforms->normal_matrix, skin_n_matrix);

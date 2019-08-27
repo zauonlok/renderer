@@ -9,7 +9,7 @@ typedef struct {
     vec3_t position;
     vec2_t texcoord;
     vec3_t normal;
-    vec4_t joint;
+    ivec4_t joint;
     vec4_t weight;
 } blinn_attribs_t;
 

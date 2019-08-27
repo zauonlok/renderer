@@ -22,7 +22,7 @@ typedef struct {
     vec2_t texcoord;
     vec3_t normal;
     vec4_t tangent;
-    vec4_t joint;
+    ivec4_t joint;
     vec4_t weight;
 } pbr_attribs_t;
 
