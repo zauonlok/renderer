@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OPTS="-o ../Viewer -std=c89 -pedantic -Wall -Wextra -O3 -flto"
+OPTS="-o ../Viewer -std=c89 -pedantic -Wall -Wextra -Ofast -flto"
 SRCS="main.c platforms/macos.m core/*.c scenes/*.c shaders/*.c tests/*.c"
 LIBS="-framework Cocoa"
 

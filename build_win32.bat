@@ -27,7 +27,7 @@ if defined VS150COMNTOOLS (
     goto :pause
 )
 
-set OPTS=/Fe../Viewer /nologo /D_CRT_SECURE_NO_WARNINGS /W4 /O2 /GL
+set OPTS=/Fe../Viewer /nologo /D_CRT_SECURE_NO_WARNINGS /W4 /O2 /GL /fp:fast
 set SRCS=main.c platforms/win32.c core/*.c scenes/*.c shaders/*.c tests/*.c
 set LIBS=gdi32.lib user32.lib
 
