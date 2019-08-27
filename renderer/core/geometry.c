@@ -18,6 +18,12 @@ int int_lerp(int a, int b, float t) {
     return (int)(a + (b - a) * t);
 }
 
+void int_swap(int *a, int *b) {
+    int t = *a;
+    *a = *b;
+    *b = t;
+}
+
 void int_print(const char *name, int i) {
     printf("int %s = %d\n", name, i);
 }

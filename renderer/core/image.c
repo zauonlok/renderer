@@ -213,10 +213,6 @@ void image_flip_v(image_t *image) {
     }
 }
 
-static int min_integer(int a, int b) {
-    return a < b ? a : b;
-}
-
 image_t *image_resize(image_t *source, int width, int height) {
     int channels = source->channels;
     image_t *target;
@@ -233,8 +229,8 @@ image_t *image_resize(image_t *source, int width, int height) {
             float mapped_c = (float)dst_c * scale_c;
             int src_r0 = (int)mapped_r;
             int src_c0 = (int)mapped_c;
-            int src_r1 = min_integer(src_r0 + 1, source->height - 1);
-            int src_c1 = min_integer(src_c0 + 1, source->width - 1);
+            int src_r1 = int_min(src_r0 + 1, source->height - 1);
+            int src_c1 = int_min(src_c0 + 1, source->width - 1);
             float delta_r = mapped_r - (float)src_r0;
             float delta_c = mapped_c - (float)src_c0;
 

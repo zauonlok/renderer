@@ -14,6 +14,7 @@ typedef struct {float m[4][4];} mat4_t;
 int int_min(int a, int b);
 int int_max(int a, int b);
 int int_lerp(int a, int b, float t);
+void int_swap(int *a, int *b);
 void int_print(const char *name, int i);
 
 /* float related functions */

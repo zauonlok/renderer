@@ -5,16 +5,6 @@
 #include "graphics.h"
 #include "texture.h"
 
-static void swap_integers(int *a, int *b) {
-    int t = *a;
-    *a = *b;
-    *b = t;
-}
-
-static int lerp_integers(int a, int b, float t) {
-    return (int)(a + (b - a) * t);
-}
-
 static void draw_point(framebuffer_t *framebuffer, vec4_t color,
                        int row, int col) {
     int index = row * framebuffer->width + col;
@@ -34,23 +24,23 @@ static void draw_line(framebuffer_t *framebuffer, vec4_t color,
     } else if (row_distance > col_distance) {
         int row;
         if (row0 > row1) {
-            swap_integers(&row0, &row1);
-            swap_integers(&col0, &col1);
+            int_swap(&row0, &row1);
+            int_swap(&col0, &col1);
         }
         for (row = row0; row <= row1; row++) {
             float t = (float)(row - row0) / (float)row_distance;
-            int col = lerp_integers(col0, col1, t);
+            int col = int_lerp(col0, col1, t);
             draw_point(framebuffer, color, row, col);
         }
     } else {
         int col;
         if (col0 > col1) {
-            swap_integers(&col0, &col1);
-            swap_integers(&row0, &row1);
+            int_swap(&col0, &col1);
+            int_swap(&row0, &row1);
         }
         for (col = col0; col <= col1; col++) {
             float t = (float)(col - col0) / (float)col_distance;
-            int row = lerp_integers(row0, row1, t);
+            int row = int_lerp(row0, row1, t);
             draw_point(framebuffer, color, row, col);
         }
     }

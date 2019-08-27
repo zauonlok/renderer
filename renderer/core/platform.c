@@ -1,10 +1,7 @@
 #include <assert.h>
+#include "geometry.h"
 #include "graphics.h"
 #include "image.h"
-
-static int min_integer(int a, int b) {
-    return a < b ? a : b;
-}
 
 static unsigned char *get_pixel_ptr(image_t *image, int row, int col) {
     int index = row * image->width * image->channels + col * image->channels;
@@ -12,8 +9,8 @@ static unsigned char *get_pixel_ptr(image_t *image, int row, int col) {
 }
 
 void private_blit_image_bgr(image_t *src, image_t *dst) {
-    int width = min_integer(src->width, dst->width);
-    int height = min_integer(src->height, dst->height);
+    int width = int_min(src->width, dst->width);
+    int height = int_min(src->height, dst->height);
     int r, c;
 
     assert(width > 0 && height > 0);
@@ -38,8 +35,8 @@ void private_blit_image_bgr(image_t *src, image_t *dst) {
 }
 
 void private_blit_image_rgb(image_t *src, image_t *dst) {
-    int width = min_integer(src->width, dst->width);
-    int height = min_integer(src->height, dst->height);
+    int width = int_min(src->width, dst->width);
+    int height = int_min(src->height, dst->height);
     int r, c;
 
     assert(width > 0 && height > 0);
@@ -73,8 +70,8 @@ static vec4_t get_buffer_val(framebuffer_t *buffer, int row, int col) {
 }
 
 void private_blit_buffer_bgr(framebuffer_t *src, image_t *dst) {
-    int width = min_integer(src->width, dst->width);
-    int height = min_integer(src->height, dst->height);
+    int width = int_min(src->width, dst->width);
+    int height = int_min(src->height, dst->height);
     int r, c;
 
     assert(width > 0 && height > 0);
@@ -93,8 +90,8 @@ void private_blit_buffer_bgr(framebuffer_t *src, image_t *dst) {
 }
 
 void private_blit_buffer_rgb(framebuffer_t *src, image_t *dst) {
-    int width = min_integer(src->width, dst->width);
-    int height = min_integer(src->height, dst->height);
+    int width = int_min(src->width, dst->width);
+    int height = int_min(src->height, dst->height);
     int r, c;
 
     assert(width > 0 && height > 0);
