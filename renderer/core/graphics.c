@@ -67,8 +67,8 @@ struct program {
     void *shader_varyings;
     void *shader_uniforms;
     /* for clipping */
-    vec4_t in_coords[MAX_VARYINGS];
-    vec4_t out_coords[MAX_VARYINGS];
+    dvec4_t in_coords[MAX_VARYINGS];
+    dvec4_t out_coords[MAX_VARYINGS];
     void *in_varyings[MAX_VARYINGS];
     void *out_varyings[MAX_VARYINGS];
 };
@@ -152,7 +152,7 @@ typedef enum {
     NEGATIVE_Z
 } plane_t;
 
-static int is_inside_plane(vec4_t coord, plane_t plane) {
+static int is_inside_plane(dvec4_t coord, plane_t plane) {
     switch (plane) {
         case POSITIVE_W:
             return coord.w >= EPSILON;
@@ -174,7 +174,7 @@ static int is_inside_plane(vec4_t coord, plane_t plane) {
     }
 }
 
-static float get_intersect_ratio(vec4_t prev, vec4_t curr, plane_t plane) {
+static double get_intersect_ratio(dvec4_t prev, dvec4_t curr, plane_t plane) {
     switch (plane) {
         case POSITIVE_W:
             return (prev.w - EPSILON) / (prev.w - curr.w);
@@ -198,8 +198,8 @@ static float get_intersect_ratio(vec4_t prev, vec4_t curr, plane_t plane) {
 
 static int clip_against_plane(
         plane_t plane, int in_num_vertices, int varying_num_floats,
-        vec4_t in_coords[MAX_VARYINGS], void *in_varyings[MAX_VARYINGS],
-        vec4_t out_coords[MAX_VARYINGS], void *out_varyings[MAX_VARYINGS]) {
+        dvec4_t in_coords[MAX_VARYINGS], void *in_varyings[MAX_VARYINGS],
+        dvec4_t out_coords[MAX_VARYINGS], void *out_varyings[MAX_VARYINGS]) {
     int out_num_vertices = 0;
     int i, j;
 
@@ -207,33 +207,33 @@ static int clip_against_plane(
     for (i = 0; i < in_num_vertices; i++) {
         int prev_index = (i - 1 + in_num_vertices) % in_num_vertices;
         int curr_index = i;
-        vec4_t prev_coord = in_coords[prev_index];
-        vec4_t curr_coord = in_coords[curr_index];
+        dvec4_t prev_coord = in_coords[prev_index];
+        dvec4_t curr_coord = in_coords[curr_index];
         float *prev_varyings = (float*)in_varyings[prev_index];
         float *curr_varyings = (float*)in_varyings[curr_index];
         int prev_inside = is_inside_plane(prev_coord, plane);
         int curr_inside = is_inside_plane(curr_coord, plane);
 
         if (prev_inside != curr_inside) {
-            vec4_t *dest_coord = &out_coords[out_num_vertices];
+            dvec4_t *dest_coord = &out_coords[out_num_vertices];
             float *dest_varyings = (float*)out_varyings[out_num_vertices];
-            float ratio = get_intersect_ratio(prev_coord, curr_coord, plane);
+            double ratio = get_intersect_ratio(prev_coord, curr_coord, plane);
 
-            *dest_coord = vec4_lerp(prev_coord, curr_coord, ratio);
+            *dest_coord = dvec4_lerp(prev_coord, curr_coord, ratio);
             /*
              * since this computation is performed in clip space before
              * division by w, clipped varying values are perspective correct
              */
             for (j = 0; j < varying_num_floats; j++) {
-                float prev_value = prev_varyings[j];
-                float curr_value = curr_varyings[j];
-                dest_varyings[j] = float_lerp(prev_value, curr_value, ratio);
+                dest_varyings[j] = float_lerp(prev_varyings[j],
+                                              curr_varyings[j],
+                                              (float)ratio);
             }
             out_num_vertices += 1;
         }
 
         if (curr_inside) {
-            vec4_t *dest_coord = &out_coords[out_num_vertices];
+            dvec4_t *dest_coord = &out_coords[out_num_vertices];
             float *dest_varyings = (float*)out_varyings[out_num_vertices];
             int sizeof_varyings = varying_num_floats * sizeof(float);
 
@@ -266,14 +266,14 @@ static int clip_against_plane(
         }                                                                   \
     } while (0)
 
-static int is_vertex_visible(vec4_t v) {
+static int is_vertex_visible(dvec4_t v) {
     return fabs(v.x) <= v.w && fabs(v.y) <= v.w && fabs(v.z) <= v.w;
 }
 
 static int clip_triangle(
         int sizeof_varyings,
-        vec4_t in_coords[MAX_VARYINGS], void *in_varyings[MAX_VARYINGS],
-        vec4_t out_coords[MAX_VARYINGS], void *out_varyings[MAX_VARYINGS]) {
+        dvec4_t in_coords[MAX_VARYINGS], void *in_varyings[MAX_VARYINGS],
+        dvec4_t out_coords[MAX_VARYINGS], void *out_varyings[MAX_VARYINGS]) {
     int v0_visible = is_vertex_visible(in_coords[0]);
     int v1_visible = is_vertex_visible(in_coords[1]);
     int v2_visible = is_vertex_visible(in_coords[2]);
@@ -516,10 +516,10 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
 
     /* execute vertex shader */
     for (i = 0; i < 3; i++) {
-        vertex_shader_t *vertex_shader = program->vertex_shader;
-        program->in_coords[i] = vertex_shader(program->shader_attribs[i],
-                                              program->in_varyings[i],
-                                              program->shader_uniforms);
+        vec4_t clip_coord = program->vertex_shader(program->shader_attribs[i],
+                                                   program->in_varyings[i],
+                                                   program->shader_uniforms);
+        program->in_coords[i] = dvec4_from_vec4(clip_coord);
     }
 
     /* triangle clipping */
@@ -536,9 +536,9 @@ void graphics_draw_triangle(framebuffer_t *framebuffer, program_t *program) {
         void *varyings[3];
         int is_culled;
 
-        clip_coords[0] = program->out_coords[index0];
-        clip_coords[1] = program->out_coords[index1];
-        clip_coords[2] = program->out_coords[index2];
+        clip_coords[0] = vec4_from_dvec4(program->out_coords[index0]);
+        clip_coords[1] = vec4_from_dvec4(program->out_coords[index1]);
+        clip_coords[2] = vec4_from_dvec4(program->out_coords[index2]);
         varyings[0] = program->out_varyings[index0];
         varyings[1] = program->out_varyings[index1];
         varyings[2] = program->out_varyings[index2];
