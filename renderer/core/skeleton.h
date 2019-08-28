@@ -1,7 +1,7 @@
 #ifndef SKELETON_H
 #define SKELETON_H
 
-#include "geometry.h"
+#include "maths.h"
 
 typedef struct skeleton skeleton_t;
 

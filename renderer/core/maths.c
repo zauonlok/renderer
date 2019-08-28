@@ -1,8 +1,8 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
-#include "geometry.h"
 #include "macro.h"
+#include "maths.h"
 
 /* int related functions */
 

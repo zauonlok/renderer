@@ -1,7 +1,7 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include "geometry.h"
+#include "maths.h"
 
 typedef struct mesh mesh_t;
 

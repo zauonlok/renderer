@@ -1,8 +1,8 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "draw2d.h"
-#include "geometry.h"
 #include "graphics.h"
+#include "maths.h"
 #include "texture.h"
 
 static void draw_point(framebuffer_t *framebuffer, vec4_t color,

@@ -1,8 +1,8 @@
 #ifndef DRAW2D_H
 #define DRAW2D_H
 
-#include "geometry.h"
 #include "graphics.h"
+#include "maths.h"
 #include "texture.h"
 
 void draw2d_draw_point(framebuffer_t *framebuffer, vec4_t color,

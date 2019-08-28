@@ -1,7 +1,7 @@
 #include <assert.h>
-#include "geometry.h"
 #include "graphics.h"
 #include "image.h"
+#include "maths.h"
 
 static unsigned char *get_pixel_ptr(image_t *image, int row, int col) {
     int index = row * image->width * image->channels + col * image->channels;

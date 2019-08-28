@@ -1,5 +1,5 @@
-#ifndef GEOMETRY_H
-#define GEOMETRY_H
+#ifndef MATHS_H
+#define MATHS_H
 
 typedef struct {float x, y;} vec2_t;
 typedef struct {float x, y, z;} vec3_t;

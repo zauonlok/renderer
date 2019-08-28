@@ -2,8 +2,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include "camera.h"
-#include "geometry.h"
 #include "macro.h"
+#include "maths.h"
 
 /*
  * for orbital camera controls, see

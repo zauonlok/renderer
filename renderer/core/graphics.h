@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
-#include "geometry.h"
+#include "maths.h"
 
 typedef struct {
     int width, height;

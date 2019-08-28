@@ -1,7 +1,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "geometry.h"
+#include "maths.h"
 
 typedef struct camera camera_t;
 typedef struct {vec2_t orbit; vec2_t pan; float dolly;} motion_t;

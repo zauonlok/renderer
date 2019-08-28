@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "geometry.h"
 #include "image.h"
+#include "maths.h"
 
 /* image creating/releasing */
 

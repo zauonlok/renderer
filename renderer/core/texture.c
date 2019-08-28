@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "geometry.h"
 #include "graphics.h"
 #include "image.h"
 #include "macro.h"
+#include "maths.h"
 #include "texture.h"
 
 /* radiance hdr related functions */

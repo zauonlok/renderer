@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "geometry.h"
 #include "macro.h"
+#include "maths.h"
 #include "skeleton.h"
 
 /*

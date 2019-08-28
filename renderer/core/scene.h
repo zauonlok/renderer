@@ -1,8 +1,8 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "geometry.h"
 #include "graphics.h"
+#include "maths.h"
 #include "mesh.h"
 #include "skeleton.h"
 #include "texture.h"

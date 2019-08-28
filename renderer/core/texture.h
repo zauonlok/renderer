@@ -1,9 +1,9 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include "geometry.h"
 #include "graphics.h"
 #include "image.h"
+#include "maths.h"
 
 typedef struct {int width, height; vec4_t *buffer;} texture_t;
 typedef struct {texture_t *faces[6];} cubemap_t;

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "darray.h"
-#include "geometry.h"
 #include "graphics.h"
+#include "maths.h"
 #include "mesh.h"
 #include "scene.h"
 #include "skeleton.h"
