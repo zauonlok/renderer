@@ -3,7 +3,7 @@ type: pbrm
 lighting:
     background: 0.15 0.15 0.15
     environment: workshop
-    skybox: on
+    skybox: blurred
     shadow: off
     ambient: 1.0
     punctual: 1.0
