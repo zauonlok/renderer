@@ -222,7 +222,9 @@ void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata) {
         window_draw_buffer(window, framebuffer);
         num_frames += 1;
         if (curr_time - print_time >= 1) {
-            printf("fps: %d\n", num_frames);
+            int sum_millis = (int)((curr_time - print_time) * 1000);
+            int avg_millis = sum_millis / num_frames;
+            printf("fps: %3d, avg: %3d ms\n", num_frames, avg_millis);
             num_frames = 0;
             print_time = curr_time;
         }
