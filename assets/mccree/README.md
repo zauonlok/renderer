@@ -2,11 +2,15 @@
 
 ## Source
 
-[https://sketchfab.com/models/38aedc02c0b2412babdc4d0eac7c6803](https://sketchfab.com/models/38aedc02c0b2412babdc4d0eac7c6803)
+[sketchfab.com/models/38aedc02c0b2412babdc4d0eac7c6803](https://sketchfab.com/models/38aedc02c0b2412babdc4d0eac7c6803)
+
+## Author
+
+[sketchfab.com/seafoam](https://sketchfab.com/seafoam)
 
 ## License
 
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+[creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/)
 
 ## Preprocessor
 

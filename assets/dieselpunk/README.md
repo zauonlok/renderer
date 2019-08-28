@@ -2,11 +2,15 @@
 
 ## Source
 
-[https://sketchfab.com/models/0163eca36af441ff9cca6f8c1bee1fdc](https://sketchfab.com/models/0163eca36af441ff9cca6f8c1bee1fdc)
+[sketchfab.com/models/0163eca36af441ff9cca6f8c1bee1fdc](https://sketchfab.com/models/0163eca36af441ff9cca6f8c1bee1fdc)
+
+## Author
+
+[sketchfab.com/patdunal](https://sketchfab.com/patdunal)
 
 ## License
 
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+[creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/)
 
 ## Preprocessor
 

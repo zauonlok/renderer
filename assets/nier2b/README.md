@@ -2,11 +2,15 @@
 
 ## Source
 
-[https://sketchfab.com/models/cec89dce88cf4b3082c73c07ab5613e7](https://sketchfab.com/models/cec89dce88cf4b3082c73c07ab5613e7)
+[sketchfab.com/models/cec89dce88cf4b3082c73c07ab5613e7](https://sketchfab.com/models/cec89dce88cf4b3082c73c07ab5613e7)
+
+## Author
+
+[sketchfab.com/blackroses](https://sketchfab.com/blackroses)
 
 ## License
 
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+[creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/)
 
 ## Preprocessor
 

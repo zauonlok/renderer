@@ -2,11 +2,15 @@
 
 ## Source
 
-[https://sketchfab.com/models/52f2e84961b94760b7805c178890d644](https://sketchfab.com/models/52f2e84961b94760b7805c178890d644)
+[sketchfab.com/models/52f2e84961b94760b7805c178890d644](https://sketchfab.com/models/52f2e84961b94760b7805c178890d644)
+
+## Author
+
+[sketchfab.com/yellow09](https://sketchfab.com/yellow09)
 
 ## License
 
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+[creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/)
 
 ## Preprocessor
 
@@ -15,5 +19,4 @@
 ## Screenshot
 
 ![Screenshot1](screenshot1.png)
-
 ![Screenshot2](screenshot2.png)

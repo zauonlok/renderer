@@ -2,11 +2,15 @@
 
 ## Source
 
-[https://sketchfab.com/models/1a85945dd2a840f594bf6cb003176a54](https://sketchfab.com/models/1a85945dd2a840f594bf6cb003176a54)
+[sketchfab.com/models/1a85945dd2a840f594bf6cb003176a54](https://sketchfab.com/models/1a85945dd2a840f594bf6cb003176a54)
+
+## Author
+
+[sketchfab.com/cotman_sam](https://sketchfab.com/cotman_sam)
 
 ## License
 
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+[creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/)
 
 ## Preprocessor
 

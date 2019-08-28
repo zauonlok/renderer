@@ -2,11 +2,15 @@
 
 ## Source
 
-[https://github.com/lighttransport/lighttransportequation-orb](https://github.com/lighttransport/lighttransportequation-orb)
+[github.com/lighttransport/lighttransportequation-orb](https://github.com/lighttransport/lighttransportequation-orb)
+
+## Author
+
+[github.com/MirageYM](https://github.com/MirageYM)
 
 ## License
 
-[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+[creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/)
 
 ## Screenshot
 
