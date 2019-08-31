@@ -36,7 +36,7 @@ scene_t *pbr_dieselpunk_scene(void) {
 scene_t *pbr_drone_scene(void) {
     mat4_t translation = mat4_translate(0, -138.288f, -4.447f);
     mat4_t rotation = mat4_rotate_y(TO_RADIANS(180));
-    mat4_t scale = mat4_scale(0.0028f, 0.0028f, 0.0028f);
+    mat4_t scale = mat4_scale(0.004f, 0.004f, 0.004f);
     mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     return helper_load_scene("drone/drone.scn", root);
 }

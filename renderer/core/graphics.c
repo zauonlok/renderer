@@ -388,7 +388,7 @@ static float interpolate_depth(float screen_depths[3], vec3_t weights) {
 }
 
 /*
- * for perspective-correct interpolation, see
+ * for perspective correct interpolation, see
  * https://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf
  * https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
  *
