@@ -3,44 +3,42 @@
 ![Model View](assets/helmet/screenshot2.png)
 ![Layer View](assets/helmet/screenshot3.png)
 
-This is a shader-based software renderer written from scratch. It is written
-in C89 with minimal dependencies, available for Windows, macOS, and Linux.
+This is a shader-based software renderer written from scratch in C89, available
+for Windows, macOS, and Linux.
 
 ## Features
 
-* Cross-platform (Windows, macOS, and Linux)
+* Cross platform
 * Minimal dependencies
-* Shader-based
-* Blinn–Phong reflection model
-* Physically based rendering (PBR)
-* Metalness workflow
-* Specular workflow
-* Image-based lighting (IBL)
-* Tangent space normal mapping
-* Shadow mapping
-* Cubemapped skybox
-* Skeletal animation
-* Orbital camera controls
-* Back-face culling
+* Shader based
 * Homogeneous clipping
-* Perspective-correct interpolation
+* Back-face culling
+* Perspective correct interpolation
 * Depth testing
 * Alpha testing
 * Alpha blending
-* Platform abstraction layer (window, event, and timer)
-* Math library (vector, matrix, and quaternion)
-* Mesh loading (obj, gltf)
-* Image loading (tga, hdr)
+* Cubemapped skybox
+* Skeletal animation
+* Tangent space normal mapping
+* Shadow mapping
+* ACES tone mapping
+* Blinn–Phong reflection model
+* Physically based rendering (PBR)
+* Metallic-roughness workflow
+* Specular-glossiness workflow
+* Image-based lighting (IBL)
+* Orbital camera controls
+* PBR material inspector
 
 ## Download
 
-[Binaries](https://github.com/zauonlok/renderer/releases) for Windows, macOS,
-and Linux are available.
+Pre-built binaries for Windows, macOS, and Linux are available for download
+from the [Releases page](https://github.com/zauonlok/renderer/releases).
 
 ## Build
 
-To build the renderer from source, a C89 compiler and development files for
-your window system are required.
+To build the software renderer from source, a C89 compiler and development
+files for your window system are required.
 
 ### Windows
 
@@ -78,9 +76,9 @@ sudo zypper install gcc libX11-devel
 
 ### Launch
 
-If the renderer is launched without arguments, one of the available scenes
-will be chosen randomly. To display a specific scene (see below), additional
-arguments should be supplied. The command line syntax is:
+If the software renderer is launched without arguments, one of the available
+scenes will be chosen randomly. To display a specific scene (see below),
+additional arguments should be supplied. The command line syntax is:
 
 ```
 Viewer [test_name [scene_name]]
@@ -88,11 +86,17 @@ Viewer [test_name [scene_name]]
 
 ### Controls
 
-* Orbit: left click and drag
-* Pan: right click and drag
-* Zoom: scroll up or down
+* Orbit: left mouse button
+* Pan: right mouse button
+* Zoom: mouse wheel
 * Rotate lighting: <kbd>A</kbd> <kbd>D</kbd> <kbd>S</kbd> <kbd>W</kbd>
 * Reset everything: <kbd>Space</kbd>
+
+### Inspector
+
+For PBR scenes, a material inspector that is very similar to the layers view
+of [Marmoset Viewer](https://marmoset.co/viewer/) is provided. Double click
+to bring it up.
 
 ## Screenshots
 
@@ -113,7 +117,7 @@ Viewer [test_name [scene_name]]
 | [<img src="assets/crab/screenshot.gif" width="600">](assets/crab/README.md)             | `Viewer pbr crab`         |
 | [<img src="assets/dieselpunk/screenshot.png" width="600">](assets/dieselpunk/README.md) | `Viewer pbr dieselpunk`   |
 | [<img src="assets/drone/screenshot.gif" width="600">](assets/drone/README.md)           | `Viewer pbr drone`        |
-| [<img src="assets/helmet/screenshot1.png" width="600">](assets/helmet/README.md)         | `Viewer pbr helmet`       |
+| [<img src="assets/helmet/screenshot1.png" width="600">](assets/helmet/README.md)        | `Viewer pbr helmet`       |
 | [<img src="assets/junkrat/screenshot.gif" width="600">](assets/junkrat/README.md)       | `Viewer pbr junkrat`      |
 | [<img src="assets/orb/screenshot.png" width="600">](assets/orb/README.md)               | `Viewer pbr orb`          |
 | [<img src="assets/ornitier/screenshot.png" width="600">](assets/ornitier/README.md)     | `Viewer pbr ornitier`     |
@@ -145,15 +149,14 @@ Viewer [test_name [scene_name]]
 
 * [Homogeneous clipping](http://fabiensanglard.net/polygon_codec/)
 * [Barycentric coordinates](http://blackpawn.com/texts/pointinpoly/)
-* [Perspective-correct interpolation](https://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf)
+* [Perspective correct interpolation](https://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf)
 * [Skeletal animation](https://people.rennes.inria.fr/Ludovic.Hoyet/teaching/IMO/05_IMO2016_Skinning.pdf)
 * [Tangent space normal mapping](http://www.terathon.com/code/tangent.html)
 * [Ambient occlusion](http://mentalraytips.blogspot.com/2008/11/joy-of-little-ambience.html)
 * [ACES tone mapping](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/)
 * [Orbital camera controls](https://github.com/mrdoob/three.js/blob/master/examples/js/controls/OrbitControls.js)
+* [Xlib programming guide](http://osiris.df.unipi.it/~moruzzi/xlib-programming.html)
 * [Type-safe dynamic array](https://github.com/nothings/stb/blob/master/stretchy_buffer.h)
-* [Xlib programming tutorial](http://osiris.df.unipi.it/~moruzzi/xlib-programming.html)
-* [Cocoa programming tutorial](https://www.amazon.com/Rys-Cocoa-Tutorial-Ryan-Hodson-ebook/dp/B00QFEYK60)
 
 ## License
 
