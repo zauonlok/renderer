@@ -47,8 +47,12 @@ run `build_win32.bat`.
 
 ### macOS
 
-Install [Xcode](https://itunes.apple.com/us/app/xcode/id497799835?mt=12) and
+Install Command Line Tools for Xcode with the command below and
 run `build_macos.sh`.
+
+```
+xcode-select --install
+```
 
 ### Linux
 
