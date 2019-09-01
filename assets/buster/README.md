@@ -18,4 +18,5 @@
 
 ## Screenshot
 
-![Screenshot](screenshot.gif)
+![Screenshot1](screenshot1.gif)
+![Screenshot2](screenshot2.gif)

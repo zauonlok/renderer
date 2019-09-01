@@ -1,6 +1,7 @@
 # Software Renderer
 
 <img src="assets/helmet/screenshot2.png" width="430"> <img src="assets/helmet/screenshot3.png" width="430">
+<img src="assets/drone/screenshot1.gif" width="430"> <img src="assets/drone/screenshot2.gif" width="430">
 
 This is a shader-based software renderer written from scratch in C89 with
 minimal dependencies, available for Windows, macOS, and Linux.
@@ -112,10 +113,10 @@ to bring it up.
 | [<img src="assets/phoenix/screenshot.gif" width="600">](assets/phoenix/README.md)       | `Viewer blinn phoenix`    |
 | [<img src="assets/witch/screenshot.png" width="600">](assets/witch/README.md)           | `Viewer blinn witch`      |
 | [<img src="assets/assassin/screenshot.gif" width="600">](assets/assassin/README.md)     | `Viewer pbr assassin`     |
-| [<img src="assets/buster/screenshot.gif" width="600">](assets/buster/README.md)         | `Viewer pbr buster`       |
+| [<img src="assets/buster/screenshot1.gif" width="600">](assets/buster/README.md)        | `Viewer pbr buster`       |
 | [<img src="assets/crab/screenshot.gif" width="600">](assets/crab/README.md)             | `Viewer pbr crab`         |
 | [<img src="assets/dieselpunk/screenshot.png" width="600">](assets/dieselpunk/README.md) | `Viewer pbr dieselpunk`   |
-| [<img src="assets/drone/screenshot.gif" width="600">](assets/drone/README.md)           | `Viewer pbr drone`        |
+| [<img src="assets/drone/screenshot1.gif" width="600">](assets/drone/README.md)          | `Viewer pbr drone`        |
 | [<img src="assets/helmet/screenshot1.png" width="600">](assets/helmet/README.md)        | `Viewer pbr helmet`       |
 | [<img src="assets/junkrat/screenshot.gif" width="600">](assets/junkrat/README.md)       | `Viewer pbr junkrat`      |
 | [<img src="assets/orb/screenshot.png" width="600">](assets/orb/README.md)               | `Viewer pbr orb`          |
