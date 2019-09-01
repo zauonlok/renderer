@@ -1,7 +1,6 @@
 # Software Renderer
 
-<img src="assets/helmet/screenshot2.png" width="435">
-<img src="assets/helmet/screenshot3.png" width="435">
+<img src="assets/helmet/screenshot2.png" width="435"><img src="assets/helmet/screenshot3.png" width="435">
 
 This is a shader-based software renderer written from scratch in C89 with
 minimal dependencies, available for Windows, macOS, and Linux.
