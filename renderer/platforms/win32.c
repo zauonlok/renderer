@@ -34,7 +34,7 @@ static const char *WINDOW_ENTRY_NAME = "Entry";
  * for virtual-key codes, see
  * https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes
  */
-static void handle_key_message(window_t *window, int virtual_key,
+static void handle_key_message(window_t *window, WPARAM virtual_key,
                                char pressed) {
     keycode_t key;
     switch (virtual_key) {

@@ -41,13 +41,13 @@ static unsigned char read_byte(FILE *file) {
 
 static void read_bytes(FILE *file, void *buffer, int size) {
     int count;
-    count = fread(buffer, 1, size, file);
+    count = (int)fread(buffer, 1, size, file);
     assert(count == size);
 }
 
 static void write_bytes(FILE *file, void *buffer, int size) {
     int count;
-    count = fwrite(buffer, 1, size, file);
+    count = (int)fwrite(buffer, 1, size, file);
     assert(count == size);
 }
 

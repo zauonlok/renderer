@@ -416,6 +416,8 @@ static scene_t *create_blinn_scene(scene_light_t scene_light,
         scene_model = scene_models[i];
         assert(scene_model.transform < num_transforms);
         assert(scene_model.material < num_materials);
+        UNUSED_VAR(num_transforms);
+        UNUSED_VAR(num_materials);
 
         mesh = wrap_path(scene_model.mesh);
         skeleton = wrap_path(scene_model.skeleton);
@@ -468,6 +470,8 @@ static scene_t *create_pbrm_scene(scene_light_t scene_light,
         scene_model = scene_models[i];
         assert(scene_model.transform < num_transforms);
         assert(scene_model.material < num_materials);
+        UNUSED_VAR(num_transforms);
+        UNUSED_VAR(num_materials);
 
         mesh = wrap_path(scene_model.mesh);
         skeleton = wrap_path(scene_model.skeleton);
@@ -524,6 +528,8 @@ static scene_t *create_pbrs_scene(scene_light_t scene_light,
         scene_model = scene_models[i];
         assert(scene_model.transform < num_transforms);
         assert(scene_model.material < num_materials);
+        UNUSED_VAR(num_transforms);
+        UNUSED_VAR(num_materials);
 
         mesh = wrap_path(scene_model.mesh);
         skeleton = wrap_path(scene_model.skeleton);
