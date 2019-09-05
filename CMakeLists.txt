@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(Renderer LANGUAGES C)
-set(TARGET Viewer)
 
 # ==============================================================================
-# Headers and Sources
+# Headers and sources
 # ==============================================================================
 
 set(HEADERS
@@ -70,6 +69,8 @@ source_group(TREE "${CMAKE_SOURCE_DIR}/renderer" FILES ${HEADERS} ${SOURCES})
 # Target definition
 # ==============================================================================
 
+set(TARGET Viewer)
+
 add_executable(${TARGET} ${HEADERS} ${SOURCES})
 
 # ==============================================================================
@@ -118,16 +119,17 @@ endif()
 
 set(SRC_ASSETS "${CMAKE_SOURCE_DIR}/assets")
 set(DST_ASSETS "$<TARGET_FILE_DIR:${TARGET}>/assets")
+
 if(WIN32)
     add_custom_command(
         TARGET ${TARGET} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SRC_ASSETS} ${DST_ASSETS}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${SRC_ASSETS}" "${DST_ASSETS}"
         COMMENT "Copy assets: ${SRC_ASSETS} => ${DST_ASSETS}"
     )
 else()
     add_custom_command(
         TARGET ${TARGET} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E create_symlink ${SRC_ASSETS} ${DST_ASSETS}
+        COMMAND ${CMAKE_COMMAND} -E create_symlink "${SRC_ASSETS}" "${DST_ASSETS}"
         COMMENT "Link assets: ${SRC_ASSETS} => ${DST_ASSETS}"
     )
 endif()
