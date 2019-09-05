@@ -76,6 +76,36 @@ sudo dnf install gcc libX11-devel
 sudo zypper install gcc libX11-devel
 ```
 
+### CMake
+
+A `CMakeLists.txt` file is provided for generating project files using
+[CMake](https://cmake.org/) (see examples below).
+
+#### Visual Studio
+
+```
+mkdir build
+cd build
+cmake -G "Visual Studio 16 2019" ..
+```
+
+#### Xcode
+
+```
+mkdir build
+cd build
+cmake -G Xcode ..
+```
+
+#### Makefile
+
+```
+mkdir build
+cd build
+cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..
+make
+```
+
 ## Usage
 
 ### Launch
