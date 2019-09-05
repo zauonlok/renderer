@@ -76,7 +76,7 @@ sudo dnf install gcc libX11-devel
 sudo zypper install gcc libX11-devel
 ```
 
-### CMake
+### Bonus
 
 A `CMakeLists.txt` file is provided for generating project files using
 [CMake](https://cmake.org/) (see examples below).
