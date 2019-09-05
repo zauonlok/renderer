@@ -1,8 +1,14 @@
 .DS_Store
 Thumbs.db
 
-.vscode
+*.exr
 *.zip
+
+.idea
+.vscode
+
+build
+cmake-build-*
 
 Viewer
 Viewer.dSYM
