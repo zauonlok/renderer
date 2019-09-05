@@ -118,6 +118,7 @@ static scene_light_t read_light(FILE *file) {
     items = fscanf(file, " punctual: %f", &light.punctual);
     assert(items == 1);
 
+    UNUSED_VAR(items);
     return light;
 }
 
@@ -148,6 +149,7 @@ static scene_blinn_t read_blinn_material(FILE *file) {
     items = fscanf(file, " alpha_cutoff: %f", &material.alpha_cutoff);
     assert(items == 1);
 
+    UNUSED_VAR(items);
     return material;
 }
 
@@ -159,6 +161,7 @@ static scene_blinn_t *read_blinn_materials(FILE *file) {
 
     items = fscanf(file, " materials %d:", &num_materials);
     assert(items == 1);
+    UNUSED_VAR(items);
     for (i = 0; i < num_materials; i++) {
         scene_blinn_t material = read_blinn_material(file);
         assert(material.index == i);
@@ -202,6 +205,7 @@ static scene_pbrm_t read_pbrm_material(FILE *file) {
     items = fscanf(file, " alpha_cutoff: %f", &material.alpha_cutoff);
     assert(items == 1);
 
+    UNUSED_VAR(items);
     return material;
 }
 
@@ -213,6 +217,7 @@ static scene_pbrm_t *read_pbrm_materials(FILE *file) {
 
     items = fscanf(file, " materials %d:", &num_materials);
     assert(items == 1);
+    UNUSED_VAR(items);
     for (i = 0; i < num_materials; i++) {
         scene_pbrm_t material = read_pbrm_material(file);
         assert(material.index == i);
@@ -259,6 +264,7 @@ static scene_pbrs_t read_pbrs_material(FILE *file) {
     items = fscanf(file, " alpha_cutoff: %f", &material.alpha_cutoff);
     assert(items == 1);
 
+    UNUSED_VAR(items);
     return material;
 }
 
@@ -270,6 +276,7 @@ static scene_pbrs_t *read_pbrs_materials(FILE *file) {
 
     items = fscanf(file, " materials %d:", &num_materials);
     assert(items == 1);
+    UNUSED_VAR(items);
     for (i = 0; i < num_materials; i++) {
         scene_pbrs_t material = read_pbrs_material(file);
         assert(material.index == i);
@@ -294,6 +301,7 @@ static scene_transform_t read_transform(FILE *file) {
         assert(items == 4);
     }
 
+    UNUSED_VAR(items);
     return transform;
 }
 
@@ -305,6 +313,7 @@ static scene_transform_t *read_transforms(FILE *file) {
 
     items = fscanf(file, " transforms %d:", &num_transforms);
     assert(items == 1);
+    UNUSED_VAR(items);
     for (i = 0; i < num_transforms; i++) {
         scene_transform_t transform = read_transform(file);
         assert(transform.index == i);
@@ -330,6 +339,7 @@ static scene_model_t read_model(FILE *file) {
     items = fscanf(file, " transform: %d", &model.transform);
     assert(items == 1);
 
+    UNUSED_VAR(items);
     return model;
 }
 
@@ -341,6 +351,7 @@ static scene_model_t *read_models(FILE *file) {
 
     items = fscanf(file, " models %d:", &num_models);
     assert(items == 1);
+    UNUSED_VAR(items);
     for (i = 0; i < num_models; i++) {
         scene_model_t model = read_model(file);
         assert(model.index == i);
@@ -383,6 +394,7 @@ static scene_t *create_scene(scene_light_t light, model_t **models) {
             items = sscanf(light.shadow, "%dx%d",
                            &shadow_width, &shadow_height);
             assert(items == 2 && shadow_width > 0 && shadow_height > 0);
+            UNUSED_VAR(items);
         }
     }
 
@@ -570,6 +582,7 @@ scene_t *helper_load_scene(const char *filename, mat4_t root) {
     assert(file != NULL);
     items = fscanf(file, " type: %s", scene_type);
     assert(items == 1);
+    UNUSED_VAR(items);
     if (equals_to(scene_type, "blinn")) {
         scene_light_t light = read_light(file);
         scene_blinn_t *materials = read_blinn_materials(file);

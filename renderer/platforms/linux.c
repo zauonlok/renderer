@@ -313,4 +313,5 @@ void platform_init_path(void) {
     assert(error == 0);
     error = chdir("assets");
     assert(error == 0);
+    UNUSED_VAR(error);
 }

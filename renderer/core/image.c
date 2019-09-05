@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "image.h"
+#include "macro.h"
 #include "maths.h"
 
 /* image creating/releasing */
@@ -40,15 +41,15 @@ static unsigned char read_byte(FILE *file) {
 }
 
 static void read_bytes(FILE *file, void *buffer, int size) {
-    int count;
-    count = (int)fread(buffer, 1, size, file);
+    int count = (int)fread(buffer, 1, size, file);
     assert(count == size);
+    UNUSED_VAR(count);
 }
 
 static void write_bytes(FILE *file, void *buffer, int size) {
-    int count;
-    count = (int)fwrite(buffer, 1, size, file);
+    int count = (int)fwrite(buffer, 1, size, file);
     assert(count == size);
+    UNUSED_VAR(count);
 }
 
 static void load_tga_rle(FILE *file, image_t *image) {
@@ -106,6 +107,7 @@ static image_t *load_tga(const char *filename) {
 
     idlength = header[0];
     assert(idlength == 0);
+    UNUSED_VAR(idlength);
     imgtype = header[2];
     if (imgtype == 2 || imgtype == 3) {           /* uncompressed */
         read_bytes(file, image->buffer, get_buffer_size(image));

@@ -150,6 +150,7 @@ static mesh_t *load_obj(const char *filename) {
             assert(items == 4);
             darray_push(weights, weight);
         }
+        UNUSED_VAR(items);
     }
     fclose(file);
 

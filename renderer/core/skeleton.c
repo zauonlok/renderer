@@ -59,6 +59,7 @@ static void read_inverse_bind(FILE *file, joint_t *joint) {
                        &joint->inverse_bind.m[i][3]);
         assert(items == 4);
     }
+    UNUSED_VAR(items);
 }
 
 static void read_translations(FILE *file, joint_t *joint) {
@@ -83,6 +84,7 @@ static void read_translations(FILE *file, joint_t *joint) {
         joint->translation_times = NULL;
         joint->translation_values = NULL;
     }
+    UNUSED_VAR(items);
 }
 
 static void read_rotations(FILE *file, joint_t *joint) {
@@ -108,6 +110,7 @@ static void read_rotations(FILE *file, joint_t *joint) {
         joint->rotation_times = NULL;
         joint->rotation_values = NULL;
     }
+    UNUSED_VAR(items);
 }
 
 static void read_scales(FILE *file, joint_t *joint) {
@@ -132,6 +135,7 @@ static void read_scales(FILE *file, joint_t *joint) {
         joint->scale_times = NULL;
         joint->scale_values = NULL;
     }
+    UNUSED_VAR(items);
 }
 
 static joint_t load_joint(FILE *file) {
@@ -148,6 +152,7 @@ static joint_t load_joint(FILE *file) {
     read_rotations(file, &joint);
     read_scales(file, &joint);
 
+    UNUSED_VAR(items);
     return joint;
 }
 
@@ -189,6 +194,7 @@ static skeleton_t *load_ani(const char *filename) {
 
     initialize_cache(skeleton);
 
+    UNUSED_VAR(items);
     return skeleton;
 }
 

@@ -48,11 +48,15 @@ static void read_hdr_header(FILE *file, int *width, int *height) {
             assert(0);
         }
     }
-    assert(header_found != 0 && format_found != 0);
+    assert(header_found != 0);
+    assert(format_found != 0);
+    UNUSED_VAR(header_found);
+    UNUSED_VAR(format_found);
 
     read_line(file, line);
     items = sscanf(line, "-Y %d +X %d", height, width);
     assert(items == 2 && *width > 0 && *height > 0);
+    UNUSED_VAR(items);
 }
 
 static vec4_t texel_from_rgbe(unsigned char rgbe[4]) {
