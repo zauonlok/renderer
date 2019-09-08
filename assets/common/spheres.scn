@@ -6,7 +6,7 @@ lighting:
     skybox: off
     shadow: off
     ambient: 1.0
-    punctual: 1.0
+    punctual: 0.0
 
 materials 33:
     material 0:
