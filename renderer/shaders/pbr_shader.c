@@ -354,9 +354,13 @@ static float get_visibility(float n_dot_v, float n_dot_l, float alpha2) {
  * for fresnel approximation, see
  * An Inexpensive BRDF Model for Physically-based Rendering
  */
-static vec3_t get_fresnel(float v_dot_h, vec3_t reflectance0) {
-    vec3_t reflectance90 = vec3_new(1, 1, 1);
-    return vec3_lerp(reflectance0, reflectance90, (float)pow(1 - v_dot_h, 5));
+static vec3_t get_fresnel(float v_dot_h, vec3_t fresnel0) {
+    float factor = (float)pow(1 - v_dot_h, 5);
+    float fresnel90 = float_saturate(max_component(fresnel0) * 50);
+    float fresnel_r = fresnel0.x + (fresnel90 - fresnel0.x) * factor;
+    float fresnel_g = fresnel0.y + (fresnel90 - fresnel0.y) * factor;
+    float fresnel_b = fresnel0.z + (fresnel90 - fresnel0.z) * factor;
+    return vec3_new(fresnel_r, fresnel_g, fresnel_b);
 }
 
 static vec3_t get_dir_shade(material_t material, vec3_t light_dir,
