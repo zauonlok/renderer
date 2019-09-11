@@ -131,7 +131,7 @@ endif()
 add_custom_command(
     TARGET ${TARGET} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo
-    "${ASSETS_MSG}: ${SRC_ASSETS} -> ${DST_ASSETS}"
+    "${ASSETS_MSG}: ${SRC_ASSETS} to ${DST_ASSETS}"
 )
 add_custom_command(
     TARGET ${TARGET} POST_BUILD
