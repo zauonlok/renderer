@@ -121,15 +121,20 @@ set(SRC_ASSETS "${CMAKE_SOURCE_DIR}/assets")
 set(DST_ASSETS "$<TARGET_FILE_DIR:${TARGET}>/assets")
 
 if(WIN32)
-    add_custom_command(
-        TARGET ${TARGET} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${SRC_ASSETS}" "${DST_ASSETS}"
-        COMMENT "Copy assets: ${SRC_ASSETS} => ${DST_ASSETS}"
-    )
+    set(ASSETS_CMD copy_directory)
+    set(ASSETS_MSG "Copy assets")
 else()
-    add_custom_command(
-        TARGET ${TARGET} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E create_symlink "${SRC_ASSETS}" "${DST_ASSETS}"
-        COMMENT "Link assets: ${SRC_ASSETS} => ${DST_ASSETS}"
-    )
+    set(ASSETS_CMD create_symlink)
+    set(ASSETS_MSG "Link assets")
 endif()
+
+add_custom_command(
+    TARGET ${TARGET} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo
+    "${ASSETS_MSG}: ${SRC_ASSETS} -> ${DST_ASSETS}"
+)
+add_custom_command(
+    TARGET ${TARGET} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E ${ASSETS_CMD}
+    "${SRC_ASSETS}" "${DST_ASSETS}"
+)
