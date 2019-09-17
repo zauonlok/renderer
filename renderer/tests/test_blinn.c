@@ -15,6 +15,7 @@ static creator_t g_creators[] = {
     {"nier2b", blinn_nier2b_scene},
     {"phoenix", blinn_phoenix_scene},
     {"witch", blinn_witch_scene},
+    {"whip", blinn_whip_scene},
     {NULL, NULL},
 };
 

@@ -23,6 +23,7 @@
 | ornitier   | ![ornitier](ornitier/thumbnail.png)     | No       | Yes |
 | phoenix    | ![phoenix](phoenix/thumbnail.png)       | Yes      | No  |
 | ponycar    | ![ponycar](ponycar/thumbnail.png)       | No       | Yes |
+| whip       | ![whip](whip/thumbnail.png)             | Yes      | No  |
 | witch      | ![witch](witch/thumbnail.png)           | No       | No  |
 
 ## Environments

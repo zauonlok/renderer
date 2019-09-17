@@ -256,6 +256,15 @@ static bbox_t get_model_bbox(model_t *model) {
     bbox_t bbox;
     int i, j;
 
+    if (model->skeleton && model->attached >= 0) {
+        mat4_t *joint_matrices;
+        mat4_t node_matrix;
+        skeleton_update_joints(model->skeleton, 0);
+        joint_matrices = skeleton_get_joint_matrices(model->skeleton);
+        node_matrix = joint_matrices[model->attached];
+        model_matrix = mat4_mul_mat4(model_matrix, node_matrix);
+    }
+
     bbox.min = vec3_new(+1e6, +1e6, +1e6);
     bbox.max = vec3_new(-1e6, -1e6, -1e6);
     for (i = 0; i < num_faces; i++) {

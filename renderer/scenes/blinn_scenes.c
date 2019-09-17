@@ -75,6 +75,14 @@ scene_t *blinn_phoenix_scene(void) {
     return helper_load_scene("phoenix/phoenix.scn", root);
 }
 
+scene_t *blinn_whip_scene(void) {
+    mat4_t translation = mat4_translate(-3732.619f, -93.643f, -1561.663f);
+    mat4_t rotation = mat4_rotate_x(TO_RADIANS(90));
+    mat4_t scale = mat4_scale(0.0004f, 0.0004f, 0.0004f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    return helper_load_scene("whip/whip.scn", root);
+}
+
 scene_t *blinn_witch_scene(void) {
     mat4_t translation = mat4_translate(-17.924f, -16.974f, -32.691f);
     mat4_t rotation = mat4_rotate_x(TO_RADIANS(-90));
