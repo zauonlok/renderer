@@ -24,5 +24,7 @@ typedef void tickfunc_t(context_t *context, void *userdata);
 void test_enter_mainloop(tickfunc_t *tickfunc, void *userdata);
 scene_t *test_create_scene(creator_t creators[], const char *scene_name);
 framedata_t test_build_framedata(scene_t *scene, context_t *context);
+void test_draw_scene(scene_t *scene, framebuffer_t *framebuffer,
+                     framedata_t *framedata);
 
 #endif

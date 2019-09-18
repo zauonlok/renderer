@@ -14,15 +14,15 @@ static creator_t g_creators[] = {
     {"mccree", blinn_mccree_scene},
     {"nier2b", blinn_nier2b_scene},
     {"phoenix", blinn_phoenix_scene},
-    {"witch", blinn_witch_scene},
     {"whip", blinn_whip_scene},
+    {"witch", blinn_witch_scene},
     {NULL, NULL},
 };
 
 static void tick_function(context_t *context, void *userdata) {
     scene_t *scene = (scene_t*)userdata;
     framedata_t framedata = test_build_framedata(scene, context);
-    scene_draw(scene, context->framebuffer, &framedata);
+    test_draw_scene(scene, context->framebuffer, &framedata);
 }
 
 void test_blinn(int argc, char *argv[]) {

@@ -122,7 +122,7 @@ static void tick_function(context_t *context, void *userdata_) {
     framedata_t framedata = test_build_framedata(userdata->scene, context);
     userdata->layer = query_curr_layer(context, userdata->layer);
     framedata.layer_view = userdata->layer;
-    scene_draw(userdata->scene, context->framebuffer, &framedata);
+    test_draw_scene(userdata->scene, context->framebuffer, &framedata);
     draw_layer_view(context->framebuffer, userdata->layer);
 }
 
