@@ -1,181 +1,12 @@
 #include <assert.h>
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "graphics.h"
 #include "image.h"
-#include "macro.h"
 #include "maths.h"
+#include "private.h"
 #include "texture.h"
-
-/* radiance hdr related functions */
-
-static void read_line(FILE *file, char line[LINE_SIZE]) {
-    if (fgets(line, LINE_SIZE, file) == NULL) {
-        assert(0);
-    }
-}
-
-static int starts_with(const char *string, const char *prefix) {
-    return strncmp(string, prefix, strlen(prefix)) == 0;
-}
-
-static void read_hdr_header(FILE *file, int *width, int *height) {
-    char line[LINE_SIZE];
-    int header_found = 0;
-    int format_found = 0;
-    int items;
-
-    read_line(file, line);
-    assert(starts_with(line, "#?"));
-
-    while (1) {
-        read_line(file, line);
-        if (strlen(line) == 1 && line[0] == '\n') {
-            header_found = 1;
-            break;
-        } else if (starts_with(line, "FORMAT=")) {
-            assert(starts_with(line, "FORMAT=32-bit_rle_rgbe"));
-            format_found = 1;
-        } else if (starts_with(line, "GAMMA=")) {
-            /* ignore, for now */
-        } else if (starts_with(line, "EXPOSURE=")) {
-            /* ignore, for now */
-        } else if (starts_with(line, "#")) {
-            /* ignore comments */
-        } else {
-            assert(0);
-        }
-    }
-    assert(header_found != 0);
-    assert(format_found != 0);
-    UNUSED_VAR(header_found);
-    UNUSED_VAR(format_found);
-
-    read_line(file, line);
-    items = sscanf(line, "-Y %d +X %d", height, width);
-    assert(items == 2 && *width > 0 && *height > 0);
-    UNUSED_VAR(items);
-}
-
-static vec4_t texel_from_rgbe(unsigned char rgbe[4]) {
-    float rm = rgbe[0];  /* red mantissa */
-    float gm = rgbe[1];  /* green mantissa */
-    float bm = rgbe[2];  /* blue mantissa */
-    float eb = rgbe[3];  /* exponent biased */
-    if (eb == 0) {
-        return vec4_new(0, 0, 0, 1);
-    } else {
-        float ev = eb - 128;     /* exponent value */
-        float factor = (float)((1.0 / 256) * pow(2, ev));
-        float rv = rm * factor;  /* red value */
-        float gv = gm * factor;  /* green value */
-        float bv = bm * factor;  /* blue value */
-        return vec4_new(rv, gv, bv, 1);
-    }
-}
-
-static unsigned char read_byte(FILE *file) {
-    int byte = fgetc(file);
-    assert(byte != EOF);
-    return (unsigned char)byte;
-}
-
-static void read_flat_scanline(FILE *file, texture_t *texture, int row) {
-    int width = texture->width;
-    int i, j;
-    for (i = 0; i < width; i++) {
-        int index = row * width + i;
-        unsigned char rgbe[4];
-        for (j = 0; j < 4; j++) {
-            rgbe[j] = read_byte(file);
-        }
-        texture->buffer[index] = texel_from_rgbe(rgbe);
-    }
-}
-
-static void read_rle_scanline(FILE *file, texture_t *texture, int row) {
-    int width = texture->width;
-    unsigned char *channels[4];
-    int i, j;
-
-    for (i = 0; i < 4; i++) {
-        channels[i] = (unsigned char*)malloc(width);
-    }
-    for (i = 0; i < 4; i++) {
-        int size = 0;
-        while (size < width) {
-            unsigned char byte = read_byte(file);
-            if (byte > 128) {
-                int count = byte - 128;
-                unsigned char value = read_byte(file);
-                assert(count > 0 && size + count <= width);
-                for (j = 0; j < count; j++) {
-                    channels[i][size++] = value;
-                }
-            } else {
-                int count = byte;
-                assert(count > 0 && size + count <= width);
-                for (j = 0; j < count; j++) {
-                    channels[i][size++] = read_byte(file);
-                }
-            }
-        }
-        assert(size == width);
-    }
-
-    for (i = 0; i < width; i++) {
-        int index = row * width + i;
-        unsigned char rgbe[4];
-        for (j = 0; j < 4; j++) {
-            rgbe[j] = channels[j][i];
-        }
-        texture->buffer[index] = texel_from_rgbe(rgbe);
-    }
-    for (i = 0; i < 4; i++) {
-        free(channels[i]);
-    }
-}
-
-static void read_hdr_scanline(FILE *file, texture_t *texture, int row) {
-    int width = texture->width;
-    if (width < 8 || width > 0x7fff) {
-        read_flat_scanline(file, texture, row);
-    } else {
-        unsigned char bytes[4];
-        int i;
-        for (i = 0; i < 4; i++) {
-            bytes[i] = read_byte(file);
-        }
-        if (bytes[0] != 2 || bytes[1] != 2 || bytes[2] & 0x80) {
-            fseek(file, -4, SEEK_CUR);
-            read_flat_scanline(file, texture, row);
-        } else {
-            assert(bytes[2] * 256 + bytes[3] == width);
-            read_rle_scanline(file, texture, row);
-        }
-    }
-}
-
-static texture_t *load_hdr(const char *filename) {
-    texture_t *texture;
-    int width, height;
-    FILE *file;
-    int i;
-
-    file = fopen(filename, "rb");
-    assert(file != NULL);
-    read_hdr_header(file, &width, &height);
-    texture = texture_create(width, height);
-    for (i = 0; i < height; i++) {
-        int row = height - 1 - i;
-        read_hdr_scanline(file, texture, row);
-    }
-    fclose(file);
-
-    return texture;
-}
 
 /* texture related functions */
 
@@ -198,15 +29,10 @@ void texture_release(texture_t *texture) {
     free(texture);
 }
 
-static const char *extract_extension(const char *filename) {
-    const char *dot_pos = strrchr(filename, '.');
-    return dot_pos == NULL ? "" : dot_pos + 1;
-}
-
 texture_t *texture_from_file(const char *filename) {
-    const char *extension = extract_extension(filename);
+    const char *extension = private_get_extension(filename);
     if (strcmp(extension, "hdr") == 0) {
-        return load_hdr(filename);
+        return private_load_hdr_image(filename);
     } else {
         image_t *image = image_load(filename);
         texture_t *texture = texture_from_image(image);

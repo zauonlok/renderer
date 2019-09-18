@@ -6,6 +6,7 @@
 #include "macro.h"
 #include "maths.h"
 #include "mesh.h"
+#include "private.h"
 
 struct mesh {
     int num_faces;
@@ -169,13 +170,8 @@ static mesh_t *load_obj(const char *filename) {
     return mesh;
 }
 
-static const char *extract_extension(const char *filename) {
-    const char *dot_pos = strrchr(filename, '.');
-    return dot_pos == NULL ? "" : dot_pos + 1;
-}
-
 mesh_t *mesh_load(const char *filename) {
-    const char *extension = extract_extension(filename);
+    const char *extension = private_get_extension(filename);
     if (strcmp(extension, "obj") == 0) {
         return load_obj(filename);
     } else {

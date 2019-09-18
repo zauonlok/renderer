@@ -9,6 +9,7 @@
 #include "../core/image.h"
 #include "../core/macro.h"
 #include "../core/platform.h"
+#include "../core/private.h"
 
 struct window {
     NSWindow *handle;
@@ -265,9 +266,6 @@ void window_set_userdata(window_t *window, void *userdata) {
 void *window_get_userdata(window_t *window) {
     return window->userdata;
 }
-
-void private_blit_image_rgb(image_t *src, image_t *dst);
-void private_blit_buffer_rgb(framebuffer_t *src, image_t *dst);
 
 static void present_surface(window_t *window) {
     [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */

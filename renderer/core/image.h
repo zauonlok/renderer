@@ -6,8 +6,6 @@ typedef struct {int width, height, channels; unsigned char *buffer;} image_t;
 /* image creating/releasing */
 image_t *image_create(int width, int height, int channels);
 void image_release(image_t *image);
-
-/* image input/output */
 image_t *image_load(const char *filename);
 void image_save(image_t *image, const char *filename);
 

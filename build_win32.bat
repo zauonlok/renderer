@@ -29,7 +29,7 @@ if defined VS150COMNTOOLS (
 
 set DEFS=/D_CRT_SECURE_NO_WARNINGS
 set OPTS=/Fe../Viewer /W4 /O2 /GL /fp:fast
-set SRCS=main.c platforms/win32.c core/*.c shaders/*.c scenes/*.c tests/*.c
+set SRCS=main.c platforms/win32.c core/*.c scenes/*.c shaders/*.c tests/*.c
 set LIBS=gdi32.lib user32.lib
 
 cd renderer && cl /nologo %DEFS% %OPTS% %SRCS% %LIBS% && del *.obj && cd ..

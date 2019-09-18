@@ -5,6 +5,7 @@
 #include <string.h>
 #include "macro.h"
 #include "maths.h"
+#include "private.h"
 #include "skeleton.h"
 
 /*
@@ -198,13 +199,8 @@ static skeleton_t *load_ani(const char *filename) {
     return skeleton;
 }
 
-static const char *extract_extension(const char *filename) {
-    const char *dot_pos = strrchr(filename, '.');
-    return dot_pos == NULL ? "" : dot_pos + 1;
-}
-
 skeleton_t *skeleton_load(const char *filename) {
-    const char *extension = extract_extension(filename);
+    const char *extension = private_get_extension(filename);
     if (strcmp(extension, "ani") == 0) {
         return load_ani(filename);
     } else {

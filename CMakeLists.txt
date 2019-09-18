@@ -16,6 +16,7 @@ set(HEADERS
     renderer/core/maths.h
     renderer/core/mesh.h
     renderer/core/platform.h
+    renderer/core/private.h
     renderer/core/scene.h
     renderer/core/skeleton.h
     renderer/core/texture.h
@@ -38,7 +39,7 @@ set(SOURCES
     renderer/core/image.c
     renderer/core/maths.c
     renderer/core/mesh.c
-    renderer/core/platform.c
+    renderer/core/private.c
     renderer/core/scene.c
     renderer/core/skeleton.c
     renderer/core/texture.c
