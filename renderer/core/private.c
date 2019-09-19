@@ -10,7 +10,7 @@
 #include "private.h"
 #include "texture.h"
 
-/* tga input/output */
+/* tga format */
 
 #define TGA_HEADER_SIZE 18
 
@@ -130,7 +130,7 @@ void private_save_tga_image(image_t *image, const char *filename) {
     fclose(file);
 }
 
-/* hdr input/output */
+/* hdr format */
 
 static void read_line(FILE *file, char line[LINE_SIZE]) {
     if (fgets(line, LINE_SIZE, file) == NULL) {

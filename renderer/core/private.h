@@ -5,7 +5,7 @@
 #include "image.h"
 #include "texture.h"
 
-/* image input/output */
+/* image formats */
 image_t *private_load_tga_image(const char *filename);
 void private_save_tga_image(image_t *image, const char *filename);
 texture_t *private_load_hdr_image(const char *filename);
