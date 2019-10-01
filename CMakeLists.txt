@@ -89,16 +89,10 @@ set_target_properties(${TARGET} PROPERTIES INTERPROCEDURAL_OPTIMIZATION ON)
 if(MSVC)
     target_compile_options(${TARGET} PRIVATE /W4)
     target_compile_options(${TARGET} PRIVATE /fp:fast)
+    target_compile_options(${TARGET} PRIVATE /D_CRT_SECURE_NO_WARNINGS)
 else()
     target_compile_options(${TARGET} PRIVATE -Wall -Wextra -pedantic)
     target_compile_options(${TARGET} PRIVATE -ffast-math)
-endif()
-
-if(WIN32)
-    target_compile_options(${TARGET} PRIVATE /D_CRT_SECURE_NO_WARNINGS)
-elseif(APPLE)
-    # nothing to do for now
-else()
     target_compile_options(${TARGET} PRIVATE -D_POSIX_C_SOURCE=200809L)
 endif()
 
@@ -118,8 +112,8 @@ endif()
 # Asset files
 # ==============================================================================
 
-set(SRC_ASSETS "${CMAKE_SOURCE_DIR}/assets")
-set(DST_ASSETS "$<TARGET_FILE_DIR:${TARGET}>/assets")
+set(ASSETS_SRC "${CMAKE_SOURCE_DIR}/assets")
+set(ASSETS_DST "$<TARGET_FILE_DIR:${TARGET}>/assets")
 
 if(WIN32)
     set(ASSETS_CMD copy_directory)
@@ -132,10 +126,10 @@ endif()
 add_custom_command(
     TARGET ${TARGET} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo
-    "${ASSETS_MSG}: ${SRC_ASSETS} to ${DST_ASSETS}"
+    "${ASSETS_MSG}: ${ASSETS_SRC} to ${ASSETS_DST}"
 )
 add_custom_command(
     TARGET ${TARGET} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E ${ASSETS_CMD}
-    "${SRC_ASSETS}" "${DST_ASSETS}"
+    "${ASSETS_SRC}" "${ASSETS_DST}"
 )

@@ -120,6 +120,7 @@ static void register_class(void) {
         window_class.lpszClassName = WINDOW_CLASS_NAME;
         class_atom = RegisterClass(&window_class);
         assert(class_atom != 0);
+        UNUSED_VAR(class_atom);
         initialized = 1;
     }
 }
