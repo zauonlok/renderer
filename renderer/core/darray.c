@@ -3,7 +3,7 @@
 #include "darray.h"
 
 /*
- * for typesafe dynamic array, see
+ * for type-safe dynamic array, see
  * https://github.com/nothings/stb/blob/master/stretchy_buffer.h
  */
 

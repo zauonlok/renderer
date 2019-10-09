@@ -88,7 +88,7 @@ void camera_orbit_update(camera_t *camera, motion_t motion) {
     camera->position = vec3_add(camera->target, offset);
 }
 
-/* propety retrieving */
+/* property retrieving */
 
 vec3_t camera_get_position(camera_t *camera) {
     return camera->position;
