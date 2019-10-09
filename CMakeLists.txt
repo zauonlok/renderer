@@ -93,6 +93,9 @@ if(MSVC)
 else()
     target_compile_options(${TARGET} PRIVATE -Wall -Wextra -pedantic)
     target_compile_options(${TARGET} PRIVATE -ffast-math)
+endif()
+
+if(UNIX AND NOT APPLE)
     target_compile_options(${TARGET} PRIVATE -D_POSIX_C_SOURCE=200809L)
 endif()
 
