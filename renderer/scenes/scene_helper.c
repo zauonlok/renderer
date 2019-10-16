@@ -572,7 +572,7 @@ static scene_t *create_pbrs_scene(scene_light_t scene_light,
     return create_scene(scene_light, models);
 }
 
-scene_t *helper_load_scene(const char *filename, mat4_t root) {
+scene_t *scene_from_file(const char *filename, mat4_t root) {
     char scene_type[LINE_SIZE];
     scene_t *scene;
     FILE *file;
