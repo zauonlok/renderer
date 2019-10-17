@@ -1,1 +1,4 @@
+title: Software Renderer
+description: A shader-based software renderer written from scratch in C89
+show_downloads: true
 theme: jekyll-theme-cayman
