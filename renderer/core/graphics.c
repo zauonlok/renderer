@@ -488,7 +488,10 @@ static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
         for (y = bbox.min_y; y <= bbox.max_y; y++) {
             vec2_t point = vec2_new((float)x, (float)y);
             vec3_t weights = calculate_weights(screen_coords, point);
-            if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
+            int weight0_okay = weights.x > -EPSILON;
+            int weight1_okay = weights.y > -EPSILON;
+            int weight2_okay = weights.z > -EPSILON;
+            if (weight0_okay && weight1_okay && weight2_okay) {
                 int index = y * width + x;
                 float depth = interpolate_depth(screen_depths, weights);
                 /* early depth testing */
