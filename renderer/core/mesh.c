@@ -18,7 +18,7 @@ struct mesh {
 
 static mesh_t *build_mesh(
         vec3_t *positions, vec2_t *texcoords, vec3_t *normals,
-        vec4_t *tangents, ivec4_t *joints, vec4_t *weights,
+        vec4_t *tangents, vec4_t *joints, vec4_t *weights,
         int *position_indices, int *texcoord_indices, int *normal_indices) {
     vec3_t bbox_min = vec3_new(+1e6, +1e6, +1e6);
     vec3_t bbox_max = vec3_new(-1e6, -1e6, -1e6);
@@ -58,7 +58,7 @@ static mesh_t *build_mesh(
             assert(joint_index >= 0 && joint_index < darray_size(joints));
             vertices[i].joint = joints[joint_index];
         } else {
-            vertices[i].joint = ivec4_new(0, 0, 0, 0);
+            vertices[i].joint = vec4_new(0, 0, 0, 0);
         }
 
         if (weights) {
@@ -86,7 +86,7 @@ static mesh_t *load_obj(const char *filename) {
     vec2_t *texcoords = NULL;
     vec3_t *normals = NULL;
     vec4_t *tangents = NULL;
-    ivec4_t *joints = NULL;
+    vec4_t *joints = NULL;
     vec4_t *weights = NULL;
     int *position_indices = NULL;
     int *texcoord_indices = NULL;
@@ -139,8 +139,8 @@ static mesh_t *load_obj(const char *filename) {
             assert(items == 4);
             darray_push(tangents, tangent);
         } else if (strncmp(line, "# ext.joint ", 12) == 0) {    /* joint */
-            ivec4_t joint;
-            items = sscanf(line, "# ext.joint %d %d %d %d",
+            vec4_t joint;
+            items = sscanf(line, "# ext.joint %f %f %f %f",
                            &joint.x, &joint.y, &joint.z, &joint.w);
             assert(items == 4);
             darray_push(joints, joint);

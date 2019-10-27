@@ -4,8 +4,6 @@
 typedef struct {float x, y;} vec2_t;
 typedef struct {float x, y, z;} vec3_t;
 typedef struct {float x, y, z, w;} vec4_t;
-typedef struct {int x, y, z, w;} ivec4_t;
-typedef struct {double x, y, z, w;} dvec4_t;
 typedef struct {float x, y, z, w;} quat_t;
 typedef struct {float m[3][3];} mat3_t;
 typedef struct {float m[4][4];} mat4_t;
@@ -24,12 +22,6 @@ float float_clamp(float f, float min, float max);
 float float_lerp(float a, float b, float t);
 float float_saturate(float f);
 void float_print(const char *name, float f);
-
-/* double related functions */
-double double_min(double a, double b);
-double double_max(double a, double b);
-double double_lerp(double a, double b, double t);
-void double_print(const char *name, double d);
 
 /* vec2 related functions */
 vec2_t vec2_new(float x, float y);
@@ -65,7 +57,6 @@ void vec3_print(const char *name, vec3_t v);
 /* vec4 related functions */
 vec4_t vec4_new(float x, float y, float z, float w);
 vec4_t vec4_from_vec3(vec3_t v, float w);
-vec4_t vec4_from_dvec4(dvec4_t v);
 vec4_t vec4_add(vec4_t a, vec4_t b);
 vec4_t vec4_sub(vec4_t a, vec4_t b);
 vec4_t vec4_mul(vec4_t v, float factor);
@@ -76,16 +67,6 @@ vec4_t vec4_modulate(vec4_t a, vec4_t b);
 vec4_t vec4_srgb2linear(vec4_t color);
 vec4_t vec4_linear2srgb(vec4_t color);
 void vec4_print(const char *name, vec4_t v);
-
-/* ivec4 related functions */
-ivec4_t ivec4_new(int x, int y, int z, int w);
-void ivec4_print(const char *name, ivec4_t v);
-
-/* dvec4 related functions */
-dvec4_t dvec4_new(double x, double y, double z, double w);
-dvec4_t dvec4_from_vec4(vec4_t v);
-dvec4_t dvec4_lerp(dvec4_t a, dvec4_t b, double t);
-void dvec4_print(const char *name, dvec4_t v);
 
 /* quat related functions */
 quat_t quat_new(float x, float y, float z, float w);

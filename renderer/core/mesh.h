@@ -10,7 +10,7 @@ typedef struct {
     vec2_t texcoord;
     vec3_t normal;
     vec4_t tangent;
-    ivec4_t joint;
+    vec4_t joint;
     vec4_t weight;
 } vertex_t;
 
