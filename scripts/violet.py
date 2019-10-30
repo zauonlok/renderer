@@ -15,7 +15,7 @@ import zipfile
 
 from PIL import Image
 
-from utils.gltf import dump_obj_data
+from .utils.gltf import dump_obj_data
 
 SRC_FILENAME = "violet_arena_of_valor_3d_model.zip"
 DST_DIRECTORY = "../assets/violet"
