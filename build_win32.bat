@@ -1,15 +1,15 @@
 @echo off
 
 for /f "delims=" %%i in ('tools\win32\vswhere -latest -property installationPath') do (
-    set VS150COMNTOOLS=%%i\Common7\Tools\
+    set VS000COMNTOOLS=%%i\Common7\Tools\
 )
 for /f "delims=" %%i in ('tools\win32\vswhere -latest -property displayName') do (
-    set VS150COMNTITLE=%%i
+    set VS000COMNTITLE=%%i
 )
 
-if defined VS150COMNTOOLS (
-    title %VS150COMNTITLE%
-    call "%VS150COMNTOOLS%VsDevCmd.bat" /no_logo
+if defined VS000COMNTOOLS (
+    title %VS000COMNTITLE%
+    call "%VS000COMNTOOLS%VsDevCmd.bat" -no_logo -arch=amd64 -host_arch=amd64
 ) else if defined VS140COMNTOOLS (
     title Visual Studio 2015
     call "%VS140COMNTOOLS%vsvars32.bat"
@@ -24,15 +24,16 @@ if defined VS150COMNTOOLS (
     call "%VS100COMNTOOLS%vsvars32.bat"
 ) else (
     title Visual Studio None
+    echo Could not find Visual Studio.
     goto :pause
 )
 
 set DEFS=/D_CRT_SECURE_NO_WARNINGS
-set OPTS=/Fe../Viewer /W4 /O2 /GL /fp:fast
+set OPTS=/nologo /W4 /O2 /GL /fp:fast
 set SRCS=main.c platforms/win32.c core/*.c scenes/*.c shaders/*.c tests/*.c
 set LIBS=gdi32.lib user32.lib
 
-cd renderer && cl /nologo %DEFS% %OPTS% %SRCS% %LIBS% && del *.obj && cd ..
+cd renderer && cl /Fe../Viewer %DEFS% %OPTS% %SRCS% %LIBS% && del *.obj && cd ..
 
 :pause
 pause
