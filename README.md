@@ -191,7 +191,7 @@ to bring it up.
 * [Ambient occlusion](http://mentalraytips.blogspot.com/2008/11/joy-of-little-ambience.html)
 * [ACES tone mapping](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/)
 * [Orbital camera controls](https://github.com/mrdoob/three.js/blob/master/examples/js/controls/OrbitControls.js)
-* [Xlib programming guide](http://osiris.df.unipi.it/~moruzzi/xlib-programming.html)
+* [Xlib programming guide](https://web.archive.org/web/20071018025425/http://users.actcom.co.il/~choo/lupg/tutorials/xlib-programming/xlib-programming.html)
 * [Type-safe dynamic array](https://github.com/nothings/stb/blob/master/stretchy_buffer.h)
 
 ## License
