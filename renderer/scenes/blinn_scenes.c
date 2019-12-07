@@ -75,13 +75,6 @@ scene_t *blinn_phoenix_scene(void) {
     return scene_from_file("phoenix/phoenix.scn", root);
 }
 
-scene_t *blinn_violet_scene(void) {
-    mat4_t translation = mat4_translate(0, -1.145f, 0);
-    mat4_t scale = mat4_scale(0.65f, 0.65f, 0.65f);
-    mat4_t root = mat4_mul_mat4(scale, translation);
-    return scene_from_file("violet/violet.scn", root);
-}
-
 scene_t *blinn_whip_scene(void) {
     mat4_t translation = mat4_translate(-3732.619f, -93.643f, -1561.663f);
     mat4_t rotation = mat4_rotate_x(TO_RADIANS(90));
