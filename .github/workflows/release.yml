@@ -1,5 +1,7 @@
 name: Release
-on: push
+on:
+  release:
+    types: [created]
 jobs:
   win32:
     runs-on: windows-latest
