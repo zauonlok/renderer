@@ -1,0 +1,48 @@
+name: CMake
+on: push
+jobs:
+  win32-vs2019:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1.0.0
+      - run: |
+        mkdir build
+        cd build
+        cmake -G "Visual Studio 16 2019" ..
+        cmake --build . --target Viewer --config Release
+  win32-mingw:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1.0.0
+      - run: |
+        mkdir build
+        cd build
+        cmake -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=Release ..
+        mingw32-make
+  macos-xcode:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1.0.0
+      - run: |
+        mkdir build
+        cd build
+        cmake -G Xcode ..
+        cmake --build . --target Viewer --config Release
+  macos-make:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1.0.0
+      - run: |
+        mkdir build
+        cd build
+        cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..
+        make
+  linux-make:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1.0.0
+      - run: |
+        mkdir build
+        cd build
+        cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..
+        make
