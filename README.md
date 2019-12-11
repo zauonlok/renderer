@@ -1,4 +1,4 @@
-# Software Renderer ![](https://github.com/zauonlok/renderer/workflows/Windows/badge.svg) ![](https://github.com/zauonlok/renderer/workflows/macOS/badge.svg) ![](https://github.com/zauonlok/renderer/workflows/Linux/badge.svg) ![](https://github.com/zauonlok/renderer/workflows/CMake/badge.svg)
+# Software Renderer ![](https://github.com/zauonlok/renderer/workflows/Windows/badge.svg) ![](https://github.com/zauonlok/renderer/workflows/macOS/badge.svg) ![](https://github.com/zauonlok/renderer/workflows/Linux/badge.svg)
 
 <img src="assets/helmet/screenshot2.png" width="410"> <img src="assets/helmet/screenshot3.png" width="410">
 <img src="assets/drone/screenshot1.gif" width="410"> <img src="assets/drone/screenshot2.gif" width="410">
@@ -42,8 +42,8 @@ files for your window system are required.
 
 ### Windows
 
-Install [Visual Studio](https://visualstudio.microsoft.com/downloads/) and
-run `build_win32.bat`.
+Install [Visual Studio](https://visualstudio.microsoft.com/downloads/)
+with C++ support and run `build_win32.bat`.
 
 ### macOS
 
