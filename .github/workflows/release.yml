@@ -18,6 +18,11 @@ jobs:
           7z a renderer-win32.zip renderer-win32
       - name: Checksum
         run: certutil -hashfile renderer-win32.zip MD5
+      - name: Upload
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: win32-release
+          path: renderer-win32.zip
   macos:
     runs-on: macos-latest
     steps:
@@ -32,6 +37,11 @@ jobs:
           zip -r renderer-macos.zip renderer-macos
       - name: Checksum
         run: md5 renderer-macos.zip
+      - name: Upload
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: macos-release
+          path: renderer-macos.zip
   linux:
     runs-on: ubuntu-latest
     steps:
@@ -46,3 +56,8 @@ jobs:
           zip -r renderer-linux.zip renderer-linux
       - name: Checksum
         run: md5sum renderer-linux.zip
+      - name: Upload
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: linux-release
+          path: renderer-linux.zip
