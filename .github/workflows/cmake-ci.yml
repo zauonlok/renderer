@@ -24,6 +24,7 @@ jobs:
           cd build
           cmake -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=Release ..
           mingw32-make
+        shell: cmd
   macos-xcode:
     runs-on: macos-latest
     steps:
