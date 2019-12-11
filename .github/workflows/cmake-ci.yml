@@ -19,13 +19,10 @@ jobs:
         uses: actions/checkout@v1.0.0
       - name: Build
         run: |
-          set PATH=%PATH:C:\Program Files\Git\bin;=%
-          set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
           mkdir build
           cd build
-          cmake -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=Release ..
+          cmake -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=Release -D CMAKE_SH=CMAKE_SH-NOTFOUND ..
           mingw32-make
-        shell: cmd
   macos-xcode:
     runs-on: macos-latest
     steps:
