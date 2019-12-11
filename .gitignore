@@ -11,6 +11,6 @@ build
 cmake-build-*
 
 Viewer
-Viewer.dSYM
-Viewer.exe
-Viewer.pdb
+Viewer.*
+
+renderer-*

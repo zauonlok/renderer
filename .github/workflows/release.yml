@@ -1,0 +1,48 @@
+name: Release
+on: push
+jobs:
+  win32:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1.0.0
+      - name: Build
+        run: ./build_win32.bat
+      - name: Package
+        run: |
+          mkdir renderer-win32\assets
+          robocopy assets renderer-win32\assets /s
+          copy LICENSE renderer-win32
+          copy README.md renderer-win32
+          copy Viewer.exe renderer-win32
+          7z a renderer-win32.zip renderer-win32
+      - name: Checksum
+        run: certutil -hashfile renderer-win32.zip MD5
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1.0.0
+      - name: Build
+        run: ./build_macos.sh
+      - name: Package
+        run: |
+          mkdir renderer-macos
+          cp -R assets LICENSE README.md Viewer renderer-macos
+          zip -r renderer-macos.zip renderer-macos
+      - name: Checksum
+        run: md5 renderer-macos.zip
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1.0.0
+      - name: Build
+        run: ./build_linux.sh
+      - name: Package
+        run: |
+          mkdir renderer-linux
+          cp -r assets LICENSE README.md Viewer renderer-linux
+          zip -r renderer-linux.zip renderer-linux
+      - name: Checksum
+        run: md5sum renderer-linux.zip
