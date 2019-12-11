@@ -4,8 +4,10 @@ jobs:
   win32-vs2019:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v1.0.0
-      - run: |
+      - name: Checkout
+        uses: actions/checkout@v1.0.0
+      - name: Build
+        run: |
         mkdir build
         cd build
         cmake -G "Visual Studio 16 2019" ..
@@ -13,8 +15,10 @@ jobs:
   win32-mingw:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v1.0.0
-      - run: |
+      - name: Checkout
+        uses: actions/checkout@v1.0.0
+      - name: Build
+        run: |
         mkdir build
         cd build
         cmake -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=Release ..
@@ -22,8 +26,10 @@ jobs:
   macos-xcode:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v1.0.0
-      - run: |
+      - name: Checkout
+        uses: actions/checkout@v1.0.0
+      - name: Build
+        run: |
         mkdir build
         cd build
         cmake -G Xcode ..
@@ -31,8 +37,10 @@ jobs:
   macos-make:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v1.0.0
-      - run: |
+      - name: Checkout
+        uses: actions/checkout@v1.0.0
+      - name: Build
+        run: |
         mkdir build
         cd build
         cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..
@@ -40,8 +48,10 @@ jobs:
   linux-make:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1.0.0
-      - run: |
+      - name: Checkout
+        uses: actions/checkout@v1.0.0
+      - name: Build
+        run: |
         mkdir build
         cd build
         cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..
