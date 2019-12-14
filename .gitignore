@@ -1,8 +1,10 @@
 .DS_Store
 Thumbs.db
 
-*.exr
+*.pyc
 *.zip
+renderer/*.obj
+scripts/*.hdr
 
 .idea
 .vscode
