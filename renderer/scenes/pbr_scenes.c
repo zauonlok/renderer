@@ -56,14 +56,6 @@ scene_t *pbr_junkrat_scene(void) {
     return scene_from_file("junkrat/junkrat.scn", root);
 }
 
-scene_t *pbr_orb_scene(void) {
-    mat4_t translation = mat4_translate(0, -0.137f, 0);
-    mat4_t rotation = mat4_rotate_y(TO_RADIANS(180));
-    mat4_t scale = mat4_scale(2.5f, 2.5f, 2.5f);
-    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
-    return scene_from_file("orb/orb.scn", root);
-}
-
 scene_t *pbr_ornitier_scene(void) {
     mat4_t translation = mat4_translate(-111.550f, -67.795f, 178.647f);
     mat4_t scale = mat4_scale(0.00095f, 0.00095f, 0.00095f);

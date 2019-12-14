@@ -154,7 +154,6 @@ to bring it up.
 | [<img src="assets/drone/screenshot1.gif" width="600">](assets/drone/README.md)          | `Viewer pbr drone`        |
 | [<img src="assets/helmet/screenshot1.png" width="600">](assets/helmet/README.md)        | `Viewer pbr helmet`       |
 | [<img src="assets/junkrat/screenshot.gif" width="600">](assets/junkrat/README.md)       | `Viewer pbr junkrat`      |
-| [<img src="assets/orb/screenshot.png" width="600">](assets/orb/README.md)               | `Viewer pbr orb`          |
 | [<img src="assets/ornitier/screenshot.png" width="600">](assets/ornitier/README.md)     | `Viewer pbr ornitier`     |
 | [<img src="assets/ponycar/screenshot2.png" width="600">](assets/ponycar/README.md)      | `Viewer pbr ponycar`      |
 | [<img src="assets/spruit/screenshot1.png" width="600">](assets/spruit/README.md)        | `Viewer pbr sphere`       |
