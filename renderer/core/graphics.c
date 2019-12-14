@@ -302,6 +302,11 @@ static int clip_triangle(
 /*
  * for facing determination, see subsection 3.5.1 of
  * https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
+ *
+ * this is the same as (but more efficient than)
+ *     vec3_t ab = vec3_sub(b, a);
+ *     vec3_t ac = vec3_sub(c, a);
+ *     return vec3_cross(ab, ac).z <= 0;
  */
 static int is_back_facing(vec3_t ndc_coords[3]) {
     vec3_t a = ndc_coords[0];
