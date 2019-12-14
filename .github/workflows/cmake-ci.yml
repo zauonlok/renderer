@@ -5,7 +5,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1.0.0
+        uses: actions/checkout@v2.0.0
       - name: Build
         run: |
           mkdir build
@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1.0.0
+        uses: actions/checkout@v2.0.0
       - name: Build
         run: |
           mkdir build
@@ -27,7 +27,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1.0.0
+        uses: actions/checkout@v2.0.0
       - name: Build
         run: |
           mkdir build
@@ -38,7 +38,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1.0.0
+        uses: actions/checkout@v2.0.0
       - name: Build
         run: |
           mkdir build
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1.0.0
+        uses: actions/checkout@v2.0.0
       - name: Build
         run: |
           mkdir build

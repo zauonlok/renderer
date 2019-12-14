@@ -7,7 +7,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1.0.0
+        uses: actions/checkout@v2.0.0
       - name: Build
         run: ./build_win32.bat
       - name: Package
@@ -23,13 +23,13 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v1.0.0
         with:
-          name: win32-release
+          name: win32-artifact
           path: renderer-win32.zip
   macos:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1.0.0
+        uses: actions/checkout@v2.0.0
       - name: Build
         run: ./build_macos.sh
       - name: Package
@@ -42,13 +42,13 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v1.0.0
         with:
-          name: macos-release
+          name: macos-artifact
           path: renderer-macos.zip
   linux:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1.0.0
+        uses: actions/checkout@v2.0.0
       - name: Build
         run: ./build_linux.sh
       - name: Package
@@ -61,5 +61,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v1.0.0
         with:
-          name: linux-release
+          name: linux-artifact
           path: renderer-linux.zip
