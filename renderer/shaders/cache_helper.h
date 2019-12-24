@@ -25,4 +25,7 @@ void cache_release_skybox(cubemap_t *skybox);
 struct ibldata *cache_acquire_ibldata(const char *env_name);
 void cache_release_ibldata(struct ibldata *ibldata);
 
+/* misc cache functions */
+void cache_cleanup(void);
+
 #endif

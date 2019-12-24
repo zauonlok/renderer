@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include "core/api.h"
+#include "shaders/cache_helper.h"
 #include "tests/test_blinn.h"
 #include "tests/test_pbr.h"
 
@@ -52,5 +53,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    cache_cleanup();
     return 0;
 }

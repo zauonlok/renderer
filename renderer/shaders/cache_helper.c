@@ -394,3 +394,46 @@ void cache_release_ibldata(ibldata_t *ibldata) {
         assert(0);
     }
 }
+
+/* misc cache functions */
+
+void cache_cleanup(void) {
+    int num_meshes = darray_size(g_meshes);
+    int num_skeletons = darray_size(g_skeletons);
+    int num_textures = darray_size(g_textures);
+    int num_skyboxes = darray_size(g_skyboxes);
+    int num_ibldata = ARRAY_SIZE(g_ibldata);
+    int i;
+    for (i = 0; i < num_meshes; i++) {
+        assert(g_meshes[i].mesh == NULL);
+        assert(g_meshes[i].references == 0);
+        free(g_meshes[i].filename);
+    }
+    for (i = 0; i < num_skeletons; i++) {
+        assert(g_skeletons[i].skeleton == NULL);
+        assert(g_skeletons[i].references == 0);
+        free(g_skeletons[i].filename);
+    }
+    for (i = 0; i < num_textures; i++) {
+        assert(g_textures[i].texture == NULL);
+        assert(g_textures[i].references == 0);
+        free(g_textures[i].filename);
+    }
+    for (i = 0; i < num_skyboxes; i++) {
+        assert(g_skyboxes[i].skybox == NULL);
+        assert(g_skyboxes[i].references == 0);
+        free(g_skyboxes[i].skybox_name);
+    }
+    for (i = 0; i < num_ibldata; i++) {
+        assert(g_ibldata[i].ibldata == NULL);
+        assert(g_ibldata[i].references == 0);
+    }
+    darray_free(g_meshes);
+    darray_free(g_skeletons);
+    darray_free(g_textures);
+    darray_free(g_skyboxes);
+    g_meshes = NULL;
+    g_skeletons = NULL;
+    g_textures = NULL;
+    g_skyboxes = NULL;
+}
