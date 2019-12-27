@@ -134,33 +134,29 @@ void cache_release_skeleton(skeleton_t *skeleton) {
 
 typedef struct {
     char *filename;
-    int srgb2linear;
+    usage_t usage;
     texture_t *texture;
     int references;
 } cached_texture_t;
 
 static cached_texture_t *g_textures = NULL;
 
-texture_t *cache_acquire_texture(const char *filename, int srgb2linear) {
+texture_t *cache_acquire_texture(const char *filename, usage_t usage) {
     if (filename != NULL) {
         cached_texture_t cached_texture;
         int num_textures = darray_size(g_textures);
         int i;
 
-        assert(srgb2linear == 0 || srgb2linear == 1);
-
         for (i = 0; i < num_textures; i++) {
             if (strcmp(g_textures[i].filename, filename) == 0) {
-                if (g_textures[i].srgb2linear == srgb2linear) {
+                if (g_textures[i].usage == usage) {
                     if (g_textures[i].references > 0) {
                         g_textures[i].references += 1;
                     } else {
                         assert(g_textures[i].references == 0);
                         assert(g_textures[i].texture == NULL);
-                        g_textures[i].texture = texture_from_file(filename);
-                        if (srgb2linear) {
-                            texture_srgb2linear(g_textures[i].texture);
-                        }
+                        g_textures[i].texture = texture_from_file(filename,
+                                                                  usage);
                         g_textures[i].references = 1;
                     }
                     return g_textures[i].texture;
@@ -169,11 +165,8 @@ texture_t *cache_acquire_texture(const char *filename, int srgb2linear) {
         }
 
         cached_texture.filename = duplicate_string(filename);
-        cached_texture.srgb2linear = srgb2linear;
-        cached_texture.texture = texture_from_file(filename);
-        if (srgb2linear) {
-            texture_srgb2linear(cached_texture.texture);
-        }
+        cached_texture.usage = usage;
+        cached_texture.texture = texture_from_file(filename, usage);
         cached_texture.references = 1;
         darray_push(g_textures, cached_texture);
         return cached_texture.texture;
@@ -231,8 +224,8 @@ static cubemap_t *load_skybox(const char *skybox_name, int blur_level) {
         sprintf(paths[i], format, skybox_name, faces[i]);
     }
     skybox = cubemap_from_files(paths[0], paths[1], paths[2],
-                                paths[3], paths[4], paths[5]);
-    cubemap_linear2srgb(skybox);
+                                paths[3], paths[4], paths[5],
+                                USAGE_LDR_COLOR);
 
     return skybox;
 }
@@ -316,6 +309,7 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_levels) {
     int i, j;
 
     ibldata = (ibldata_t*)malloc(sizeof(ibldata_t));
+    memset(ibldata, 0, sizeof(ibldata_t));
     ibldata->mip_levels = mip_levels;
 
     /* diffuse environment map */
@@ -323,7 +317,8 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_levels) {
         sprintf(paths[j], "%s/i_%s.hdr", env_name, faces[j]);
     }
     ibldata->diffuse_map = cubemap_from_files(paths[0], paths[1], paths[2],
-                                              paths[3], paths[4], paths[5]);
+                                              paths[3], paths[4], paths[5],
+                                              USAGE_HDR_COLOR);
 
     /* specular environment maps */
     for (i = 0; i < mip_levels; i++) {
@@ -332,11 +327,13 @@ static ibldata_t *load_ibldata(const char *env_name, int mip_levels) {
         }
         ibldata->specular_maps[i] = cubemap_from_files(paths[0], paths[1],
                                                        paths[2], paths[3],
-                                                       paths[4], paths[5]);
+                                                       paths[4], paths[5],
+                                                       USAGE_HDR_COLOR);
     }
 
     /* brdf lookup texture */
-    ibldata->brdf_lut = cache_acquire_texture("common/brdf_lut.hdr", 0);
+    ibldata->brdf_lut = cache_acquire_texture("common/brdf_lut.hdr",
+                                              USAGE_HDR_DATA);
 
     return ibldata;
 }

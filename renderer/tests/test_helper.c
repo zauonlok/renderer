@@ -115,7 +115,7 @@ static void update_camera(window_t *window, camera_t *camera,
         motion.orbit = record->orbit_delta;
         motion.pan = record->pan_delta;
         motion.dolly = record->dolly_delta;
-        camera_orbit_update(camera, motion);
+        camera_update_transform(camera, motion);
     }
 }
 
@@ -374,25 +374,25 @@ static mat4_t get_light_proj_matrix(float half_w, float half_h,
     return mat4_orthographic(half_w, half_h, z_near, z_far);
 }
 
-framedata_t test_build_framedata(scene_t *scene, context_t *context) {
+perframe_t test_build_perframe(scene_t *scene, context_t *context) {
     vec3_t light_dir = vec3_normalize(context->light_dir);
     camera_t *camera = context->camera;
-    framedata_t framedata;
+    perframe_t perframe;
 
-    framedata.frame_time = context->frame_time;
-    framedata.delta_time = context->delta_time;
-    framedata.light_dir = light_dir;
-    framedata.camera_pos = camera_get_position(camera);
-    framedata.light_view_matrix = get_light_view_matrix(light_dir);
-    framedata.light_proj_matrix = get_light_proj_matrix(1, 1, 0, 2);
-    framedata.camera_view_matrix = camera_get_view_matrix(camera);
-    framedata.camera_proj_matrix = camera_get_proj_matrix(camera);
-    framedata.ambient_intensity = scene->ambient_intensity;
-    framedata.punctual_intensity = scene->punctual_intensity;
-    framedata.shadow_map = scene->shadow_map;
-    framedata.layer_view = -1;
+    perframe.frame_time = context->frame_time;
+    perframe.delta_time = context->delta_time;
+    perframe.light_dir = light_dir;
+    perframe.camera_pos = camera_get_position(camera);
+    perframe.light_view_matrix = get_light_view_matrix(light_dir);
+    perframe.light_proj_matrix = get_light_proj_matrix(1, 1, 0, 2);
+    perframe.camera_view_matrix = camera_get_view_matrix(camera);
+    perframe.camera_proj_matrix = camera_get_proj_matrix(camera);
+    perframe.ambient_intensity = scene->ambient_intensity;
+    perframe.punctual_intensity = scene->punctual_intensity;
+    perframe.shadow_map = scene->shadow_map;
+    perframe.layer_view = -1;
 
-    return framedata;
+    return perframe;
 }
 
 static int compare_models(const void *model1p, const void *model2p) {
@@ -427,7 +427,7 @@ static void sort_models(model_t **models, mat4_t view_matrix) {
 }
 
 void test_draw_scene(scene_t *scene, framebuffer_t *framebuffer,
-                     framedata_t *framedata) {
+                     perframe_t *perframe) {
     model_t *skybox = scene->skybox;
     model_t **models = scene->models;
     int num_models = darray_size(models);
@@ -435,14 +435,14 @@ void test_draw_scene(scene_t *scene, framebuffer_t *framebuffer,
 
     for (i = 0; i < num_models; i++) {
         model_t *model = models[i];
-        model->update(model, framedata);
+        model->update(model, perframe);
     }
     if (skybox != NULL) {
-        skybox->update(skybox, framedata);
+        skybox->update(skybox, perframe);
     }
 
     if (scene->shadow_buffer && scene->shadow_map) {
-        sort_models(models, framedata->light_view_matrix);
+        sort_models(models, perframe->light_view_matrix);
         framebuffer_clear_depth(scene->shadow_buffer, 1);
         for (i = 0; i < num_models; i++) {
             model_t *model = models[i];
@@ -450,13 +450,13 @@ void test_draw_scene(scene_t *scene, framebuffer_t *framebuffer,
                 model->draw(model, scene->shadow_buffer, 1);
             }
         }
-        texture_from_depth(scene->shadow_map, scene->shadow_buffer);
+        texture_from_depthbuffer(scene->shadow_map, scene->shadow_buffer);
     }
 
-    sort_models(models, framedata->camera_view_matrix);
+    sort_models(models, perframe->camera_view_matrix);
     framebuffer_clear_color(framebuffer, scene->background);
     framebuffer_clear_depth(framebuffer, 1);
-    if (skybox == NULL || framedata->layer_view >= 0) {
+    if (skybox == NULL || perframe->layer_view >= 0) {
         for (i = 0; i < num_models; i++) {
             model_t *model = models[i];
             model->draw(model, framebuffer, 0);

@@ -20,20 +20,20 @@ typedef struct {
     float punctual_intensity;
     texture_t *shadow_map;
     int layer_view;
-} framedata_t;
+} perframe_t;
 
 typedef struct model {
     mesh_t *mesh;
     program_t *program;
     mat4_t transform;
-    /* animation */
+    /* for animation */
     skeleton_t *skeleton;
     int attached;
-    /* sorting */
+    /* for sorting */
     int opaque;
     float distance;
     /* polymorphism */
-    void (*update)(struct model *model, framedata_t *framedata);
+    void (*update)(struct model *model, perframe_t *perframe);
     void (*draw)(struct model *model, framebuffer_t *framebuffer,
                  int shadow_pass);
     void (*release)(struct model *model);

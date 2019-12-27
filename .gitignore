@@ -12,7 +12,6 @@ scripts/*.hdr
 build
 cmake-build-*
 
-Viewer
-Viewer.*
+Viewer*
 
 renderer-*

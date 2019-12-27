@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "darray.h"
 #include "graphics.h"
+#include "image.h"
 #include "maths.h"
 #include "mesh.h"
 #include "scene.h"
@@ -18,7 +19,9 @@ scene_t *scene_create(vec3_t background, model_t *skybox, model_t **models,
     scene->punctual_intensity = punctual_intensity;
     if (shadow_width > 0 && shadow_height > 0) {
         scene->shadow_buffer = framebuffer_create(shadow_width, shadow_height);
-        scene->shadow_map = texture_create(shadow_width, shadow_height);
+        scene->shadow_map = texture_create(shadow_width,
+                                           shadow_height,
+                                           FORMAT_HDR);
     } else {
         scene->shadow_buffer = NULL;
         scene->shadow_map = NULL;

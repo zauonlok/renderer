@@ -30,9 +30,9 @@ vec4_t skybox_fragment_shader(void *varyings_, void *uniforms_,
 
 /* high-level api */
 
-static void update_model(model_t *model, framedata_t *framedata) {
-    mat4_t view_matrix = framedata->camera_view_matrix;
-    mat4_t proj_matrix = framedata->camera_proj_matrix;
+static void update_model(model_t *model, perframe_t *perframe) {
+    mat4_t view_matrix = perframe->camera_view_matrix;
+    mat4_t proj_matrix = perframe->camera_proj_matrix;
     skybox_uniforms_t *uniforms;
 
     /* remove translation */
@@ -46,21 +46,22 @@ static void update_model(model_t *model, framedata_t *framedata) {
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer,
                        int shadow_pass) {
-    mesh_t *mesh = model->mesh;
-    int num_faces = mesh_get_num_faces(mesh);
-    vertex_t *vertices = mesh_get_vertices(mesh);
-    program_t *program = model->program;
-    skybox_attribs_t *attribs;
-    int i, j;
+    if (!shadow_pass) {
+        mesh_t *mesh = model->mesh;
+        int num_faces = mesh_get_num_faces(mesh);
+        vertex_t *vertices = mesh_get_vertices(mesh);
+        program_t *program = model->program;
+        skybox_attribs_t *attribs;
+        int i, j;
 
-    UNUSED_VAR(shadow_pass);
-    for (i = 0; i < num_faces; i++) {
-        for (j = 0; j < 3; j++) {
-            vertex_t vertex = vertices[i * 3 + j];
-            attribs = (skybox_attribs_t*)program_get_attribs(program, j);
-            attribs->position = vertex.position;
+        for (i = 0; i < num_faces; i++) {
+            for (j = 0; j < 3; j++) {
+                vertex_t vertex = vertices[i * 3 + j];
+                attribs = (skybox_attribs_t*)program_get_attribs(program, j);
+                attribs->position = vertex.position;
+            }
+            graphics_draw_triangle(framebuffer, program);
         }
-        graphics_draw_triangle(framebuffer, program);
     }
 }
 

@@ -12,7 +12,7 @@ void camera_release(camera_t *camera);
 
 /* camera updating */
 void camera_set_transform(camera_t *camera, vec3_t position, vec3_t target);
-void camera_orbit_update(camera_t *camera, motion_t motion);
+void camera_update_transform(camera_t *camera, motion_t motion);
 
 /* property retrieving */
 vec3_t camera_get_position(camera_t *camera);

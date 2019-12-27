@@ -5,14 +5,14 @@
 
 typedef struct {
     int width, height;
-    vec4_t *colorbuffer;
-    float *depthbuffer;
+    unsigned char *color_buffer;
+    float *depth_buffer;
 } framebuffer_t;
 
+typedef struct program program_t;
 typedef vec4_t vertex_shader_t(void *attribs, void *varyings, void *uniforms);
 typedef vec4_t fragment_shader_t(void *varyings, void *uniforms,
                                  int *discard, int backface);
-typedef struct program program_t;
 
 /* framebuffer management */
 framebuffer_t *framebuffer_create(int width, int height);

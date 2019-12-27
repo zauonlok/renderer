@@ -79,7 +79,7 @@ static vec3_t calculate_offset(vec3_t from_target, motion_t motion) {
     return offset;
 }
 
-void camera_orbit_update(camera_t *camera, motion_t motion) {
+void camera_update_transform(camera_t *camera, motion_t motion) {
     vec3_t from_target = vec3_sub(camera->position, camera->target);
     vec3_t from_camera = vec3_sub(camera->target, camera->position);
     vec3_t pan = calculate_pan(from_camera, motion);

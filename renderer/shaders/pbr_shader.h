@@ -68,7 +68,7 @@ typedef struct {
     texture_t *emission_map;
     /* environment maps */
     ibldata_t *ibldata;
-    /* render control */
+    /* render controls */
     workflow_t workflow;
     float alpha_cutoff;
     int shadow_pass;
@@ -119,9 +119,9 @@ typedef struct {
 
 model_t *pbrm_create_model(const char *mesh, mat4_t transform,
                            const char *skeleton, int attached,
-                           pbrm_material_t material, const char *env_name);
+                           pbrm_material_t *material, const char *env_name);
 model_t *pbrs_create_model(const char *mesh, mat4_t transform,
                            const char *skeleton, int attached,
-                           pbrs_material_t material, const char *env_name);
+                           pbrs_material_t *material, const char *env_name);
 
 #endif

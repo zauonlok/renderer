@@ -38,7 +38,7 @@ typedef struct {
     texture_t *diffuse_map;
     texture_t *specular_map;
     texture_t *emission_map;
-    /* render control */
+    /* render controls */
     float alpha_cutoff;
     int shadow_pass;
 } blinn_uniforms_t;
@@ -63,6 +63,6 @@ typedef struct {
 
 model_t *blinn_create_model(const char *mesh, mat4_t transform,
                             const char *skeleton, int attached,
-                            blinn_material_t material);
+                            blinn_material_t *material);
 
 #endif

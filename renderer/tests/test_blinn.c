@@ -21,8 +21,8 @@ static creator_t g_creators[] = {
 
 static void tick_function(context_t *context, void *userdata) {
     scene_t *scene = (scene_t*)userdata;
-    framedata_t framedata = test_build_framedata(scene, context);
-    test_draw_scene(scene, context->framebuffer, &framedata);
+    perframe_t perframe = test_build_perframe(scene, context);
+    test_draw_scene(scene, context->framebuffer, &perframe);
 }
 
 void test_blinn(int argc, char *argv[]) {

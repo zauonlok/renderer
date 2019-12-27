@@ -14,7 +14,7 @@ skeleton_t *cache_acquire_skeleton(const char *filename);
 void cache_release_skeleton(skeleton_t *skeleton);
 
 /* texture related functions */
-texture_t *cache_acquire_texture(const char *filename, int srgb2linear);
+texture_t *cache_acquire_texture(const char *filename, usage_t usage);
 void cache_release_texture(texture_t *texture);
 
 /* skybox related functions */

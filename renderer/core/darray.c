@@ -21,10 +21,11 @@ void darray_free(void *darray) {
     }
 }
 
-void *darray_hold(void *darray, int count, int itemsize) {
-    assert(count > 0 && itemsize > 0);
+void *darray_hold(void *darray, int count, int item_size) {
+    int header_size = sizeof(int) * 2;
+    assert(count > 0 && item_size > 0);
     if (darray == NULL) {
-        int raw_size = sizeof(int) * 2 + itemsize * count;
+        int raw_size = header_size + item_size * count;
         int *base = (int*)malloc(raw_size);
         base[0] = count;  /* capacity */
         base[1] = count;  /* occupied */
@@ -37,7 +38,7 @@ void *darray_hold(void *darray, int count, int itemsize) {
         int double_curr = DARRAY_CAPACITY(darray) * 2;
         int capacity = needed_size > double_curr ? needed_size : double_curr;
         int occupied = needed_size;
-        int raw_size = sizeof(int) * 2 + itemsize * capacity;
+        int raw_size = header_size + item_size * capacity;
         int *base = (int*)realloc(DARRAY_RAW_DATA(darray), raw_size);
         base[0] = capacity;
         base[1] = occupied;

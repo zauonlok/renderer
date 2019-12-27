@@ -1,7 +1,7 @@
-#include <assert.h>
-#include <stdlib.h>
+#include <stddef.h>
 #include "../core/api.h"
 #include "../scenes/pbr_scenes.h"
+#include "../shaders/cache_helper.h"
 #include "test_helper.h"
 #include "test_pbr.h"
 
@@ -25,7 +25,11 @@ static creator_t g_creators[] = {
 #define EDGE_START (1 - EDGE_SPACE * 0.5f)
 #define EDGE_END (EDGE_SPACE * (NUM_EDGES - 0.5f))
 
-typedef struct {scene_t *scene; int layer;} userdata_t;
+typedef struct {
+    scene_t *scene;
+    int layer;
+    texture_t *labels[5];
+} userdata_t;
 
 static int above_layer_edge(int edge, vec2_t coord) {
     float offset = EDGE_SPACE * (float)edge;
@@ -67,62 +71,49 @@ static void draw_layer_edge(framebuffer_t *framebuffer, int edge) {
     float offset = EDGE_SPACE * (float)edge;
     float start = EDGE_START - offset;
     float end = EDGE_END - offset;
-
-    int row0 = 0;
-    int row1 = framebuffer->height - 1;
-    int col0 = (int)(start * (framebuffer->width - 1));
-    int col1 = (int)(end * (framebuffer->width - 1));
-    draw2d_draw_line(framebuffer, color, row0, row1, col0, col1);
+    draw2d_draw_line(framebuffer, color, vec2_new(start, 0), vec2_new(end, 1));
 }
 
-static texture_t *get_text_texture(int layer) {
-    static texture_t **textures = NULL;
-    if (textures == NULL) {
-        textures = (texture_t**)malloc(sizeof(texture_t*) * NUM_EDGES);
-        textures[0] = texture_from_file("common/diffuse.tga");
-        textures[1] = texture_from_file("common/specular.tga");
-        textures[2] = texture_from_file("common/roughness.tga");
-        textures[3] = texture_from_file("common/occlusion.tga");
-        textures[4] = texture_from_file("common/normal.tga");
-    }
-    assert(layer >= 1 && layer <= NUM_EDGES);
-    return textures[layer - 1];
+static void draw_top_text(framebuffer_t *framebuffer, texture_t *labels[5],
+                          int layer) {
+    texture_t *label = labels[layer - 1];
+    float ratio = (float)label->height / (float)framebuffer->height;
+    vec2_t origin = vec2_new(0, 1 - ratio);
+    draw2d_draw_texture(framebuffer, label, origin);
 }
 
-static void draw_top_text(framebuffer_t *framebuffer, int layer) {
-    texture_t *texture = get_text_texture(layer);
-    int row = framebuffer->height - texture->height - 10;
-    int col = 10;
-    draw2d_draw_texture(framebuffer, texture, row, col);
-}
-
-static void draw_bottom_text(framebuffer_t *framebuffer, int layer) {
-    texture_t *texture = get_text_texture(layer);
+static void draw_bottom_text(framebuffer_t *framebuffer, texture_t *labels[5],
+                             int layer) {
+    texture_t *label = labels[layer - 1];
+    float ratio = (float)label->width / (float)framebuffer->width;
     float center = EDGE_START - EDGE_SPACE * ((float)layer - 0.5f);
-    int row = 5;
-    int col = (int)(center * framebuffer->width - texture->width * 0.5) - 5;
-    draw2d_draw_texture(framebuffer, texture, row, col);
+    vec2_t origin = vec2_new(center - ratio * 0.5f, 0);
+    draw2d_draw_texture(framebuffer, label, origin);
 }
 
-static void draw_layer_view(framebuffer_t *framebuffer, int layer) {
-    if (layer == 0) {
+static void draw_layer_view(framebuffer_t *framebuffer, userdata_t *userdata) {
+    if (userdata->layer == 0) {
         int edge;
         for (edge = 0; edge < NUM_EDGES; edge++) {
             draw_layer_edge(framebuffer, edge);
-            draw_bottom_text(framebuffer, edge + 1);
+            draw_bottom_text(framebuffer, userdata->labels, edge + 1);
         }
-    } else if (layer > 0) {
-        draw_top_text(framebuffer, layer);
+    } else if (userdata->layer > 0) {
+        draw_top_text(framebuffer, userdata->labels, userdata->layer);
     }
 }
 
 static void tick_function(context_t *context, void *userdata_) {
     userdata_t *userdata = (userdata_t*)userdata_;
-    framedata_t framedata = test_build_framedata(userdata->scene, context);
+    perframe_t perframe = test_build_perframe(userdata->scene, context);
     userdata->layer = query_curr_layer(context, userdata->layer);
-    framedata.layer_view = userdata->layer;
-    test_draw_scene(userdata->scene, context->framebuffer, &framedata);
-    draw_layer_view(context->framebuffer, userdata->layer);
+    perframe.layer_view = userdata->layer;
+    test_draw_scene(userdata->scene, context->framebuffer, &perframe);
+    draw_layer_view(context->framebuffer, userdata);
+}
+
+static texture_t *acquire_label_texture(const char *filename) {
+    return cache_acquire_texture(filename, USAGE_LDR_COLOR);
 }
 
 void test_pbr(int argc, char *argv[]) {
@@ -132,7 +123,19 @@ void test_pbr(int argc, char *argv[]) {
         userdata_t userdata;
         userdata.scene = scene;
         userdata.layer = -1;
+        userdata.labels[0] = acquire_label_texture("common/diffuse.tga");
+        userdata.labels[1] = acquire_label_texture("common/specular.tga");
+        userdata.labels[2] = acquire_label_texture("common/roughness.tga");
+        userdata.labels[3] = acquire_label_texture("common/occlusion.tga");
+        userdata.labels[4] = acquire_label_texture("common/normal.tga");
+
         test_enter_mainloop(tick_function, &userdata);
         scene_release(scene);
+
+        cache_release_texture(userdata.labels[0]);
+        cache_release_texture(userdata.labels[1]);
+        cache_release_texture(userdata.labels[2]);
+        cache_release_texture(userdata.labels[3]);
+        cache_release_texture(userdata.labels[4]);
     }
 }

@@ -22,7 +22,61 @@ struct window {
     void *userdata;
 };
 
-static NSAutoreleasePool *g_autoreleasepool;
+/* platform initialization */
+
+static NSAutoreleasePool *g_autoreleasepool = NULL;
+
+static void create_menubar(void) {
+    NSMenu *menu_bar, *app_menu;
+    NSMenuItem *app_menu_item, *quit_menu_item;
+    NSString *app_name, *quit_title;
+
+    menu_bar = [[[NSMenu alloc] init] autorelease];
+    [NSApp setMainMenu:menu_bar];
+
+    app_menu_item = [[[NSMenuItem alloc] init] autorelease];
+    [menu_bar addItem:app_menu_item];
+
+    app_menu = [[[NSMenu alloc] init] autorelease];
+    [app_menu_item setSubmenu:app_menu];
+
+    app_name = [[NSProcessInfo processInfo] processName];
+    quit_title = [@"Quit " stringByAppendingString:app_name];
+    quit_menu_item = [[[NSMenuItem alloc] initWithTitle:quit_title
+                                                 action:@selector(terminate:)
+                                          keyEquivalent:@"q"] autorelease];
+    [app_menu addItem:quit_menu_item];
+}
+
+static void create_application(void) {
+    if (NSApp == nil) {
+        g_autoreleasepool = [[NSAutoreleasePool alloc] init];
+        [NSApplication sharedApplication];
+        [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+        create_menubar();
+        [NSApp finishLaunching];
+    }
+}
+
+static void initialize_path(void) {
+    char path[PATH_SIZE];
+    uint32_t size = PATH_SIZE;
+    _NSGetExecutablePath(path, &size);
+    *strrchr(path, '/') = '\0';
+    chdir(path);
+    chdir("assets");
+}
+
+void platform_initialize(void) {
+    create_application();
+    initialize_path();
+}
+
+void platform_terminate(void) {
+    assert(g_autoreleasepool != NULL);
+    [g_autoreleasepool drain];
+    g_autoreleasepool = [[NSAutoreleasePool alloc] init];
+}
 
 /* window related functions */
 
@@ -107,7 +161,7 @@ static void handle_scroll_event(window_t *window, float offset) {
 - (void)drawRect:(NSRect)dirtyRect {
     image_t *surface = _window->surface;
     NSBitmapImageRep *rep = [[[NSBitmapImageRep alloc]
-            initWithBitmapDataPlanes:&(surface->buffer)
+            initWithBitmapDataPlanes:&(surface->ldr_buffer)
                           pixelsWide:surface->width
                           pixelsHigh:surface->height
                        bitsPerSample:8
@@ -160,38 +214,6 @@ static void handle_scroll_event(window_t *window, float offset) {
 
 @end
 
-static void create_menubar(void) {
-    NSMenu *menu_bar, *app_menu;
-    NSMenuItem *app_menu_item, *quit_menu_item;
-    NSString *app_name, *quit_title;
-
-    menu_bar = [[[NSMenu alloc] init] autorelease];
-    [NSApp setMainMenu:menu_bar];
-
-    app_menu_item = [[[NSMenuItem alloc] init] autorelease];
-    [menu_bar addItem:app_menu_item];
-
-    app_menu = [[[NSMenu alloc] init] autorelease];
-    [app_menu_item setSubmenu:app_menu];
-
-    app_name = [[NSProcessInfo processInfo] processName];
-    quit_title = [@"Quit " stringByAppendingString:app_name];
-    quit_menu_item = [[[NSMenuItem alloc] initWithTitle:quit_title
-                                                 action:@selector(terminate:)
-                                          keyEquivalent:@"q"] autorelease];
-    [app_menu addItem:quit_menu_item];
-}
-
-static void create_application(void) {
-    if (NSApp == nil) {
-        g_autoreleasepool = [[NSAutoreleasePool alloc] init];
-        [NSApplication sharedApplication];
-        [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-        create_menubar();
-        [NSApp finishLaunching];
-    }
-}
-
 static NSWindow *create_window(window_t *window, const char *title,
                                int width, int height) {
     NSRect rect;
@@ -230,13 +252,12 @@ static NSWindow *create_window(window_t *window, const char *title,
 window_t *window_create(const char *title, int width, int height) {
     window_t *window;
 
-    assert(width > 0 && height > 0);
+    assert(NSApp && width > 0 && height > 0);
 
-    create_application();
     window = (window_t*)malloc(sizeof(window_t));
     memset(window, 0, sizeof(window_t));
     window->handle = create_window(window, title, width, height);
-    window->surface = image_create(width, height, 4);
+    window->surface = image_create(width, height, 4, FORMAT_LDR);
 
     [window->handle makeKeyAndOrderFront:nil];
     return window;
@@ -271,13 +292,8 @@ static void present_surface(window_t *window) {
     [[window->handle contentView] setNeedsDisplay:YES];  /* invoke drawRect */
 }
 
-void window_draw_image(window_t *window, image_t *image) {
-    private_blit_image_rgb(image, window->surface);
-    present_surface(window);
-}
-
 void window_draw_buffer(window_t *window, framebuffer_t *buffer) {
-    private_blit_buffer_rgb(buffer, window->surface);
+    private_blit_rgb(buffer, window->surface);
     present_surface(window);
 }
 
@@ -337,13 +353,4 @@ float platform_get_time(void) {
         initial = get_native_time();
     }
     return (float)(get_native_time() - initial);
-}
-
-void platform_init_path(void) {
-    char path[PATH_SIZE];
-    uint32_t size = PATH_SIZE;
-    _NSGetExecutablePath(path, &size);
-    *strrchr(path, '/') = '\0';
-    chdir(path);
-    chdir("assets");
 }

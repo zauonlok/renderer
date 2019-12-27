@@ -360,50 +360,50 @@ static scene_model_t *read_models(FILE *file) {
     return models;
 }
 
-static scene_t *create_scene(scene_light_t light, model_t **models) {
+static scene_t *create_scene(scene_light_t *light, model_t **models) {
     model_t *skybox;
     int shadow_width;
     int shadow_height;
 
-    if (equals_to(light.skybox, "off")) {
+    if (equals_to(light->skybox, "off")) {
         skybox = NULL;
     } else {
-        const char *skybox_name = wrap_path(light.environment);
+        const char *skybox_name = wrap_path(light->environment);
         int blur_level;
-        if (equals_to(light.skybox, "ambient")) {
+        if (equals_to(light->skybox, "ambient")) {
             blur_level = -1;
-        } else if (equals_to(light.skybox, "blurred")) {
+        } else if (equals_to(light->skybox, "blurred")) {
             blur_level = 1;
         } else {
-            assert(equals_to(light.skybox, "on"));
+            assert(equals_to(light->skybox, "on"));
             blur_level = 0;
         }
         assert(skybox_name != NULL);
         skybox = skybox_create_model(skybox_name, blur_level);
     }
 
-    if (equals_to(light.shadow, "off")) {
+    if (equals_to(light->shadow, "off")) {
         shadow_width = -1;
         shadow_height = -1;
     } else {
-        if (equals_to(light.shadow, "on")) {
+        if (equals_to(light->shadow, "on")) {
             shadow_width = 512;
             shadow_height = 512;
         } else {
             int items;
-            items = sscanf(light.shadow, "%dx%d",
+            items = sscanf(light->shadow, "%dx%d",
                            &shadow_width, &shadow_height);
             assert(items == 2 && shadow_width > 0 && shadow_height > 0);
             UNUSED_VAR(items);
         }
     }
 
-    return scene_create(light.background, skybox, models,
-                        light.ambient, light.punctual,
+    return scene_create(light->background, skybox, models,
+                        light->ambient, light->punctual,
                         shadow_width, shadow_height);
 }
 
-static scene_t *create_blinn_scene(scene_light_t scene_light,
+static scene_t *create_blinn_scene(scene_light_t *scene_light,
                                    scene_blinn_t *scene_materials,
                                    scene_transform_t *scene_transforms,
                                    scene_model_t *scene_models,
@@ -449,19 +449,19 @@ static scene_t *create_blinn_scene(scene_light_t scene_light,
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
         model = blinn_create_model(mesh, transform, skeleton, attached,
-                                   material);
+                                   &material);
         darray_push(models, model);
     }
 
     return create_scene(scene_light, models);
 }
 
-static scene_t *create_pbrm_scene(scene_light_t scene_light,
+static scene_t *create_pbrm_scene(scene_light_t *scene_light,
                                   scene_pbrm_t *scene_materials,
                                   scene_transform_t *scene_transforms,
                                   scene_model_t *scene_models,
                                   mat4_t root_transform) {
-    const char *env_name = wrap_path(scene_light.environment);
+    const char *env_name = wrap_path(scene_light->environment);
     int num_materials = darray_size(scene_materials);
     int num_transforms = darray_size(scene_transforms);
     int num_models = darray_size(scene_models);
@@ -507,19 +507,19 @@ static scene_t *create_pbrm_scene(scene_light_t scene_light,
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
         model = pbrm_create_model(mesh, transform, skeleton, attached,
-                                  material, env_name);
+                                  &material, env_name);
         darray_push(models, model);
     }
 
     return create_scene(scene_light, models);
 }
 
-static scene_t *create_pbrs_scene(scene_light_t scene_light,
+static scene_t *create_pbrs_scene(scene_light_t *scene_light,
                                   scene_pbrs_t *scene_materials,
                                   scene_transform_t *scene_transforms,
                                   scene_model_t *scene_models,
                                   mat4_t root_transform) {
-    const char *env_name = wrap_path(scene_light.environment);
+    const char *env_name = wrap_path(scene_light->environment);
     int num_materials = darray_size(scene_materials);
     int num_transforms = darray_size(scene_transforms);
     int num_models = darray_size(scene_models);
@@ -565,7 +565,7 @@ static scene_t *create_pbrs_scene(scene_light_t scene_light,
         material.alpha_cutoff = scene_material.alpha_cutoff;
 
         model = pbrs_create_model(mesh, transform, skeleton, attached,
-                                  material, env_name);
+                                  &material, env_name);
         darray_push(models, model);
     }
 
@@ -588,7 +588,7 @@ scene_t *scene_from_file(const char *filename, mat4_t root) {
         scene_blinn_t *materials = read_blinn_materials(file);
         scene_transform_t *transforms = read_transforms(file);
         scene_model_t *models = read_models(file);
-        scene = create_blinn_scene(light, materials, transforms, models, root);
+        scene = create_blinn_scene(&light, materials, transforms, models, root);
         darray_free(materials);
         darray_free(transforms);
         darray_free(models);
@@ -597,7 +597,7 @@ scene_t *scene_from_file(const char *filename, mat4_t root) {
         scene_pbrm_t *materials = read_pbrm_materials(file);
         scene_transform_t *transforms = read_transforms(file);
         scene_model_t *models = read_models(file);
-        scene = create_pbrm_scene(light, materials, transforms, models, root);
+        scene = create_pbrm_scene(&light, materials, transforms, models, root);
         darray_free(materials);
         darray_free(transforms);
         darray_free(models);
@@ -606,7 +606,7 @@ scene_t *scene_from_file(const char *filename, mat4_t root) {
         scene_pbrs_t *materials = read_pbrs_materials(file);
         scene_transform_t *transforms = read_transforms(file);
         scene_model_t *models = read_models(file);
-        scene = create_pbrs_scene(light, materials, transforms, models, root);
+        scene = create_pbrs_scene(&light, materials, transforms, models, root);
         darray_free(materials);
         darray_free(transforms);
         darray_free(models);

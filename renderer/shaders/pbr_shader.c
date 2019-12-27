@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -227,8 +226,8 @@ static vec3_t get_normal_dir(pbr_varyings_t *varyings,
                              int backface) {
     vec3_t normal_dir;
     if (uniforms->normal_map) {
-        vec2_t texcoord = varyings->texcoord;
-        vec4_t sample = texture_sample(uniforms->normal_map, texcoord);
+        vec4_t sample = texture_sample(uniforms->normal_map,
+                                       varyings->texcoord);
         vec3_t tangent_normal = vec3_new(sample.x * 2 - 1,
                                          sample.y * 2 - 1,
                                          sample.z * 2 - 1);
@@ -411,14 +410,38 @@ static int above_layer_edge(int edge, vec2_t coord) {
     return vec2_edge(start, end, coord) > 0;
 }
 
+/*
+ * for aces filmic tone mapping curve, see
+ * https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+ */
+static vec4_t linear_to_srgb(vec3_t color, float alpha) {
+    float a = 2.51f;
+    float b = 0.03f;
+    float c = 2.43f;
+    float d = 0.59f;
+    float e = 0.14f;
+
+    float x = color.x;
+    float y = color.y;
+    float z = color.z;
+
+    x = (x * (a * x + b)) / (x * (c * x + d) + e);
+    y = (y * (a * y + b)) / (y * (c * y + d) + e);
+    z = (z * (a * z + b)) / (z * (c * z + d) + e);
+
+    x = (float)pow(float_saturate(x), 1 / 2.2);
+    y = (float)pow(float_saturate(y), 1 / 2.2);
+    z = (float)pow(float_saturate(z), 1 / 2.2);
+
+    return vec4_new(x, y, z, alpha);
+}
+
 static vec4_t get_layer_color(int layer, material_t material) {
     float alpha = material.alpha;
     if (layer == 1) {
-        vec4_t diffuse = vec4_from_vec3(material.diffuse, alpha);
-        return vec4_linear2srgb(diffuse);
+        return linear_to_srgb(material.diffuse, alpha);
     } else if (layer == 2) {
-        vec4_t specular = vec4_from_vec3(material.specular, alpha);
-        return vec4_linear2srgb(specular);
+        return linear_to_srgb(material.specular, alpha);
     } else if (layer == 3) {
         float roughness = material.roughness;
         return vec4_new(roughness, roughness, roughness, alpha);
@@ -481,7 +504,7 @@ static vec4_t common_fragment_shader(pbr_varyings_t *varyings,
             }
         }
 
-        return vec4_linear2srgb(vec4_from_vec3(color, material.alpha));
+        return linear_to_srgb(color, material.alpha);
     }
 }
 
@@ -499,9 +522,9 @@ vec4_t pbr_fragment_shader(void *varyings_, void *uniforms_,
 
 /* high-level api */
 
-static void update_model(model_t *model, framedata_t *framedata) {
-    float ambient_intensity = framedata->ambient_intensity;
-    float punctual_intensity = framedata->punctual_intensity;
+static void update_model(model_t *model, perframe_t *perframe) {
+    float ambient_intensity = perframe->ambient_intensity;
+    float punctual_intensity = perframe->punctual_intensity;
     skeleton_t *skeleton = model->skeleton;
     mat4_t model_matrix = model->transform;
     mat3_t normal_matrix;
@@ -510,7 +533,7 @@ static void update_model(model_t *model, framedata_t *framedata) {
     pbr_uniforms_t *uniforms;
 
     if (skeleton) {
-        skeleton_update_joints(skeleton, framedata->frame_time);
+        skeleton_update_joints(skeleton, perframe->frame_time);
         joint_matrices = skeleton_get_joint_matrices(skeleton);
         joint_n_matrices = skeleton_get_normal_matrices(skeleton);
         if (model->attached >= 0) {
@@ -526,20 +549,20 @@ static void update_model(model_t *model, framedata_t *framedata) {
     normal_matrix = mat3_inverse_transpose(mat3_from_mat4(model_matrix));
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
-    uniforms->light_dir = framedata->light_dir;
-    uniforms->camera_pos = framedata->camera_pos;
+    uniforms->light_dir = perframe->light_dir;
+    uniforms->camera_pos = perframe->camera_pos;
     uniforms->model_matrix = model_matrix;
     uniforms->normal_matrix = normal_matrix;
-    uniforms->light_vp_matrix = mat4_mul_mat4(framedata->light_proj_matrix,
-                                              framedata->light_view_matrix);
-    uniforms->camera_vp_matrix = mat4_mul_mat4(framedata->camera_proj_matrix,
-                                               framedata->camera_view_matrix);
+    uniforms->light_vp_matrix = mat4_mul_mat4(perframe->light_proj_matrix,
+                                              perframe->light_view_matrix);
+    uniforms->camera_vp_matrix = mat4_mul_mat4(perframe->camera_proj_matrix,
+                                               perframe->camera_view_matrix);
     uniforms->joint_matrices = joint_matrices;
     uniforms->joint_n_matrices = joint_n_matrices;
     uniforms->ambient_intensity = float_clamp(ambient_intensity, 0, 5);
     uniforms->punctual_intensity = float_clamp(punctual_intensity, 0, 5);
-    uniforms->shadow_map = framedata->shadow_map;
-    uniforms->layer_view = framedata->layer_view;
+    uniforms->shadow_map = perframe->shadow_map;
+    uniforms->layer_view = perframe->layer_view;
 }
 
 static void draw_model(model_t *model, framebuffer_t *framebuffer,
@@ -616,30 +639,35 @@ static model_t *create_model(const char *mesh, mat4_t transform,
     return model;
 }
 
+static texture_t *acquire_color_texture(const char *filename) {
+    return cache_acquire_texture(filename, USAGE_HDR_COLOR);
+}
+
+static texture_t *acquire_data_texture(const char *filename) {
+    return cache_acquire_texture(filename, USAGE_LDR_DATA);
+}
+
 model_t *pbrm_create_model(const char *mesh, mat4_t transform,
                            const char *skeleton, int attached,
-                           pbrm_material_t material, const char *env_name) {
+                           pbrm_material_t *material, const char *env_name) {
     pbr_uniforms_t *uniforms;
     model_t *model;
 
-    assert(material.metalness_factor >= 0 && material.metalness_factor <= 1);
-    assert(material.roughness_factor >= 0 && material.roughness_factor <= 1);
-
     model = create_model(mesh, transform, skeleton, attached,
-                         material.double_sided, material.enable_blend);
+                         material->double_sided, material->enable_blend);
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
-    uniforms->basecolor_factor = material.basecolor_factor;
-    uniforms->metalness_factor = material.metalness_factor;
-    uniforms->roughness_factor = material.roughness_factor;
-    uniforms->basecolor_map = cache_acquire_texture(material.basecolor_map, 1);
-    uniforms->metalness_map = cache_acquire_texture(material.metalness_map, 0);
-    uniforms->roughness_map = cache_acquire_texture(material.roughness_map, 0);
-    uniforms->normal_map = cache_acquire_texture(material.normal_map, 0);
-    uniforms->occlusion_map = cache_acquire_texture(material.occlusion_map, 0);
-    uniforms->emission_map = cache_acquire_texture(material.emission_map, 1);
+    uniforms->basecolor_factor = material->basecolor_factor;
+    uniforms->metalness_factor = float_saturate(material->metalness_factor);
+    uniforms->roughness_factor = float_saturate(material->roughness_factor);
+    uniforms->basecolor_map = acquire_color_texture(material->basecolor_map);
+    uniforms->metalness_map = acquire_data_texture(material->metalness_map);
+    uniforms->roughness_map = acquire_data_texture(material->roughness_map);
+    uniforms->normal_map = acquire_data_texture(material->normal_map);
+    uniforms->occlusion_map = acquire_data_texture(material->occlusion_map);
+    uniforms->emission_map = acquire_color_texture(material->emission_map);
     uniforms->ibldata = cache_acquire_ibldata(env_name);
-    uniforms->alpha_cutoff = material.alpha_cutoff;
+    uniforms->alpha_cutoff = material->alpha_cutoff;
     uniforms->workflow = METALNESS_WORKFLOW;
     uniforms->layer_view = -1;
 
@@ -648,27 +676,25 @@ model_t *pbrm_create_model(const char *mesh, mat4_t transform,
 
 model_t *pbrs_create_model(const char *mesh, mat4_t transform,
                            const char *skeleton, int attached,
-                           pbrs_material_t material, const char *env_name) {
+                           pbrs_material_t *material, const char *env_name) {
     pbr_uniforms_t *uniforms;
     model_t *model;
 
-    assert(material.glossiness_factor >= 0 && material.glossiness_factor <= 1);
-
     model = create_model(mesh, transform, skeleton, attached,
-                         material.double_sided, material.enable_blend);
+                         material->double_sided, material->enable_blend);
 
     uniforms = (pbr_uniforms_t*)program_get_uniforms(model->program);
-    uniforms->diffuse_factor = material.diffuse_factor;
-    uniforms->specular_factor = material.specular_factor;
-    uniforms->glossiness_factor = material.glossiness_factor;
-    uniforms->diffuse_map = cache_acquire_texture(material.diffuse_map, 1);
-    uniforms->specular_map = cache_acquire_texture(material.specular_map, 1);
-    uniforms->glossiness_map = cache_acquire_texture(material.glossiness_map, 0);
-    uniforms->normal_map = cache_acquire_texture(material.normal_map, 0);
-    uniforms->occlusion_map = cache_acquire_texture(material.occlusion_map, 0);
-    uniforms->emission_map = cache_acquire_texture(material.emission_map, 1);
+    uniforms->diffuse_factor = material->diffuse_factor;
+    uniforms->specular_factor = material->specular_factor;
+    uniforms->glossiness_factor = float_saturate(material->glossiness_factor);
+    uniforms->diffuse_map = acquire_color_texture(material->diffuse_map);
+    uniforms->specular_map = acquire_color_texture(material->specular_map);
+    uniforms->glossiness_map = acquire_data_texture(material->glossiness_map);
+    uniforms->normal_map = acquire_data_texture(material->normal_map);
+    uniforms->occlusion_map = acquire_data_texture(material->occlusion_map);
+    uniforms->emission_map = acquire_color_texture(material->emission_map);
     uniforms->ibldata = cache_acquire_ibldata(env_name);
-    uniforms->alpha_cutoff = material.alpha_cutoff;
+    uniforms->alpha_cutoff = material->alpha_cutoff;
     uniforms->workflow = SPECULAR_WORKFLOW;
     uniforms->layer_view = -1;
 

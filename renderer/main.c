@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     int i;
 
     srand((unsigned int)time(NULL));
-    platform_init_path();
+    platform_initialize();
 
     if (argc > 1) {
         testname = argv[1];
@@ -53,6 +53,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    platform_terminate();
     cache_cleanup();
+
     return 0;
 }

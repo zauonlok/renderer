@@ -4,30 +4,6 @@
 #include "macro.h"
 #include "maths.h"
 
-/* int related functions */
-
-int int_min(int a, int b) {
-    return a < b ? a : b;
-}
-
-int int_max(int a, int b) {
-    return a > b ? a : b;
-}
-
-int int_lerp(int a, int b, float t) {
-    return (int)(a + (b - a) * t);
-}
-
-void int_swap(int *a, int *b) {
-    int t = *a;
-    *a = *b;
-    *b = t;
-}
-
-void int_print(const char *name, int i) {
-    printf("int %s = %d\n", name, i);
-}
-
 /* float related functions */
 
 float float_min(float a, float b) {
@@ -38,16 +14,42 @@ float float_max(float a, float b) {
     return a > b ? a : b;
 }
 
-float float_clamp(float f, float min, float max) {
-    return f < min ? min : (f > max ? max : f);
-}
-
 float float_lerp(float a, float b, float t) {
     return a + (b - a) * t;
 }
 
+float float_clamp(float f, float min, float max) {
+    return f < min ? min : (f > max ? max : f);
+}
+
 float float_saturate(float f) {
     return f < 0 ? 0 : (f > 1 ? 1 : f);
+}
+
+float float_from_uchar(unsigned char value) {
+    return value / 255.0f;
+}
+
+unsigned char float_to_uchar(float value) {
+    return (unsigned char)(value * 255);
+}
+
+float float_srgb2linear(float value) {
+    return (float)pow(value, 2.2);
+}
+
+float float_linear2srgb(float value) {
+    return (float)pow(value, 1 / 2.2);
+}
+
+float float_aces(float value) {
+    float a = 2.51f;
+    float b = 0.03f;
+    float c = 2.43f;
+    float d = 0.59f;
+    float e = 0.14f;
+    value = (value * (a * value + b)) / (value * (c * value + d) + e);
+    return float_saturate(value);
 }
 
 void float_print(const char *name, float f) {
@@ -91,16 +93,16 @@ vec2_t vec2_div(vec2_t v, float divisor) {
     return vec2_mul(v, 1 / divisor);
 }
 
+float vec2_length(vec2_t v) {
+    return (float)sqrt(v.x * v.x + v.y * v.y);
+}
+
 /*
  * for edge function, see
  * https://www.scratchapixel.com/lessons/3d-basic-rendering/rasterization-practical-implementation/rasterization-stage
  */
 float vec2_edge(vec2_t s, vec2_t e, vec2_t v) {
     return (v.x - s.x) * (e.y - s.y) - (v.y - s.y) * (e.x - s.x);
-}
-
-float vec2_length(vec2_t v) {
-    return (float)sqrt(v.x * v.x + v.y * v.y);
 }
 
 void vec2_print(const char *name, vec2_t v) {
@@ -247,40 +249,6 @@ vec4_t vec4_saturate(vec4_t v) {
 
 vec4_t vec4_modulate(vec4_t a, vec4_t b) {
     return vec4_new(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
-}
-
-vec4_t vec4_srgb2linear(vec4_t color) {
-    float r = (float)pow(color.x, 2.2);
-    float g = (float)pow(color.y, 2.2);
-    float b = (float)pow(color.z, 2.2);
-    float a = color.w;
-    return vec4_new(r, g, b, a);
-}
-
-/*
- * for aces filmic tone mapping curve, see
- * https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
- */
-vec4_t vec4_linear2srgb(vec4_t color) {
-    float a = 2.51f;
-    float b = 0.03f;
-    float c = 2.43f;
-    float d = 0.59f;
-    float e = 0.14f;
-
-    float x = color.x;
-    float y = color.y;
-    float z = color.z;
-
-    x = (x * (a * x + b)) / (x * (c * x + d) + e);
-    y = (y * (a * y + b)) / (y * (c * y + d) + e);
-    z = (z * (a * z + b)) / (z * (c * z + d) + e);
-
-    x = (float)pow(float_saturate(x), 1 / 2.2);
-    y = (float)pow(float_saturate(y), 1 / 2.2);
-    z = (float)pow(float_saturate(z), 1 / 2.2);
-
-    return vec4_new(x, y, z, color.w);
 }
 
 void vec4_print(const char *name, vec4_t v) {

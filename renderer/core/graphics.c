@@ -11,7 +11,6 @@
 framebuffer_t *framebuffer_create(int width, int height) {
     vec4_t default_color = {0, 0, 0, 1};
     float default_depth = 1;
-    int num_elems = width * height;
     framebuffer_t *framebuffer;
 
     assert(width > 0 && height > 0);
@@ -19,8 +18,8 @@ framebuffer_t *framebuffer_create(int width, int height) {
     framebuffer = (framebuffer_t*)malloc(sizeof(framebuffer_t));
     framebuffer->width = width;
     framebuffer->height = height;
-    framebuffer->colorbuffer = (vec4_t*)malloc(sizeof(vec4_t) * num_elems);
-    framebuffer->depthbuffer = (float*)malloc(sizeof(float) * num_elems);
+    framebuffer->color_buffer = (unsigned char*)malloc(width * height * 4);
+    framebuffer->depth_buffer = (float*)malloc(sizeof(float) * width * height);
 
     framebuffer_clear_color(framebuffer, default_color);
     framebuffer_clear_depth(framebuffer, default_depth);
@@ -29,24 +28,33 @@ framebuffer_t *framebuffer_create(int width, int height) {
 }
 
 void framebuffer_release(framebuffer_t *framebuffer) {
-    free(framebuffer->colorbuffer);
-    free(framebuffer->depthbuffer);
+    free(framebuffer->color_buffer);
+    free(framebuffer->depth_buffer);
     free(framebuffer);
 }
 
-void framebuffer_clear_color(framebuffer_t *framebuffer, vec4_t color) {
-    int num_elems = framebuffer->width * framebuffer->height;
-    int i;
-    for (i = 0; i < num_elems; i++) {
-        framebuffer->colorbuffer[i] = color;
+void framebuffer_clear_color(framebuffer_t *framebuffer, vec4_t color_) {
+    int num_pixels = framebuffer->width * framebuffer->height;
+    unsigned char color[4];
+    int i, j;
+
+    color[0] = float_to_uchar(color_.x);
+    color[1] = float_to_uchar(color_.y);
+    color[2] = float_to_uchar(color_.z);
+    color[3] = float_to_uchar(color_.w);
+
+    for (i = 0; i < num_pixels; i++) {
+        for (j = 0; j < 4; j++) {
+            framebuffer->color_buffer[i * 4 + j] = color[j];
+        }
     }
 }
 
 void framebuffer_clear_depth(framebuffer_t *framebuffer, float depth) {
-    int num_elems = framebuffer->width * framebuffer->height;
+    int num_pixels = framebuffer->width * framebuffer->height;
     int i;
-    for (i = 0; i < num_elems; i++) {
-        framebuffer->depthbuffer[i] = depth;
+    for (i = 0; i < num_pixels; i++) {
+        framebuffer->depth_buffer[i] = depth;
     }
 }
 
@@ -227,7 +235,7 @@ static int clip_against_plane(
             for (j = 0; j < varying_num_floats; j++) {
                 dest_varyings[j] = float_lerp(prev_varyings[j],
                                               curr_varyings[j],
-                                              (float)ratio);
+                                              ratio);
             }
             out_num_vertices += 1;
         }
@@ -299,13 +307,24 @@ static int clip_triangle(
     }
 }
 
+/*
+ * for facing determination, see subsection 3.5.1 of
+ * https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf
+ *
+ * this is the same as (but more efficient than)
+ *     vec3_t ab = vec3_sub(b, a);
+ *     vec3_t ac = vec3_sub(c, a);
+ *     return vec3_cross(ab, ac).z <= 0;
+ */
 static int is_back_facing(vec3_t ndc_coords[3]) {
     vec3_t a = ndc_coords[0];
     vec3_t b = ndc_coords[1];
     vec3_t c = ndc_coords[2];
-    vec3_t ab = vec3_sub(b, a);
-    vec3_t ac = vec3_sub(c, a);
-    return vec3_cross(ab, ac).z <= 0;
+    float signed_area = 0;
+    signed_area += a.x * b.y - a.y * b.x;
+    signed_area += b.x * c.y - b.y * c.x;
+    signed_area += c.x * a.y - c.y * a.x;
+    return signed_area <= 0;
 }
 
 /*
@@ -323,6 +342,14 @@ static vec3_t viewport_transform(int width_, int height_, vec3_t ndc_coord) {
 
 typedef struct {int min_x, min_y, max_x, max_y;} bbox_t;
 
+static int min_integer(int a, int b) {
+    return a < b ? a : b;
+}
+
+static int max_integer(int a, int b) {
+    return a > b ? a : b;
+}
+
 static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
     vec2_t a = abc[0];
     vec2_t b = abc[1];
@@ -330,10 +357,10 @@ static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
     vec2_t min = vec2_min(vec2_min(a, b), c);
     vec2_t max = vec2_max(vec2_max(a, b), c);
     bbox_t bbox;
-    bbox.min_x = int_max((int)ceil(min.x), 0);
-    bbox.min_y = int_max((int)ceil(min.y), 0);
-    bbox.max_x = int_min((int)floor(max.x), width - 1);
-    bbox.max_y = int_min((int)floor(max.y), height - 1);
+    bbox.min_x = max_integer((int)ceil(min.x), 0);
+    bbox.min_y = max_integer((int)ceil(min.y), 0);
+    bbox.max_x = min_integer((int)floor(max.x), width - 1);
+    bbox.max_y = min_integer((int)floor(max.y), height - 1);
     return bbox;
 }
 
@@ -409,7 +436,7 @@ static void interpolate_varyings(
 }
 
 static void draw_fragment(framebuffer_t *framebuffer, program_t *program,
-                          int index, float depth, int backface) {
+                          int backface, int index, float depth) {
     vec4_t color;
     int discard;
 
@@ -426,18 +453,20 @@ static void draw_fragment(framebuffer_t *framebuffer, program_t *program,
 
     /* perform blending */
     if (program->enable_blend) {
-        vec3_t src_color = vec3_from_vec4(color);
-        float src_alpha = color.w;
-        vec3_t dst_color = vec3_from_vec4(framebuffer->colorbuffer[index]);
-        color.x = src_color.x * src_alpha + dst_color.x * (1 - src_alpha);
-        color.y = src_color.y * src_alpha + dst_color.y * (1 - src_alpha);
-        color.z = src_color.z * src_alpha + dst_color.z * (1 - src_alpha);
-        color.w = 1;
+        /* out_color = src_color * src_alpha + dst_color * (1 - src_alpha) */
+        unsigned char dst_r = framebuffer->color_buffer[index * 4 + 0];
+        unsigned char dst_g = framebuffer->color_buffer[index * 4 + 1];
+        unsigned char dst_b = framebuffer->color_buffer[index * 4 + 2];
+        color.x = color.x * color.w + float_from_uchar(dst_r) * (1 - color.w);
+        color.y = color.y * color.w + float_from_uchar(dst_g) * (1 - color.w);
+        color.z = color.z * color.w + float_from_uchar(dst_b) * (1 - color.w);
     }
 
     /* write color and depth */
-    framebuffer->colorbuffer[index] = color;
-    framebuffer->depthbuffer[index] = depth;
+    framebuffer->color_buffer[index * 4 + 0] = float_to_uchar(color.x);
+    framebuffer->color_buffer[index * 4 + 1] = float_to_uchar(color.y);
+    framebuffer->color_buffer[index * 4 + 2] = float_to_uchar(color.z);
+    framebuffer->depth_buffer[index] = depth;
 }
 
 static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
@@ -489,11 +518,11 @@ static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
                 int index = y * width + x;
                 float depth = interpolate_depth(screen_depths, weights);
                 /* early depth testing */
-                if (depth <= framebuffer->depthbuffer[index]) {
+                if (depth <= framebuffer->depth_buffer[index]) {
                     int sizeof_varyings = program->sizeof_varyings;
                     interpolate_varyings(varyings, program->shader_varyings,
                                          sizeof_varyings, weights, recip_w);
-                    draw_fragment(framebuffer, program, index, depth, backface);
+                    draw_fragment(framebuffer, program, backface, index, depth);
                 }
             }
         }

@@ -4,7 +4,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
-#include <X11/Xresource.h>
 #include <X11/Xutil.h>
 #include "../core/graphics.h"
 #include "../core/image.h"
@@ -24,18 +23,51 @@ struct window {
     void *userdata;
 };
 
-/* window related functions */
+/* platform initialization */
 
 static Display *g_display = NULL;
 static XContext g_context;
 
 static void open_display(void) {
-    if (g_display == NULL) {
-        g_display = XOpenDisplay(NULL);
-        assert(g_display != NULL);
-        g_context = XUniqueContext();
-    }
+    g_display = XOpenDisplay(NULL);
+    assert(g_display != NULL);
+    g_context = XUniqueContext();
 }
+
+static void close_display(void) {
+    XCloseDisplay(g_display);
+    g_display = NULL;
+}
+
+static void initialize_path(void) {
+    char path[PATH_SIZE];
+    ssize_t bytes;
+    int error;
+
+    bytes = readlink("/proc/self/exe", path, PATH_SIZE - 1);
+    assert(bytes != -1);
+    path[bytes] = '\0';
+    *strrchr(path, '/') = '\0';
+
+    error = chdir(path);
+    assert(error == 0);
+    error = chdir("assets");
+    assert(error == 0);
+    UNUSED_VAR(error);
+}
+
+void platform_initialize(void) {
+    assert(g_display == NULL);
+    open_display();
+    initialize_path();
+}
+
+void platform_terminate(void) {
+    assert(g_display != NULL);
+    close_display();
+}
+
+/* window related functions */
 
 static Window create_window(const char *title, int width, int height) {
     int screen = XDefaultScreen(g_display);
@@ -45,7 +77,7 @@ static Window create_window(const char *title, int width, int height) {
     Window handle;
     XSizeHints *size_hints;
     XClassHint *class_hint;
-    Atom wm_delete_window;
+    Atom delete_window;
     long mask;
 
     handle = XCreateSimpleWindow(g_display, root, 0, 0, width, height, 0,
@@ -71,8 +103,8 @@ static Window create_window(const char *title, int width, int height) {
     /* event subscription */
     mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask;
     XSelectInput(g_display, handle, mask);
-    wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
-    XSetWMProtocols(g_display, handle, &wm_delete_window, 1);
+    delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
+    XSetWMProtocols(g_display, handle, &delete_window, 1);
 
     return handle;
 }
@@ -86,9 +118,9 @@ static void create_surface(int width, int height,
     XImage *ximage;
 
     assert(depth == 24 || depth == 32);
-    surface = image_create(width, height, 4);
+    surface = image_create(width, height, 4, FORMAT_LDR);
     ximage = XCreateImage(g_display, visual, depth, ZPixmap, 0,
-                          (char*)surface->buffer, width, height, 32, 0);
+                          (char*)surface->ldr_buffer, width, height, 32, 0);
 
     *out_surface = surface;
     *out_ximage = ximage;
@@ -100,9 +132,8 @@ window_t *window_create(const char *title, int width, int height) {
     image_t *surface;
     XImage *ximage;
 
-    assert(width > 0 && height > 0);
+    assert(g_display && width > 0 && height > 0);
 
-    open_display();
     handle = create_window(title, width, height);
     create_surface(width, height, &surface, &ximage);
 
@@ -152,13 +183,8 @@ static void present_surface(window_t *window) {
     XFlush(g_display);
 }
 
-void window_draw_image(window_t *window, image_t *image) {
-    private_blit_image_bgr(image, window->surface);
-    present_surface(window);
-}
-
 void window_draw_buffer(window_t *window, framebuffer_t *buffer) {
-    private_blit_buffer_bgr(buffer, window->surface);
+    private_blit_bgr(buffer, window->surface);
     present_surface(window);
 }
 
@@ -205,18 +231,18 @@ static void handle_button_event(window_t *window, int xbutton, char pressed) {
     }
 }
 
-static void handle_client_event(window_t *window, XClientMessageEvent event) {
-    static Atom wm_protocols = None;
-    static Atom wm_delete_window = None;
-    if (wm_protocols == None) {
-        wm_protocols = XInternAtom(g_display, "WM_PROTOCOLS", True);
-        wm_delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
-        assert(wm_protocols != None);
-        assert(wm_delete_window != None);
+static void handle_client_event(window_t *window, XClientMessageEvent *event) {
+    static Atom protocols = None;
+    static Atom delete_window = None;
+    if (protocols == None) {
+        protocols = XInternAtom(g_display, "WM_PROTOCOLS", True);
+        delete_window = XInternAtom(g_display, "WM_DELETE_WINDOW", True);
+        assert(protocols != None);
+        assert(delete_window != None);
     }
-    if (event.message_type == wm_protocols) {
-        Atom protocol = event.data.l[0];
-        if (protocol == wm_delete_window) {
+    if (event->message_type == protocols) {
+        Atom protocol = event->data.l[0];
+        if (protocol == delete_window) {
             window->should_close = 1;
         }
     }
@@ -234,7 +260,7 @@ static void process_event(XEvent *event) {
     }
 
     if (event->type == ClientMessage) {
-        handle_client_event(window, event->xclient);
+        handle_client_event(window, &event->xclient);
     } else if (event->type == KeyPress) {
         handle_key_event(window, event->xkey.keycode, 1);
     } else if (event->type == KeyRelease) {
@@ -295,21 +321,4 @@ float platform_get_time(void) {
         initial = get_native_time();
     }
     return (float)(get_native_time() - initial);
-}
-
-void platform_init_path(void) {
-    char path[PATH_SIZE];
-    ssize_t bytes;
-    int error;
-
-    bytes = readlink("/proc/self/exe", path, PATH_SIZE - 1);
-    assert(bytes != -1);
-    path[bytes] = '\0';
-    *strrchr(path, '/') = '\0';
-
-    error = chdir(path);
-    assert(error == 0);
-    error = chdir("assets");
-    assert(error == 0);
-    UNUSED_VAR(error);
 }

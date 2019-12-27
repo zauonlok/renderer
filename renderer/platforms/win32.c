@@ -21,7 +21,9 @@ struct window {
     void *userdata;
 };
 
-/* window related functions */
+/* platform initialization */
+
+static int g_initialized = 0;
 
 #ifdef UNICODE
 static const wchar_t *WINDOW_CLASS_NAME = L"Class";
@@ -104,26 +106,57 @@ static LRESULT CALLBACK process_message(HWND hWnd, UINT uMsg,
 }
 
 static void register_class(void) {
-    static int initialized = 0;
-    if (initialized == 0) {
-        ATOM class_atom;
-        WNDCLASS window_class;
-        window_class.style = CS_HREDRAW | CS_VREDRAW;
-        window_class.lpfnWndProc = process_message;
-        window_class.cbClsExtra = 0;
-        window_class.cbWndExtra = 0;
-        window_class.hInstance = GetModuleHandle(NULL);
-        window_class.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-        window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
-        window_class.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-        window_class.lpszMenuName = NULL;
-        window_class.lpszClassName = WINDOW_CLASS_NAME;
-        class_atom = RegisterClass(&window_class);
-        assert(class_atom != 0);
-        UNUSED_VAR(class_atom);
-        initialized = 1;
-    }
+    ATOM class_atom;
+    WNDCLASS window_class;
+    window_class.style = CS_HREDRAW | CS_VREDRAW;
+    window_class.lpfnWndProc = process_message;
+    window_class.cbClsExtra = 0;
+    window_class.cbWndExtra = 0;
+    window_class.hInstance = GetModuleHandle(NULL);
+    window_class.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
+    window_class.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    window_class.lpszMenuName = NULL;
+    window_class.lpszClassName = WINDOW_CLASS_NAME;
+    class_atom = RegisterClass(&window_class);
+    assert(class_atom != 0);
+    UNUSED_VAR(class_atom);
 }
+
+static void unregister_class(void) {
+    UnregisterClass(WINDOW_CLASS_NAME, GetModuleHandle(NULL));
+}
+
+static void initialize_path(void) {
+#ifdef UNICODE
+    wchar_t path[MAX_PATH];
+    GetModuleFileName(NULL, path, MAX_PATH);
+    *wcsrchr(path, L'\\') = L'\0';
+    _wchdir(path);
+    _wchdir(L"assets");
+#else
+    char path[MAX_PATH];
+    GetModuleFileName(NULL, path, MAX_PATH);
+    *strrchr(path, '\\') = '\0';
+    _chdir(path);
+    _chdir("assets");
+#endif
+}
+
+void platform_initialize(void) {
+    assert(g_initialized == 0);
+    register_class();
+    initialize_path();
+    g_initialized = 1;
+}
+
+void platform_terminate(void) {
+    assert(g_initialized == 1);
+    unregister_class();
+    g_initialized = 0;
+}
+
+/* window related functions */
 
 static HWND create_window(const char *title_, int width, int height) {
     DWORD style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
@@ -159,12 +192,15 @@ static HWND create_window(const char *title_, int width, int height) {
 static void create_surface(HWND handle, int width, int height,
                            image_t **out_surface, HDC *out_memory_dc) {
     BITMAPINFOHEADER bi_header;
-    HDC window_dc;
-    HDC memory_dc;
     HBITMAP dib_bitmap;
     HBITMAP old_bitmap;
-    unsigned char *buffer;
+    HDC window_dc;
+    HDC memory_dc;
     image_t *surface;
+
+    surface = image_create(width, height, 4, FORMAT_LDR);
+    free(surface->ldr_buffer);
+    surface->ldr_buffer = NULL;
 
     window_dc = GetDC(handle);
     memory_dc = CreateCompatibleDC(window_dc);
@@ -178,16 +214,11 @@ static void create_surface(HWND handle, int width, int height,
     bi_header.biBitCount = 32;
     bi_header.biCompression = BI_RGB;
     dib_bitmap = CreateDIBSection(memory_dc, (BITMAPINFO*)&bi_header,
-                                  DIB_RGB_COLORS, (void**)&buffer, NULL, 0);
+                                  DIB_RGB_COLORS, (void**)&surface->ldr_buffer,
+                                  NULL, 0);
     assert(dib_bitmap != NULL);
     old_bitmap = (HBITMAP)SelectObject(memory_dc, dib_bitmap);
     DeleteObject(old_bitmap);
-
-    surface = (image_t*)malloc(sizeof(image_t));
-    surface->width = width;
-    surface->height = height;
-    surface->channels = 4;
-    surface->buffer = buffer;
 
     *out_surface = surface;
     *out_memory_dc = memory_dc;
@@ -199,9 +230,8 @@ window_t *window_create(const char *title, int width, int height) {
     image_t *surface;
     HDC memory_dc;
 
-    assert(width > 0 && height > 0);
+    assert(g_initialized && width > 0 && height > 0);
 
-    register_class();
     handle = create_window(title, width, height);
     create_surface(handle, width, height, &surface, &memory_dc);
 
@@ -223,7 +253,8 @@ void window_destroy(window_t *window) {
     DeleteDC(window->memory_dc);
     DestroyWindow(window->handle);
 
-    free(window->surface);
+    window->surface->ldr_buffer = NULL;
+    image_release(window->surface);
     free(window);
 }
 
@@ -249,13 +280,8 @@ static void present_surface(window_t *window) {
     ReleaseDC(window->handle, window_dc);
 }
 
-void window_draw_image(window_t *window, image_t *image) {
-    private_blit_image_bgr(image, window->surface);
-    present_surface(window);
-}
-
 void window_draw_buffer(window_t *window, framebuffer_t *buffer) {
-    private_blit_buffer_bgr(buffer, window->surface);
+    private_blit_bgr(buffer, window->surface);
     present_surface(window);
 }
 
@@ -311,20 +337,4 @@ float platform_get_time(void) {
         initial = get_native_time();
     }
     return (float)(get_native_time() - initial);
-}
-
-void platform_init_path(void) {
-#ifdef UNICODE
-    wchar_t path[MAX_PATH];
-    GetModuleFileName(NULL, path, MAX_PATH);
-    *wcsrchr(path, L'\\') = L'\0';
-    _wchdir(path);
-    _wchdir(L"assets");
-#else
-    char path[MAX_PATH];
-    GetModuleFileName(NULL, path, MAX_PATH);
-    *strrchr(path, '\\') = '\0';
-    _chdir(path);
-    _chdir("assets");
-#endif
 }

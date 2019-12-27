@@ -8,19 +8,17 @@ typedef struct {float x, y, z, w;} quat_t;
 typedef struct {float m[3][3];} mat3_t;
 typedef struct {float m[4][4];} mat4_t;
 
-/* int related functions */
-int int_min(int a, int b);
-int int_max(int a, int b);
-int int_lerp(int a, int b, float t);
-void int_swap(int *a, int *b);
-void int_print(const char *name, int i);
-
 /* float related functions */
 float float_min(float a, float b);
 float float_max(float a, float b);
-float float_clamp(float f, float min, float max);
 float float_lerp(float a, float b, float t);
+float float_clamp(float f, float min, float max);
 float float_saturate(float f);
+float float_from_uchar(unsigned char value);
+unsigned char float_to_uchar(float value);
+float float_srgb2linear(float value);
+float float_linear2srgb(float value);
+float float_aces(float value);
 void float_print(const char *name, float f);
 
 /* vec2 related functions */
@@ -31,8 +29,8 @@ vec2_t vec2_add(vec2_t a, vec2_t b);
 vec2_t vec2_sub(vec2_t a, vec2_t b);
 vec2_t vec2_mul(vec2_t v, float factor);
 vec2_t vec2_div(vec2_t v, float divisor);
-float vec2_edge(vec2_t start, vec2_t end, vec2_t v);
 float vec2_length(vec2_t v);
+float vec2_edge(vec2_t start, vec2_t end, vec2_t v);
 void vec2_print(const char *name, vec2_t v);
 
 /* vec3 related functions */
@@ -64,8 +62,6 @@ vec4_t vec4_div(vec4_t v, float divisor);
 vec4_t vec4_lerp(vec4_t a, vec4_t b, float t);
 vec4_t vec4_saturate(vec4_t v);
 vec4_t vec4_modulate(vec4_t a, vec4_t b);
-vec4_t vec4_srgb2linear(vec4_t color);
-vec4_t vec4_linear2srgb(vec4_t color);
 void vec4_print(const char *name, vec4_t v);
 
 /* quat related functions */
