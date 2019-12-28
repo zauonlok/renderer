@@ -22,9 +22,5 @@ void image_save(image_t *image, const char *filename);
 /* image processing */
 void image_flip_h(image_t *image);
 void image_flip_v(image_t *image);
-void image_ldr2hdr(image_t *image);
-void image_hdr2ldr(image_t *image);
-void image_srgb2linear(image_t *image);
-void image_linear2srgb(image_t *image);
 
 #endif

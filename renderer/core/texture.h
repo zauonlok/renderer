@@ -2,7 +2,6 @@
 #define TEXTURE_H
 
 #include "graphics.h"
-#include "image.h"
 #include "maths.h"
 
 typedef enum {
@@ -13,10 +12,8 @@ typedef enum {
 } usage_t;
 
 typedef struct {
-    format_t format;
     int width, height;
-    unsigned char *ldr_buffer;
-    float *hdr_buffer;
+    vec4_t *buffer;
 } texture_t;
 
 typedef struct {
@@ -24,7 +21,7 @@ typedef struct {
 } cubemap_t;
 
 /* texture related functions */
-texture_t *texture_create(int width, int height, format_t format);
+texture_t *texture_create(int width, int height);
 void texture_release(texture_t *texture);
 texture_t *texture_from_file(const char *filename, usage_t usage);
 void texture_from_colorbuffer(texture_t *texture, framebuffer_t *framebuffer);

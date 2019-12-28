@@ -78,21 +78,13 @@ static void draw_texture(framebuffer_t *framebuffer, texture_t *texture,
         for (src_c = 0; src_c < width; src_c++) {
             int dst_r = row + src_r;
             int dst_c = col + src_c;
-            int src_index = (src_r * texture->width + src_c) * 4;
+            int src_index = src_r * texture->width + src_c;
             int dst_index = (dst_r * framebuffer->width + dst_c) * 4;
+            vec4_t *src_pixel = &texture->buffer[src_index];
             unsigned char *dst_pixel = &framebuffer->color_buffer[dst_index];
-            if (texture->format == FORMAT_LDR) {
-                unsigned char *src_pixel = &texture->ldr_buffer[src_index];
-                dst_pixel[0] = src_pixel[0] + dst_pixel[0];
-                dst_pixel[1] = src_pixel[1] + dst_pixel[1];
-                dst_pixel[2] = src_pixel[2] + dst_pixel[2];
-
-            } else {
-                float *src_pixel = &texture->hdr_buffer[src_index];
-                dst_pixel[0] = float_to_uchar(src_pixel[0]) + dst_pixel[0];
-                dst_pixel[1] = float_to_uchar(src_pixel[1]) + dst_pixel[1];
-                dst_pixel[2] = float_to_uchar(src_pixel[2]) + dst_pixel[2];
-            }
+            dst_pixel[0] += float_to_uchar(src_pixel->x);
+            dst_pixel[1] += float_to_uchar(src_pixel->y);
+            dst_pixel[2] += float_to_uchar(src_pixel->z);
         }
     }
 }

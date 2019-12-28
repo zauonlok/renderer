@@ -143,80 +143,6 @@ void image_flip_v(image_t *image) {
     }
 }
 
-static int get_num_elems(image_t *image) {
-    return image->width * image->height * image->channels;
-}
-
-void image_ldr2hdr(image_t *image) {
-    int num_elems = get_num_elems(image);
-    int i;
-
-    assert(image->format == FORMAT_LDR);
-
-    image->hdr_buffer = (float*)malloc(sizeof(float) * num_elems);
-    for (i = 0; i < num_elems; i++) {
-        image->hdr_buffer[i] = float_from_uchar(image->ldr_buffer[i]);
-    }
-
-    image->format = FORMAT_HDR;
-    free(image->ldr_buffer);
-    image->ldr_buffer = NULL;
-}
-
-void image_hdr2ldr(image_t *image) {
-    int num_elems = get_num_elems(image);
-    int i;
-
-    assert(image->format == FORMAT_HDR);
-
-    image->ldr_buffer = (unsigned char*)malloc(num_elems);
-    for (i = 0; i < num_elems; i++) {
-        image->ldr_buffer[i] = float_to_uchar(image->hdr_buffer[i]);
-    }
-
-    image->format = FORMAT_LDR;
-    free(image->hdr_buffer);
-    image->hdr_buffer = NULL;
-}
-
-void image_srgb2linear(image_t *image) {
-    int r, c;
-
-    assert(image->format == FORMAT_HDR);
-
-    for (r = 0; r < image->height; r++) {
-        for (c = 0; c < image->width; c++) {
-            float *pixel = get_hdr_pixel(image, r, c);
-            if (image->channels == 1 || image->channels == 2) {
-                pixel[0] = float_srgb2linear(pixel[0]);
-            } else {
-                pixel[0] = float_srgb2linear(pixel[0]);
-                pixel[1] = float_srgb2linear(pixel[1]);
-                pixel[2] = float_srgb2linear(pixel[2]);
-            }
-        }
-    }
-}
-
-void image_linear2srgb(image_t *image) {
-    int r, c;
-
-    assert(image->format == FORMAT_HDR);
-
-    for (r = 0; r < image->height; r++) {
-        for (c = 0; c < image->width; c++) {
-            float *pixel = get_hdr_pixel(image, r, c);
-            if (image->channels == 1 || image->channels == 2) {
-                pixel[0] = float_linear2srgb(float_aces(pixel[0]));
-            } else {
-                pixel[0] = float_linear2srgb(float_aces(pixel[0]));
-                pixel[1] = float_linear2srgb(float_aces(pixel[1]));
-                pixel[2] = float_linear2srgb(float_aces(pixel[2]));
-            }
-        }
-    }
-}
-
 /* tga codec */
 
 #define TGA_HEADER_SIZE 18
@@ -237,6 +163,10 @@ static void write_bytes(FILE *file, void *buffer, int size) {
     int count = (int)fwrite(buffer, 1, size, file);
     assert(count == size);
     UNUSED_VAR(count);
+}
+
+static int get_num_elems(image_t *image) {
+    return image->width * image->height * image->channels;
 }
 
 static void read_tga_header(FILE *file, int *width, int *height, int *channels,

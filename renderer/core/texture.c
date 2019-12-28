@@ -9,104 +9,99 @@
 
 /* texture related functions */
 
-texture_t *texture_create(int width, int height, format_t format) {
-    int num_elems = width * height * 4;
+texture_t *texture_create(int width, int height) {
+    int buffer_size = sizeof(vec4_t) * width * height;
     texture_t *texture;
 
     assert(width > 0 && height > 0);
-    assert(format == FORMAT_LDR || format == FORMAT_HDR);
 
     texture = (texture_t*)malloc(sizeof(texture_t));
-    texture->format = format;
     texture->width = width;
     texture->height = height;
-    texture->ldr_buffer = NULL;
-    texture->hdr_buffer = NULL;
-
-    if (format == FORMAT_LDR) {
-        int size = sizeof(unsigned char) * num_elems;
-        texture->ldr_buffer = (unsigned char*)malloc(size);
-        memset(texture->ldr_buffer, 0, size);
-    } else {
-        int size = sizeof(float) * num_elems;
-        texture->hdr_buffer = (float*)malloc(size);
-        memset(texture->hdr_buffer, 0, size);
-    }
+    texture->buffer = (vec4_t*)malloc(buffer_size);
+    memset(texture->buffer, 0, buffer_size);
 
     return texture;
 }
 
 void texture_release(texture_t *texture) {
-    free(texture->ldr_buffer);
-    free(texture->hdr_buffer);
+    free(texture->buffer);
     free(texture);
 }
 
 static void ldr_image_to_texture(image_t *image, texture_t *texture) {
-    unsigned char *img_buffer = image->ldr_buffer;
-    unsigned char *tex_buffer = texture->ldr_buffer;
-    int r, c;
+    int num_pixels = image->width * image->height;
+    int i;
 
-    for (r = 0; r < image->height; r++) {
-        for (c = 0; c < image->width; c++) {
-            int img_index = (r * image->width + c) * image->channels;
-            int tex_index = (r * image->width + c) * 4;
-            if (image->channels == 1) {             /* GL_LUMINANCE */
-                tex_buffer[tex_index + 0] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 1] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 2] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 3] = 1;
-            } else if (image->channels == 2) {      /* GL_LUMINANCE_ALPHA */
-                tex_buffer[tex_index + 0] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 1] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 2] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 3] = img_buffer[img_index + 1];
-            } else if (image->channels == 3) {      /* GL_RGB */
-                tex_buffer[tex_index + 0] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 1] = img_buffer[img_index + 1];
-                tex_buffer[tex_index + 2] = img_buffer[img_index + 2];
-                tex_buffer[tex_index + 3] = 1;
-            } else {                                /* GL_RGBA */
-                tex_buffer[tex_index + 0] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 1] = img_buffer[img_index + 1];
-                tex_buffer[tex_index + 2] = img_buffer[img_index + 2];
-                tex_buffer[tex_index + 3] = img_buffer[img_index + 3];
-            }
+    for (i = 0; i < num_pixels; i++) {
+        unsigned char *pixel = &image->ldr_buffer[i * image->channels];
+        vec4_t texel = {0, 0, 0, 1};
+        if (image->channels == 1) {             /* GL_LUMINANCE */
+            texel.x = texel.y = texel.z = float_from_uchar(pixel[0]);
+        } else if (image->channels == 2) {      /* GL_LUMINANCE_ALPHA */
+            texel.x = texel.y = texel.z = float_from_uchar(pixel[0]);
+            texel.w = float_from_uchar(pixel[1]);
+        } else if (image->channels == 3) {      /* GL_RGB */
+            texel.x = float_from_uchar(pixel[0]);
+            texel.y = float_from_uchar(pixel[1]);
+            texel.z = float_from_uchar(pixel[2]);
+        } else {                                /* GL_RGBA */
+            texel.x = float_from_uchar(pixel[0]);
+            texel.y = float_from_uchar(pixel[1]);
+            texel.z = float_from_uchar(pixel[2]);
+            texel.w = float_from_uchar(pixel[3]);
         }
+        texture->buffer[i] = texel;
     }
 }
 
 static void hdr_image_to_texture(image_t *image, texture_t *texture) {
-    float *img_buffer = image->hdr_buffer;
-    float *tex_buffer = texture->hdr_buffer;
-    int r, c;
+    int num_pixels = image->width * image->height;
+    int i;
 
-    for (r = 0; r < image->height; r++) {
-        for (c = 0; c < image->width; c++) {
-            int img_index = (r * image->width + c) * image->channels;
-            int tex_index = (r * image->width + c) * 4;
-            if (image->channels == 1) {             /* GL_LUMINANCE */
-                tex_buffer[tex_index + 0] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 1] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 2] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 3] = 1;
-            } else if (image->channels == 2) {      /* GL_LUMINANCE_ALPHA */
-                tex_buffer[tex_index + 0] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 1] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 2] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 3] = img_buffer[img_index + 1];
-            } else if (image->channels == 3) {      /* GL_RGB */
-                tex_buffer[tex_index + 0] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 1] = img_buffer[img_index + 1];
-                tex_buffer[tex_index + 2] = img_buffer[img_index + 2];
-                tex_buffer[tex_index + 3] = 1;
-            } else {                                /* GL_RGBA */
-                tex_buffer[tex_index + 0] = img_buffer[img_index + 0];
-                tex_buffer[tex_index + 1] = img_buffer[img_index + 1];
-                tex_buffer[tex_index + 2] = img_buffer[img_index + 2];
-                tex_buffer[tex_index + 3] = img_buffer[img_index + 3];
-            }
+    for (i = 0; i < num_pixels; i++) {
+        float *pixel = &image->hdr_buffer[i * image->channels];
+        vec4_t texel = {0, 0, 0, 1};
+        if (image->channels == 1) {             /* GL_LUMINANCE */
+            texel.x = texel.y = texel.z = pixel[0];
+        } else if (image->channels == 2) {      /* GL_LUMINANCE_ALPHA */
+            texel.x = texel.y = texel.z = pixel[0];
+            texel.w = pixel[1];
+        } else if (image->channels == 3) {      /* GL_RGB */
+            texel.x = pixel[0];
+            texel.y = pixel[1];
+            texel.z = pixel[2];
+        } else {                                /* GL_RGBA */
+            texel.x = pixel[0];
+            texel.y = pixel[1];
+            texel.z = pixel[2];
+            texel.w = pixel[3];
         }
+        texture->buffer[i] = texel;
+    }
+}
+
+static void srgb_to_linear(texture_t *texture) {
+    int num_pixels = texture->width * texture->height;
+    int i;
+
+    for (i = 0; i < num_pixels; i++) {
+        vec4_t *pixel = &texture->buffer[i];
+        pixel->x = float_srgb2linear(pixel->x);
+        pixel->y = float_srgb2linear(pixel->y);
+        pixel->z = float_srgb2linear(pixel->z);
+    }
+}
+
+static void linear_to_srgb(texture_t *texture) {
+    int num_pixels = texture->width * texture->height;
+    int i;
+
+    for (i = 0; i < num_pixels; i++) {
+        vec4_t *pixel = &texture->buffer[i];
+        pixel->x = float_linear2srgb(float_aces(pixel->x));
+        pixel->y = float_linear2srgb(float_aces(pixel->y));
+        pixel->z = float_linear2srgb(float_aces(pixel->z));
     }
 }
 
@@ -115,28 +110,17 @@ texture_t *texture_from_file(const char *filename, usage_t usage) {
     image_t *image;
 
     image = image_load(filename);
-    if (image->format == FORMAT_LDR) {
-        if (usage == USAGE_HDR_COLOR) {
-            image_ldr2hdr(image);
-            image_srgb2linear(image);
-        }
-        if (usage == USAGE_HDR_DATA) {
-            image_ldr2hdr(image);
-        }
-    } else {
-        if (usage == USAGE_LDR_COLOR) {
-            image_linear2srgb(image);
-            image_hdr2ldr(image);
-        }
-        if (usage == USAGE_LDR_DATA) {
-            image_hdr2ldr(image);
-        }
-    }
-    texture = texture_create(image->width, image->height, image->format);
+    texture = texture_create(image->width, image->height);
     if (image->format == FORMAT_LDR) {
         ldr_image_to_texture(image, texture);
+        if (usage == USAGE_HDR_COLOR) {
+            srgb_to_linear(texture);
+        }
     } else {
         hdr_image_to_texture(image, texture);
+        if (usage == USAGE_LDR_COLOR) {
+            linear_to_srgb(texture);
+        }
     }
     image_release(image);
 
@@ -149,15 +133,14 @@ void texture_from_colorbuffer(texture_t *texture, framebuffer_t *framebuffer) {
 
     assert(texture->width == framebuffer->width);
     assert(texture->height == framebuffer->height);
-    assert(texture->format == FORMAT_LDR);
 
     for (i = 0; i < num_pixels; i++) {
-        unsigned char *src_pixel = &framebuffer->color_buffer[i * 4];
-        unsigned char *dst_pixel = &texture->ldr_buffer[i * 4];
-        dst_pixel[0] = src_pixel[0];
-        dst_pixel[1] = src_pixel[1];
-        dst_pixel[2] = src_pixel[2];
-        dst_pixel[3] = src_pixel[3];
+        unsigned char *color = &framebuffer->color_buffer[i * 4];
+        float r = float_from_uchar(color[0]);
+        float g = float_from_uchar(color[1]);
+        float b = float_from_uchar(color[2]);
+        float a = float_from_uchar(color[3]);
+        texture->buffer[i] = vec4_new(r, g, b, a);
     }
 }
 
@@ -167,47 +150,29 @@ void texture_from_depthbuffer(texture_t *texture, framebuffer_t *framebuffer) {
 
     assert(texture->width == framebuffer->width);
     assert(texture->height == framebuffer->height);
-    assert(texture->format == FORMAT_HDR);
 
     for (i = 0; i < num_pixels; i++) {
-        float *src_pixel = &framebuffer->depth_buffer[i];
-        float *dst_pixel = &texture->hdr_buffer[i * 4];
-        dst_pixel[0] = src_pixel[0];
-        dst_pixel[1] = src_pixel[0];
-        dst_pixel[2] = src_pixel[0];
-        dst_pixel[3] = 1;
+        float depth = framebuffer->depth_buffer[i];
+        texture->buffer[i] = vec4_new(depth, depth, depth, 1);
     }
-}
-
-static vec4_t get_texture_sample(texture_t *texture, float u, float v) {
-    int col = (int)((texture->width - 1) * u);
-    int row = (int)((texture->height - 1) * v);
-    int index = (row * texture->width + col) * 4;
-    float r, g, b, a;
-    if (texture->format == FORMAT_LDR) {
-        r = float_from_uchar(texture->ldr_buffer[index + 0]);
-        g = float_from_uchar(texture->ldr_buffer[index + 1]);
-        b = float_from_uchar(texture->ldr_buffer[index + 2]);
-        a = float_from_uchar(texture->ldr_buffer[index + 3]);
-    } else {
-        r = texture->hdr_buffer[index + 0];
-        g = texture->hdr_buffer[index + 1];
-        b = texture->hdr_buffer[index + 2];
-        a = texture->hdr_buffer[index + 3];
-    }
-    return vec4_new(r, g, b, a);
 }
 
 vec4_t texture_repeat_sample(texture_t *texture, vec2_t texcoord) {
     float u = texcoord.x - (float)floor(texcoord.x);
     float v = texcoord.y - (float)floor(texcoord.y);
-    return get_texture_sample(texture, u, v);
+    int c = (int)((texture->width - 1) * u);
+    int r = (int)((texture->height - 1) * v);
+    int index = r * texture->width + c;
+    return texture->buffer[index];
 }
 
 vec4_t texture_clamp_sample(texture_t *texture, vec2_t texcoord) {
     float u = float_saturate(texcoord.x);
     float v = float_saturate(texcoord.y);
-    return get_texture_sample(texture, u, v);
+    int c = (int)((texture->width - 1) * u);
+    int r = (int)((texture->height - 1) * v);
+    int index = r * texture->width + c;
+    return texture->buffer[index];
 }
 
 vec4_t texture_sample(texture_t *texture, vec2_t texcoord) {
