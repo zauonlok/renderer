@@ -159,6 +159,7 @@ void image_ldr2hdr(image_t *image) {
     }
 
     image->format = FORMAT_HDR;
+    free(image->ldr_buffer);
     image->ldr_buffer = NULL;
 }
 
@@ -174,6 +175,7 @@ void image_hdr2ldr(image_t *image) {
     }
 
     image->format = FORMAT_LDR;
+    free(image->hdr_buffer);
     image->hdr_buffer = NULL;
 }
 
