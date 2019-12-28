@@ -9,6 +9,8 @@
 /* framebuffer management */
 
 framebuffer_t *framebuffer_create(int width, int height) {
+    int color_buffer_size = width * height * 4;
+    int depth_buffer_size = sizeof(float) * width * height;
     vec4_t default_color = {0, 0, 0, 1};
     float default_depth = 1;
     framebuffer_t *framebuffer;
@@ -18,8 +20,8 @@ framebuffer_t *framebuffer_create(int width, int height) {
     framebuffer = (framebuffer_t*)malloc(sizeof(framebuffer_t));
     framebuffer->width = width;
     framebuffer->height = height;
-    framebuffer->color_buffer = (unsigned char*)malloc(width * height * 4);
-    framebuffer->depth_buffer = (float*)malloc(sizeof(float) * width * height);
+    framebuffer->color_buffer = (unsigned char*)malloc(color_buffer_size);
+    framebuffer->depth_buffer = (float*)malloc(depth_buffer_size);
 
     framebuffer_clear_color(framebuffer, default_color);
     framebuffer_clear_depth(framebuffer, default_depth);
@@ -33,20 +35,20 @@ void framebuffer_release(framebuffer_t *framebuffer) {
     free(framebuffer);
 }
 
-void framebuffer_clear_color(framebuffer_t *framebuffer, vec4_t color_) {
+void framebuffer_clear_color(framebuffer_t *framebuffer, vec4_t color) {
     int num_pixels = framebuffer->width * framebuffer->height;
-    unsigned char color[4];
-    int i, j;
+    unsigned char r, g, b, a;
+    int i;
 
-    color[0] = float_to_uchar(color_.x);
-    color[1] = float_to_uchar(color_.y);
-    color[2] = float_to_uchar(color_.z);
-    color[3] = float_to_uchar(color_.w);
-
+    r = float_to_uchar(color.x);
+    g = float_to_uchar(color.y);
+    b = float_to_uchar(color.z);
+    a = float_to_uchar(color.w);
     for (i = 0; i < num_pixels; i++) {
-        for (j = 0; j < 4; j++) {
-            framebuffer->color_buffer[i * 4 + j] = color[j];
-        }
+        framebuffer->color_buffer[i * 4 + 0] = r;
+        framebuffer->color_buffer[i * 4 + 1] = g;
+        framebuffer->color_buffer[i * 4 + 2] = b;
+        framebuffer->color_buffer[i * 4 + 3] = a;
     }
 }
 
@@ -230,7 +232,7 @@ static int clip_against_plane(
             *dest_coord = vec4_lerp(prev_coord, curr_coord, ratio);
             /*
              * since this computation is performed in clip space before
-             * division by w, clipped varying values are perspective correct
+             * division by w, clipped varying values are perspective-correct
              */
             for (j = 0; j < varying_num_floats; j++) {
                 dest_varyings[j] = float_lerp(prev_varyings[j],
@@ -519,9 +521,9 @@ static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
                 float depth = interpolate_depth(screen_depths, weights);
                 /* early depth testing */
                 if (depth <= framebuffer->depth_buffer[index]) {
-                    int sizeof_varyings = program->sizeof_varyings;
                     interpolate_varyings(varyings, program->shader_varyings,
-                                         sizeof_varyings, weights, recip_w);
+                                         program->sizeof_varyings,
+                                         weights, recip_w);
                     draw_fragment(framebuffer, program, backface, index, depth);
                 }
             }

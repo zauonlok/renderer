@@ -42,6 +42,10 @@ float float_linear2srgb(float value) {
     return (float)pow(value, 1 / 2.2);
 }
 
+/*
+ * for aces filmic tone mapping curve, see
+ * https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+ */
 float float_aces(float value) {
     float a = 2.51f;
     float b = 0.03f;
@@ -299,8 +303,10 @@ quat_t quat_slerp(quat_t a, quat_t b, float t) {
     } else {
         float angle = (float)acos(cos_angle);
         float sin_angle = (float)sin(angle);
-        float factor_a = (float)sin((1 - t) * angle) / sin_angle;
-        float factor_b = (float)sin(t * angle) / sin_angle;
+        float angle_a = (1 - t) * angle;
+        float angle_b = t * angle;
+        float factor_a = (float)sin(angle_a) / sin_angle;
+        float factor_b = (float)sin(angle_b) / sin_angle;
         float x = factor_a * a.x + factor_b * b.x;
         float y = factor_a * a.y + factor_b * b.y;
         float z = factor_a * a.z + factor_b * b.z;

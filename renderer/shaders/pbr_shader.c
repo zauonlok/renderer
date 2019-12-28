@@ -398,6 +398,13 @@ static vec3_t get_view_dir(pbr_varyings_t *varyings, pbr_uniforms_t *uniforms) {
     return vec3_normalize(vec3_sub(camera_pos, world_pos));
 }
 
+static vec4_t linear_to_srgb(vec3_t color, float alpha) {
+    float r = float_linear2srgb(float_aces(color.x));
+    float g = float_linear2srgb(float_aces(color.y));
+    float b = float_linear2srgb(float_aces(color.z));
+    return vec4_new(r, g, b, alpha);
+}
+
 #define NUM_EDGES 5
 #define EDGE_SPACE 0.15f
 #define EDGE_START (1 - EDGE_SPACE * 0.5f)
@@ -408,32 +415,6 @@ static int above_layer_edge(int edge, vec2_t coord) {
     vec2_t start = vec2_new(EDGE_START - offset, 0);
     vec2_t end = vec2_new(EDGE_END - offset, 1);
     return vec2_edge(start, end, coord) > 0;
-}
-
-/*
- * for aces filmic tone mapping curve, see
- * https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
- */
-static vec4_t linear_to_srgb(vec3_t color, float alpha) {
-    float a = 2.51f;
-    float b = 0.03f;
-    float c = 2.43f;
-    float d = 0.59f;
-    float e = 0.14f;
-
-    float x = color.x;
-    float y = color.y;
-    float z = color.z;
-
-    x = (x * (a * x + b)) / (x * (c * x + d) + e);
-    y = (y * (a * y + b)) / (y * (c * y + d) + e);
-    z = (z * (a * z + b)) / (z * (c * z + d) + e);
-
-    x = (float)pow(float_saturate(x), 1 / 2.2);
-    y = (float)pow(float_saturate(y), 1 / 2.2);
-    z = (float)pow(float_saturate(z), 1 / 2.2);
-
-    return vec4_new(x, y, z, alpha);
 }
 
 static vec4_t get_layer_color(int layer, material_t material) {
