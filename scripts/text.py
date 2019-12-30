@@ -10,21 +10,25 @@ from PIL import Image, ImageDraw, ImageFont
 
 DST_DIRECTORY = "../assets/common"
 
+FONT_NAME = "arial.ttf"
+FONT_SIZE = 14
 
-def get_text_sizes(texts):
-    image = Image.new("L", (128, 128))
+PADDING_TOP = 6
+PADDING_BOTTOM = 6
+PADDING_LEFT = 8
+PADDING_RIGHT = 8
+
+
+def gen_text_image(text):
+    font = ImageFont.truetype(FONT_NAME, FONT_SIZE)
+    ascent, descent = font.getmetrics()
+    height = PADDING_TOP + ascent + descent + PADDING_BOTTOM
+    width = PADDING_LEFT + font.getsize(text)[0] + PADDING_RIGHT
+
+    image = Image.new("L", (width, height))
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("arial.ttf", 14)
-    sizes = [draw.textsize(text, font) for text in texts]
-    sizes = [(x, 18) for x, _ in sizes]
-    return sizes
+    draw.text((PADDING_LEFT, PADDING_TOP), text, (127,), font)
 
-
-def gen_text_image(text, size):
-    image = Image.new("L", size)
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("arial.ttf", 14)
-    draw.text((0, 0), text, (127,), font)
     name = text.lower() + ".tga"
     path = os.path.join(DST_DIRECTORY, name)
     image.save(path, rle=True)
@@ -32,9 +36,8 @@ def gen_text_image(text, size):
 
 def main():
     texts = ["Diffuse", "Specular", "Roughness", "Occlusion", "Normal"]
-    sizes = get_text_sizes(texts)
-    for text, size in zip(texts, sizes):
-        gen_text_image(text, size)
+    for text in texts:
+        gen_text_image(text)
 
 
 if __name__ == "__main__":
