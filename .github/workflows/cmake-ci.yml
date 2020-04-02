@@ -21,7 +21,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=Release ..
+          cmake -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=Release -D CMAKE_SH=CMAKE_SH-NOTFOUND ..
           mingw32-make
   macos-xcode:
     runs-on: macos-latest
