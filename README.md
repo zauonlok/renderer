@@ -145,6 +145,7 @@ to bring it up.
 | [<img src="assets/mccree/screenshot.png" width="600">](assets/mccree/README.md)         | `Viewer blinn mccree`     |
 | [<img src="assets/nier2b/screenshot.png" width="600">](assets/nier2b/README.md)         | `Viewer blinn nier2b`     |
 | [<img src="assets/phoenix/screenshot.gif" width="600">](assets/phoenix/README.md)       | `Viewer blinn phoenix`    |
+| [<img src="assets/vivi/screenshot.png" width="600">](assets/vivi/README.md)             | `Viewer blinn vivi`       |
 | [<img src="assets/whip/screenshot.gif" width="600">](assets/whip/README.md)             | `Viewer blinn whip`       |
 | [<img src="assets/witch/screenshot.png" width="600">](assets/witch/README.md)           | `Viewer blinn witch`      |
 | [<img src="assets/assassin/screenshot.gif" width="600">](assets/assassin/README.md)     | `Viewer pbr assassin`     |
@@ -156,6 +157,7 @@ to bring it up.
 | [<img src="assets/junkrat/screenshot.gif" width="600">](assets/junkrat/README.md)       | `Viewer pbr junkrat`      |
 | [<img src="assets/ornitier/screenshot.png" width="600">](assets/ornitier/README.md)     | `Viewer pbr ornitier`     |
 | [<img src="assets/ponycar/screenshot2.png" width="600">](assets/ponycar/README.md)      | `Viewer pbr ponycar`      |
+| [<img src="assets/robot/screenshot.png" width="600">](assets/robot/README.md)           | `Viewer pbr robot`        |
 | [<img src="assets/spruit/screenshot1.png" width="600">](assets/spruit/README.md)        | `Viewer pbr sphere`       |
 | [<img src="assets/workshop/screenshot2.png" width="600">](assets/workshop/README.md)    | `Viewer pbr spheres`      |
 
