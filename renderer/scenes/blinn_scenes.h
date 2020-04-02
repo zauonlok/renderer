@@ -12,6 +12,7 @@ scene_t *blinn_lighthouse_scene(void);
 scene_t *blinn_mccree_scene(void);
 scene_t *blinn_nier2b_scene(void);
 scene_t *blinn_phoenix_scene(void);
+scene_t *blinn_vivi_scene(void);
 scene_t *blinn_whip_scene(void);
 scene_t *blinn_witch_scene(void);
 

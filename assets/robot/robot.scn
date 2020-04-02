@@ -1,0 +1,51 @@
+type: pbrm
+
+lighting:
+    background: 0.15 0.15 0.15
+    environment: workshop
+    skybox: off
+    shadow: off
+    ambient: 1.0
+    punctual: 1.0
+
+materials 1:
+    material 0:
+        basecolor_factor: 1 1 1 1
+        metalness_factor: 1
+        roughness_factor: 1
+        basecolor_map: robot/robot_basecolor.tga
+        metalness_map: null
+        roughness_map: robot/robot_roughness.tga
+        normal_map: null
+        occlusion_map: null
+        emission_map: robot/robot_emission.tga
+        double_sided: off
+        enable_blend: off
+        alpha_cutoff: 0
+
+transforms 1:
+    transform 0:
+        1  0  0  0
+        0  1  0  0
+        0  0  1  0
+        0  0  0  1
+
+models 3:
+    model 0:
+        mesh: robot/robot0.obj
+        skeleton: null
+        attached: -1
+        material: 0
+        transform: 0
+    model 1:
+        mesh: robot/robot1.obj
+        skeleton: null
+        attached: -1
+        material: 0
+        transform: 0
+    model 2:
+        mesh: robot/robot2.obj
+        skeleton: null
+        attached: -1
+        material: 0
+        transform: 0

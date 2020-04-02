@@ -71,6 +71,16 @@ scene_t *pbr_ponycar_scene(void) {
     return scene_from_file("ponycar/ponycar.scn", root);
 }
 
+scene_t *pbr_robot_scene(void) {
+    mat4_t translation = mat4_translate(-0.478f, 2.465f, -7.816f);
+    mat4_t rotation_x = mat4_rotate_x(TO_RADIANS(-90));
+    mat4_t rotation_y = mat4_rotate_y(TO_RADIANS(-45));
+    mat4_t rotation = mat4_mul_mat4(rotation_y, rotation_x);
+    mat4_t scale = mat4_scale(0.0575f, 0.0575f, 0.0575f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    return scene_from_file("robot/robot.scn", root);
+}
+
 scene_t *pbr_sphere_scene(void) {
     mat4_t root = mat4_scale(1.1f, 1.1f, 1.1f);
     return scene_from_file("common/sphere.scn", root);

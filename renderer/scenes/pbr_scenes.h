@@ -12,6 +12,7 @@ scene_t *pbr_helmet_scene(void);
 scene_t *pbr_junkrat_scene(void);
 scene_t *pbr_ornitier_scene(void);
 scene_t *pbr_ponycar_scene(void);
+scene_t *pbr_robot_scene(void);
 scene_t *pbr_sphere_scene(void);
 scene_t *pbr_spheres_scene(void);
 
