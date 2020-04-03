@@ -87,6 +87,7 @@ A `CMakeLists.txt` file is provided for generating project files using
 mkdir build
 cd build
 cmake -G "Visual Studio 16 2019" ..
+start Renderer.sln
 ```
 
 #### Xcode
@@ -95,6 +96,7 @@ cmake -G "Visual Studio 16 2019" ..
 mkdir build
 cd build
 cmake -G Xcode ..
+open Renderer.xcodeproj
 ```
 
 #### Makefile
