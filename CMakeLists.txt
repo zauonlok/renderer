@@ -64,8 +64,6 @@ else()
     set(SOURCES ${SOURCES} renderer/platforms/linux.c)
 endif()
 
-source_group(TREE "${CMAKE_SOURCE_DIR}/renderer" FILES ${HEADERS} ${SOURCES})
-
 # ==============================================================================
 # Target definition
 # ==============================================================================
@@ -87,9 +85,8 @@ set_target_properties(${TARGET} PROPERTIES INTERPROCEDURAL_OPTIMIZATION ON)
 # ==============================================================================
 
 if(MSVC)
-    target_compile_options(${TARGET} PRIVATE /W4)
+    target_compile_options(${TARGET} PRIVATE /W4 /D_CRT_SECURE_NO_WARNINGS)
     target_compile_options(${TARGET} PRIVATE /fp:fast)
-    target_compile_options(${TARGET} PRIVATE /D_CRT_SECURE_NO_WARNINGS)
 else()
     target_compile_options(${TARGET} PRIVATE -Wall -Wextra -pedantic)
     target_compile_options(${TARGET} PRIVATE -ffast-math)
@@ -136,3 +133,10 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E ${ASSETS_CMD}
     "${ASSETS_SRC}" "${ASSETS_DST}"
 )
+
+# ==============================================================================
+# IDE support
+# ==============================================================================
+
+set_directory_properties(PROPERTIES VS_STARTUP_PROJECT ${TARGET})
+source_group(TREE "${CMAKE_SOURCE_DIR}/renderer" FILES ${HEADERS} ${SOURCES})
