@@ -1,17 +1,15 @@
 .DS_Store
 Thumbs.db
 
+.idea
+.vscode
+
 *.pyc
 *.zip
 renderer/*.obj
 scripts/*.hdr
 
-.idea
-.vscode
-
 build
 cmake-build-*
-
-Viewer*
-
 renderer-*
+Viewer*
