@@ -37,18 +37,12 @@ void framebuffer_release(framebuffer_t *framebuffer) {
 
 void framebuffer_clear_color(framebuffer_t *framebuffer, vec4_t color) {
     int num_pixels = framebuffer->width * framebuffer->height;
-    unsigned char r, g, b, a;
     int i;
-
-    r = float_to_uchar(color.x);
-    g = float_to_uchar(color.y);
-    b = float_to_uchar(color.z);
-    a = float_to_uchar(color.w);
     for (i = 0; i < num_pixels; i++) {
-        framebuffer->color_buffer[i * 4 + 0] = r;
-        framebuffer->color_buffer[i * 4 + 1] = g;
-        framebuffer->color_buffer[i * 4 + 2] = b;
-        framebuffer->color_buffer[i * 4 + 3] = a;
+        framebuffer->color_buffer[i * 4 + 0] = float_to_uchar(color.x);
+        framebuffer->color_buffer[i * 4 + 1] = float_to_uchar(color.y);
+        framebuffer->color_buffer[i * 4 + 2] = float_to_uchar(color.z);
+        framebuffer->color_buffer[i * 4 + 3] = float_to_uchar(color.w);
     }
 }
 
@@ -322,10 +316,9 @@ static int is_back_facing(vec3_t ndc_coords[3]) {
     vec3_t a = ndc_coords[0];
     vec3_t b = ndc_coords[1];
     vec3_t c = ndc_coords[2];
-    float signed_area = 0;
-    signed_area += a.x * b.y - a.y * b.x;
-    signed_area += b.x * c.y - b.y * c.x;
-    signed_area += c.x * a.y - c.y * a.x;
+    float signed_area = a.x * b.y - a.y * b.x +
+                        b.x * c.y - b.y * c.x +
+                        c.x * a.y - c.y * a.x;
     return signed_area <= 0;
 }
 
