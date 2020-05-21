@@ -26,11 +26,11 @@ struct window {
 static int g_initialized = 0;
 
 #ifdef UNICODE
-static const wchar_t *WINDOW_CLASS_NAME = L"Class";
-static const wchar_t *WINDOW_ENTRY_NAME = L"Entry";
+static const wchar_t *const WINDOW_CLASS_NAME = L"Class";
+static const wchar_t *const WINDOW_ENTRY_NAME = L"Entry";
 #else
-static const char *WINDOW_CLASS_NAME = "Class";
-static const char *WINDOW_ENTRY_NAME = "Entry";
+static const char *const WINDOW_CLASS_NAME = "Class";
+static const char *const WINDOW_ENTRY_NAME = "Entry";
 #endif
 
 /*

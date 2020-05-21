@@ -7,7 +7,7 @@
 
 /* mainloop related functions */
 
-static const char *WINDOW_TITLE = "Viewer";
+static const char *const WINDOW_TITLE = "Viewer";
 static const int WINDOW_WIDTH = 800;
 static const int WINDOW_HEIGHT = 600;
 
