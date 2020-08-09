@@ -347,10 +347,10 @@ static bbox_t find_bounding_box(vec2_t abc[3], int width, int height) {
     vec2_t min = vec2_min(vec2_min(abc[0], abc[1]), abc[2]);
     vec2_t max = vec2_max(vec2_max(abc[0], abc[1]), abc[2]);
     bbox_t bbox;
-    bbox.min_x = max_integer((int)ceil(min.x), 0);
-    bbox.min_y = max_integer((int)ceil(min.y), 0);
-    bbox.max_x = min_integer((int)floor(max.x), width - 1);
-    bbox.max_y = min_integer((int)floor(max.y), height - 1);
+    bbox.min_x = max_integer((int)floor(min.x), 0);
+    bbox.min_y = max_integer((int)floor(min.y), 0);
+    bbox.max_x = min_integer((int)ceil(max.x), width - 1);
+    bbox.max_y = min_integer((int)ceil(max.y), height - 1);
     return bbox;
 }
 
@@ -499,7 +499,7 @@ static int rasterize_triangle(framebuffer_t *framebuffer, program_t *program,
     bbox = find_bounding_box(screen_coords, width, height);
     for (x = bbox.min_x; x <= bbox.max_x; x++) {
         for (y = bbox.min_y; y <= bbox.max_y; y++) {
-            vec2_t point = vec2_new((float)x, (float)y);
+            vec2_t point = vec2_new((float)x + 0.5f, (float)y + 0.5f);
             vec3_t weights = calculate_weights(screen_coords, point);
             int weight0_okay = weights.x > -EPSILON;
             int weight1_okay = weights.y > -EPSILON;
