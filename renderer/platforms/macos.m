@@ -232,6 +232,7 @@ static NSWindow *create_window(window_t *window, const char *title,
                                              defer:NO];
     assert(handle != nil);
     [handle setTitle:[NSString stringWithUTF8String:title]];
+    [handle setColorSpace:[NSColorSpace genericRGBColorSpace]];
 
     /*
      * the storage semantics of NSWindow.setDelegate is @property(assign),
