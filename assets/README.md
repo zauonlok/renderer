@@ -14,6 +14,7 @@
 | drone      | ![drone](drone/thumbnail.png)           | Yes      | Yes |
 | elfgirl    | ![elfgirl](elfgirl/thumbnail.png)       | No       | No  |
 | helmet     | ![helmet](helmet/thumbnail.png)         | No       | Yes |
+| horse      | ![horse](horse/thumbnail.png)           | Yes      | Yes |
 | junkrat    | ![junkrat](junkrat/thumbnail.png)       | Yes      | Yes |
 | kgirl      | ![kgirl](kgirl/thumbnail.png)           | Yes      | No  |
 | lighthouse | ![lighthouse](lighthouse/thumbnail.png) | No       | No  |
