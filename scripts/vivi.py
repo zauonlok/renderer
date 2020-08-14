@@ -15,7 +15,7 @@ import zipfile
 
 from PIL import Image
 
-from .utils.gltf import dump_obj_data
+from utils.gltf import dump_obj_data
 
 SRC_FILENAME = "vivi_ornitier_-_retrogasm_art_competition.zip"
 DST_DIRECTORY = "../assets/vivi"

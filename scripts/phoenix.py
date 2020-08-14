@@ -15,7 +15,7 @@ import zipfile
 
 from PIL import Image
 
-from .utils.gltf import dump_obj_data, dump_skin_ani_data
+from utils.gltf import dump_obj_data, dump_skin_ani_data
 
 SRC_FILENAME = "phoenix_bird.zip"
 DST_DIRECTORY = "../assets/phoenix"

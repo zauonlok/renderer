@@ -6,7 +6,7 @@ The environment map is available for download from
 
 from __future__ import print_function
 
-from .utils import cmgen
+from utils import cmgen
 
 SRC_FILENAME = "venice_sunset_8k.hdr"
 DST_DIRECTORY = "../assets/venice"

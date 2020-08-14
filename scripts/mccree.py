@@ -10,7 +10,7 @@ import json
 import os
 import zipfile
 
-from .utils.gltf import dump_obj_data
+from utils.gltf import dump_obj_data
 
 SRC_FILENAME = "low_poly_mccree.zip"
 DST_DIRECTORY = "../assets/mccree"

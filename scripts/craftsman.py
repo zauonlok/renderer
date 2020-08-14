@@ -15,7 +15,7 @@ import zipfile
 
 from PIL import Image
 
-from .utils.gltf import dump_obj_data
+from utils.gltf import dump_obj_data
 
 SRC_FILENAME = "the_noble_craftsman.zip"
 DST_DIRECTORY = "../assets/craftsman"

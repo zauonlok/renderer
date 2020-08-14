@@ -15,7 +15,7 @@ import zipfile
 
 from PIL import Image
 
-from .utils.gltf import dump_node_ani_data, dump_obj_data
+from utils.gltf import dump_node_ani_data, dump_obj_data
 
 SRC_FILENAME = "buster_drone.zip"
 DST_DIRECTORY = "../assets/buster"

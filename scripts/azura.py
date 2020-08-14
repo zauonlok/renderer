@@ -15,7 +15,7 @@ import zipfile
 
 from PIL import Image
 
-from .utils.gltf import dump_obj_data
+from utils.gltf import dump_obj_data
 
 SRC_FILENAME = "dancing_girl_from_fire_emblem_if.zip"
 DST_DIRECTORY = "../assets/azura"

@@ -15,7 +15,7 @@ import zipfile
 
 from PIL import Image
 
-from .utils.gltf import dump_node_ani_data, dump_obj_data, dump_skin_ani_data
+from utils.gltf import dump_node_ani_data, dump_obj_data, dump_skin_ani_data
 
 SRC_FILENAME = "mech_drone.zip"
 DST_DIRECTORY = "../assets/drone"
