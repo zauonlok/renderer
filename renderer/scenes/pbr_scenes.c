@@ -49,6 +49,14 @@ scene_t *pbr_helmet_scene(void) {
     return scene_from_file("helmet/helmet.scn", root);
 }
 
+scene_t *pbr_horse_scene(void) {
+    mat4_t translation = mat4_translate(0.069f, 0, -0.845f);
+    mat4_t rotation = mat4_rotate_x(TO_RADIANS(-90));
+    mat4_t scale = mat4_scale(0.422f, 0.422f, 0.422f);
+    mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
+    return scene_from_file("horse/horse.scn", root);
+}
+
 scene_t *pbr_junkrat_scene(void) {
     mat4_t translation = mat4_translate(3.735f, -382.993f, 57.980f);
     mat4_t scale = mat4_scale(0.0013f, 0.0013f, 0.0013f);

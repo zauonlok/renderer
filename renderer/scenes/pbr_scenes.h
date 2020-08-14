@@ -9,6 +9,7 @@ scene_t *pbr_crab_scene(void);
 scene_t *pbr_dieselpunk_scene(void);
 scene_t *pbr_drone_scene(void);
 scene_t *pbr_helmet_scene(void);
+scene_t *pbr_horse_scene(void);
 scene_t *pbr_junkrat_scene(void);
 scene_t *pbr_ornitier_scene(void);
 scene_t *pbr_ponycar_scene(void);

@@ -1,0 +1,141 @@
+type: pbrm
+
+lighting:
+    background: 0.15 0.15 0.15
+    environment: workshop
+    skybox: off
+    shadow: off
+    ambient: 1.0
+    punctual: 1.0
+
+materials 1:
+    material 0:
+        basecolor_factor: 1 1 1 1
+        metalness_factor: 1
+        roughness_factor: 1
+        basecolor_map: horse/horse_basecolor.tga
+        metalness_map: horse/horse_metalness.tga
+        roughness_map: horse/horse_roughness.tga
+        normal_map: horse/horse_normal.tga
+        occlusion_map: null
+        emission_map: null
+        double_sided: off
+        enable_blend: off
+        alpha_cutoff: 0
+
+transforms 1:
+    transform 0:
+        1  0  0  0
+        0  1  0  0
+        0  0  1  0
+        0  0  0  1
+
+models 18:
+    model 0:
+        mesh: horse/horse0.obj
+        skeleton: horse/horse.ani
+        attached: 2
+        material: 0
+        transform: 0
+    model 1:
+        mesh: horse/horse1.obj
+        skeleton: horse/horse.ani
+        attached: 2
+        material: 0
+        transform: 0
+    model 2:
+        mesh: horse/horse2.obj
+        skeleton: horse/horse.ani
+        attached: 1
+        material: 0
+        transform: 0
+    model 3:
+        mesh: horse/horse3.obj
+        skeleton: horse/horse.ani
+        attached: 2
+        material: 0
+        transform: 0
+    model 4:
+        mesh: horse/horse4.obj
+        skeleton: horse/horse.ani
+        attached: 1
+        material: 0
+        transform: 0
+    model 5:
+        mesh: horse/horse5.obj
+        skeleton: horse/horse.ani
+        attached: 1
+        material: 0
+        transform: 0
+    model 6:
+        mesh: horse/horse6.obj
+        skeleton: horse/horse.ani
+        attached: 1
+        material: 0
+        transform: 0
+    model 7:
+        mesh: horse/horse7.obj
+        skeleton: horse/horse.ani
+        attached: 1
+        material: 0
+        transform: 0
+    model 8:
+        mesh: horse/horse8.obj
+        skeleton: horse/horse.ani
+        attached: 1
+        material: 0
+        transform: 0
+    model 9:
+        mesh: horse/horse9.obj
+        skeleton: horse/horse.ani
+        attached: 1
+        material: 0
+        transform: 0
+    model 10:
+        mesh: horse/horse10.obj
+        skeleton: horse/horse.ani
+        attached: 2
+        material: 0
+        transform: 0
+    model 11:
+        mesh: horse/horse11.obj
+        skeleton: horse/horse.ani
+        attached: 1
+        material: 0
+        transform: 0
+    model 12:
+        mesh: horse/horse12.obj
+        skeleton: horse/horse.ani
+        attached: 1
+        material: 0
+        transform: 0
+    model 13:
+        mesh: horse/horse13.obj
+        skeleton: horse/horse.ani
+        attached: 4
+        material: 0
+        transform: 0
+    model 14:
+        mesh: horse/horse14.obj
+        skeleton: horse/horse.ani
+        attached: 2
+        material: 0
+        transform: 0
+    model 15:
+        mesh: horse/horse15.obj
+        skeleton: horse/horse.ani
+        attached: 1
+        material: 0
+        transform: 0
+    model 16:
+        mesh: horse/horse16.obj
+        skeleton: horse/horse.ani
+        attached: 2
+        material: 0
+        transform: 0
+    model 17:
+        mesh: horse/horse17.obj
+        skeleton: horse/horse.ani
+        attached: 1
+        material: 0
+        transform: 0
