@@ -52,7 +52,7 @@ scene_t *pbr_helmet_scene(void) {
 scene_t *pbr_horse_scene(void) {
     mat4_t translation = mat4_translate(0.069f, 0, -0.845f);
     mat4_t rotation = mat4_rotate_x(TO_RADIANS(-90));
-    mat4_t scale = mat4_scale(0.422f, 0.422f, 0.422f);
+    mat4_t scale = mat4_scale(0.475f, 0.475f, 0.475f);
     mat4_t root = mat4_mul_mat4(scale, mat4_mul_mat4(rotation, translation));
     return scene_from_file("horse/horse.scn", root);
 }
